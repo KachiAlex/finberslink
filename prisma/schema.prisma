@@ -1,0 +1,366 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  TUTOR
+  ADMIN
+  SUPER_ADMIN
+  EMPLOYER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  INVITED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum LessonFormat {
+  VIDEO
+  LIVE
+  TEXT
+  PROJECT
+}
+
+enum ResourceType {
+  PDF
+  SLIDE
+  LINK
+  CODE
+  VIDEO
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  WITHDRAWN
+}
+
+enum LessonProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ResumeVisibility {
+  PRIVATE
+  NETWORK
+  PUBLIC
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum RemoteOption {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum JobApplicationStatus {
+  SUBMITTED
+  REVIEWING
+  INTERVIEW
+  OFFER
+  REJECTED
+}
+
+enum VolunteerApplicationStatus {
+  SUBMITTED
+  CONFIRMED
+  COMPLETED
+  WITHDRAWN
+}
+
+enum NotificationType {
+  ENROLLMENT_UPDATE
+  LESSON_RELEASE
+  FORUM_REPLY
+  APPLICATION_STATUS
+  SYSTEM
+}
+
+model User {
+  id               String              @id @default(cuid())
+  email            String              @unique
+  passwordHash     String
+  firstName        String
+  lastName         String
+  avatarUrl        String?
+  role             Role                @default(STUDENT)
+  status           UserStatus          @default(ACTIVE)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  profile          Profile?
+  coursesTaught    Course[]            @relation("CourseInstructor")
+  enrollments      Enrollment[]
+  resumes          Resume[]
+  jobApplications  JobApplication[]
+  volunteerApps    VolunteerApplication[]
+  notifications    Notification[]
+  forumThreads     ForumThread[]
+  forumPosts       ForumPost[]
+  jobOpportunitiesPosted    JobOpportunity[]       @relation("JobPostedBy")
+  volunteerOpportunitiesPosted VolunteerOpportunity[] @relation("VolunteerPostedBy")
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  headline  String?
+  bio       String?
+  location  String?
+  skills    String[] @default([])
+  interests String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Course {
+  id                   String      @id @default(cuid())
+  slug                 String      @unique
+  title                String
+  tagline              String
+  description          String
+  level                CourseLevel
+  category             String
+  coverImage           String
+  certificateAvailable Boolean     @default(false)
+  instructorId         String
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  instructor  User           @relation("CourseInstructor", fields: [instructorId], references: [id])
+  lessons      Lesson[]
+  enrollments  Enrollment[]
+  forumThreads ForumThread[]
+}
+
+model Lesson {
+  id              String      @id @default(cuid())
+  courseId        String
+  title           String
+  slug            String
+  order           Int
+  durationMinutes Int
+  format          LessonFormat
+  summary         String
+  content         String?
+  videoUrl        String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  course        Course          @relation(fields: [courseId], references: [id])
+  resources     LessonResource[]
+  lessonProgress LessonProgress[]
+  forumPosts    ForumPost[]
+
+  @@unique([courseId, slug])
+  @@index([courseId, order])
+}
+
+model LessonResource {
+  id       String       @id @default(cuid())
+  lessonId String
+  title    String
+  type     ResourceType
+  url      String
+
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+}
+
+model Enrollment {
+  id                 String             @id @default(cuid())
+  userId             String
+  courseId           String
+  status             EnrollmentStatus   @default(ACTIVE)
+  progressPercentage Int                @default(0)
+  lastAccessedAt     DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user          User            @relation(fields: [userId], references: [id])
+  course        Course          @relation(fields: [courseId], references: [id])
+  lessonProgress LessonProgress[]
+
+  @@unique([userId, courseId])
+}
+
+model LessonProgress {
+  id           String               @id @default(cuid())
+  enrollmentId String
+  lessonId     String
+  status       LessonProgressStatus @default(NOT_STARTED)
+  completedAt  DateTime?
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id])
+  lesson     Lesson     @relation(fields: [lessonId], references: [id])
+
+  @@unique([enrollmentId, lessonId])
+}
+
+model ForumThread {
+  id        String   @id @default(cuid())
+  title     String
+  courseId  String
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id])
+  author User   @relation(fields: [authorId], references: [id])
+  posts  ForumPost[]
+}
+
+model ForumPost {
+  id        String    @id @default(cuid())
+  threadId  String
+  authorId  String
+  lessonId  String?
+  parentId  String?
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  thread ForumThread @relation(fields: [threadId], references: [id])
+  author User        @relation(fields: [authorId], references: [id])
+  lesson Lesson?     @relation(fields: [lessonId], references: [id])
+  parent ForumPost?  @relation("PostReplies", fields: [parentId], references: [id])
+  replies ForumPost[] @relation("PostReplies")
+}
+
+model Resume {
+  id         String           @id @default(cuid())
+  userId     String
+  title      String
+  summary    String?
+  skills     String[]         @default([])
+  slug       String           @unique
+  visibility ResumeVisibility @default(PRIVATE)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  user        User             @relation(fields: [userId], references: [id])
+  experiences ResumeExperience[]
+  projects    ResumeProject[]
+  jobApplications JobApplication[]
+}
+
+model ResumeExperience {
+  id         String   @id @default(cuid())
+  resumeId   String
+  company    String
+  role       String
+  startDate  DateTime
+  endDate    DateTime?
+  description String?
+  achievements String[] @default([])
+  order      Int      @default(0)
+
+  resume Resume @relation(fields: [resumeId], references: [id])
+}
+
+model ResumeProject {
+  id          String   @id @default(cuid())
+  resumeId    String
+  name        String
+  summary     String?
+  link        String?
+  techStack   String[] @default([])
+  order       Int      @default(0)
+
+  resume Resume @relation(fields: [resumeId], references: [id])
+}
+
+model JobOpportunity {
+  id           String     @id @default(cuid())
+  title        String
+  company      String
+  location     String
+  country      String
+  jobType      JobType
+  remoteOption RemoteOption
+  salaryRange  String?
+  description  String?
+  requirements String[] @default([])
+  tags         String[] @default([])
+  postedById   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  postedBy    User?            @relation("JobPostedBy", fields: [postedById], references: [id])
+  applications JobApplication[]
+}
+
+model JobApplication {
+  id               String               @id @default(cuid())
+  userId           String
+  jobOpportunityId String
+  resumeId         String?
+  status           JobApplicationStatus @default(SUBMITTED)
+  submittedAt      DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id])
+  opportunity   JobOpportunity @relation(fields: [jobOpportunityId], references: [id])
+  resume        Resume?        @relation(fields: [resumeId], references: [id])
+}
+
+model VolunteerOpportunity {
+  id           String    @id @default(cuid())
+  title        String
+  organization String
+  location     String
+  country      String
+  description  String?
+  commitment   String?
+  skills       String[]  @default([])
+  isRemote     Boolean   @default(false)
+  postedById   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  postedBy     User?                  @relation("VolunteerPostedBy", fields: [postedById], references: [id])
+  applications VolunteerApplication[]
+}
+
+model VolunteerApplication {
+  id                     String                     @id @default(cuid())
+  userId                 String
+  volunteerOpportunityId String
+  status                 VolunteerApplicationStatus @default(SUBMITTED)
+  submittedAt            DateTime                   @default(now())
+
+  user        User                 @relation(fields: [userId], references: [id])
+  opportunity VolunteerOpportunity @relation(fields: [volunteerOpportunityId], references: [id])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
