@@ -40,6 +40,7 @@ enum ResourceType {
   LINK
   CODE
   VIDEO
+  SHEET
 }
 
 enum EnrollmentStatus {
@@ -143,6 +144,8 @@ model Course {
   description          String
   level                CourseLevel
   category             String
+  outcomes             String[]    @default([])
+  skills               String[]    @default([])
   coverImage           String
   certificateAvailable Boolean     @default(false)
   instructorId         String

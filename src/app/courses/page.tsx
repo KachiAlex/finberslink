@@ -1,9 +1,13 @@
 import { SiteHeader } from "@/components/layout/site-header";
 import { Badge } from "@/components/ui/badge";
 import { CourseCard } from "@/features/lms/components/course-card";
-import { mockCourses } from "@/features/lms/data/mock-courses";
+import { listLearnerCourses } from "@/features/lms/data/course-service";
 
-export default function CoursesPage() {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function CoursesPage() {
+  const courses = await listLearnerCourses();
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-[hsl(215,60%,92%)]">
       <SiteHeader />
@@ -22,14 +26,16 @@ export default function CoursesPage() {
               </p>
             </div>
             <div className="flex gap-3 text-sm text-slate-500">
-              <span>Showing {mockCourses.length} programs</span>
+              <span>Showing {courses.length} programs</span>
             </div>
           </div>
         </section>
         <section className="mt-10 grid gap-8 md:grid-cols-2">
-          {mockCourses.map((course) => (
-            <CourseCard key={course.id} course={course} />
-          ))}
+          {courses.length === 0 ? (
+            <p className="text-slate-500">No programs are available yet. Check back soon!</p>
+          ) : (
+            courses.map((course) => <CourseCard key={course.id} course={course} />)
+          )}
         </section>
       </main>
     </div>

@@ -11,7 +11,7 @@ export interface Instructor {
 export interface Resource {
   id: string;
   title: string;
-  type: "pdf" | "slide" | "link" | "code";
+  type: "pdf" | "slide" | "link" | "code" | "video" | "sheet";
   url: string;
 }
 
@@ -23,6 +23,8 @@ export interface Lesson {
   status: "locked" | "available" | "completed";
   summary: string;
   resources: Resource[];
+  content?: string;
+  videoUrl?: string;
 }
 
 export interface CourseSummary {

@@ -6,11 +6,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCourseById } from "@/features/lms/data/mock-courses";
-
-interface LessonPageProps {
-  params: { courseId: string; lessonId: string };
-}
+import { getLearnerLesson } from "@/features/lms/data/course-service";
 
 const forumPreview = [
   {
@@ -28,18 +24,20 @@ const forumPreview = [
   },
 ];
 
-export default function LessonPage({ params }: LessonPageProps) {
-  const course = getCourseById(params.courseId);
-  if (!course) {
-    notFound();
-  }
-  const lesson = course.lessons.find((item) => item.id === params.lessonId);
-  if (!lesson) {
+export default async function LessonPage({
+  params,
+}: {
+  params: Promise<{ courseId: string; lessonId: string }>;
+}) {
+  const { courseId, lessonId } = await params;
+  const result = await getLearnerLesson(courseId, lessonId);
+  if (!result) {
     notFound();
   }
 
+  const { course, lesson } = result;
   const nextLesson = course.lessons.find((item) => item.status === "available" && item.id !== lesson.id);
-  const lessonVideoUrl = "https://www.youtube.com/embed/ysz5S6PUM-U";
+  const lessonVideoUrl = lesson.videoUrl ?? "https://www.youtube.com/embed/ysz5S6PUM-U";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-[hsl(215,60%,92%)]">
@@ -60,7 +58,7 @@ export default function LessonPage({ params }: LessonPageProps) {
           <Badge variant="outline" className="border-primary/30 text-primary">
             {lesson.status === "completed" && "Completed"}
             {lesson.status === "available" && "Available now"}
-            {lesson.status === "locked" && "Unlocks soon"}
+            {lesson.status === "locked" && "Locked"}
           </Badge>
         </div>
 
@@ -84,6 +82,7 @@ export default function LessonPage({ params }: LessonPageProps) {
               </div>
               <h1 className="text-3xl font-semibold text-slate-900">{lesson.title}</h1>
               <p className="text-slate-600">{lesson.summary}</p>
+              {lesson.content && <p className="text-sm text-slate-500">{lesson.content}</p>}
               <div className="flex flex-wrap gap-3">
                 <Button className="gap-2">
                   <MessageCircle className="h-4 w-4" /> Join live chat
@@ -139,14 +138,14 @@ export default function LessonPage({ params }: LessonPageProps) {
                     </div>
                   </div>
                 ))}
-+                <Button asChild variant="ghost" className="w-full text-primary">
-+                  <Link href="/forum">Open community space</Link>
-+                </Button>
-+              </CardContent>
-+            </Card>
-+          </div>
-+        </section>
-+      </main>
-+    </div>
-+  );
-+}
+                <Button asChild variant="ghost" className="w-full text-primary">
+                  <Link href="/forum">Open community space</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}

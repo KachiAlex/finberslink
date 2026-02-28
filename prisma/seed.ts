@@ -109,9 +109,21 @@ async function seedCourse(instructorId: string) {
       tagline: "Design bold services that launch careers",
       description:
         "A five-week studio where fellows learn to translate research into outcome-driven roadmaps, stakeholder stories, and launch experiments.",
+      level: CourseLevel.INTERMEDIATE,
       category: "Product & Service Design",
       coverImage:
         "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1200&q=80",
+      certificateAvailable: true,
+      outcomes: {
+        set: [
+          "Apply customer discovery templates",
+          "Craft measurable success metrics",
+          "Facilitate team ideation rituals",
+        ],
+      },
+      skills: {
+        set: ["Discovery", "Storytelling", "Prioritization"],
+      },
       instructorId,
     },
     create: {
@@ -126,6 +138,12 @@ async function seedCourse(instructorId: string) {
       coverImage:
         "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1200&q=80",
       certificateAvailable: true,
+      outcomes: [
+        "Apply customer discovery templates",
+        "Craft measurable success metrics",
+        "Facilitate team ideation rituals",
+      ],
+      skills: ["Discovery", "Storytelling", "Prioritization"],
       instructorId,
     },
   });

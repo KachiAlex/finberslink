@@ -5,14 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { CourseHero } from "@/features/lms/components/course-hero";
 import { LessonList } from "@/features/lms/components/lesson-list";
-import { getCourseById } from "@/features/lms/data/mock-courses";
+import { getLearnerCourseDetail } from "@/features/lms/data/course-service";
 
-interface CourseDetailPageProps {
-  params: { courseId: string };
-}
-
-export default function CourseDetailPage({ params }: CourseDetailPageProps) {
-  const course = getCourseById(params.courseId);
+export default async function CourseDetailPage({
+  params,
+}: {
+  params: Promise<{ courseId: string }>;
+}) {
+  const { courseId } = await params;
+  const course = await getLearnerCourseDetail(courseId);
 
   if (!course) {
     notFound();
