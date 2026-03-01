@@ -10,6 +10,8 @@ import { AdminShell } from "../../../_components/admin-shell";
 
 type JobApplicationStatus = 'SUBMITTED' | 'REVIEWING' | 'INTERVIEW' | 'OFFER' | 'REJECTED';
 
+const JobApplicationStatusValues = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'REJECTED'] as const;
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -61,7 +63,7 @@ export default async function JobApplicantsPage({
     notFound();
   }
 
-  const statusOptions = Object.values(JobApplicationStatus);
+  const statusOptions = JobApplicationStatusValues;
 
   return (
     <div className="space-y-6">
