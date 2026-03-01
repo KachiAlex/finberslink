@@ -94,19 +94,19 @@ export default async function JobApplicantsPage({
               <div>
                 <div className="text-sm text-gray-600">Under Review</div>
                 <div className="text-2xl font-bold">
-                  {applications.filter(a => a.status === "REVIEWING").length}
+                  {applications.filter((a: any) => a.status === "REVIEWING").length}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">Interviews</div>
                 <div className="text-2xl font-bold">
-                  {applications.filter(a => a.status === "INTERVIEW").length}
+                  {applications.filter((a: any) => a.status === "INTERVIEW").length}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">Offers</div>
                 <div className="text-2xl font-bold">
-                  {applications.filter(a => a.status === "OFFER").length}
+                  {applications.filter((a: any) => a.status === "OFFER").length}
                 </div>
               </div>
             </div>
