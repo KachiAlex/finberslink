@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import { prisma } from "@/lib/prisma";
+import * as FirestoreService from "@/lib/firestore-service";
 import { z } from "zod";
 
 const UpdateJobSchema = z.object({
@@ -33,24 +33,7 @@ export async function GET(
 
     const { jobId } = await params;
 
-    const job = await prisma.jobOpportunity.findUnique({
-      where: { id: jobId },
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        _count: {
-          select: {
-            applications: true,
-          },
-        },
-      },
-    });
+    const job = await FirestoreService.getJobById(jobId);
 
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
@@ -94,19 +77,8 @@ export async function PUT(
       );
     }
 
-    const job = await prisma.jobOpportunity.update({
-      where: { id: jobId },
-      data: parsed.data,
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
-    });
+    await FirestoreService.updateJob(jobId, parsed.data);
+    const job = await FirestoreService.getJobById(jobId);
 
     return NextResponse.json({
       message: "Job updated successfully",
@@ -140,15 +112,7 @@ export async function DELETE(
 
     const { jobId } = await params;
 
-    // Delete associated applications first
-    await prisma.jobApplication.deleteMany({
-      where: { jobOpportunityId: jobId },
-    });
-
-    // Delete the job
-    await prisma.jobOpportunity.delete({
-      where: { id: jobId },
-    });
+    await FirestoreService.deleteJob(jobId);
 
     return NextResponse.json({
       message: "Job deleted successfully",
