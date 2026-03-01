@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
-import { CourseLevel } from "@prisma/client";
+
+type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

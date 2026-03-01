@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
-import { UserStatus } from "@prisma/client";
+
+type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

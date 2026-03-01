@@ -6,7 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJobBySlug, incrementJobViewCount } from "@/features/jobs/service";
-import { JobType, RemoteOption } from "@prisma/client";
+
+type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
+type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

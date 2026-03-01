@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJobById, getJobApplicationsForAdmin, updateJobApplicationStatus } from "@/features/jobs/service";
 import { AdminShell } from "../../../_components/admin-shell";
-import { JobApplicationStatus } from "@prisma/client";
+
+type JobApplicationStatus = 'SUBMITTED' | 'REVIEWING' | 'INTERVIEW' | 'OFFER' | 'REJECTED';
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

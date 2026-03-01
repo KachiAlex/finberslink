@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { Role } from "@prisma/client";
+
+type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

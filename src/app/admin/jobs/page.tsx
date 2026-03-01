@@ -1,5 +1,7 @@
 import { revalidatePath } from "next/cache";
-import { JobType, RemoteOption } from "@prisma/client";
+
+type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
+type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

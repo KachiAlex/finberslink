@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getUserById, updateUserRole, updateUserStatus } from "@/features/admin/service";
-import { Role, UserStatus } from "@prisma/client";
+
+type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
+type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
 import { AdminShell } from "../../_components/admin-shell";
 

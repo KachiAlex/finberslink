@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserById, updateUserRole, updateUserStatus } from "@/features/admin/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
-import { Role, UserStatus } from "@prisma/client";
+
+type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
+type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
 const UpdateUserRoleSchema = z.object({
   role: z.nativeEnum(Role),

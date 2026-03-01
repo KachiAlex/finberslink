@@ -11,7 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { getJobBySlug, createJobApplication, getUserJobApplications } from "@/features/jobs/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { listUserResumes } from "@/features/resume/service";
-import { JobType, RemoteOption } from "@prisma/client";
+
+type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
+type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

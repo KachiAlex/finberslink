@@ -1,7 +1,9 @@
 import jwt from "jsonwebtoken";
-import { Role, UserStatus } from "@prisma/client";
 
 import { env } from "@/lib/env";
+
+type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
+type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
 export interface SessionPayload {
   sub: string;

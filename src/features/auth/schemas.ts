@@ -1,5 +1,6 @@
-import { Role } from "@prisma/client";
 import { z } from "zod";
+
+type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
 
 export const RegisterSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
