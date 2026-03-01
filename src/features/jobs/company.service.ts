@@ -17,16 +17,7 @@ export async function getCompanies(filters?: { search?: string; page?: number; l
   const [companies, total] = await Promise.all([
     prisma.company.findMany({
       where,
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        description: true,
-        logo: true,
-        industry: true,
-        location: true,
-        website: true,
-        createdAt: true,
+      include: {
         _count: {
           select: {
             jobs: true,
