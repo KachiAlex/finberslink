@@ -1,5 +1,4 @@
 import * as admin from 'firebase-admin';
-import { PrismaClient } from '@prisma/client';
 
 // Initialize Firebase Admin
 const serviceAccount = JSON.parse(
@@ -12,7 +11,17 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
-const prisma = new PrismaClient();
+
+// Prisma client - only imported when migration script is run directly
+let prisma: any;
+try {
+  const { PrismaClient } = require('@prisma/client');
+  prisma = new PrismaClient();
+} catch (error) {
+  console.error('Prisma not available. This script requires Prisma to be installed.');
+  console.error('Run: npm install @prisma/client prisma');
+  process.exit(1);
+}
 
 interface MigrationStats {
   users: number;
