@@ -1,8 +1,5 @@
 import * as admin from 'firebase-admin';
 import { PrismaClient } from '@prisma/client';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
 
 // Initialize Firebase Admin
 const serviceAccount = JSON.parse(
@@ -62,13 +59,11 @@ async function migrateUsers() {
           await db.collection('profiles').doc(user.profile.id).set({
             id: user.profile.id,
             userId: user.id,
-            headline: user.profile.headline,
-            bio: user.profile.bio,
-            location: user.profile.location,
-            website: user.profile.website,
+            headline: user.profile.headline || '',
+            bio: user.profile.bio || '',
+            location: user.profile.location || '',
             skills: user.profile.skills || [],
-            experience: user.profile.experience,
-            education: user.profile.education,
+            interests: user.profile.interests || [],
             createdAt: user.profile.createdAt,
             updatedAt: user.profile.updatedAt,
           });
@@ -142,7 +137,6 @@ async function migrateApplications() {
           coverLetter: app.coverLetter,
           status: app.status,
           submittedAt: app.submittedAt,
-          createdAt: app.createdAt,
           updatedAt: app.updatedAt,
         });
 
@@ -212,12 +206,9 @@ async function migrateNotifications() {
           id: notification.id,
           userId: notification.userId,
           type: notification.type,
-          title: notification.title,
-          message: notification.message,
-          read: notification.read,
-          metadata: notification.metadata,
+          payload: notification.payload,
+          readAt: notification.readAt,
           createdAt: notification.createdAt,
-          updatedAt: notification.updatedAt,
         });
 
         stats.notifications++;
