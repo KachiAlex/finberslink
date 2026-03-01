@@ -93,14 +93,14 @@ export default async function AdminUserDetailPage({
 
                 <div>
                   <label className="text-sm font-medium text-gray-500">Headline</label>
-                  <p>{user.profile?.headline || "No headline set"}</p>
+                  <p>{(user as any).profile?.headline || "No headline set"}</p>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-gray-500">Location</label>
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-gray-400" />
-                    <p>{user.profile?.location || "No location set"}</p>
+                    <p>{(user as any).profile?.location || "No location set"}</p>
                   </div>
                 </div>
               </div>
