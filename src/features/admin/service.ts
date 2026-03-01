@@ -39,6 +39,30 @@ export async function listAdminCourses() {
   return courses;
 }
 
+export async function createAdminCourse(input: {
+  slug: string;
+  title: string;
+  tagline: string;
+  description: string;
+  category: string;
+  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  coverImage: string;
+}) {
+  return FirestoreService.createCourse({
+    slug: input.slug,
+    title: input.title,
+    tagline: input.tagline,
+    description: input.description,
+    category: input.category,
+    level: input.level,
+    coverImage: input.coverImage,
+    instructorId: DEFAULT_ADMIN_ID,
+    certificateAvailable: false,
+    outcomes: [],
+    skills: [],
+  });
+}
+
 export async function listStudents() {
   return FirestoreService.listUsers({ role: 'STUDENT' }, 100);
 }

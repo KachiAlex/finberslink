@@ -121,34 +121,40 @@ export default async function AdminAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {analytics.topCourses.map((course, index) => (
-                  <div
-                    key={course.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-medium">
-                        {index + 1}
+                {analytics.topCourses && analytics.topCourses.length > 0 ? (
+                  analytics.topCourses.map((course: any, index: number) => (
+                    <div
+                      key={course.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-medium">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm">
+                            {course.title}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {course.category}
+                          </div>
+                        </div>
                       </div>
-                      <div>
+                      <div className="text-right">
                         <div className="font-medium text-sm">
-                          {course.title}
+                          {course._count?.enrollments || 0}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {course.category}
+                          enrollments
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-medium text-sm">
-                        {course._count.enrollments}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        enrollments
-                      </div>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    No course data available
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
