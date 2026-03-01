@@ -9,6 +9,11 @@ export interface SessionPayload {
   status: UserStatus;
 }
 
+export interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+}
+
 const ACCESS_TOKEN_EXPIRES_IN = "1h";
 const REFRESH_TOKEN_EXPIRES_IN = "30d";
 

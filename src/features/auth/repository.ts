@@ -1,30 +1,24 @@
-import { Role, UserStatus } from "@prisma/client";
-
-import { prisma } from "@/lib/prisma";
+import * as FirestoreService from "@/lib/firestore-service";
 
 interface CreateUserInput {
   firstName: string;
   lastName: string;
   email: string;
   passwordHash: string;
-  role?: Role;
+  role?: 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
 }
 
 export async function findUserByEmail(email: string) {
-  return prisma.user.findUnique({
-    where: { email },
-  });
+  return FirestoreService.findUserByEmail(email);
 }
 
 export async function createUser(input: CreateUserInput) {
-  return prisma.user.create({
-    data: {
-      firstName: input.firstName,
-      lastName: input.lastName,
-      email: input.email,
-      passwordHash: input.passwordHash,
-      role: input.role ?? Role.STUDENT,
-      status: UserStatus.ACTIVE,
-    },
+  return FirestoreService.createUser({
+    firstName: input.firstName,
+    lastName: input.lastName,
+    email: input.email,
+    passwordHash: input.passwordHash,
+    role: input.role ?? 'STUDENT',
+    status: 'ACTIVE',
   });
 }

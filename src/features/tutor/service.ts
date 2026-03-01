@@ -23,7 +23,6 @@ export async function getTutorCohorts(tutorId: string) {
           title: true,
           slug: true,
           order: true,
-          isPublished: true,
         },
         orderBy: { order: "asc" },
       },
@@ -38,10 +37,13 @@ export async function getPendingForumPosts(tutorId: string) {
     select: { id: true },
   });
 
+  const courseIds = courses.map((c) => c.id);
+
   return prisma.forumPost.findMany({
     where: {
-      courseId: { in: courses.map((c) => c.id) },
-      status: "PENDING",
+      thread: {
+        courseId: { in: courseIds },
+      },
     },
     include: {
       author: {
@@ -51,11 +53,17 @@ export async function getPendingForumPosts(tutorId: string) {
           lastName: true,
         },
       },
-      course: {
+      thread: {
         select: {
           id: true,
-          title: true,
-          slug: true,
+          courseId: true,
+          course: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+            },
+          },
         },
       },
       lesson: {
@@ -72,21 +80,6 @@ export async function getPendingForumPosts(tutorId: string) {
 }
 
 export async function getTutorOfficeHours(tutorId: string) {
-  return prisma.officeHour.findMany({
-    where: { tutorId },
-    include: {
-      bookings: {
-        include: {
-          student: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: { startTime: "asc" },
-  });
+  // TODO: Implement office hours once OfficeHour model is added to schema
+  return [];
 }
