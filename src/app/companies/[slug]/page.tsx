@@ -44,38 +44,38 @@ export default async function CompanyPage({
         <Card className="mb-8">
           <CardHeader className="pb-6">
             <div className="flex items-start gap-6">
-              {company.logo && (
+              {(company as any).logo && (
                 <div className="h-24 w-24 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <img
-                    src={company.logo}
-                    alt={company.name}
+                    src={(company as any).logo}
+                    alt={(company as any).name}
                     className="h-full w-full object-cover rounded-lg"
                   />
                 </div>
               )}
               <div className="flex-1">
-                <CardTitle className="text-3xl mb-2">{company.name}</CardTitle>
+                <CardTitle className="text-3xl mb-2">{(company as any).name}</CardTitle>
                 <CardDescription className="text-base mb-4">
-                  {company.description}
+                  {(company as any).description}
                 </CardDescription>
 
                 {/* Company Details */}
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                  {company.industry && (
+                  {(company as any).industry && (
                     <div className="flex items-center gap-1">
                       <Briefcase className="w-4 h-4" />
-                      <span>{company.industry}</span>
+                      <span>{(company as any).industry}</span>
                     </div>
                   )}
-                  {company.location && (
+                  {(company as any).location && (
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
-                      <span>{company.location}</span>
+                      <span>{(company as any).location}</span>
                     </div>
                   )}
-                  {company.website && (
+                  {(company as any).website && (
                     <a
-                      href={company.website}
+                      href={(company as any).website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-blue-600 hover:underline"
