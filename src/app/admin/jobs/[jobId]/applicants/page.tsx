@@ -116,7 +116,7 @@ export default async function JobApplicantsPage({
         {/* Applications List */}
         {applications.length > 0 ? (
           <div className="space-y-4">
-            {applications.map((application) => {
+            {applications.map((application: any) => {
               const StatusIcon = statusIcons[application.status];
               
               return (
