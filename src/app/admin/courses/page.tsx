@@ -78,13 +78,13 @@ export default async function AdminCoursesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {courses.map((course) => (
+                    {courses.map((course: any) => (
                       <tr key={course.id} className="text-slate-700">
                         <td className="py-3 font-semibold">{course.title}</td>
                         <td>{course.category}</td>
                         <td className="capitalize">{course.level.toLowerCase()}</td>
-                        <td>{course.enrollments.length}</td>
-                        <td>{new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(course.createdAt)}</td>
+                        <td>{course._count?.enrollments || 0}</td>
+                        <td>{new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(course.createdAt))}</td>
                       </tr>
                     ))}
                     {courses.length === 0 && (
