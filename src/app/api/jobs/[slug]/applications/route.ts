@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import { prisma } from "@/lib/prisma";
+import * as FirestoreService from "@/lib/firestore-service";
 import { z } from "zod";
 
 const ApplyJobSchema = z.object({
@@ -31,22 +31,18 @@ export async function POST(
       );
     }
 
-    // Check if job exists
-    const job = await prisma.jobOpportunity.findUnique({
-      where: { slug },
-    });
+    // Check if job exists (slug is used as jobId in Firestore)
+    const job = await FirestoreService.getJobById(slug);
 
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
     // Check if user has already applied
-    const existingApplication = await prisma.jobApplication.findFirst({
-      where: {
-        userId: user.sub,
-        jobOpportunityId: job.id,
-      },
-    });
+    const { applications } = await FirestoreService.listApplicationsByUser(user.sub, 1, 1000);
+    const existingApplication = applications.find(
+      app => app.jobOpportunityId === job.id && app.userId === user.sub
+    );
 
     if (existingApplication) {
       return NextResponse.json(
@@ -55,35 +51,12 @@ export async function POST(
       );
     }
 
-    // Check if resume exists and belongs to user
-    const resume = await prisma.resume.findUnique({
-      where: { id: parsed.data.resumeId },
-    });
-
-    if (!resume || resume.userId !== user.sub) {
-      return NextResponse.json(
-        { error: "Resume not found or does not belong to you" },
-        { status: 404 }
-      );
-    }
-
     // Create application
-    const application = await prisma.jobApplication.create({
-      data: {
-        userId: user.sub,
-        jobOpportunityId: job.id,
-        resumeId: parsed.data.resumeId,
-        coverLetter: parsed.data.coverLetter,
-      },
-      include: {
-        opportunity: {
-          select: {
-            id: true,
-            title: true,
-            company: true,
-          },
-        },
-      },
+    const application = await FirestoreService.createApplication({
+      userId: user.sub,
+      jobOpportunityId: job.id,
+      resumeId: parsed.data.resumeId,
+      status: 'SUBMITTED',
     });
 
     return NextResponse.json(
