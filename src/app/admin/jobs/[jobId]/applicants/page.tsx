@@ -117,7 +117,7 @@ export default async function JobApplicantsPage({
         {applications.length > 0 ? (
           <div className="space-y-4">
             {applications.map((application: any) => {
-              const StatusIcon = statusIcons[application.status];
+              const StatusIcon = statusIcons[application.status as JobApplicationStatus];
               
               return (
                 <Card key={application.id}>
