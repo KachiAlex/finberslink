@@ -1,20 +1,8 @@
-import {
-  CourseLevel,
-  EnrollmentStatus,
-  JobApplicationStatus,
-  JobType,
-  LessonFormat,
-  LessonProgressStatus,
-  NotificationType,
-  PrismaClient,
-  RemoteOption,
-  ResourceType,
-  ResumeVisibility,
-  VolunteerApplicationStatus,
-} from "@prisma/client";
+// Prisma seed file - not used with Firestore migration
+// This file is kept for reference but is no longer executed
+// Firestore seeding should be done through the migration script instead
 
-const prisma = new PrismaClient();
-
+/*
 async function seedUsers() {
   const passwordHash = "$argon2id$v=19$m=65536,t=3,p=4$demo$FinbersSeed";
 
@@ -502,3 +490,7 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+*/
+
+// Placeholder for Firestore seeding
+console.log("Prisma seed file is disabled. Use migration script instead.");
