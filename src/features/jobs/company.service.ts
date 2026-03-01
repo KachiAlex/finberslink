@@ -4,7 +4,7 @@ export async function getCompanies(filters?: { search?: string; page?: number; l
   const { search, page = 1, limit = 20 } = filters || {};
   const skip = (page - 1) * limit;
 
-  const where = search
+  const where: any = search
     ? {
         OR: [
           { name: { contains: search, mode: "insensitive" } },

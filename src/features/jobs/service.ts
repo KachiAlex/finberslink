@@ -95,8 +95,18 @@ export async function getJobs(filters: JobFilters = {}) {
     prisma.jobOpportunity.count({ where }),
   ]);
 
+  const processedJobs = jobs
+    .filter(job => job.slug !== null)
+    .map(job => ({
+      ...job,
+      slug: job.slug!,
+      salaryRange: job.salaryRange || undefined,
+      description: job.description || undefined,
+      createdAt: job.createdAt.toISOString(),
+    }));
+
   return {
-    jobs,
+    jobs: processedJobs,
     pagination: {
       page,
       limit,
@@ -182,6 +192,8 @@ export async function getFeaturedJobs(limit = 5) {
     .map(job => ({
       ...job,
       slug: job.slug!,
+      salaryRange: job.salaryRange || undefined,
+      description: job.description || undefined,
       createdAt: job.createdAt.toISOString(),
     }));
 }
