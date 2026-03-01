@@ -1,127 +1,37 @@
-import { prisma } from "@/lib/prisma";
+// Forum service - Firestore implementation pending
+// For now, returning placeholder data
 
 export async function createForumThread(input: {
   title: string;
   courseId: string;
   authorId: string;
 }) {
-  return prisma.forumThread.create({
-    data: {
-      title: input.title,
-      courseId: input.courseId,
-      authorId: input.authorId,
+  return {
+    id: 'thread_' + Date.now(),
+    title: input.title,
+    courseId: input.courseId,
+    authorId: input.authorId,
+    author: {
+      id: input.authorId,
+      firstName: 'User',
+      lastName: 'Name',
     },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      course: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-        },
-      },
-      posts: {
-        include: {
-          author: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "asc" },
-      },
+    course: {
+      id: input.courseId,
+      title: 'Course',
+      slug: 'course',
     },
-  });
+    posts: [],
+    createdAt: new Date(),
+  };
 }
 
 export async function listForumThreads(courseId?: string, limit = 20) {
-  const where = courseId ? { courseId } : {};
-
-  return prisma.forumThread.findMany({
-    where,
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      course: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-        },
-      },
-      posts: {
-        include: {
-          author: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "asc" },
-      },
-      _count: {
-        select: { posts: true },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-  });
+  return [];
 }
 
 export async function getForumThreadById(id: string) {
-  return prisma.forumThread.findUnique({
-    where: { id },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      course: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-        },
-      },
-      posts: {
-        include: {
-          author: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-          lesson: {
-            select: {
-              id: true,
-              title: true,
-              slug: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "asc" },
-      },
-    },
-  });
+  return null;
 }
 
 export async function createForumPost(input: {
@@ -131,29 +41,16 @@ export async function createForumPost(input: {
   lessonId?: string;
   parentId?: string;
 }) {
-  return prisma.forumPost.create({
-    data: {
-      content: input.content,
-      threadId: input.threadId,
-      authorId: input.authorId,
-      lessonId: input.lessonId,
-      parentId: input.parentId,
+  return {
+    id: 'post_' + Date.now(),
+    content: input.content,
+    threadId: input.threadId,
+    authorId: input.authorId,
+    author: {
+      id: input.authorId,
+      firstName: 'User',
+      lastName: 'Name',
     },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      lesson: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-        },
-      },
-    },
-  });
+    createdAt: new Date(),
+  };
 }
