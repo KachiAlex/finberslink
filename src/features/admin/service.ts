@@ -39,6 +39,11 @@ export async function listAdminCourses() {
   return courses;
 }
 
+export async function listCourses() {
+  const { courses } = await FirestoreService.listCourses(1, 100);
+  return courses;
+}
+
 export async function createAdminCourse(input: {
   slug: string;
   title: string;
@@ -61,6 +66,18 @@ export async function createAdminCourse(input: {
     outcomes: [],
     skills: [],
   });
+}
+
+export async function createCourse(input: {
+  slug: string;
+  title: string;
+  tagline: string;
+  description: string;
+  category: string;
+  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  coverImage: string;
+}) {
+  return createAdminCourse(input);
 }
 
 export async function listStudents() {

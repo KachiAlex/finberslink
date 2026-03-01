@@ -168,29 +168,35 @@ export default async function AdminAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {analytics.courseCompletionStats.map((stat) => (
-                  <div
-                    key={stat.status}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-sm font-medium capitalize">
-                      {stat.status.toLowerCase()}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full"
-                          style={{
-                            width: `${(stat._count.status / analytics.overview.totalEnrollments) * 100}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium">
-                        {stat._count.status}
+                {analytics.courseCompletionStats && analytics.courseCompletionStats.length > 0 ? (
+                  analytics.courseCompletionStats.map((stat: any) => (
+                    <div
+                      key={stat.status}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-sm font-medium capitalize">
+                        {stat.status.toLowerCase()}
                       </span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full"
+                            style={{
+                              width: `${(stat._count?.status / analytics.overview.totalEnrollments) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium">
+                          {stat._count?.status || 0}
+                        </span>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    No completion data available
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -201,29 +207,35 @@ export default async function AdminAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {analytics.jobPlacementStats.map((stat) => (
-                  <div
-                    key={stat.status}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-sm font-medium capitalize">
-                      {stat.status.toLowerCase()}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-green-600 h-2 rounded-full"
-                          style={{
-                            width: `${(stat._count.status / analytics.overview.totalApplications) * 100}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium">
-                        {stat._count.status}
+                {analytics.jobPlacementStats && analytics.jobPlacementStats.length > 0 ? (
+                  analytics.jobPlacementStats.map((stat: any) => (
+                    <div
+                      key={stat.status}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-sm font-medium capitalize">
+                        {stat.status.toLowerCase()}
                       </span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-green-600 h-2 rounded-full"
+                            style={{
+                              width: `${(stat._count?.status / analytics.overview.totalApplications) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium">
+                          {stat._count?.status || 0}
+                        </span>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    No placement data available
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -236,35 +248,41 @@ export default async function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {analytics.recentUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-medium">
-                      {user.firstName[0]}
-                      {user.lastName[0]}
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm">
-                        {user.firstName} {user.lastName}
+              {analytics.recentUsers && analytics.recentUsers.length > 0 ? (
+                analytics.recentUsers.map((user: any) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-medium">
+                        {user.firstName[0]}
+                        {user.lastName[0]}
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {user.email}
+                      <div>
+                        <div className="font-medium text-sm">
+                          {user.firstName} {user.lastName}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {user.email}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="outline" className="text-xs">
+                        {user.role.replace("_", " ")}
+                      </Badge>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(user.createdAt).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Badge variant="outline" className="text-xs">
-                      {user.role.replace("_", " ")}
-                    </Badge>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  No recent user activity
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
