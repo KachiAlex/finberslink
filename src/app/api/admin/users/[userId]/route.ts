@@ -8,11 +8,11 @@ type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
 type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
 const UpdateUserRoleSchema = z.object({
-  role: z.nativeEnum(Role),
+  role: z.enum(['ADMIN', 'SUPER_ADMIN', 'STUDENT', 'TUTOR']),
 });
 
 const UpdateUserStatusSchema = z.object({
-  status: z.nativeEnum(UserStatus),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED']),
 });
 
 export async function GET(
