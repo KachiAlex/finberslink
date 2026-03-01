@@ -24,18 +24,18 @@ export default async function JobAnalyticsPage() {
 
   // Application status breakdown
   const statusBreakdown = {
-    SUBMITTED: allApplications.filter(a => a.status === "SUBMITTED").length,
-    REVIEWING: allApplications.filter(a => a.status === "REVIEWING").length,
-    INTERVIEW: allApplications.filter(a => a.status === "INTERVIEW").length,
-    OFFER: allApplications.filter(a => a.status === "OFFER").length,
-    REJECTED: allApplications.filter(a => a.status === "REJECTED").length,
+    SUBMITTED: allApplications.filter((a: any) => a.status === "SUBMITTED").length,
+    REVIEWING: allApplications.filter((a: any) => a.status === "REVIEWING").length,
+    INTERVIEW: allApplications.filter((a: any) => a.status === "INTERVIEW").length,
+    OFFER: allApplications.filter((a: any) => a.status === "OFFER").length,
+    REJECTED: allApplications.filter((a: any) => a.status === "REJECTED").length,
   };
 
   // Top jobs by applications
   const topJobs = jobs
-    .map(job => ({
+    .map((job: any) => ({
       ...job,
-      applicationCount: allApplications.filter(a => a.jobOpportunityId === job.id).length,
+      applicationCount: allApplications.filter((a: any) => a.jobOpportunityId === job.id).length,
     }))
     .sort((a, b) => b.applicationCount - a.applicationCount)
     .slice(0, 5);
