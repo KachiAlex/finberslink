@@ -3,6 +3,9 @@ import { revalidatePath } from "next/cache";
 type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
 type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
 
+const JobTypeValues = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP'] as const;
+const RemoteOptionValues = ['REMOTE', 'HYBRID', 'ONSITE'] as const;
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -131,9 +134,9 @@ export default async function AdminJobsPage() {
                     <select
                       name="jobType"
                       className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      defaultValue={JobType.FULL_TIME}
+                      defaultValue="FULL_TIME"
                     >
-                      {Object.values(JobType).map((option) => (
+                      {JobTypeValues.map((option) => (
                         <option key={option} value={option}>
                           {option.toLowerCase().replace("_", " ")}
                         </option>
@@ -145,9 +148,9 @@ export default async function AdminJobsPage() {
                     <select
                       name="remoteOption"
                       className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      defaultValue={RemoteOption.ONSITE}
+                      defaultValue="ONSITE"
                     >
-                      {Object.values(RemoteOption).map((option) => (
+                      {RemoteOptionValues.map((option) => (
                         <option key={option} value={option}>
                           {option.toLowerCase()}
                         </option>
