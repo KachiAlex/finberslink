@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import { prisma } from "@/lib/prisma";
+import * as FirestoreService from "@/lib/firestore-service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,49 +15,21 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const status = searchParams.get("status");
-    const skip = (page - 1) * limit;
 
-    const where: any = { userId: user.sub };
+    const { applications, total } = await FirestoreService.listApplicationsByUser(user.sub, page, limit);
+
+    let filtered = applications;
     if (status) {
-      where.status = status;
+      filtered = applications.filter(app => app.status === status);
     }
 
-    const [applications, total] = await Promise.all([
-      prisma.jobApplication.findMany({
-        where,
-        include: {
-          opportunity: {
-            select: {
-              id: true,
-              title: true,
-              company: true,
-              location: true,
-              jobType: true,
-              remoteOption: true,
-              salaryRange: true,
-            },
-          },
-          resume: {
-            select: {
-              id: true,
-              title: true,
-            },
-          },
-        },
-        orderBy: { submittedAt: "desc" },
-        skip,
-        take: limit,
-      }),
-      prisma.jobApplication.count({ where }),
-    ]);
-
     return NextResponse.json({
-      applications,
+      applications: filtered,
       pagination: {
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+        total: filtered.length,
+        totalPages: Math.ceil(filtered.length / limit),
       },
     });
   } catch (error) {
