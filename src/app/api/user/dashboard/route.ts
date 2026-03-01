@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import { prisma } from "@/lib/prisma";
+import * as FirestoreService from "@/lib/firestore-service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,39 +12,16 @@ export async function GET(request: NextRequest) {
 
     const user = verifyToken(accessToken);
 
-    const [totalApplications, applicationsByStatus, recentApplications, savedJobs] = await Promise.all([
-      prisma.jobApplication.count({ where: { userId: user.sub } }),
-      prisma.jobApplication.groupBy({
-        by: ["status"],
-        where: { userId: user.sub },
-        _count: true,
-      }),
-      prisma.jobApplication.findMany({
-        where: { userId: user.sub },
-        include: {
-          opportunity: {
-            select: {
-              id: true,
-              title: true,
-              company: true,
-              location: true,
-              jobType: true,
-            },
-          },
-        },
-        orderBy: { submittedAt: "desc" },
-        take: 5,
-      }),
-      prisma.resume.count({ where: { userId: user.sub } }),
-    ]);
+    const { applications, total } = await FirestoreService.listApplicationsByUser(user.sub, 1, 100);
 
-    const statusBreakdown = applicationsByStatus.reduce(
-      (acc, item) => {
-        acc[item.status] = item._count;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    // Calculate status breakdown
+    const statusBreakdown: Record<string, number> = {};
+    applications.forEach(app => {
+      statusBreakdown[app.status] = (statusBreakdown[app.status] || 0) + 1;
+    });
+
+    // Get recent applications (first 5)
+    const recentApplications = applications.slice(0, 5);
 
     return NextResponse.json({
       user: {
@@ -52,8 +29,8 @@ export async function GET(request: NextRequest) {
         role: user.role,
       },
       stats: {
-        totalApplications,
-        resumes: savedJobs,
+        totalApplications: total,
+        resumes: 0,
         statusBreakdown,
       },
       recentApplications,
