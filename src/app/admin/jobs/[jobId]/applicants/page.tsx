@@ -189,7 +189,7 @@ export default async function JobApplicantsPage({
                           <input type="hidden" name="applicationId" value={application.id} />
                           <div className="flex items-center gap-2 mb-2">
                             <StatusIcon className="w-4 h-4" />
-                            <Badge className={statusColors[application.status]}>
+                            <Badge className={statusColors[application.status as JobApplicationStatus]}>
                               {application.status.replace("_", " ")}
                             </Badge>
                           </div>
