@@ -96,11 +96,14 @@ export async function getCompanyJobs(companyId: string) {
     },
   });
 
-  return jobs.map(job => ({
-    ...job,
-    salaryRange: job.salaryRange || undefined,
-    createdAt: job.createdAt.toISOString(),
-  }));
+  return jobs
+    .filter(job => job.slug !== null)
+    .map(job => ({
+      ...job,
+      slug: job.slug!,
+      salaryRange: job.salaryRange || undefined,
+      createdAt: job.createdAt.toISOString(),
+    }));
 }
 
 export async function createCompany(data: {
