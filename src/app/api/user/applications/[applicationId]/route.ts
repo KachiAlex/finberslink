@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import { prisma } from "@/lib/prisma";
+import * as FirestoreService from "@/lib/firestore-service";
 
 export async function GET(
   request: NextRequest,
@@ -16,32 +16,7 @@ export async function GET(
     const user = verifyToken(accessToken);
     const { applicationId } = await params;
 
-    const application = await prisma.jobApplication.findUnique({
-      where: { id: applicationId },
-      include: {
-        opportunity: {
-          select: {
-            id: true,
-            title: true,
-            company: true,
-            location: true,
-            country: true,
-            jobType: true,
-            remoteOption: true,
-            salaryRange: true,
-            description: true,
-            requirements: true,
-          },
-        },
-        resume: {
-          select: {
-            id: true,
-            title: true,
-            summary: true,
-          },
-        },
-      },
-    });
+    const application = await FirestoreService.getApplicationById(applicationId);
 
     if (!application) {
       return NextResponse.json(
