@@ -164,7 +164,7 @@ export default async function AdminUsersPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {result.users.map((user) => (
+                  {result.users.map((user: any) => (
                     <tr key={user.id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div>
@@ -174,33 +174,33 @@ export default async function AdminUsersPage({
                           <div className="text-sm text-gray-500">
                             {user.email}
                           </div>
-                          {user.profile?.headline && (
+                          {(user as any).profile?.headline && (
                             <div className="text-xs text-gray-400 mt-1">
-                              {user.profile.headline}
+                              {(user as any).profile.headline}
                             </div>
                           )}
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <Badge className={roleColors[user.role]}>
+                        <Badge className={roleColors[user.role as keyof typeof roleColors]}>
                           {user.role.replace("_", " ")}
                         </Badge>
                       </td>
                       <td className="py-3 px-4">
-                        <Badge className={statusColors[user.status]}>
+                        <Badge className={statusColors[user.status as keyof typeof statusColors]}>
                           {user.status}
                         </Badge>
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm space-y-1">
                           <div>
-                            {user._count.enrollments} enrollments
+                            {(user as any)._count?.enrollments || 0} enrollments
                           </div>
                           <div>
-                            {user._count.jobApplications} applications
+                            {(user as any)._count?.jobApplications || 0} applications
                           </div>
                           <div>
-                            {user._count.forumThreads} threads
+                            {(user as any)._count?.forumThreads || 0} threads
                           </div>
                         </div>
                       </td>
