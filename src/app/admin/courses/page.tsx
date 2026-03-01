@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 
 type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 
+const CourseLevelValues = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const;
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -118,9 +120,9 @@ export default async function AdminCoursesPage() {
                     <select
                       name="level"
                       className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      defaultValue={CourseLevel.BEGINNER}
+                      defaultValue="BEGINNER"
                     >
-                      {Object.values(CourseLevel).map((option) => (
+                      {CourseLevelValues.map((option) => (
                         <option key={option} value={option}>
                           {option.toLowerCase()}
                         </option>
