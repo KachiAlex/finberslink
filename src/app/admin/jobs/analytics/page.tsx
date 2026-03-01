@@ -42,7 +42,7 @@ export default async function JobAnalyticsPage() {
 
   // Job type distribution
   const jobTypeDistribution = jobs.reduce(
-    (acc, job) => {
+    (acc: any, job: any) => {
       acc[job.jobType] = (acc[job.jobType] || 0) + 1;
       return acc;
     },
@@ -51,7 +51,7 @@ export default async function JobAnalyticsPage() {
 
   // Remote option distribution
   const remoteDistribution = jobs.reduce(
-    (acc, job) => {
+    (acc: any, job: any) => {
       acc[job.remoteOption] = (acc[job.remoteOption] || 0) + 1;
       return acc;
     },
@@ -177,10 +177,10 @@ export default async function JobAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {Object.entries(jobTypeDistribution).map(([type, count]) => (
+                {Object.entries(jobTypeDistribution).map(([type, count]: [string, any]) => (
                   <div key={type} className="flex items-center justify-between">
                     <Badge variant="outline">{type.replace("_", " ")}</Badge>
-                    <span className="font-semibold">{count}</span>
+                    <span className="font-semibold">{String(count)}</span>
                   </div>
                 ))}
               </div>
@@ -197,10 +197,10 @@ export default async function JobAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {Object.entries(remoteDistribution).map(([option, count]) => (
+                {Object.entries(remoteDistribution).map(([option, count]: [string, any]) => (
                   <div key={option} className="flex items-center justify-between">
                     <Badge variant="outline">{option}</Badge>
-                    <span className="font-semibold">{count}</span>
+                    <span className="font-semibold">{String(count)}</span>
                   </div>
                 ))}
               </div>
@@ -219,7 +219,7 @@ export default async function JobAnalyticsPage() {
           <CardContent>
             <div className="space-y-4">
               {topJobs.length > 0 ? (
-                topJobs.map((job, index) => (
+                topJobs.map((job: any, index: number) => (
                   <div key={job.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -253,7 +253,7 @@ export default async function JobAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {jobs.slice(0, 10).map((job) => (
+              {jobs.slice(0, 10).map((job: any) => (
                 <div key={job.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <h4 className="font-semibold text-sm">{job.title}</h4>
