@@ -188,31 +188,31 @@ export default async function AdminUserDetailPage({
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
-                  {user._count.enrollments}
+                  {(user as any)._count?.enrollments || 0}
                 </div>
                 <div className="text-sm text-gray-600">Enrollments</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {user._count.jobApplications}
+                  {(user as any)._count?.jobApplications || 0}
                 </div>
                 <div className="text-sm text-gray-600">Applications</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">
-                  {user._count.forumThreads}
+                  {(user as any)._count?.forumThreads || 0}
                 </div>
                 <div className="text-sm text-gray-600">Threads</div>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">
-                  {user._count.forumPosts}
+                  {(user as any)._count?.forumPosts || 0}
                 </div>
                 <div className="text-sm text-gray-600">Posts</div>
               </div>
               <div className="text-center p-4 bg-pink-50 rounded-lg">
                 <div className="text-2xl font-bold text-pink-600">
-                  {user._count.resumes}
+                  {(user as any)._count?.resumes || 0}
                 </div>
                 <div className="text-sm text-gray-600">Resumes</div>
               </div>
@@ -228,9 +228,9 @@ export default async function AdminUserDetailPage({
               <CardTitle>Recent Enrollments</CardTitle>
             </CardHeader>
             <CardContent>
-              {user.enrollments.length > 0 ? (
+              {(user as any).enrollments?.length > 0 ? (
                 <div className="space-y-3">
-                  {user.enrollments.map((enrollment) => (
+                  {(user as any).enrollments.map((enrollment: any) => (
                     <div
                       key={enrollment.id}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -265,9 +265,9 @@ export default async function AdminUserDetailPage({
               <CardTitle>Recent Applications</CardTitle>
             </CardHeader>
             <CardContent>
-              {user.jobApplications.length > 0 ? (
+              {(user as any).jobApplications?.length > 0 ? (
                 <div className="space-y-3">
-                  {user.jobApplications.map((application) => (
+                  {(user as any).jobApplications.map((application: any) => (
                     <div
                       key={application.id}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
