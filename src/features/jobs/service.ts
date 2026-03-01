@@ -1,5 +1,4 @@
 import * as FirestoreService from "@/lib/firestore-service";
-import { prisma } from "@/lib/prisma";
 
 export interface JobFilters {
   search?: string;

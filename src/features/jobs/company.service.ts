@@ -1,116 +1,26 @@
-import { prisma } from "@/lib/prisma";
+// Company service - Firestore implementation pending
+// Company model not yet migrated to Firestore
 
 export async function getCompanies(filters?: { search?: string; page?: number; limit?: number }) {
-  const { search, page = 1, limit = 20 } = filters || {};
-  const skip = (page - 1) * limit;
-
-  const where: any = search
-    ? {
-        OR: [
-          { name: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } },
-          { industry: { contains: search, mode: "insensitive" } },
-        ],
-      }
-    : {};
-
-  const [companies, total] = await Promise.all([
-    prisma.company.findMany({
-      where,
-      orderBy: {
-        createdAt: "desc",
-      },
-      skip,
-      take: limit,
-    }),
-    prisma.company.count({ where }),
-  ]);
-
-  // Manually count jobs for each company
-  const companiesWithCounts = await Promise.all(
-    companies.map(async (company) => ({
-      ...company,
-      _count: {
-        jobs: await prisma.jobOpportunity.count({
-          where: {
-            company: { equals: company.name, mode: "insensitive" },
-          },
-        }),
-      },
-    }))
-  );
+  const { page = 1, limit = 20 } = filters || {};
 
   return {
-    companies: companiesWithCounts,
+    companies: [],
     pagination: {
       page,
       limit,
-      total,
-      totalPages: Math.ceil(total / limit),
+      total: 0,
+      totalPages: 0,
     },
   };
 }
 
 export async function getCompanyBySlug(slug: string) {
-  const company = await prisma.company.findUnique({
-    where: { slug },
-  });
-
-  if (!company) {
-    return null;
-  }
-
-  const jobCount = await prisma.jobOpportunity.count({
-    where: {
-      company: { equals: company.name, mode: "insensitive" },
-    },
-  });
-
-  return {
-    ...company,
-    _count: {
-      jobs: jobCount,
-    },
-  };
+  return null;
 }
 
 export async function getCompanyJobs(companyId: string) {
-  const jobs = await prisma.jobOpportunity.findMany({
-    where: {
-      company: { equals: "", mode: "insensitive" }, // Will be updated when company FK is added
-      isActive: true,
-    },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      company: true,
-      country: true,
-      location: true,
-      jobType: true,
-      remoteOption: true,
-      salaryRange: true,
-      tags: true,
-      createdAt: true,
-      _count: {
-        select: {
-          applications: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  return jobs
-    .filter(job => job.slug !== null)
-    .map(job => ({
-      ...job,
-      slug: job.slug!,
-      salaryRange: job.salaryRange || undefined,
-      createdAt: job.createdAt.toISOString(),
-    }));
+  return [];
 }
 
 export async function createCompany(data: {
@@ -122,30 +32,7 @@ export async function createCompany(data: {
   location?: string;
   size?: string;
 }) {
-  const slug = data.name
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-
-  return prisma.company.create({
-    data: {
-      slug,
-      ...data,
-    },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      description: true,
-      logo: true,
-      website: true,
-      industry: true,
-      location: true,
-      size: true,
-      createdAt: true,
-    },
-  });
+  return null;
 }
 
 export async function updateCompany(
@@ -160,57 +47,17 @@ export async function updateCompany(
     size?: string;
   }
 ) {
-  return prisma.company.update({
-    where: { id: companyId },
-    data,
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      description: true,
-      logo: true,
-      website: true,
-      industry: true,
-      location: true,
-      size: true,
-      createdAt: true,
-    },
-  });
+  return null;
 }
 
 export async function deleteCompany(companyId: string) {
-  return prisma.company.delete({
-    where: { id: companyId },
-  });
+  return null;
 }
 
 export async function getCompanyStats(companyId: string) {
-  const [jobCount, applicationCount, totalViews] = await Promise.all([
-    prisma.jobOpportunity.count({
-      where: {
-        company: { equals: "", mode: "insensitive" }, // Will be updated when company FK is added
-      },
-    }),
-    prisma.jobApplication.count({
-      where: {
-        opportunity: {
-          company: { equals: "", mode: "insensitive" }, // Will be updated when company FK is added
-        },
-      },
-    }),
-    prisma.jobOpportunity.aggregate({
-      where: {
-        company: { equals: "", mode: "insensitive" }, // Will be updated when company FK is added
-      },
-      _sum: {
-        viewCount: true,
-      },
-    }),
-  ]);
-
   return {
-    jobCount,
-    applicationCount,
-    totalViews: totalViews._sum.viewCount || 0,
+    jobCount: 0,
+    applicationCount: 0,
+    totalViews: 0,
   };
 }
