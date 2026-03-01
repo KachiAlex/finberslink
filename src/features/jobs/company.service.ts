@@ -52,26 +52,26 @@ export async function getCompanies(filters?: { search?: string; page?: number; l
 }
 
 export async function getCompanyBySlug(slug: string) {
-  return prisma.company.findUnique({
+  const company = await prisma.company.findUnique({
     where: { slug },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      description: true,
-      logo: true,
-      website: true,
-      industry: true,
-      location: true,
-      size: true,
-      createdAt: true,
-      _count: {
-        select: {
-          jobs: true,
-        },
-      },
+  });
+
+  if (!company) {
+    return null;
+  }
+
+  const jobCount = await prisma.jobOpportunity.count({
+    where: {
+      company: { equals: company.name, mode: "insensitive" },
     },
   });
+
+  return {
+    ...company,
+    _count: {
+      jobs: jobCount,
+    },
+  };
 }
 
 export async function getCompanyJobs(companyId: string) {
