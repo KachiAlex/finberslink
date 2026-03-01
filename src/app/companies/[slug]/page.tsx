@@ -123,7 +123,7 @@ export default async function CompanyPage({
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Open Positions</h2>
           {jobs.length > 0 ? (
             <div className="space-y-4">
-              {jobs.map((job) => (
+              {jobs.map((job: any) => (
                 <JobCard key={job.id} job={job} />
               ))}
             </div>
