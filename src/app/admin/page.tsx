@@ -75,7 +75,7 @@ export default async function AdminOverviewPage() {
               {overview.recentCourses.length === 0 && (
                 <p className="text-sm text-slate-500">No courses yet. Create one to kickstart cohorts.</p>
               )}
-              {overview.recentCourses.map((course) => (
+              {overview.recentCourses.map((course: any) => (
                 <div
                   key={course.id}
                   className="flex items-center justify-between rounded-2xl border border-slate-100 px-4 py-3"
