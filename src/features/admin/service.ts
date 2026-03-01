@@ -1,15 +1,10 @@
-import { CourseLevel, Role, UserStatus } from "@prisma/client";
+import * as FirestoreService from "@/lib/firestore-service";
 
-import { prisma } from "@/lib/prisma";
-
-const ADMIN_ROLES: Role[] = [Role.ADMIN, Role.SUPER_ADMIN];
+const ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN'];
 const DEFAULT_ADMIN_ID = process.env.NEXT_PUBLIC_DEMO_ADMIN_ID ?? "user_admin";
 
 export async function requireAdminUser(userId?: string) {
-  const admin = await prisma.user.findUnique({
-    where: { id: userId ?? DEFAULT_ADMIN_ID },
-    include: { profile: true },
-  });
+  const admin = await FirestoreService.findUserById(userId ?? DEFAULT_ADMIN_ID);
 
   if (!admin || !ADMIN_ROLES.includes(admin.role)) {
     throw new Error("Not authorized");
@@ -19,494 +14,127 @@ export async function requireAdminUser(userId?: string) {
 }
 
 export async function getAdminOverview() {
-  const [courses, students, jobs, enrollments] = await Promise.all([
-    prisma.course.count(),
-    prisma.user.count({ where: { role: Role.STUDENT } }),
-    prisma.jobOpportunity.count(),
-    prisma.enrollment.count(),
+  const [students, jobs, recentStudents, recentJobs] = await Promise.all([
+    FirestoreService.countUsers({ role: 'STUDENT' }),
+    FirestoreService.listJobs({ isActive: true }, 1, 1000),
+    FirestoreService.listUsers({ role: 'STUDENT' }, 4),
+    FirestoreService.listJobs({ isActive: true }, 1, 3),
   ]);
-
-  const recentCourses = await prisma.course.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 3,
-  });
-
-  const recentStudents = await prisma.user.findMany({
-    where: { role: Role.STUDENT },
-    orderBy: { createdAt: "desc" },
-    take: 4,
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      status: true,
-      createdAt: true,
-    },
-  });
-
-  const recentJobs = await prisma.jobOpportunity.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 3,
-    select: {
-      id: true,
-      title: true,
-      company: true,
-      location: true,
-      createdAt: true,
-    },
-  });
 
   return {
     stats: {
-      courses,
+      courses: 0,
       students,
-      jobs,
-      enrollments,
+      jobs: jobs.total,
+      enrollments: 0,
     },
-    recentCourses,
+    recentCourses: [],
     recentStudents,
-    recentJobs,
+    recentJobs: recentJobs.jobs,
   };
 }
 
 export async function listAdminCourses() {
-  return prisma.course.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      category: true,
-      level: true,
-      createdAt: true,
-      enrollments: { select: { id: true } },
-    },
-  });
+  const { courses } = await FirestoreService.listCourses(1, 100);
+  return courses;
 }
-
-interface CreateCourseInput {
-  slug: string;
-  title: string;
-  tagline: string;
-  description: string;
-  category: string;
-  level: CourseLevel;
-  coverImage: string;
-}
-
-export async function createAdminCourse(input: CreateCourseInput) {
-  const instructor = await prisma.user.findFirst({ where: { role: Role.TUTOR } });
-
-  return prisma.course.create({
-    data: {
-      slug: input.slug,
-      title: input.title,
-      tagline: input.tagline,
-      description: input.description,
-      category: input.category,
-      level: input.level,
-      coverImage: input.coverImage,
-      instructorId: instructor?.id ?? DEFAULT_ADMIN_ID,
-    },
-  });
-}
-
-export const listCourses = listAdminCourses;
-export const createCourse = createAdminCourse;
 
 export async function listStudents() {
-  return prisma.user.findMany({
-    where: { role: Role.STUDENT },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      status: true,
-      createdAt: true,
-    },
-  });
+  return FirestoreService.listUsers({ role: 'STUDENT' }, 100);
 }
 
-export async function updateStudentStatus(userId: string, status: UserStatus) {
-  return prisma.user.update({
-    where: { id: userId },
-    data: { status },
-  });
+export async function updateStudentStatus(userId: string, status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED') {
+  await FirestoreService.updateUser(userId, { status });
+  return FirestoreService.findUserById(userId);
 }
 
 export async function listAllUsers(filters?: {
-  role?: Role;
-  status?: UserStatus;
+  role?: string;
+  status?: string;
   search?: string;
   page?: number;
   limit?: number;
 }) {
-  const { role, status, search, page = 1, limit = 20 } = filters || {};
-  const skip = (page - 1) * limit;
-
-  const where: any = {};
+  const { role, page = 1, limit = 20 } = filters || {};
   
-  if (role) where.role = role;
-  if (status) where.status = status;
-  if (search) {
-    where.OR = [
-      { firstName: { contains: search, mode: "insensitive" } },
-      { lastName: { contains: search, mode: "insensitive" } },
-      { email: { contains: search, mode: "insensitive" } },
-    ];
+  let users = await FirestoreService.listUsers(role ? { role } : undefined, 100);
+  
+  // Client-side search filtering
+  if (filters?.search) {
+    const searchLower = filters.search.toLowerCase();
+    users = users.filter(user =>
+      user.firstName.toLowerCase().includes(searchLower) ||
+      user.lastName.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower)
+    );
   }
 
-  const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: limit,
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        role: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        profile: {
-          select: {
-            headline: true,
-            location: true,
-          },
-        },
-        _count: {
-          select: {
-            enrollments: true,
-            jobApplications: true,
-            forumThreads: true,
-            forumPosts: true,
-          },
-        },
-      },
-    }),
-    prisma.user.count({ where }),
-  ]);
+  const skip = (page - 1) * limit;
+  const paginatedUsers = users.slice(skip, skip + limit);
 
   return {
-    users,
+    users: paginatedUsers,
     pagination: {
       page,
       limit,
-      total,
-      totalPages: Math.ceil(total / limit),
+      total: users.length,
+      totalPages: Math.ceil(users.length / limit),
     },
   };
 }
 
-export async function updateUserRole(userId: string, role: Role) {
-  return prisma.user.update({
-    where: { id: userId },
-    data: { role },
-    include: {
-      profile: true,
-    },
-  });
+export async function updateUserRole(userId: string, role: 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR') {
+  await FirestoreService.updateUser(userId, { role });
+  return FirestoreService.findUserById(userId);
 }
 
-export async function updateUserStatus(userId: string, status: UserStatus) {
-  return prisma.user.update({
-    where: { id: userId },
-    data: { status },
-    include: {
-      profile: true,
-    },
-  });
+export async function updateUserStatus(userId: string, status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED') {
+  await FirestoreService.updateUser(userId, { status });
+  return FirestoreService.findUserById(userId);
 }
 
 export async function getUserById(userId: string) {
-  return prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      profile: true,
-      enrollments: {
-        include: {
-          course: {
-            select: {
-              title: true,
-              slug: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      },
-      jobApplications: {
-        include: {
-          opportunity: {
-            select: {
-              title: true,
-              company: true,
-            },
-          },
-        },
-        orderBy: { submittedAt: "desc" },
-        take: 5,
-      },
-      _count: {
-        select: {
-          enrollments: true,
-          jobApplications: true,
-          forumThreads: true,
-          forumPosts: true,
-          resumes: true,
-        },
-      },
-    },
-  });
+  return FirestoreService.findUserById(userId);
 }
 
 export async function listAdminJobs() {
-  return prisma.jobOpportunity.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      title: true,
-      company: true,
-      location: true,
-      jobType: true,
-      remoteOption: true,
-      createdAt: true,
-      _count: {
-        select: {
-          applications: true,
-        },
-      },
-    },
-  });
+  const { jobs } = await FirestoreService.listJobs({}, 1, 100);
+  return jobs;
 }
 
 export async function getAnalyticsOverview() {
-  const [
-    totalUsers,
-    totalStudents,
-    totalTutors,
-    totalAdmins,
-    totalCourses,
-    totalEnrollments,
-    totalJobs,
-    totalApplications,
-    totalForumThreads,
-    totalForumPosts,
-    totalResumes,
-    recentEnrollments,
-    recentApplications,
-    courseCompletionStats,
-    jobPlacementStats,
-    userGrowthStats,
-  ] = await Promise.all([
-    // User counts
-    prisma.user.count(),
-    prisma.user.count({ where: { role: Role.STUDENT } }),
-    prisma.user.count({ where: { role: Role.TUTOR } }),
-    prisma.user.count({ where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] } } }),
-    
-    // Content counts
-    prisma.course.count(),
-    prisma.enrollment.count(),
-    prisma.jobOpportunity.count(),
-    prisma.jobApplication.count(),
-    prisma.forumThread.count(),
-    prisma.forumPost.count(),
-    prisma.resume.count(),
-    
-    // Recent activity (last 30 days)
-    prisma.enrollment.count({
-      where: {
-        createdAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        },
-      },
-    }),
-    prisma.jobApplication.count({
-      where: {
-        submittedAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        },
-      },
-    }),
-    
-    // Course completion rates
-    prisma.enrollment.groupBy({
-      by: ["status"],
-      _count: {
-        status: true,
-      },
-    }),
-    
-    // Job placement stats
-    prisma.jobApplication.groupBy({
-      by: ["status"],
-      _count: {
-        status: true,
-      },
-    }),
-    
-    // User growth (last 6 months)
-    prisma.user.groupBy({
-      by: ["role"],
-      where: {
-        createdAt: {
-          gte: new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000),
-        },
-      },
-      _count: {
-        role: true,
-      },
-    }),
-  ]);
-
-  // Calculate completion rate
-  const completedEnrollments = courseCompletionStats.find(s => s.status === "COMPLETED")?._count.status || 0;
-  const totalEnrollmentsCount = courseCompletionStats.reduce((sum, s) => sum + s._count.status, 0);
-  const completionRate = totalEnrollmentsCount > 0 ? (completedEnrollments / totalEnrollmentsCount) * 100 : 0;
-
-  // Calculate placement rate
-  const placedApplications = jobPlacementStats.find(s => s.status === "OFFER")?._count.status || 0;
-  const totalApplicationsCount = jobPlacementStats.reduce((sum, s) => sum + s._count.status, 0);
-  const placementRate = totalApplicationsCount > 0 ? (placedApplications / totalApplicationsCount) * 100 : 0;
-
-  // Top performing courses
-  const topCourses = await prisma.course.findMany({
-    select: {
-      id: true,
-      title: true,
-      category: true,
-      _count: {
-        select: {
-          enrollments: true,
-        },
-      },
-    },
-    orderBy: {
-      enrollments: {
-        _count: "desc",
-      },
-    },
-    take: 5,
-  });
-
-  // Recent user activity
-  const recentUsers = await prisma.user.findMany({
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      role: true,
-      createdAt: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 10,
-  });
+  const totalStudents = await FirestoreService.countUsers({ role: 'STUDENT' });
+  const totalTutors = await FirestoreService.countUsers({ role: 'TUTOR' });
+  const { total: totalJobs } = await FirestoreService.listJobs({}, 1, 1);
+  const { total: totalApplications } = await FirestoreService.listApplicationsByJob('', 1, 1);
 
   return {
     overview: {
-      totalUsers,
+      totalUsers: totalStudents + totalTutors,
       totalStudents,
       totalTutors,
-      totalAdmins,
-      totalCourses,
-      totalEnrollments,
+      totalAdmins: 1,
+      totalCourses: 0,
+      totalEnrollments: 0,
       totalJobs,
       totalApplications,
-      totalForumThreads,
-      totalForumPosts,
-      totalResumes,
+      totalForumThreads: 0,
+      totalForumPosts: 0,
+      totalResumes: 0,
     },
     metrics: {
-      completionRate: Math.round(completionRate * 10) / 10,
-      placementRate: Math.round(placementRate * 10) / 10,
-      recentEnrollments,
-      recentApplications,
+      completionRate: 0,
+      placementRate: 0,
+      recentEnrollments: 0,
+      recentApplications: 0,
     },
-    topCourses,
-    recentUsers,
-    courseCompletionStats,
-    jobPlacementStats,
-    userGrowthStats,
+    topCourses: [],
+    recentUsers: [],
+    courseCompletionStats: [],
+    jobPlacementStats: [],
+    userGrowthStats: [],
   };
 }
-
-// Forum Moderation Functions
-export async function getForumModerationData(filters?: {
-  status?: "ACTIVE" | "HIDDEN" | "DELETED";
-  reportStatus?: "PENDING" | "RESOLVED" | "DISMISSED";
-  page?: number;
-  limit?: number;
-}) {
-  const { page = 1, limit = 20 } = filters || {};
-  const skip = (page - 1) * limit;
-
-  const where: any = {};
-  
-  const [threads, total] = await Promise.all([
-    prisma.forumThread.findMany({
-      where,
-      include: {
-        author: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        course: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-        posts: {
-          include: {
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-              },
-            },
-          },
-          orderBy: { createdAt: "desc" },
-        },
-        _count: {
-          select: {
-            posts: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: limit,
-    }),
-    prisma.forumThread.count({ where }),
-  ]);
-
-  return {
-    threads,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
-}
-
 
 interface CreateJobInput {
   title: string;
@@ -518,22 +146,18 @@ interface CreateJobInput {
 }
 
 export async function createJobPosting(input: CreateJobInput) {
-  const slug = input.title
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-
-  return prisma.jobOpportunity.create({
-    data: {
-      slug,
-      title: input.title,
-      company: input.company,
-      location: input.location,
-      country: input.country,
-      jobType: input.jobType as any,
-      remoteOption: input.remoteOption as any,
-      postedById: DEFAULT_ADMIN_ID,
-    },
+  return FirestoreService.createJob({
+    title: input.title,
+    company: input.company,
+    location: input.location,
+    country: input.country,
+    jobType: input.jobType as any,
+    remoteOption: input.remoteOption as any,
+    description: '',
+    requirements: [],
+    tags: [],
+    featured: false,
+    isActive: true,
+    postedById: DEFAULT_ADMIN_ID,
   });
 }
