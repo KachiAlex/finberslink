@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/prisma";
-import { JobType } from "@prisma/client";
+// Job alerts service - Firestore implementation pending
+
+type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
 
 export interface JobAlertData {
   userId: string;
@@ -8,7 +9,7 @@ export interface JobAlertData {
   jobType?: JobType;
 }
 
-// TODO: Implement once JobAlert model is migrated to database
+// TODO: Implement once JobAlert model is migrated to Firestore
 export async function createJobAlert(data: JobAlertData) {
   // Placeholder - will be implemented after migration
   console.log("Creating job alert:", data);
@@ -41,41 +42,9 @@ export async function findMatchingJobs(alert: {
   location?: string;
   jobType?: JobType;
 }) {
-  const where: any = {
-    isActive: true,
-  };
-
-  if (alert.keywords && alert.keywords.length > 0) {
-    where.OR = [
-      { title: { contains: alert.keywords[0], mode: "insensitive" } },
-      { description: { contains: alert.keywords[0], mode: "insensitive" } },
-      { tags: { hasSome: alert.keywords } },
-    ];
-  }
-
-  if (alert.location) {
-    where.location = { contains: alert.location, mode: "insensitive" };
-  }
-
-  if (alert.jobType) {
-    where.jobType = alert.jobType;
-  }
-
-  return prisma.jobOpportunity.findMany({
-    where,
-    select: {
-      id: true,
-      title: true,
-      company: true,
-      location: true,
-      jobType: true,
-      remoteOption: true,
-      salaryRange: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "desc" },
-    take: 10,
-  });
+  // Placeholder - will be implemented after migration
+  console.log("Finding matching jobs for alert:", alert);
+  return [];
 }
 
 export async function processJobAlerts() {
