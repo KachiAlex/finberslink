@@ -143,27 +143,27 @@ export default async function CompanyPage({
         {/* Company Info Card */}
         <Card className="mt-8">
           <CardHeader>
-            <CardTitle>About {company.name}</CardTitle>
+            <CardTitle>About {(company as any).name}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {company.description && (
+              {(company as any).description && (
                 <div>
                   <h4 className="font-semibold mb-2">Description</h4>
-                  <p className="text-gray-700">{company.description}</p>
+                  <p className="text-gray-700">{(company as any).description}</p>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                {company.industry && (
+                {(company as any).industry && (
                   <div>
                     <h4 className="font-semibold text-sm text-gray-600">Industry</h4>
-                    <p className="text-gray-900">{company.industry}</p>
+                    <p className="text-gray-900">{(company as any).industry}</p>
                   </div>
                 )}
-                {company.location && (
+                {(company as any).location && (
                   <div>
                     <h4 className="font-semibold text-sm text-gray-600">Location</h4>
-                    <p className="text-gray-900">{company.location}</p>
+                    <p className="text-gray-900">{(company as any).location}</p>
                   </div>
                 )}
               </div>
