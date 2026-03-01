@@ -1,5 +1,6 @@
-import { NewsStatus } from "@prisma/client";
 import { z } from "zod";
+
+import { NEWS_STATUSES, type NewsStatus } from "./constants";
 
 export const CreateNewsSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -13,7 +14,7 @@ export const UpdateNewsSchema = z.object({
   content: z.string().min(1, "Content is required").optional(),
   summary: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  status: z.nativeEnum(NewsStatus).optional(),
+  status: z.enum(NEWS_STATUSES).optional(),
 });
 
 export type CreateNewsInput = z.infer<typeof CreateNewsSchema>;

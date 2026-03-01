@@ -1,6 +1,5 @@
-import { NewsStatus } from "@prisma/client";
-
 import { prisma } from "@/lib/prisma";
+import { NEWS_STATUSES } from "./constants";
 
 export async function createNewsPost(input: {
   title: string;
@@ -15,7 +14,7 @@ export async function createNewsPost(input: {
       content: input.content,
       summary: input.summary,
       tags: input.tags || [],
-      status: NewsStatus.DRAFT,
+      status: "DRAFT",
       authorId: input.authorId,
     },
   });
@@ -39,7 +38,7 @@ export async function listNewsPosts(limit = 20) {
 
 export async function listPublishedNewsPosts(limit = 20) {
   return prisma.news.findMany({
-    where: { status: NewsStatus.PUBLISHED },
+    where: { status: "PUBLISHED" },
     include: {
       author: {
         select: {
@@ -74,7 +73,7 @@ export async function updateNewsPost(id: string, input: {
   content?: string;
   summary?: string;
   tags?: string[];
-  status?: NewsStatus;
+  status?: (typeof NEWS_STATUSES)[number];
 }) {
   return prisma.news.update({
     where: { id },

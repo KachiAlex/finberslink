@@ -1,5 +1,4 @@
 import { revalidatePath } from "next/cache";
-import { NewsStatus } from "@prisma/client";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createNewsPost, listNewsPosts, updateNewsPost } from "@/features/news/service";
 import { CreateNewsSchema } from "@/features/news/schemas";
+import { NEWS_STATUSES, type NewsStatus } from "@/features/news/constants";
 import { requireAdminUser } from "@/features/admin/service";
 import { AdminShell } from "../_components/admin-shell";
 
@@ -79,7 +79,7 @@ export default async function AdminNewsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {posts.map((post) => (
+                    {posts.map((post: any) => (
                       <tr key={post.id} className="text-slate-700">
                         <td className="py-3 font-semibold">{post.title}</td>
                         <td>
@@ -104,7 +104,7 @@ export default async function AdminNewsPage() {
                               defaultValue={post.status}
                               className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
                             >
-                              {Object.values(NewsStatus).map((option) => (
+                              {NEWS_STATUSES.map((option) => (
                                 <option key={option} value={option}>
                                   {option.toLowerCase()}
                                 </option>
