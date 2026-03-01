@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { JobType, RemoteOption } from "@prisma/client";
+
+type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
+type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
 
 interface JobFiltersProps {
   currentFilters: {
@@ -24,8 +26,8 @@ interface JobFiltersProps {
   popularCompanies: Array<{ name: string; jobCount: number }>;
 }
 
-const jobTypes = Object.values(JobType);
-const remoteOptions = Object.values(RemoteOption);
+const jobTypes: JobType[] = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP'];
+const remoteOptions: RemoteOption[] = ['REMOTE', 'HYBRID', 'ONSITE'];
 
 export function JobFilters({ currentFilters, availableTags, popularCompanies }: JobFiltersProps) {
   const [expandedSections, setExpandedSections] = useState({
