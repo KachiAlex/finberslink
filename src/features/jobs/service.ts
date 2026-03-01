@@ -152,7 +152,7 @@ export async function incrementJobViewCount(jobId: string) {
 }
 
 export async function getFeaturedJobs(limit = 5) {
-  return prisma.jobOpportunity.findMany({
+  const jobs = await prisma.jobOpportunity.findMany({
     where: {
       isActive: true,
     },
@@ -173,8 +173,17 @@ export async function getFeaturedJobs(limit = 5) {
     orderBy: {
       createdAt: "desc",
     },
-    take: limit,
+    take: limit * 2,
   });
+
+  return jobs
+    .filter(job => job.slug !== null)
+    .slice(0, limit)
+    .map(job => ({
+      ...job,
+      slug: job.slug!,
+      createdAt: job.createdAt.toISOString(),
+    }));
 }
 
 export async function getRecentJobs(limit = 10) {
