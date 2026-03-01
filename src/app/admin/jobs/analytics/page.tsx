@@ -37,7 +37,7 @@ export default async function JobAnalyticsPage() {
       ...job,
       applicationCount: allApplications.filter((a: any) => a.jobOpportunityId === job.id).length,
     }))
-    .sort((a, b) => b.applicationCount - a.applicationCount)
+    .sort((a: any, b: any) => b.applicationCount - a.applicationCount)
     .slice(0, 5);
 
   // Job type distribution
