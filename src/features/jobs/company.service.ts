@@ -17,13 +17,6 @@ export async function getCompanies(filters?: { search?: string; page?: number; l
   const [companies, total] = await Promise.all([
     prisma.company.findMany({
       where,
-      include: {
-        _count: {
-          select: {
-            jobs: true,
-          },
-        },
-      },
       orderBy: {
         createdAt: "desc",
       },
@@ -33,8 +26,22 @@ export async function getCompanies(filters?: { search?: string; page?: number; l
     prisma.company.count({ where }),
   ]);
 
+  // Manually count jobs for each company
+  const companiesWithCounts = await Promise.all(
+    companies.map(async (company) => ({
+      ...company,
+      _count: {
+        jobs: await prisma.jobOpportunity.count({
+          where: {
+            company: { equals: company.name, mode: "insensitive" },
+          },
+        }),
+      },
+    }))
+  );
+
   return {
-    companies,
+    companies: companiesWithCounts,
     pagination: {
       page,
       limit,
