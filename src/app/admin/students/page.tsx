@@ -2,6 +2,8 @@ import { revalidatePath } from "next/cache";
 
 type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
+const UserStatusValues = ['ACTIVE', 'INACTIVE', 'SUSPENDED'] as const;
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,7 +86,7 @@ export default async function AdminStudentsPage() {
                             defaultValue={student.status}
                             className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
                           >
-                            {Object.values(UserStatus).map((option) => (
+                            {UserStatusValues.map((option) => (
                               <option key={option} value={option}>
                                 {option.toLowerCase()}
                               </option>
