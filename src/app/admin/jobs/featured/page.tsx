@@ -31,7 +31,7 @@ export default async function FeaturedJobsPage() {
   const { jobs } = await getJobs({ limit: 1000 });
 
   // TODO: Filter featured jobs once field is available in schema
-  const featuredJobs = [];
+  const featuredJobs: typeof jobs = [];
   const availableJobs = jobs;
 
   return (

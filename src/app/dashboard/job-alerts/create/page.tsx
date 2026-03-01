@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -19,16 +18,15 @@ async function createJobAlertAction(formData: FormData) {
   const jobType = String(formData.get("jobType") ?? "").trim();
 
   if (keywords.length === 0) {
-    return { error: "Please enter at least one keyword" };
+    console.error("No keywords provided");
+    return;
   }
 
   try {
     // TODO: Create job alert once migration is complete
     console.log("Creating job alert:", { keywords, location, jobType });
-    return { success: true };
   } catch (error) {
     console.error("Error creating job alert:", error);
-    return { error: "Failed to create job alert" };
   }
 }
 
@@ -90,33 +88,32 @@ export default function CreateJobAlertPage() {
             {/* Job Type */}
             <div>
               <Label htmlFor="jobType">Job Type (Optional)</Label>
-              <Select name="jobType">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select job type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
-                  <SelectItem value="FULL_TIME">Full Time</SelectItem>
-                  <SelectItem value="PART_TIME">Part Time</SelectItem>
-                  <SelectItem value="CONTRACT">Contract</SelectItem>
-                  <SelectItem value="INTERNSHIP">Internship</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                id="jobType"
+                name="jobType"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Types</option>
+                <option value="FULL_TIME">Full Time</option>
+                <option value="PART_TIME">Part Time</option>
+                <option value="CONTRACT">Contract</option>
+                <option value="INTERNSHIP">Internship</option>
+              </select>
             </div>
 
             {/* Frequency */}
             <div>
               <Label htmlFor="frequency">Notification Frequency</Label>
-              <Select defaultValue="daily">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="immediately">Immediately</SelectItem>
-                  <SelectItem value="daily">Daily Digest</SelectItem>
-                  <SelectItem value="weekly">Weekly Digest</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                id="frequency"
+                name="frequency"
+                defaultValue="daily"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="immediately">Immediately</option>
+                <option value="daily">Daily Digest</option>
+                <option value="weekly">Weekly Digest</option>
+              </select>
               <p className="text-xs text-gray-500 mt-1">
                 How often you want to receive notifications
               </p>

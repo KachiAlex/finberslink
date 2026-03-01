@@ -77,7 +77,7 @@ export async function getCompanyBySlug(slug: string) {
 }
 
 export async function getCompanyJobs(companyId: string) {
-  return prisma.jobOpportunity.findMany({
+  const jobs = await prisma.jobOpportunity.findMany({
     where: {
       company: { equals: "", mode: "insensitive" }, // Will be updated when company FK is added
       isActive: true,
@@ -104,6 +104,12 @@ export async function getCompanyJobs(companyId: string) {
       createdAt: "desc",
     },
   });
+
+  return jobs.map(job => ({
+    ...job,
+    salaryRange: job.salaryRange || undefined,
+    createdAt: job.createdAt.toISOString(),
+  }));
 }
 
 export async function createCompany(data: {
