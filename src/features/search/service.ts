@@ -131,7 +131,7 @@ export async function searchAll(query: string, limit = 10): Promise<SearchResult
       type: "news" as const,
       id: article.id,
       title: article.title,
-      description: article.summary,
+      description: article.summary || undefined,
       url: `/news/${article.slug}`,
       metadata: { publishedAt: article.publishedAt },
     })),

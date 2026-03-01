@@ -447,23 +447,11 @@ export async function getForumModerationData(filters?: {
   page?: number;
   limit?: number;
 }) {
-  const { status, reportStatus, page = 1, limit = 20 } = filters || {};
+  const { page = 1, limit = 20 } = filters || {};
   const skip = (page - 1) * limit;
 
   const where: any = {};
   
-  if (status) {
-    where.status = status;
-  }
-  
-  if (reportStatus) {
-    where.reports = {
-      some: {
-        status: reportStatus,
-      },
-    };
-  }
-
   const [threads, total] = await Promise.all([
     prisma.forumThread.findMany({
       where,
@@ -492,28 +480,12 @@ export async function getForumModerationData(filters?: {
                 email: true,
               },
             },
-            reports: {
-              where: reportStatus ? { status: reportStatus } : undefined,
-            },
           },
           orderBy: { createdAt: "desc" },
-        },
-        reports: {
-          where: reportStatus ? { status: reportStatus } : undefined,
-          include: {
-            reportedBy: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
         },
         _count: {
           select: {
             posts: true,
-            reports: true,
           },
         },
       },
@@ -535,188 +507,6 @@ export async function getForumModerationData(filters?: {
   };
 }
 
-export async function hideForumThread(threadId: string, reason: string) {
-  return prisma.forumThread.update({
-    where: { id: threadId },
-    data: {
-      status: "HIDDEN",
-      moderationNote: reason,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-    },
-  });
-}
-
-export async function deleteForumThread(threadId: string, reason: string) {
-  return prisma.forumThread.update({
-    where: { id: threadId },
-    data: {
-      status: "DELETED",
-      moderationNote: reason,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-    },
-  });
-}
-
-export async function restoreForumThread(threadId: string) {
-  return prisma.forumThread.update({
-    where: { id: threadId },
-    data: {
-      status: "ACTIVE",
-      moderationNote: null,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-    },
-  });
-}
-
-export async function hideForumPost(postId: string, reason: string) {
-  return prisma.forumPost.update({
-    where: { id: postId },
-    data: {
-      status: "HIDDEN",
-      moderationNote: reason,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-      thread: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
-    },
-  });
-}
-
-export async function deleteForumPost(postId: string, reason: string) {
-  return prisma.forumPost.update({
-    where: { id: postId },
-    data: {
-      status: "DELETED",
-      moderationNote: reason,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-      thread: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
-    },
-  });
-}
-
-export async function restoreForumPost(postId: string) {
-  return prisma.forumPost.update({
-    where: { id: postId },
-    data: {
-      status: "ACTIVE",
-      moderationNote: null,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-      thread: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
-    },
-  });
-}
-
-export async function getModerationStats() {
-  const [
-    totalThreads,
-    activeThreads,
-    hiddenThreads,
-    deletedThreads,
-    totalPosts,
-    activePosts,
-    hiddenPosts,
-    deletedPosts,
-    pendingReports,
-    resolvedReports,
-  ] = await Promise.all([
-    prisma.forumThread.count(),
-    prisma.forumThread.count({ where: { status: "ACTIVE" } }),
-    prisma.forumThread.count({ where: { status: "HIDDEN" } }),
-    prisma.forumThread.count({ where: { status: "DELETED" } }),
-    prisma.forumPost.count(),
-    prisma.forumPost.count({ where: { status: "ACTIVE" } }),
-    prisma.forumPost.count({ where: { status: "HIDDEN" } }),
-    prisma.forumPost.count({ where: { status: "DELETED" } }),
-    prisma.report.count({ where: { status: "PENDING" } }),
-    prisma.report.count({ where: { status: "RESOLVED" } }),
-  ]);
-
-  return {
-    threads: {
-      total: totalThreads,
-      active: activeThreads,
-      hidden: hiddenThreads,
-      deleted: deletedThreads,
-    },
-    posts: {
-      total: totalPosts,
-      active: activePosts,
-      hidden: hiddenPosts,
-      deleted: deletedPosts,
-    },
-    reports: {
-      pending: pendingReports,
-      resolved: resolvedReports,
-    },
-  };
-}
 
 interface CreateJobInput {
   title: string;
@@ -728,8 +518,15 @@ interface CreateJobInput {
 }
 
 export async function createJobPosting(input: CreateJobInput) {
+  const slug = input.title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+
   return prisma.jobOpportunity.create({
     data: {
+      slug,
       title: input.title,
       company: input.company,
       location: input.location,

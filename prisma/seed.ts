@@ -395,6 +395,7 @@ async function seedOpportunities(employerId: string, studentId: string, resumeId
     },
     create: {
       id: "job_service_designer",
+      slug: "service-designer-youth-employability",
       title: "Service Designer, Youth Employability",
       company: "Equinox Impact",
       location: "Hybrid — Nairobi / Remote",

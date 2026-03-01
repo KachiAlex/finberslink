@@ -26,7 +26,7 @@ export default async function NewsPage() {
           </Card>
         ) : (
           <div className="space-y-6">
-            {posts.map((post) => (
+            {posts.map((post: any) => (
               <Card key={post.id} className="border border-slate-200/70 bg-white/95">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -46,7 +46,7 @@ export default async function NewsPage() {
                   )}
                   {post.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-4">
-                      {post.tags.map((tag) => (
+                      {post.tags.map((tag: string) => (
                         <Badge key={tag} variant="secondary" className="text-xs">
                           {tag}
                         </Badge>

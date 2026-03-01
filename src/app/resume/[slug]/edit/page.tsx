@@ -6,6 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { AIButton } from "@/components/ai/ai-button";
+import { BulletSuggestions } from "@/components/ai/bullet-suggestions";
+import { SkillAnalysis } from "@/components/ai/skill-analysis";
 import { getResumeBySlug } from "@/features/resume/service";
 
 async function updateResumeAction(formData: FormData) {
@@ -23,6 +27,132 @@ async function updateResumeAction(formData: FormData) {
   // await updateResume(slug, { title, summary });
 
   revalidatePath(`/resume/${slug}/edit`);
+}
+
+async function optimizeSummaryAction(formData: FormData) {
+  "use server";
+
+  const slug = String(formData.get("slug") ?? "").trim();
+  const summary = String(formData.get("summary") ?? "").trim();
+
+  if (!slug) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/ai/optimize-summary`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': `access_token=${formData.get('accessToken')}`,
+      },
+      body: JSON.stringify({
+        currentSummary: summary,
+        experience: [], // TODO: Get from resume
+        skills: [], // TODO: Get from resume
+        targetRole: 'Professional',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to optimize summary');
+    }
+
+    const data = await response.json();
+    
+    // TODO: Update resume with optimized summary
+    console.log('Optimized summary:', data.optimizedSummary);
+    
+    return { success: true, optimizedSummary: data.optimizedSummary };
+  } catch (error) {
+    console.error('Error optimizing summary:', error);
+    return { success: false, error: 'Failed to optimize summary' };
+  }
+}
+
+async function generateBulletsAction(formData: FormData) {
+  "use server";
+
+  const company = String(formData.get("company") ?? "").trim();
+  const role = String(formData.get("role") ?? "").trim();
+  const duration = String(formData.get("duration") ?? "").trim();
+  const rawDescription = String(formData.get("rawDescription") ?? "").trim();
+
+  if (!company || !role || !duration) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/ai/generate-bullets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': `access_token=${formData.get('accessToken')}`,
+      },
+      body: JSON.stringify({
+        company,
+        role,
+        duration,
+        rawDescription,
+        targetRole: 'Professional',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate bullet points');
+    }
+
+    const data = await response.json();
+    
+    // TODO: Update resume with generated bullets
+    console.log('Generated bullets:', data.bulletPoints);
+    
+    return { success: true, bulletPoints: data.bulletPoints };
+  } catch (error) {
+    console.error('Error generating bullets:', error);
+    return { success: false, error: 'Failed to generate bullet points' };
+  }
+}
+
+async function analyzeSkillsAction(formData: FormData) {
+  "use server";
+
+  const experience = String(formData.get("experience") ?? "").trim();
+  const targetRole = String(formData.get("targetRole") ?? "").trim();
+  const jobDescription = String(formData.get("jobDescription") ?? "").trim();
+
+  if (!experience) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/ai/analyze-skills`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': `access_token=${formData.get('accessToken')}`,
+      },
+      body: JSON.stringify({
+        experience: experience.split('\n').filter(exp => exp.trim()),
+        targetRole: targetRole || undefined,
+        jobDescription: jobDescription || undefined,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to analyze skills');
+    }
+
+    const data = await response.json();
+    
+    // TODO: Update resume with skill analysis
+    console.log('Skill analysis:', data);
+    
+    return { success: true, analysis: data };
+  } catch (error) {
+    console.error('Error analyzing skills:', error);
+    return { success: false, error: 'Failed to analyze skills' };
+  }
 }
 
 export default async function ResumeEditPage({
@@ -77,9 +207,13 @@ export default async function ResumeEditPage({
               <Button variant="outline" className="w-full">
                 Add Project
               </Button>
-              <Button variant="outline" className="w-full">
+              <AIButton 
+                variant="outline" 
+                className="w-full"
+                formAction={optimizeSummaryAction}
+              >
                 AI Optimize Summary
-              </Button>
+              </AIButton>
               <Button variant="outline" className="w-full">
                 Preview Public View
               </Button>
@@ -90,30 +224,168 @@ export default async function ResumeEditPage({
         <Card className="border border-slate-200/70 bg-white/95">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-slate-900">Experience</CardTitle>
-            <CardDescription>Your work history</CardDescription>
+            <CardDescription>Add your work experience with AI assistance.</CardDescription>
           </CardHeader>
           <CardContent>
-            {resume.experiences.length === 0 ? (
-              <p className="text-sm text-slate-500">No experience added yet.</p>
-            ) : (
+            {resume.experiences.length > 0 ? (
               <div className="space-y-4">
-                {resume.experiences.map((exp) => (
-                  <div key={exp.id} className="border-l-2 border-slate-200 pl-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-slate-900">{exp.role}</h4>
-                      <span className="text-sm text-slate-500">
-                        {exp.startDate.toLocaleDateString()} –{" "}
-                        {exp.endDate?.toLocaleDateString() || "Present"}
-                      </span>
+                {resume.experiences.map((experience) => (
+                  <div key={experience.id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-semibold">{experience.role}</h4>
+                        <p className="text-sm text-slate-600">{experience.company}</p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(experience.startDate).toLocaleDateString()} - {experience.endDate ? new Date(experience.endDate).toLocaleDateString() : "Present"}
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Edit
+                      </Button>
                     </div>
-                    <p className="text-sm text-slate-600">{exp.company}</p>
-                    {exp.description && (
-                      <p className="text-sm text-slate-600 mt-1">{exp.description}</p>
-                    )}
+                    <ul className="text-sm text-slate-700 space-y-1">
+                      {experience.achievements.map((achievement, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-blue-500 mr-2">•</span>
+                          {achievement}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-3 pt-3 border-t">
+                      <AIButton
+                        variant="outline"
+                        size="sm"
+                        formAction={generateBulletsAction}
+                      >
+                        AI Generate Better Bullets
+                      </AIButton>
+                    </div>
                   </div>
                 ))}
               </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-slate-500 mb-4">No work experience added yet.</p>
+                <Button>Add Experience</Button>
+              </div>
             )}
+            
+            {/* Add Experience Form */}
+            <div className="mt-6 pt-6 border-t">
+              <h4 className="font-semibold mb-4">Add New Experience</h4>
+              <form className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="company">Company</Label>
+                    <Input id="company" name="company" placeholder="Company name" />
+                  </div>
+                  <div>
+                    <Label htmlFor="role">Role</Label>
+                    <Input id="role" name="role" placeholder="Job title" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="startDate">Start Date</Label>
+                    <Input id="startDate" name="startDate" type="month" />
+                  </div>
+                  <div>
+                    <Label htmlFor="endDate">End Date</Label>
+                    <Input id="endDate" name="endDate" type="month" placeholder="Present" />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="rawDescription">Job Description (optional)</Label>
+                  <Textarea
+                    id="rawDescription"
+                    name="rawDescription"
+                    placeholder="Describe your responsibilities and achievements..."
+                    rows={3}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit">Add Experience</Button>
+                  <AIButton
+                    variant="outline"
+                    onClick={() => {
+                      // TODO: Generate bullets from form data
+                      console.log('Generate bullets from form');
+                    }}
+                  >
+                    AI Generate Bullets First
+                  </AIButton>
+                </div>
+              </form>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-200/70 bg-white/95">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-slate-900">Skills</CardTitle>
+            <CardDescription>Manage your technical and soft skills with AI assistance.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Current Skills */}
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-2 mb-4">
+                {resume.skills.map((skill) => (
+                  <Badge key={skill} variant="secondary">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+              <AIButton
+                variant="outline"
+                size="sm"
+                formAction={analyzeSkillsAction}
+              >
+                AI Analyze & Suggest Skills
+              </AIButton>
+            </div>
+
+            {/* AI Skill Analysis Form */}
+            <div className="border-t pt-4">
+              <h4 className="font-semibold mb-3">AI Skill Analysis</h4>
+              <form className="space-y-4">
+                <div>
+                  <Label htmlFor="experience">Experience Summary</Label>
+                  <Textarea
+                    id="experience"
+                    name="experience"
+                    placeholder="Paste your work experience descriptions here..."
+                    rows={4}
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    AI will analyze this to identify your skills and suggest improvements
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="targetRole">Target Role (optional)</Label>
+                    <Input
+                      id="targetRole"
+                      name="targetRole"
+                      placeholder="e.g., Software Engineer, Product Manager"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="jobDescription">Job Description (optional)</Label>
+                    <Input
+                      id="jobDescription"
+                      name="jobDescription"
+                      placeholder="Paste job description for targeted analysis"
+                    />
+                  </div>
+                </div>
+                <AIButton
+                  variant="default"
+                  formAction={analyzeSkillsAction}
+                >
+                  Analyze My Skills
+                </AIButton>
+              </form>
+            </div>
           </CardContent>
         </Card>
 
@@ -124,21 +396,29 @@ export default async function ResumeEditPage({
           </CardHeader>
           <CardContent>
             {resume.projects.length === 0 ? (
-              <p className="text-sm text-slate-500">No projects added yet.</p>
+              <div className="text-center py-8">
+                <p className="text-slate-500 mb-4">No projects added yet.</p>
+                <Button>Add Project</Button>
+              </div>
             ) : (
               <div className="space-y-4">
                 {resume.projects.map((project) => (
-                  <div key={project.id} className="border-l-2 border-slate-200 pl-4">
-                    <h4 className="font-semibold text-slate-900">{project.name}</h4>
-                    {project.summary && (
-                      <p className="text-sm text-slate-600 mt-1">{project.summary}</p>
-                    )}
+                  <div key={project.id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-semibold">{project.name}</h4>
+                        <p className="text-sm text-slate-600">{project.summary}</p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Edit
+                      </Button>
+                    </div>
                     {project.techStack.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div className="flex flex-wrap gap-1">
                         {project.techStack.map((tech) => (
-                          <span key={tech} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                          <Badge key={tech} variant="outline" className="text-xs">
                             {tech}
-                          </span>
+                          </Badge>
                         ))}
                       </div>
                     )}

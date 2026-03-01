@@ -64,7 +64,7 @@ export default async function TutorPage() {
                 <p className="text-sm text-slate-500">No cohorts assigned yet.</p>
               ) : (
                 <div className="space-y-4">
-                  {cohorts.map((course) => (
+                  {cohorts.map((course: any) => (
                     <div key={course.id} className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold text-slate-900">{course.title}</h3>
@@ -94,7 +94,7 @@ export default async function TutorPage() {
                 <p className="text-sm text-slate-500">No pending posts.</p>
               ) : (
                 <div className="space-y-3">
-                  {pendingPosts.slice(0, 5).map((post) => (
+                  {pendingPosts.slice(0, 5).map((post: any) => (
                     <div key={post.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-slate-900 truncate">{post.title}</p>
@@ -128,7 +128,7 @@ export default async function TutorPage() {
               <p className="text-sm text-slate-500">No office hours scheduled.</p>
             ) : (
               <div className="space-y-4">
-                {officeHours.slice(0, 3).map((session) => (
+                {officeHours.slice(0, 3).map((session: any) => (
                   <div key={session.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-3">
                     <div>
                       <p className="text-sm font-semibold text-slate-900">

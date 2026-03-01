@@ -13,9 +13,11 @@ export async function createNotification(input: {
     data: {
       userId: input.userId,
       type: input.type,
-      title: input.title,
-      body: input.body,
-      actionUrl: input.actionUrl,
+      payload: {
+        title: input.title,
+        body: input.body,
+        actionUrl: input.actionUrl,
+      },
     },
   });
 }

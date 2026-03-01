@@ -77,51 +77,54 @@ export default async function NotificationsPage() {
               </CardContent>
             </Card>
           ) : (
-            notifications.map((notification) => (
-              <Card
-                key={notification.id}
-                className={`border border-slate-200/70 bg-white/95 transition-colors ${
-                  !notification.readAt ? "border-primary/30 bg-primary/5" : ""
-                }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-slate-900">{notification.title}</h3>
+            notifications.map((notification) => {
+              const payload = notification.payload as any;
+              return (
+                <Card
+                  key={notification.id}
+                  className={`border border-slate-200/70 bg-white/95 transition-colors ${
+                    !notification.readAt ? "border-primary/30 bg-primary/5" : ""
+                  }`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-slate-900">{payload.title || "Notification"}</h3>
+                          {!notification.readAt && (
+                            <Badge variant="secondary" className="text-xs">
+                              New
+                            </Badge>
+                          )}
+                        </div>
+                        {payload.body && (
+                          <p className="text-sm text-slate-600">{payload.body}</p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-slate-500">
+                          <span className="capitalize">{notification.type.toLowerCase().replace("_", " ")}</span>
+                          <span>{notification.createdAt.toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {payload.actionUrl && (
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={payload.actionUrl}>View</a>
+                          </Button>
+                        )}
                         {!notification.readAt && (
-                          <Badge variant="secondary" className="text-xs">
-                            New
-                          </Badge>
+                          <form action={markAsReadAction}>
+                            <input type="hidden" name="id" value={notification.id} />
+                            <Button variant="ghost" size="sm" type="submit">
+                              Mark read
+                            </Button>
+                          </form>
                         )}
                       </div>
-                      {notification.body && (
-                        <p className="text-sm text-slate-600">{notification.body}</p>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-slate-500">
-                        <span className="capitalize">{notification.type.toLowerCase().replace("_", " ")}</span>
-                        <span>{notification.createdAt.toLocaleDateString()}</span>
-                      </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      {notification.actionUrl && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={notification.actionUrl}>View</a>
-                        </Button>
-                      )}
-                      {!notification.readAt && (
-                        <form action={markAsReadAction}>
-                          <input type="hidden" name="id" value={notification.id} />
-                          <Button variant="ghost" size="sm" type="submit">
-                            Mark read
-                          </Button>
-                        </form>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>

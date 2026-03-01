@@ -98,28 +98,31 @@ enum NotificationType {
 }
 
 model User {
-  id               String              @id @default(cuid())
-  email            String              @unique
-  passwordHash     String
-  firstName        String
-  lastName         String
-  avatarUrl        String?
-  role             Role                @default(STUDENT)
-  status           UserStatus          @default(ACTIVE)
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  id            String              @id @default(cuid())
+  email         String              @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  avatarUrl     String?
+  role          Role                @default(STUDENT)
+  status        UserStatus          @default(ACTIVE)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
-  profile          Profile?
-  coursesTaught    Course[]            @relation("CourseInstructor")
-  enrollments      Enrollment[]
-  resumes          Resume[]
-  jobApplications  JobApplication[]
-  volunteerApps    VolunteerApplication[]
-  notifications    Notification[]
-  forumThreads     ForumThread[]
-  forumPosts       ForumPost[]
+  profile       Profile?
+  coursesTaught Course[]            @relation("CourseInstructor")
+  enrollments   Enrollment[]
+  resumes       Resume[]
+  jobApplications JobApplication[]
+  volunteerApps VolunteerApplication[]
+  notifications Notification[]
+  forumThreads  ForumThread[]
+  forumPosts    ForumPost[]
+  newsPosts     News[]
   jobOpportunitiesPosted    JobOpportunity[]       @relation("JobPostedBy")
   volunteerOpportunitiesPosted VolunteerOpportunity[] @relation("VolunteerPostedBy")
+  postedCompanies Company[]         @relation("CompanyPostedBy")
+  jobAlerts     JobAlert[]
 }
 
 model Profile {
@@ -295,23 +298,29 @@ model ResumeProject {
 }
 
 model JobOpportunity {
-  id           String     @id @default(cuid())
-  title        String
-  company      String
-  location     String
-  country      String
-  jobType      JobType
-  remoteOption RemoteOption
-  salaryRange  String?
-  description  String?
-  requirements String[] @default([])
-  tags         String[] @default([])
-  postedById   String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id               String               @id @default(cuid())
+  slug             String?              @unique
+  title            String
+  company          String
+  location         String
+  country          String
+  jobType          JobType
+  remoteOption     RemoteOption
+  salaryRange      String?
+  description      String?
+  requirements     String[]             @default([])
+  tags             String[]             @default([])
+  isActive         Boolean              @default(true)
+  featured         Boolean              @default(false)
+  deadline         DateTime?
+  viewCount        Int                  @default(0)
+  applicationCount Int                  @default(0)
+  postedById       String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
-  postedBy    User?            @relation("JobPostedBy", fields: [postedById], references: [id])
-  applications JobApplication[]
+  postedBy         User?                @relation("JobPostedBy", fields: [postedById], references: [id])
+  applications     JobApplication[]
 }
 
 model JobApplication {
@@ -319,6 +328,7 @@ model JobApplication {
   userId           String
   jobOpportunityId String
   resumeId         String?
+  coverLetter      String?
   status           JobApplicationStatus @default(SUBMITTED)
   submittedAt      DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
@@ -326,6 +336,35 @@ model JobApplication {
   user          User           @relation(fields: [userId], references: [id])
   opportunity   JobOpportunity @relation(fields: [jobOpportunityId], references: [id])
   resume        Resume?        @relation(fields: [resumeId], references: [id])
+}
+
+model Company {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  website     String?
+  logo        String?
+  size        String?
+  industry    String?
+  location    String?
+  postedById  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  postedBy    User?     @relation("CompanyPostedBy", fields: [postedById], references: [id])
+}
+
+model JobAlert {
+  id         String   @id @default(cuid())
+  userId     String
+  keywords   String[]
+  location   String?
+  jobType    JobType?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 model VolunteerOpportunity {
@@ -355,6 +394,22 @@ model VolunteerApplication {
 
   user        User                 @relation(fields: [userId], references: [id])
   opportunity VolunteerOpportunity @relation(fields: [volunteerOpportunityId], references: [id])
+}
+
+model News {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  content     String
+  summary     String?
+  tags        String[]
+  status      String    @default("DRAFT")
+  authorId    String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  author User @relation(fields: [authorId], references: [id])
 }
 
 model Notification {

@@ -8,8 +8,15 @@ export async function createNewsPost(input: {
   tags?: string[];
   authorId: string;
 }) {
+  const slug = input.title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+
   return prisma.news.create({
     data: {
+      slug,
       title: input.title,
       content: input.content,
       summary: input.summary,

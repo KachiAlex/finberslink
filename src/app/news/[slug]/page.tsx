@@ -38,7 +38,7 @@ export default async function NewsPostPage({
             </div>
             {post.tags.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {post.tags.map((tag) => (
+                {post.tags.map((tag: string) => (
                   <Badge key={tag} variant="secondary" className="text-xs">
                     {tag}
                   </Badge>
@@ -48,7 +48,7 @@ export default async function NewsPostPage({
           </CardHeader>
           <CardContent>
             <div className="prose prose-slate max-w-none">
-              {post.content.split("\n").map((paragraph, i) => (
+              {post.content.split("\n").map((paragraph: string, i: number) => (
                 <p key={i} className="mb-4 text-slate-700 leading-relaxed">
                   {paragraph}
                 </p>

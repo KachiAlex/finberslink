@@ -51,7 +51,7 @@ export default async function NewThreadPage() {
   }
 
   // TODO: fetch user's enrolled courses
-  const courses = []; // placeholder
+  const courses: any[] = []; // placeholder
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
