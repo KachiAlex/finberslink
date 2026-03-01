@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const CompanyQuerySchema = z.object({
@@ -15,9 +14,8 @@ export async function GET(request: NextRequest) {
     const filters = CompanyQuerySchema.parse(Object.fromEntries(searchParams));
 
     const { search, page, limit } = filters;
-    const skip = (page - 1) * limit;
 
-    // TODO: Implement company listing once Company model is migrated
+    // TODO: Implement company listing once Company model is migrated to Firestore
     // For now, return empty list
     const companies: any[] = [];
     const total = 0;
