@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import { prisma } from "@/lib/prisma";
+import * as FirestoreService from "@/lib/firestore-service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,89 +17,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const [totalJobs, totalApplications, applicationsByStatus, jobsByType, jobsByRemote] = await Promise.all([
-      prisma.jobOpportunity.count(),
-      prisma.jobApplication.count(),
-      prisma.jobApplication.groupBy({
-        by: ["status"],
-        _count: true,
-      }),
-      prisma.jobOpportunity.groupBy({
-        by: ["jobType"],
-        _count: true,
-      }),
-      prisma.jobOpportunity.groupBy({
-        by: ["remoteOption"],
-        _count: true,
-      }),
-    ]);
+    const { jobs, total: totalJobs } = await FirestoreService.listJobs({}, 1, 1000);
+    const { applications: allApplications, total: totalApplications } = await FirestoreService.listApplicationsByJob('', 1, 1000);
 
-    // Get top jobs by applications
-    const topJobs = await prisma.jobOpportunity.findMany({
-      select: {
-        id: true,
-        title: true,
-        company: true,
-        _count: {
-          select: {
-            applications: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 5,
+    // Calculate status breakdown
+    const statusBreakdown: Record<string, number> = {};
+    allApplications.forEach(app => {
+      statusBreakdown[app.status] = (statusBreakdown[app.status] || 0) + 1;
     });
 
-    // Get recent applications
-    const recentApplications = await prisma.jobApplication.findMany({
-      select: {
-        id: true,
-        status: true,
-        submittedAt: true,
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
-        },
-        opportunity: {
-          select: {
-            title: true,
-            company: true,
-          },
-        },
-      },
-      orderBy: {
-        submittedAt: "desc",
-      },
-      take: 10,
+    // Calculate type distribution
+    const typeDistribution: Record<string, number> = {};
+    jobs.forEach(job => {
+      typeDistribution[job.jobType] = (typeDistribution[job.jobType] || 0) + 1;
     });
 
-    const statusBreakdown = applicationsByStatus.reduce(
-      (acc, item) => {
-        acc[item.status] = item._count;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    // Calculate remote distribution
+    const remoteDistribution: Record<string, number> = {};
+    jobs.forEach(job => {
+      remoteDistribution[job.remoteOption] = (remoteDistribution[job.remoteOption] || 0) + 1;
+    });
 
-    const typeDistribution = jobsByType.reduce(
-      (acc, item) => {
-        acc[item.jobType] = item._count;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    // Get top 5 jobs (by creation date)
+    const topJobs = jobs.slice(0, 5).map(job => ({
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      applicationCount: allApplications.filter(app => app.jobOpportunityId === job.id).length,
+    }));
 
-    const remoteDistribution = jobsByRemote.reduce(
-      (acc, item) => {
-        acc[item.remoteOption] = item._count;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    // Get recent applications (last 10)
+    const recentApplications = allApplications.slice(0, 10);
 
     return NextResponse.json({
       metrics: {
