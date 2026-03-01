@@ -138,7 +138,7 @@ export default async function AdminUserDetailPage({
                 <div>
                   <label className="text-sm font-medium text-gray-500">Status</label>
                   <div className="flex items-center gap-2">
-                    <Badge className={statusColors[user.status]}>
+                    <Badge className={statusColors[user.status as keyof typeof statusColors]}>
                       {user.status}
                     </Badge>
                     <form
