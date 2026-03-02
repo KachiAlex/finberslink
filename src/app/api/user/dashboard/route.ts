@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +12,16 @@ export async function GET(request: NextRequest) {
 
     const user = verifyToken(accessToken);
 
-    const { applications, total } = await FirestoreService.listApplicationsByUser(user.sub, 1, 100);
+    const applications = await prisma.jobApplication.findMany({
+      where: { userId: user.sub },
+      include: { opportunity: true, resume: true },
+      orderBy: { submittedAt: 'desc' },
+      take: 100,
+    });
+
+    const total = await prisma.jobApplication.count({
+      where: { userId: user.sub },
+    });
 
     // Calculate status breakdown
     const statusBreakdown: Record<string, number> = {};
