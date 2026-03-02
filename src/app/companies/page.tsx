@@ -76,7 +76,7 @@ export default async function CompaniesPage({
           <div className="space-y-6">
             {/* Company Cards */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {companies.map((company) => (
+              {companies.map((company: any) => (
                 <Card key={company.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     {company.logo && (
