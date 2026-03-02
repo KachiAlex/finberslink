@@ -329,7 +329,7 @@ export default async function ResumeEditPage({
             {/* Current Skills */}
             <div className="mb-6">
               <div className="flex flex-wrap gap-2 mb-4">
-                {resume.skills.map((skill) => (
+                {(resume as any).skills.map((skill: any) => (
                   <Badge key={skill} variant="secondary">
                     {skill}
                   </Badge>
@@ -395,14 +395,14 @@ export default async function ResumeEditPage({
             <CardDescription>Featured projects</CardDescription>
           </CardHeader>
           <CardContent>
-            {resume.projects.length === 0 ? (
+            {(resume as any).projects.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-slate-500 mb-4">No projects added yet.</p>
                 <Button>Add Project</Button>
               </div>
             ) : (
               <div className="space-y-4">
-                {resume.projects.map((project) => (
+                {(resume as any).projects.map((project: any) => (
                   <div key={project.id} className="border rounded-lg p-4">
                     <div className="flex justify-between items-start mb-2">
                       <div>
@@ -415,7 +415,7 @@ export default async function ResumeEditPage({
                     </div>
                     {project.techStack.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {project.techStack.map((tech) => (
+                        {project.techStack.map((tech: any) => (
                           <Badge key={tech} variant="outline" className="text-xs">
                             {tech}
                           </Badge>
