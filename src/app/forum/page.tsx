@@ -31,7 +31,7 @@ export default async function ForumPage() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {threads.map((thread) => (
+            {threads.map((thread: any) => (
               <Card key={thread.id} className="border border-slate-200/70 bg-white/95">
                 <CardHeader>
                   <div className="flex items-center justify-between">
