@@ -81,13 +81,13 @@ export default async function JobDetailPage({
                   </div>
                   <div className="flex items-center gap-1">
                     <Briefcase className="w-4 h-4" />
-                    <Badge className={jobTypeColors[job.jobType]}>
+                    <Badge className={jobTypeColors[job.jobType as keyof typeof jobTypeColors]}>
                       {job.jobType.replace("_", " ")}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    <Badge className={remoteOptionColors[job.remoteOption]}>
+                    <Badge className={remoteOptionColors[job.remoteOption as keyof typeof remoteOptionColors]}>
                       {job.remoteOption.replace("_", " ")}
                     </Badge>
                   </div>
@@ -119,7 +119,7 @@ export default async function JobDetailPage({
               <div>
                 <h3 className="font-semibold mb-2">Tags</h3>
                 <div className="flex flex-wrap gap-2">
-                  {job.tags.map((tag) => (
+                  {job.tags.map((tag: any) => (
                     <Badge key={tag} variant="secondary">
                       {tag}
                     </Badge>
@@ -147,7 +147,7 @@ export default async function JobDetailPage({
               <div>
                 <h3 className="font-semibold mb-3">Requirements</h3>
                 <ul className="space-y-2">
-                  {job.requirements.map((requirement, index) => (
+                  {job.requirements.map((requirement: any, index: number) => (
                     <li key={index} className="flex items-start gap-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                       <span className="text-gray-700">{requirement}</span>
