@@ -134,13 +134,13 @@ export default async function JobApplyPage({
                 <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
                     <FileText className="w-4 h-4" />
-                    <Badge className={jobTypeColors[job.jobType]}>
+                    <Badge className={jobTypeColors[job.jobType as keyof typeof jobTypeColors]}>
                       {job.jobType.replace("_", " ")}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-1">
                     <Upload className="w-4 h-4" />
-                    <Badge className={remoteOptionColors[job.remoteOption]}>
+                    <Badge className={remoteOptionColors[job.remoteOption as keyof typeof remoteOptionColors]}>
                       {job.remoteOption.replace("_", " ")}
                     </Badge>
                   </div>
@@ -163,7 +163,7 @@ export default async function JobApplyPage({
                   <div>
                     <h4 className="font-semibold text-sm mb-2">Tags</h4>
                     <div className="flex flex-wrap gap-1">
-                      {job.tags.map((tag) => (
+                      {job.tags.map((tag: any) => (
                         <Badge key={tag} variant="secondary" className="text-xs">
                           {tag}
                         </Badge>
