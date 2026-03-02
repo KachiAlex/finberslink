@@ -90,7 +90,7 @@ export async function getJobs(filters: JobFilters = {}) {
 
 export async function getJobBySlug(slug: string) {
   const { jobs } = await FirestoreService.listJobs({}, 1, 1000);
-  return jobs.find(job => job.slug === slug) || null;
+  return jobs.find(job => (job as any).slug === slug) || null;
 }
 
 export async function getJobById(jobId: string) {
@@ -170,11 +170,7 @@ export async function updateJobApplicationStatus(
 }
 
 export async function getJobApplicationsForAdmin(jobId?: string) {
-  const { applications } = await FirestoreService.listApplications(1, 100);
-  
-  if (jobId) {
-    return applications.filter(app => app.jobOpportunityId === jobId);
-  }
+  const { applications } = await FirestoreService.listApplicationsByJob(jobId || '', 1, 100);
   
   return applications;
 }
