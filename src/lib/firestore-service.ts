@@ -129,7 +129,7 @@ export async function listUsers(filters?: { role?: string; status?: string }, li
   }
 
   const snapshot = await query.orderBy('createdAt', 'desc').limit(limit).get();
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+  return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as User));
 }
 
 export async function countUsers(filters?: { role?: string; status?: string }): Promise<number> {
@@ -231,7 +231,7 @@ export async function listJobs(filters?: {
 
   const skip = (page - 1) * limit;
   const snapshot = await query.orderBy('createdAt', 'desc').offset(skip).limit(limit).get();
-  const jobs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JobOpportunity));
+  const jobs = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as JobOpportunity));
 
   return { jobs, total };
 }
@@ -244,13 +244,13 @@ export async function searchJobs(searchTerm: string, page = 1, limit = 20): Prom
     .orderBy('createdAt', 'desc')
     .get();
 
-  const allJobs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JobOpportunity));
+  const allJobs = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as JobOpportunity));
   
-  const filtered = allJobs.filter(job =>
+  const filtered = allJobs.filter((job: any) =>
     job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    job.tags.some((tag: any) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const skip = (page - 1) * limit;
@@ -301,26 +301,23 @@ export async function listApplicationsByUser(userId: string, page = 1, limit = 2
     .limit(limit)
     .get();
 
-  const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JobApplication));
+  const applications = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as JobApplication));
   return { applications, total };
 }
 
 export async function listApplicationsByJob(jobId: string, page = 1, limit = 20): Promise<{ applications: JobApplication[]; total: number }> {
-  const countSnapshot = await db.collection('jobApplications')
-    .where('jobOpportunityId', '==', jobId)
-    .count()
-    .get();
+  let query: any = db.collection('jobApplications');
+
+  if (jobId) {
+    query = query.where('jobOpportunityId', '==', jobId);
+  }
+
+  const countSnapshot = await query.count().get();
   const total = countSnapshot.data().count;
 
   const skip = (page - 1) * limit;
-  const snapshot = await db.collection('jobApplications')
-    .where('jobOpportunityId', '==', jobId)
-    .orderBy('appliedAt', 'desc')
-    .offset(skip)
-    .limit(limit)
-    .get();
-
-  const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JobApplication));
+  const snapshot = await query.orderBy('appliedAt', 'desc').offset(skip).limit(limit).get();
+  const applications = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as JobApplication));
   return { applications, total };
 }
 
@@ -330,7 +327,7 @@ export async function countApplicationsByStatus(jobId: string): Promise<Record<s
     .get();
 
   const counts: Record<string, number> = {};
-  snapshot.docs.forEach(doc => {
+  snapshot.docs.forEach((doc: any) => {
     const status = doc.data().status;
     counts[status] = (counts[status] || 0) + 1;
   });
@@ -383,7 +380,7 @@ export async function listCourses(page = 1, limit = 20): Promise<{ courses: Cour
     .limit(limit)
     .get();
 
-  const courses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course));
+  const courses = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Course));
   return { courses, total };
 }
 
@@ -407,7 +404,7 @@ export async function listUserNotifications(userId: string, limit = 20): Promise
     .limit(limit)
     .get();
 
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+  return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Notification));
 }
 
 export async function markNotificationAsRead(id: string): Promise<void> {
@@ -423,7 +420,7 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
     .get();
 
   const batch = db.batch();
-  snapshot.docs.forEach(doc => {
+  snapshot.docs.forEach((doc: any) => {
     batch.update(doc.ref, { readAt: new Date() });
   });
   await batch.commit();
