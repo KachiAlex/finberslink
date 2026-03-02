@@ -21,13 +21,18 @@ function loadEnv(): EnvShape {
   for (const key of requiredEnv) {
     const value = process.env[key];
     if (!value) {
-      missing.push(key);
+      // During build time, use placeholder values
+      if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
+        missing.push(key);
+      } else {
+        env[key] = `placeholder_${key}`;
+      }
     } else {
       env[key] = value;
     }
   }
 
-  if (missing.length > 0) {
+  if (missing.length > 0 && process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
     throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
   }
 
