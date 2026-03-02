@@ -55,7 +55,7 @@ export default async function DashboardPage() {
                 <p className="text-sm text-slate-500">No enrollments yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {enrollments.slice(0, 3).map((enrollment) => (
+                  {enrollments.slice(0, 3).map((enrollment: any) => (
                     <div key={enrollment.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-3">
                       <div>
                         <p className="text-sm font-semibold text-slate-900">{enrollment.course.title}</p>
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {resumes.slice(0, 2).map((resume) => (
+                  {resumes.slice(0, 2).map((resume: any) => (
                     <div key={resume.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-3">
                       <div>
                         <p className="text-sm font-semibold text-slate-900">{resume.title}</p>
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
                 <p className="text-sm text-slate-500">No applications yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {[...applications.jobs.slice(0, 2), ...applications.volunteer.slice(0, 1)].map((app) => (
+                  {[...applications.jobs.slice(0, 2), ...applications.volunteer.slice(0, 1)].map((app: any) => (
                     <div key={app.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-3">
                       <div>
                         <p className="text-sm font-semibold text-slate-900">
