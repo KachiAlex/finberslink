@@ -16,9 +16,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Vercel-specific optimizations
-  swcMinify: true,
-  reactStrictMode: true,
 };
 
 export default nextConfig;
