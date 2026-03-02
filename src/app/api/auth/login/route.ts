@@ -25,12 +25,21 @@ export async function POST(request: NextRequest) {
     setAuthCookies(response, tokens);
     return response;
   } catch (error) {
-    console.error("Login error:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Login error:", errorMessage, error);
     
     if (error instanceof Error && error.message === "Invalid credentials") {
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
+      );
+    }
+
+    if (errorMessage.includes("Cannot read properties of undefined") || errorMessage.includes("db.collection is not a function")) {
+      console.error("Firebase not initialized properly");
+      return NextResponse.json(
+        { error: "Database connection failed. Please try again later." },
+        { status: 503 }
       );
     }
 
