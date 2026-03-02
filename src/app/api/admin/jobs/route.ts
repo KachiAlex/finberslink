@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const CreateJobSchema = z.object({
@@ -35,7 +35,14 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
 
-    const { jobs, total } = await FirestoreService.listJobs({}, page, limit);
+    const skip = (page - 1) * limit;
+    const jobs = await prisma.jobOpportunity.findMany({
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const total = await prisma.jobOpportunity.count();
 
     return NextResponse.json({
       jobs,
@@ -79,19 +86,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const job = await FirestoreService.createJob({
-      title: parsed.data.title,
-      company: parsed.data.company,
-      location: parsed.data.location,
-      country: parsed.data.country,
-      jobType: parsed.data.jobType as any,
-      remoteOption: parsed.data.remoteOption as any,
-      description: parsed.data.description || "",
-      requirements: parsed.data.requirements || [],
-      tags: parsed.data.tags || [],
-      featured: false,
-      isActive: true,
-      postedById: user.sub,
+    const job = await prisma.jobOpportunity.create({
+      data: {
+        title: parsed.data.title,
+        company: parsed.data.company,
+        location: parsed.data.location,
+        country: parsed.data.country,
+        jobType: parsed.data.jobType,
+        remoteOption: parsed.data.remoteOption,
+        description: parsed.data.description || "",
+        requirements: parsed.data.requirements || [],
+        tags: parsed.data.tags || [],
+        featured: false,
+        isActive: true,
+        postedById: user.sub,
+      },
     });
 
     return NextResponse.json(
