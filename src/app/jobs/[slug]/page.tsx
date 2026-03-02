@@ -103,7 +103,7 @@ export default async function JobDetailPage({
               <div className="text-right text-sm text-gray-500 ml-6">
                 <div className="flex items-center gap-1">
                   <Users className="w-3 h-3" />
-                  {job._count.applications} applications
+                  {(job as any)._count?.applications || 0} applications
                 </div>
                 <div className="flex items-center gap-1 mt-1">
                   <Calendar className="w-3 h-3" />
