@@ -133,7 +133,7 @@ export default async function JobDetailPage({
               <div>
                 <h3 className="font-semibold mb-3">Job Description</h3>
                 <div className="prose prose-slate max-w-none">
-                  {job.description.split("\n").map((paragraph, i) => (
+                  {job.description.split("\n").map((paragraph: any, i: number) => (
                     <p key={i} className="mb-4 text-gray-700 leading-relaxed">
                       {paragraph}
                     </p>
