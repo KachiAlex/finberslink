@@ -62,9 +62,6 @@ export async function createAdminCourse(input: {
     level: input.level,
     coverImage: input.coverImage,
     instructorId: DEFAULT_ADMIN_ID,
-    certificateAvailable: false,
-    outcomes: [],
-    skills: [],
   });
 }
 
