@@ -167,7 +167,7 @@ export default async function JobDetailPage({
                   </p>
                 </div>
                 <Button size="lg" asChild>
-                  <Link href={`/jobs/${job.slug}/apply`}>
+                  <Link href={`/jobs/${(job as any).slug}/apply`}>
                     Apply Now
                   </Link>
                 </Button>
