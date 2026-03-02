@@ -1,4 +1,4 @@
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 
 export interface JobFilters {
   search?: string;
@@ -25,25 +25,32 @@ export async function getJobs(filters: JobFilters = {}) {
     limit = 20,
   } = filters;
 
-  let filterOptions: any = { isActive: true };
+  const where: any = { isActive: true };
 
   if (jobType) {
-    filterOptions.jobType = jobType;
+    where.jobType = jobType;
   }
 
   if (remoteOption) {
-    filterOptions.remoteOption = remoteOption;
+    where.remoteOption = remoteOption;
   }
 
   if (featured !== undefined) {
-    filterOptions.featured = featured;
+    where.featured = featured;
   }
 
-  const { jobs, total } = await FirestoreService.listJobs(filterOptions, page, limit);
+  const skip = (page - 1) * limit;
+  const jobs = await prisma.jobOpportunity.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const total = await prisma.jobOpportunity.count({ where });
 
   let filteredJobs = jobs;
 
-  // Client-side filtering for complex queries (search, location, company, tags)
   if (search || location || company || (tags && tags.length > 0)) {
     filteredJobs = jobs.filter(job => {
       if (search) {
@@ -51,7 +58,7 @@ export async function getJobs(filters: JobFilters = {}) {
         const matchesSearch = 
           job.title.toLowerCase().includes(searchLower) ||
           job.company.toLowerCase().includes(searchLower) ||
-          job.description.toLowerCase().includes(searchLower) ||
+          (job.description?.toLowerCase().includes(searchLower) ?? false) ||
           job.tags.some(tag => tag.toLowerCase().includes(searchLower));
         if (!matchesSearch) return false;
       }
@@ -89,31 +96,45 @@ export async function getJobs(filters: JobFilters = {}) {
 }
 
 export async function getJobBySlug(slug: string) {
-  const { jobs } = await FirestoreService.listJobs({}, 1, 1000);
-  return jobs.find(job => (job as any).slug === slug) || null;
+  return prisma.jobOpportunity.findUnique({
+    where: { slug: slug || '' },
+  });
 }
 
 export async function getJobById(jobId: string) {
-  return FirestoreService.getJobById(jobId);
+  return prisma.jobOpportunity.findUnique({
+    where: { id: jobId },
+  });
 }
 
 export async function incrementJobViewCount(jobId: string) {
-  // TODO: Implement view count tracking once field is added to schema
-  return null;
+  return prisma.jobOpportunity.update({
+    where: { id: jobId },
+    data: { viewCount: { increment: 1 } },
+  });
 }
 
 export async function getFeaturedJobs(limit = 5) {
-  const { jobs } = await FirestoreService.listJobs({ isActive: true, featured: true }, 1, limit);
-  return jobs;
+  return prisma.jobOpportunity.findMany({
+    where: { isActive: true, featured: true },
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+  });
 }
 
 export async function getRecentJobs(limit = 10) {
-  const { jobs } = await FirestoreService.listJobs({ isActive: true }, 1, limit);
-  return jobs;
+  return prisma.jobOpportunity.findMany({
+    where: { isActive: true },
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+  });
 }
 
 export async function getPopularCompanies(limit = 10) {
-  const { jobs } = await FirestoreService.listJobs({ isActive: true }, 1, 1000);
+  const jobs = await prisma.jobOpportunity.findMany({
+    where: { isActive: true },
+    select: { company: true },
+  });
   
   const companyCounts: Record<string, number> = {};
   jobs.forEach(job => {
@@ -127,7 +148,10 @@ export async function getPopularCompanies(limit = 10) {
 }
 
 export async function getJobTags() {
-  const { jobs } = await FirestoreService.listJobs({ isActive: true }, 1, 1000);
+  const jobs = await prisma.jobOpportunity.findMany({
+    where: { isActive: true },
+    select: { tags: true },
+  });
   
   const allTags = jobs.flatMap(job => job.tags).filter(tag => tag && tag.length > 0);
   const tagCounts = allTags.reduce((acc, tag) => {
@@ -146,31 +170,40 @@ export async function createJobApplication(data: {
   resumeId?: string;
   coverLetter?: string;
 }) {
-  const application = await FirestoreService.createApplication({
-    userId: data.userId,
-    jobOpportunityId: data.jobOpportunityId,
-    resumeId: data.resumeId || '',
-    status: 'SUBMITTED',
+  return prisma.jobApplication.create({
+    data: {
+      userId: data.userId,
+      jobOpportunityId: data.jobOpportunityId,
+      resumeId: data.resumeId,
+      coverLetter: data.coverLetter,
+      status: 'SUBMITTED',
+    },
   });
-
-  return application;
 }
 
 export async function getUserJobApplications(userId: string) {
-  const { applications } = await FirestoreService.listApplicationsByUser(userId, 1, 100);
-  return applications;
+  return prisma.jobApplication.findMany({
+    where: { userId },
+    include: { opportunity: true, resume: true },
+    orderBy: { submittedAt: 'desc' },
+  });
 }
 
 export async function updateJobApplicationStatus(
   applicationId: string,
   status: 'SUBMITTED' | 'REVIEWING' | 'INTERVIEW' | 'OFFER' | 'REJECTED'
 ) {
-  await FirestoreService.updateApplication(applicationId, { status });
-  return FirestoreService.getApplicationById(applicationId);
+  return prisma.jobApplication.update({
+    where: { id: applicationId },
+    data: { status },
+  });
 }
 
 export async function getJobApplicationsForAdmin(jobId?: string) {
-  const { applications } = await FirestoreService.listApplicationsByJob(jobId || '', 1, 100);
-  
-  return applications;
+  const where = jobId ? { jobOpportunityId: jobId } : {};
+  return prisma.jobApplication.findMany({
+    where,
+    include: { user: true, opportunity: true, resume: true },
+    orderBy: { submittedAt: 'desc' },
+  });
 }
