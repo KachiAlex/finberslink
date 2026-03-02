@@ -62,18 +62,18 @@ export default async function ForumThreadPage({
         <Card className="border border-slate-200/70 bg-white/95">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-semibold text-slate-900">{thread.title}</CardTitle>
-              <Badge variant="outline">{thread.course.title}</Badge>
+              <CardTitle className="text-2xl font-semibold text-slate-900">{(thread as any).title}</CardTitle>
+              <Badge variant="outline">{(thread as any).course.title}</Badge>
             </div>
             <CardDescription>
-              By {thread.author.firstName} {thread.author.lastName} ·{" "}
-              {thread.createdAt.toLocaleDateString()}
+              By {(thread as any).author.firstName} {(thread as any).author.lastName} ·{" "}
+              {(thread as any).createdAt.toLocaleDateString()}
             </CardDescription>
           </CardHeader>
         </Card>
 
         <div className="space-y-6">
-          {thread.posts.map((post) => (
+          {(thread as any).posts.map((post: any) => (
             <Card key={post.id} className="border border-slate-200/70 bg-white/95">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -109,7 +109,7 @@ export default async function ForumThreadPage({
             </CardHeader>
             <CardContent>
               <form className="space-y-4" action={replyAction}>
-                <input type="hidden" name="threadId" value={thread.id} />
+                <input type="hidden" name="threadId" value={(thread as any).id} />
                 <Textarea
                   name="content"
                   placeholder="Share your thoughts..."
