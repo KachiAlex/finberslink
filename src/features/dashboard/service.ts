@@ -1,20 +1,36 @@
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 
 export async function getStudentEnrollments(userId: string) {
-  // Placeholder - enrollments not yet in Firestore
-  return [];
+  return prisma.enrollment.findMany({
+    where: { userId },
+    include: { course: true },
+    orderBy: { createdAt: 'desc' },
+  });
 }
 
 export async function getStudentResumes(userId: string) {
-  // Placeholder - resumes not yet in Firestore
-  return [];
+  return prisma.resume.findMany({
+    where: { userId },
+    include: { experiences: true, projects: true },
+    orderBy: { createdAt: 'desc' },
+  });
 }
 
 export async function getStudentApplications(userId: string) {
-  const { applications } = await FirestoreService.listApplicationsByUser(userId, 1, 100);
+  const jobApplications = await prisma.jobApplication.findMany({
+    where: { userId },
+    include: { opportunity: true, resume: true },
+    orderBy: { submittedAt: 'desc' },
+  });
+
+  const volunteerApplications = await prisma.volunteerApplication.findMany({
+    where: { userId },
+    include: { opportunity: true },
+    orderBy: { submittedAt: 'desc' },
+  });
 
   return {
-    jobs: applications,
-    volunteer: [],
+    jobs: jobApplications,
+    volunteer: volunteerApplications,
   };
 }
