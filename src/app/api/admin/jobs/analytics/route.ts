@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,8 +17,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { jobs, total: totalJobs } = await FirestoreService.listJobs({}, 1, 1000);
-    const { applications: allApplications, total: totalApplications } = await FirestoreService.listApplicationsByJob('', 1, 1000);
+    const jobs = await prisma.jobOpportunity.findMany({ take: 1000 });
+    const allApplications = await prisma.jobApplication.findMany({ take: 1000 });
+
+    const totalJobs = await prisma.jobOpportunity.count();
+    const totalApplications = await prisma.jobApplication.count();
 
     // Calculate status breakdown
     const statusBreakdown: Record<string, number> = {};
