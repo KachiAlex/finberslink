@@ -4,6 +4,8 @@ import { loginUser } from "@/features/auth/service";
 import { LoginSchema } from "@/features/auth/schemas";
 import { setAuthCookies } from "@/lib/auth/cookies";
 
+export const runtime = "nodejs";
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
