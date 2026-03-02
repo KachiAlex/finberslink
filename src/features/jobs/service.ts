@@ -89,8 +89,8 @@ export async function getJobs(filters: JobFilters = {}) {
 }
 
 export async function getJobBySlug(slug: string) {
-  const jobs = await FirestoreService.listJobs({ slug }, 1, 1);
-  return jobs.jobs.length > 0 ? jobs.jobs[0] : null;
+  const { jobs } = await FirestoreService.listJobs({}, 1, 1000);
+  return jobs.find(job => job.slug === slug) || null;
 }
 
 export async function getJobById(jobId: string) {
