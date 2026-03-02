@@ -99,7 +99,7 @@ export default async function ResumePublicPage({
 
             <div className="pt-6 border-t border-slate-100">
               <Button variant="outline" asChild>
-                <a href={`mailto:?subject=Regarding your resume: ${resume.title}`}>
+                <a href={`mailto:?subject=Regarding your resume: ${(resume as any).title}`}>
                   Contact
                 </a>
               </Button>
