@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const ApplyJobSchema = z.object({
@@ -31,18 +31,22 @@ export async function POST(
       );
     }
 
-    // Check if job exists (slug is used as jobId in Firestore)
-    const job = await FirestoreService.getJobById(slug);
+    // Check if job exists by slug
+    const job = await prisma.jobOpportunity.findFirst({
+      where: { slug },
+    });
 
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
     // Check if user has already applied
-    const { applications } = await FirestoreService.listApplicationsByUser(user.sub, 1, 1000);
-    const existingApplication = applications.find(
-      app => app.jobOpportunityId === job.id && app.userId === user.sub
-    );
+    const existingApplication = await prisma.jobApplication.findFirst({
+      where: {
+        jobOpportunityId: job.id,
+        userId: user.sub,
+      },
+    });
 
     if (existingApplication) {
       return NextResponse.json(
@@ -52,11 +56,13 @@ export async function POST(
     }
 
     // Create application
-    const application = await FirestoreService.createApplication({
-      userId: user.sub,
-      jobOpportunityId: job.id,
-      resumeId: parsed.data.resumeId,
-      status: 'SUBMITTED',
+    const application = await prisma.jobApplication.create({
+      data: {
+        userId: user.sub,
+        jobOpportunityId: job.id,
+        resumeId: parsed.data.resumeId,
+        status: 'SUBMITTED',
+      },
     });
 
     return NextResponse.json(
