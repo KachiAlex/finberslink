@@ -12,7 +12,7 @@ export default async function ResumePublicPage({
 }) {
   const { slug } = await params;
   const resume = await getResumeBySlug(slug);
-  if (!resume || resume.visibility !== "PUBLIC") {
+  if (!resume || (resume as any).visibility !== "PUBLIC") {
     notFound();
   }
 
@@ -23,20 +23,20 @@ export default async function ResumePublicPage({
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
-                <CardTitle className="text-2xl font-semibold text-slate-900">{resume.title}</CardTitle>
-                <CardDescription className="mt-2">{resume.summary}</CardDescription>
+                <CardTitle className="text-2xl font-semibold text-slate-900">{(resume as any).title}</CardTitle>
+                <CardDescription className="mt-2">{(resume as any).summary}</CardDescription>
               </div>
               <Badge variant="outline" className="capitalize">
-                {resume.visibility.toLowerCase()}
+                {(resume as any).visibility.toLowerCase()}
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {resume.experiences.length > 0 && (
+            {(resume as any).experiences.length > 0 && (
               <section>
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Experience</h3>
                 <div className="space-y-4">
-                  {resume.experiences.map((exp) => (
+                  {(resume as any).experiences.map((exp: any) => (
                     <div key={exp.id} className="border-l-2 border-slate-200 pl-4">
                       <div className="flex items-center justify-between">
                         <h4 className="font-semibold text-slate-900">{exp.role}</h4>
@@ -51,7 +51,7 @@ export default async function ResumePublicPage({
                       )}
                       {exp.achievements.length > 0 && (
                         <ul className="mt-2 text-sm text-slate-600 list-disc list-inside">
-                          {exp.achievements.map((achievement, i) => (
+                          {exp.achievements.map((achievement: any, i: number) => (
                             <li key={i}>{achievement}</li>
                           ))}
                         </ul>
@@ -62,11 +62,11 @@ export default async function ResumePublicPage({
               </section>
             )}
 
-            {resume.projects.length > 0 && (
+            {(resume as any).projects.length > 0 && (
               <section>
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Projects</h3>
                 <div className="space-y-4">
-                  {resume.projects.map((project) => (
+                  {(resume as any).projects.map((project: any) => (
                     <div key={project.id} className="border-l-2 border-slate-200 pl-4">
                       <h4 className="font-semibold text-slate-900">{project.name}</h4>
                       {project.summary && (
@@ -84,7 +84,7 @@ export default async function ResumePublicPage({
                       )}
                       {project.techStack.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
-                          {project.techStack.map((tech) => (
+                          {project.techStack.map((tech: any) => (
                             <Badge key={tech} variant="secondary" className="text-xs">
                               {tech}
                             </Badge>
