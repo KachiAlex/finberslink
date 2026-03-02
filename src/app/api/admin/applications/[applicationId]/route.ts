@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const UpdateApplicationStatusSchema = z.object({
@@ -27,7 +27,10 @@ export async function GET(
 
     const { applicationId } = await params;
 
-    const application = await FirestoreService.getApplicationById(applicationId);
+    const application = await prisma.jobApplication.findUnique({
+      where: { id: applicationId },
+      include: { opportunity: true, user: true, resume: true },
+    });
 
     if (!application) {
       return NextResponse.json(
@@ -74,8 +77,11 @@ export async function PUT(
       );
     }
 
-    await FirestoreService.updateApplication(applicationId, { status: parsed.data.status });
-    const application = await FirestoreService.getApplicationById(applicationId);
+    const application = await prisma.jobApplication.update({
+      where: { id: applicationId },
+      data: { status: parsed.data.status },
+      include: { opportunity: true, user: true, resume: true },
+    });
 
     return NextResponse.json({
       message: "Application status updated successfully",
