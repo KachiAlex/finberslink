@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const UpdateJobSchema = z.object({
@@ -33,7 +33,9 @@ export async function GET(
 
     const { jobId } = await params;
 
-    const job = await FirestoreService.getJobById(jobId);
+    const job = await prisma.jobOpportunity.findUnique({
+      where: { id: jobId },
+    });
 
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
@@ -77,8 +79,10 @@ export async function PUT(
       );
     }
 
-    await FirestoreService.updateJob(jobId, parsed.data);
-    const job = await FirestoreService.getJobById(jobId);
+    const job = await prisma.jobOpportunity.update({
+      where: { id: jobId },
+      data: parsed.data,
+    });
 
     return NextResponse.json({
       message: "Job updated successfully",
@@ -112,7 +116,9 @@ export async function DELETE(
 
     const { jobId } = await params;
 
-    await FirestoreService.deleteJob(jobId);
+    await prisma.jobOpportunity.delete({
+      where: { id: jobId },
+    });
 
     return NextResponse.json({
       message: "Job deleted successfully",
