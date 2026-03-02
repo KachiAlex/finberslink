@@ -22,7 +22,10 @@ async function createResumeAction(formData: FormData) {
 
   try {
     const resume = await createResume(parsed.data);
-    redirect(`/resume/${resume.slug}/edit`);
+    if (!resume) {
+      return;
+    }
+    redirect(`/resume/${(resume as any).slug}/edit`);
   } catch {
     // TODO: surface errors
     return;
