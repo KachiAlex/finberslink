@@ -77,7 +77,7 @@ export default async function NotificationsPage() {
               </CardContent>
             </Card>
           ) : (
-            notifications.map((notification) => {
+            notifications.map((notification: any) => {
               const payload = notification.payload as any;
               return (
                 <Card
