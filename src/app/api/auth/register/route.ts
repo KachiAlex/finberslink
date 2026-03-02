@@ -80,6 +80,18 @@ export async function POST(request: NextRequest) {
       typeof error === "object" &&
       error !== null &&
       "code" in error &&
+      (error as { code?: unknown }).code === "P2021"
+    ) {
+      return NextResponse.json(
+        { error: "Database schema not deployed", requestId },
+        { status: 503 }
+      );
+    }
+
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
       (error as { code?: unknown }).code === "P2002"
     ) {
       return NextResponse.json(
