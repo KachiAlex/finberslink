@@ -1,4 +1,4 @@
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 
 export interface SearchResult {
   type: "course" | "job" | "forum" | "news";
@@ -13,21 +13,41 @@ export async function searchAll(query: string, limit = 10): Promise<SearchResult
   const trimmed = query.trim();
   if (!trimmed) return [];
 
-  const [jobsResult, coursesResult] = await Promise.all([
-    FirestoreService.searchJobs(trimmed, 1, limit),
-    FirestoreService.listCourses(1, limit),
+  const searchLower = trimmed.toLowerCase();
+
+  const [jobs, courses] = await Promise.all([
+    prisma.jobOpportunity.findMany({
+      where: {
+        isActive: true,
+        OR: [
+          { title: { contains: searchLower, mode: 'insensitive' } },
+          { company: { contains: searchLower, mode: 'insensitive' } },
+          { description: { contains: searchLower, mode: 'insensitive' } },
+        ],
+      },
+      take: limit,
+    }),
+    prisma.course.findMany({
+      where: {
+        OR: [
+          { title: { contains: searchLower, mode: 'insensitive' } },
+          { description: { contains: searchLower, mode: 'insensitive' } },
+        ],
+      },
+      take: limit,
+    }),
   ]);
 
   const results: SearchResult[] = [
-    ...jobsResult.jobs.map((job) => ({
+    ...jobs.map((job) => ({
       type: "job" as const,
       id: job.id,
       title: job.title,
       description: `${job.company} · ${job.location} · ${job.jobType.toLowerCase().replace("_", " ")}`,
-      url: `/jobs/${job.id}`,
+      url: `/jobs/${job.slug || job.id}`,
       metadata: { company: job.company, location: job.location },
     })),
-    ...coursesResult.courses.map((course) => ({
+    ...courses.map((course) => ({
       type: "course" as const,
       id: course.id,
       title: course.title,
