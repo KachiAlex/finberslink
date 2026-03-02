@@ -42,23 +42,33 @@ export function initializeFirebase() {
   return { db: dbInstance, auth: authInstance };
 }
 
-// Export lazy-initialized instances
-export const db = {
-  collection: (...args: any[]) => {
+// Export lazy-initialized instances using Proxy
+export const db = new Proxy({} as any, {
+  get: (target, prop: string | symbol) => {
     const { db: firestore } = initializeFirebase();
-    return firestore?.collection(...args);
+    if (!firestore) {
+      return undefined;
+    }
+    const value = (firestore as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(firestore);
+    }
+    return value;
   },
-  batch: (...args: any[]) => {
-    const { db: firestore } = initializeFirebase();
-    return firestore?.batch(...args);
-  },
-} as any;
+});
 
-export const auth = {
-  verifyIdToken: (...args: any[]) => {
+export const auth = new Proxy({} as any, {
+  get: (target, prop: string | symbol) => {
     const { auth: authService } = initializeFirebase();
-    return authService?.verifyIdToken(...args);
+    if (!authService) {
+      return undefined;
+    }
+    const value = (authService as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(authService);
+    }
+    return value;
   },
-} as any;
+});
 
 export default admin;
