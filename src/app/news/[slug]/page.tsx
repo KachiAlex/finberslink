@@ -14,7 +14,7 @@ export default async function NewsPostPage({
 }) {
   const { slug } = await params;
   const post = await getNewsPostBySlug(slug);
-  if (!post || post.status !== "PUBLISHED") {
+  if (!post || (post as any).status !== "PUBLISHED") {
     notFound();
   }
 
@@ -24,21 +24,21 @@ export default async function NewsPostPage({
         <Card className="border border-slate-200/70 bg-white/95">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-semibold text-slate-900">{post.title}</CardTitle>
+              <CardTitle className="text-2xl font-semibold text-slate-900">{(post as any).title}</CardTitle>
               <Badge variant="outline" className="capitalize">
-                {post.status.toLowerCase()}
+                {(post as any).status.toLowerCase()}
               </Badge>
             </div>
             <div className="flex items-center gap-4 text-sm text-slate-500">
               <span>
-                By {post.author.firstName} {post.author.lastName}
+                By {(post as any).author.firstName} {(post as any).author.lastName}
               </span>
               <span>·</span>
-              <span>{post.publishedAt?.toLocaleDateString() || post.createdAt.toLocaleDateString()}</span>
+              <span>{(post as any).publishedAt?.toLocaleDateString() || (post as any).createdAt.toLocaleDateString()}</span>
             </div>
-            {post.tags.length > 0 && (
+            {(post as any).tags.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {post.tags.map((tag: string) => (
+                {(post as any).tags.map((tag: string) => (
                   <Badge key={tag} variant="secondary" className="text-xs">
                     {tag}
                   </Badge>
@@ -48,7 +48,7 @@ export default async function NewsPostPage({
           </CardHeader>
           <CardContent>
             <div className="prose prose-slate max-w-none">
-              {post.content.split("\n").map((paragraph: string, i: number) => (
+              {(post as any).content.split("\n").map((paragraph: string, i: number) => (
                 <p key={i} className="mb-4 text-slate-700 leading-relaxed">
                   {paragraph}
                 </p>
