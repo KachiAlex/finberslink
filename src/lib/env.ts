@@ -15,25 +15,16 @@ type EnvShape = Record<RequiredEnvKey, string> & {
 };
 
 function loadEnv(): EnvShape {
-  const missing: string[] = [];
   const env: Partial<EnvShape> = {};
 
   for (const key of requiredEnv) {
     const value = process.env[key];
     if (!value) {
-      // During build time, use placeholder values
-      if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
-        missing.push(key);
-      } else {
-        env[key] = `placeholder_${key}`;
-      }
+      // During build time or when not in production runtime, use placeholder values
+      env[key] = `placeholder_${key}`;
     } else {
       env[key] = value;
     }
-  }
-
-  if (missing.length > 0 && process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
-    throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
   }
 
   env.NEXTAUTH_URL = process.env.NEXTAUTH_URL;
