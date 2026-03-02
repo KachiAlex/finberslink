@@ -1,11 +1,12 @@
 import * as admin from 'firebase-admin';
 
-let cachedDb: any = null;
-let cachedAuth: any = null;
+let initialized = false;
+let dbInstance: any = null;
+let authInstance: any = null;
 
-function initializeFirebase() {
-  if (cachedDb && cachedAuth) {
-    return { db: cachedDb, auth: cachedAuth };
+export function initializeFirebase() {
+  if (initialized) {
+    return { db: dbInstance, auth: authInstance };
   }
 
   const serviceAccount = {
@@ -16,42 +17,48 @@ function initializeFirebase() {
 
   // Only initialize if we have valid credentials
   if (serviceAccount.projectId && serviceAccount.privateKey && serviceAccount.clientEmail) {
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-        databaseURL: process.env.FIREBASE_DATABASE_URL,
+    try {
+      if (!admin.apps.length) {
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+          databaseURL: process.env.FIREBASE_DATABASE_URL,
+        });
+      }
+
+      dbInstance = admin.firestore();
+      authInstance = admin.auth();
+
+      // Enable offline persistence for better performance
+      dbInstance.settings({
+        ignoreUndefinedProperties: true,
       });
+
+      initialized = true;
+    } catch (error) {
+      console.error('Failed to initialize Firebase:', error);
     }
-
-    cachedDb = admin.firestore();
-    cachedAuth = admin.auth();
-
-    // Enable offline persistence for better performance
-    cachedDb.settings({
-      ignoreUndefinedProperties: true,
-    });
   }
 
-  return { db: cachedDb, auth: cachedAuth };
+  return { db: dbInstance, auth: authInstance };
 }
 
-// Lazy initialization - only initialize when actually needed
-export function getFirebaseServices() {
-  return initializeFirebase();
-}
-
-export const db = new Proxy({}, {
-  get: (target, prop) => {
+// Export lazy-initialized instances
+export const db = {
+  collection: (...args: any[]) => {
     const { db: firestore } = initializeFirebase();
-    return firestore?.[prop as string];
+    return firestore?.collection(...args);
   },
-});
+  batch: (...args: any[]) => {
+    const { db: firestore } = initializeFirebase();
+    return firestore?.batch(...args);
+  },
+} as any;
 
-export const auth = new Proxy({}, {
-  get: (target, prop) => {
+export const auth = {
+  verifyIdToken: (...args: any[]) => {
     const { auth: authService } = initializeFirebase();
-    return authService?.[prop as string];
+    return authService?.verifyIdToken(...args);
   },
-});
+} as any;
 
 export default admin;
