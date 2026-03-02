@@ -12,6 +12,8 @@ import { NEWS_STATUSES, type NewsStatus } from "@/features/news/constants";
 import { requireAdminUser } from "@/features/admin/service";
 import { AdminShell } from "../_components/admin-shell";
 
+export const dynamic = 'force-dynamic';
+
 async function createNewsAction(formData: FormData) {
   "use server";
 
