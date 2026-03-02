@@ -114,7 +114,7 @@ export default async function JobsPage({
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Featured Opportunities</h2>
                 <div className="grid gap-4">
-                  {featuredJobs.map((job) => (
+                  {featuredJobs.map((job: any) => (
                     <JobCard key={job.id} job={job} featured={true} />
                   ))}
                 </div>
@@ -144,7 +144,7 @@ export default async function JobsPage({
             {/* Job Listings */}
             {jobsData.jobs.length > 0 ? (
               <div className="space-y-4">
-                {jobsData.jobs.map((job) => (
+                {jobsData.jobs.map((job: any) => (
                   <JobCard key={job.id} job={job} />
                 ))}
 
