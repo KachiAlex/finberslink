@@ -16,7 +16,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  serverExternalPackages: ["@prisma/client"],
+  // Vercel-specific optimizations
+  swcMinify: true,
+  reactStrictMode: true,
 };
 
 export default nextConfig;
