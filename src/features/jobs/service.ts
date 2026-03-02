@@ -89,23 +89,8 @@ export async function getJobs(filters: JobFilters = {}) {
 }
 
 export async function getJobBySlug(slug: string) {
-  return prisma.jobOpportunity.findUnique({
-    where: { slug },
-    include: {
-      postedBy: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      _count: {
-        select: {
-          applications: true,
-        },
-      },
-    },
-  });
+  const jobs = await FirestoreService.listJobs({ slug }, 1, 1);
+  return jobs.jobs.length > 0 ? jobs.jobs[0] : null;
 }
 
 export async function getJobById(jobId: string) {
@@ -185,34 +170,11 @@ export async function updateJobApplicationStatus(
 }
 
 export async function getJobApplicationsForAdmin(jobId?: string) {
-  const where = jobId ? { jobOpportunityId: jobId } : {};
+  const { applications } = await FirestoreService.listApplications(1, 100);
   
-  return prisma.jobApplication.findMany({
-    where,
-    include: {
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          profile: {
-            select: {
-              headline: true,
-              location: true,
-            },
-          },
-        },
-      },
-      resume: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
-    },
-    orderBy: {
-      submittedAt: "desc",
-    },
-  });
+  if (jobId) {
+    return applications.filter(app => app.jobOpportunityId === jobId);
+  }
+  
+  return applications;
 }
