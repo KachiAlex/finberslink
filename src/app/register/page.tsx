@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
 type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
+const RoleValues: Role[] = ['ADMIN', 'SUPER_ADMIN', 'STUDENT', 'TUTOR'];
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -111,7 +112,7 @@ export default function RegisterPage() {
                 className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
               >
                 <option value="">Select role (defaults to Student)</option>
-                {Object.values(Role).map((r) => (
+                {RoleValues.map((r) => (
                   <option key={r} value={r}>
                     {r.replace("_", " ")}
                   </option>
