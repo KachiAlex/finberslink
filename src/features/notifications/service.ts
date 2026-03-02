@@ -1,4 +1,4 @@
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 
 export async function createNotification(input: {
   userId: string;
@@ -7,28 +7,44 @@ export async function createNotification(input: {
   body?: string;
   actionUrl?: string;
 }) {
-  return FirestoreService.createNotification({
-    userId: input.userId,
-    type: input.type,
-    title: input.title,
-    body: input.body,
-    actionUrl: input.actionUrl,
+  return prisma.notification.create({
+    data: {
+      userId: input.userId,
+      type: input.type,
+      payload: {
+        title: input.title,
+        body: input.body,
+        actionUrl: input.actionUrl,
+      },
+    },
   });
 }
 
 export async function listUserNotifications(userId: string, limit = 20) {
-  return FirestoreService.listUserNotifications(userId, limit);
+  return prisma.notification.findMany({
+    where: { userId },
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+  });
 }
 
 export async function markNotificationAsRead(id: string) {
-  await FirestoreService.markNotificationAsRead(id);
+  await prisma.notification.update({
+    where: { id },
+    data: { readAt: new Date() },
+  });
   return null;
 }
 
 export async function markAllNotificationsAsRead(userId: string) {
-  return FirestoreService.markAllNotificationsAsRead(userId);
+  return prisma.notification.updateMany({
+    where: { userId, readAt: null },
+    data: { readAt: new Date() },
+  });
 }
 
 export async function getUnreadCount(userId: string) {
-  return FirestoreService.getUnreadCount(userId);
+  return prisma.notification.count({
+    where: { userId, readAt: null },
+  });
 }
