@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,20 +16,29 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const status = searchParams.get("status");
 
-    const { applications, total } = await FirestoreService.listApplicationsByUser(user.sub, page, limit);
-
-    let filtered = applications;
+    const where: any = { userId: user.sub };
     if (status) {
-      filtered = applications.filter(app => app.status === status);
+      where.status = status;
     }
 
+    const skip = (page - 1) * limit;
+    const applications = await prisma.jobApplication.findMany({
+      where,
+      include: { opportunity: true, resume: true },
+      skip,
+      take: limit,
+      orderBy: { submittedAt: 'desc' },
+    });
+
+    const total = await prisma.jobApplication.count({ where });
+
     return NextResponse.json({
-      applications: filtered,
+      applications,
       pagination: {
         page,
         limit,
-        total: filtered.length,
-        totalPages: Math.ceil(filtered.length / limit),
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error) {
