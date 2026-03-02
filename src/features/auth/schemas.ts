@@ -7,7 +7,7 @@ export const RegisterSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email(),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  role: z.nativeEnum(Role).optional(),
+  role: z.enum(['ADMIN', 'SUPER_ADMIN', 'STUDENT', 'TUTOR']).optional(),
 });
 
 export const LoginSchema = z.object({
