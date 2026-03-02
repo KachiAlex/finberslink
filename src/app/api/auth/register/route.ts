@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { setAuthCookies } from "@/lib/auth/cookies";
 import { hashPassword } from "@/lib/auth/password";
 import { signAccessToken, signRefreshToken, type SessionPayload } from "@/lib/auth/jwt";
+import { getOrCreateDefaultTenant } from "@/features/tenant/service";
 
 export const runtime = "nodejs";
 
@@ -28,7 +29,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const passwordHash = await hashPassword(parsed.data.password);
+    const [passwordHash, defaultTenant] = await Promise.all([
+      hashPassword(parsed.data.password),
+      getOrCreateDefaultTenant(),
+    ]);
+
     const user = await prisma.user.create({
       data: {
         firstName: parsed.data.firstName,
@@ -37,6 +42,7 @@ export async function POST(request: NextRequest) {
         passwordHash,
         role: parsed.data.role ?? "STUDENT",
         status: "ACTIVE",
+        tenantId: defaultTenant.id,
       },
     });
 
@@ -44,6 +50,7 @@ export async function POST(request: NextRequest) {
       sub: user.id,
       role: user.role as SessionPayload["role"],
       status: user.status as SessionPayload["status"],
+      tenantId: user.tenantId,
     };
 
     const tokens = {

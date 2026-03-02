@@ -10,6 +10,7 @@ type EnvShape = Record<RequiredEnvKey, string> & {
   NEXTAUTH_URL?: string;
   NEXTAUTH_SECRET?: string;
   NEXT_PUBLIC_DEMO_STUDENT_ID?: string;
+  NEXT_PUBLIC_DEFAULT_TENANT_SLUG?: string;
   OPENAI_API_KEY?: string;
   SENDGRID_API_KEY?: string;
 };
@@ -37,6 +38,7 @@ function loadEnv(): EnvShape {
   env.NEXTAUTH_URL = process.env.NEXTAUTH_URL;
   env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET;
   env.NEXT_PUBLIC_DEMO_STUDENT_ID = process.env.NEXT_PUBLIC_DEMO_STUDENT_ID;
+  env.NEXT_PUBLIC_DEFAULT_TENANT_SLUG = process.env.NEXT_PUBLIC_DEFAULT_TENANT_SLUG;
   env.OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   env.SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 

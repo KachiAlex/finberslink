@@ -5,6 +5,7 @@ import { verifyToken } from "@/lib/auth/jwt";
 const protectedRoutes = [
   "/dashboard",
   "/admin",
+  "/superadmin",
   "/tutor",
   "/notifications",
   "/resume",
@@ -15,6 +16,7 @@ const protectedRoutes = [
 // Routes that require specific roles
 const roleBasedRoutes = {
   "/admin": ["ADMIN", "SUPER_ADMIN"],
+  "/superadmin": ["SUPER_ADMIN"],
   "/tutor": ["TUTOR"],
 };
 

@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { siteConfig } from "@/config/site";
 
-type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
-const RoleValues: Role[] = ['ADMIN', 'SUPER_ADMIN', 'STUDENT', 'TUTOR'];
+type Role = 'STUDENT' | 'TUTOR' | 'EMPLOYER';
+const RoleValues: Role[] = ['STUDENT', 'TUTOR', 'EMPLOYER'];
 
 export default function RegisterPage() {
   const router = useRouter();

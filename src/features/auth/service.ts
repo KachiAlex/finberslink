@@ -3,10 +3,10 @@ import type { LoginInput, RegisterInput } from "@/features/auth/schemas";
 import { signAccessToken, signRefreshToken, verifyToken, type SessionPayload } from "@/lib/auth/jwt";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 
-type UserRole = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
+type UserRole = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR' | 'EMPLOYER';
 type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
-export async function registerUser(input: RegisterInput) {
+export async function registerUser(input: RegisterInput, tenantId?: string | null) {
   const existing = await findUserByEmail(input.email);
   if (existing) {
     throw new Error("User already exists");
@@ -19,9 +19,10 @@ export async function registerUser(input: RegisterInput) {
     email: input.email,
     passwordHash,
     role: (input.role ?? 'STUDENT') as UserRole,
+    tenantId,
   });
 
-  return buildTokens(user.id, user.role, user.status);
+  return buildTokens(user.id, user.role, user.status, user.tenantId ?? null);
 }
 
 export async function loginUser(input: LoginInput) {
@@ -35,19 +36,26 @@ export async function loginUser(input: LoginInput) {
     throw new Error("Invalid credentials");
   }
 
-  return buildTokens(user.id, user.role, user.status);
+  return buildTokens(user.id, user.role, user.status, user.tenantId ?? null);
 }
 
 export function refreshSession(refreshToken: string) {
   const payload = verifyToken(refreshToken);
-  return buildTokens(payload.sub, payload.role, payload.status, refreshToken);
+  return buildTokens(payload.sub, payload.role, payload.status, payload.tenantId ?? null, refreshToken);
 }
 
-function buildTokens(userId: string, role: UserRole, status: UserStatus, refreshToken?: string) {
+function buildTokens(
+  userId: string,
+  role: UserRole,
+  status: UserStatus,
+  tenantId: string | null,
+  refreshToken?: string
+) {
   const sessionPayload: SessionPayload = {
     sub: userId,
     role,
     status,
+    tenantId,
   };
 
   const newRefreshToken = refreshToken ?? signRefreshToken(sessionPayload);

@@ -97,6 +97,26 @@ enum NotificationType {
   SYSTEM
 }
 
+enum TenantStatus {
+  ACTIVE
+  TRIAL
+  SUSPENDED
+  CANCELLED
+}
+
+enum TenantPlanTier {
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
 model User {
   id            String              @id @default(cuid())
   email         String              @unique
@@ -106,6 +126,7 @@ model User {
   avatarUrl     String?
   role          Role                @default(STUDENT)
   status        UserStatus          @default(ACTIVE)
+  tenantId      String?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
@@ -123,6 +144,8 @@ model User {
   volunteerOpportunitiesPosted VolunteerOpportunity[] @relation("VolunteerPostedBy")
   postedCompanies Company[]         @relation("CompanyPostedBy")
   jobAlerts     JobAlert[]
+  tenant        Tenant?             @relation(fields: [tenantId], references: [id])
+  createdInvites TenantInvite[]     @relation("InviteCreator")
 }
 
 model Profile {
@@ -421,4 +444,74 @@ model Notification {
   createdAt DateTime          @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model Tenant {
+  id               String           @id @default(cuid())
+  name             String
+  slug             String           @unique
+  contactName      String?
+  contactEmail     String?
+  logoUrl          String?
+  planTier         TenantPlanTier   @default(PROFESSIONAL)
+  status           TenantStatus     @default(ACTIVE)
+  seatLimit        Int              @default(100)
+  seatAllocated    Int              @default(0)
+  licenseExpiresAt DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  settings TenantSettings?
+  usage    TenantUsage[]
+  users    User[]
+  invites  TenantInvite[]
+}
+
+model TenantSettings {
+  id             String   @id @default(cuid())
+  tenantId       String   @unique
+  primaryColor   String?  @default("#4f46e5")
+  secondaryColor String?  @default("#2dd4bf")
+  featureFlags   Json     @default("{}")
+  themeOverrides Json?
+  domain         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model TenantInvite {
+  id          String       @id @default(cuid())
+  tenantId    String
+  email       String
+  role        Role
+  token       String       @unique
+  status      InviteStatus @default(PENDING)
+  expiresAt   DateTime
+  createdById String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  createdBy User?  @relation("InviteCreator", fields: [createdById], references: [id])
+
+  @@index([tenantId, status])
+}
+
+model TenantUsage {
+  id              String   @id @default(cuid())
+  tenantId        String
+  year            Int
+  month           Int
+  activeStudents  Int      @default(0)
+  activeTutors    Int      @default(0)
+  activeJobs      Int      @default(0)
+  storageUsedMb   Int      @default(0)
+  applications    Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, year, month])
 }

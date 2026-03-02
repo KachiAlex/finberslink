@@ -5,7 +5,8 @@ interface CreateUserInput {
   lastName: string;
   email: string;
   passwordHash: string;
-  role?: 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
+  role?: 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR' | 'EMPLOYER';
+  tenantId?: string | null;
 }
 
 export async function findUserByEmail(email: string) {
@@ -23,6 +24,7 @@ export async function createUser(input: CreateUserInput) {
       passwordHash: input.passwordHash,
       role: input.role ?? 'STUDENT',
       status: 'ACTIVE',
+      tenantId: input.tenantId ?? undefined,
     },
   });
 }

@@ -1,13 +1,13 @@
 import { z } from "zod";
 
-type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
+type Role = 'STUDENT' | 'TUTOR' | 'EMPLOYER';
 
 export const RegisterSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email(),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  role: z.enum(['ADMIN', 'SUPER_ADMIN', 'STUDENT', 'TUTOR']).optional(),
+  role: z.enum(['STUDENT', 'TUTOR', 'EMPLOYER']).optional(),
 });
 
 export const LoginSchema = z.object({

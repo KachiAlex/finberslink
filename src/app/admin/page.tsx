@@ -1,7 +1,9 @@
-import { BookOpen, Briefcase, GraduationCap, Users } from "lucide-react";
+import { ArrowUpRight, BookOpen, Briefcase, GraduationCap, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/glass-card";
+import { StatCard } from "@/components/ui/stat-card";
 import { getAdminOverview } from "@/features/admin/service";
 
 import { AdminShell } from "./_components/admin-shell";
@@ -49,96 +51,119 @@ export default async function AdminOverviewPage() {
         description="Snapshots of program health, learner momentum, and employer demand."
       >
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {statConfig.map(({ key, label, icon: Icon, accent }) => (
-            <Card key={key} className="border border-slate-200/70 bg-white/95">
-              <CardHeader className="flex flex-row items-center justify-between px-5 pb-2 pt-5">
-                <CardTitle className="text-sm font-medium text-slate-500">{label}</CardTitle>
-                <span className={`rounded-full p-2 text-xs ${accent}`}>
-                  <Icon className="h-4 w-4" />
-                </span>
-              </CardHeader>
-              <CardContent className="px-5 pb-5">
-                <p className="text-3xl font-semibold text-slate-900">{overview.stats[key]}</p>
-              </CardContent>
-            </Card>
+          {statConfig.map(({ key, label, icon }) => (
+            <StatCard
+              key={key}
+              title={label}
+              value={overview.stats[key]}
+              icon={icon}
+              trend={{ value: 6, isPositive: true }}
+              className="bg-gradient-to-br from-white/15 via-white/5 to-transparent text-white"
+            />
           ))}
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          <Card className="border border-slate-200/60 bg-white/95">
-            <CardHeader>
-              <CardTitle className="text-base font-semibold text-slate-900">
-                Recently published courses
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <GlassCard className="p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.4em] text-white/60">Publishing</p>
+                <h2 className="mt-2 text-2xl font-semibold text-white">Recently published courses</h2>
+                <p className="text-white/70">
+                  High-impact cohorts shipping to the marketplace
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" className="text-white/80" asChild>
+                <a href="/admin/courses/new" className="inline-flex items-center gap-1">
+                  Launch new course <ArrowUpRight className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
+            <div className="mt-6 space-y-3">
               {overview.recentCourses.length === 0 && (
-                <p className="text-sm text-slate-500">No courses yet. Create one to kickstart cohorts.</p>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
+                  No courses yet. Create one to unlock learner demand.
+                </div>
               )}
               {overview.recentCourses.map((course: any) => (
                 <div
                   key={course.id}
-                  className="flex items-center justify-between rounded-2xl border border-slate-100 px-4 py-3"
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
                 >
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{course.title}</p>
-                    <p className="text-xs text-slate-500">{course.category}</p>
+                    <p className="text-sm font-semibold text-white">{course.title}</p>
+                    <p className="text-xs text-white/60">{course.category}</p>
                   </div>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="border-white/30 bg-white/5 text-xs text-white">
                     {formatDate(course.createdAt)}
                   </Badge>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </GlassCard>
 
-          <Card className="border border-slate-200/60 bg-white/95">
-            <CardHeader>
-              <CardTitle className="text-base font-semibold text-slate-900">Recent job partners</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <GlassCard className="p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-white/60">Employer ecosystem</p>
+                <h2 className="mt-2 text-2xl font-semibold text-white">Recent job partners</h2>
+                <p className="text-white/70">Supply pipeline shaping hiring outlook</p>
+              </div>
+            </div>
+            <div className="mt-6 space-y-3">
               {overview.recentJobs.length === 0 && (
-                <p className="text-sm text-slate-500">No job postings yet. Use the Jobs tab to add one.</p>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
+                  No job postings yet. Use the Jobs tab to add the first employer.
+                </div>
               )}
               {overview.recentJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="flex items-center justify-between rounded-2xl border border-slate-100 px-4 py-3"
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-white/5 to-transparent px-4 py-3"
                 >
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{job.title}</p>
-                    <p className="text-xs text-slate-500">{job.company}</p>
+                    <p className="text-sm font-semibold text-white">{job.title}</p>
+                    <p className="text-xs text-white/60">{job.company}</p>
                   </div>
-                  <span className="text-xs text-slate-500">{formatDate(job.createdAt)}</span>
+                  <span className="text-xs text-white/50">{formatDate(job.createdAt)}</span>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </GlassCard>
         </div>
 
-        <Card className="border border-slate-200/60 bg-white/95">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold text-slate-900">New learners</CardTitle>
-          </CardHeader>
-          <CardContent className="divide-y divide-slate-100">
+        <GlassCard className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">Talent flow</p>
+              <h2 className="mt-2 text-2xl font-semibold text-white">New learners</h2>
+              <p className="text-white/70">Freshly onboarded students joining the experience</p>
+            </div>
+            <Badge variant="outline" className="border-white/30 bg-white/5 text-xs text-white">
+              {overview.recentStudents.length} arrivals
+            </Badge>
+          </div>
+          <div className="mt-6 divide-y divide-white/10">
             {overview.recentStudents.length === 0 && (
-              <p className="py-4 text-sm text-slate-500">Student roster will appear once people enroll.</p>
+              <p className="py-4 text-sm text-white/70">
+                Student roster will appear once people enroll.
+              </p>
             )}
             {overview.recentStudents.map((student) => (
               <div key={student.id} className="flex items-center justify-between py-4">
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-white">
                     {student.firstName} {student.lastName}
                   </p>
-                  <p className="text-xs text-slate-500">{student.email}</p>
+                  <p className="text-xs text-white/60">{student.email}</p>
                 </div>
-                <Badge variant="secondary" className="text-xs capitalize">
+                <Badge variant="secondary" className="bg-white/15 text-xs capitalize text-white">
                   {student.status.toLowerCase()}
                 </Badge>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </GlassCard>
       </AdminShell>
     </div>
   );

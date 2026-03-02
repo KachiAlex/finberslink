@@ -2,13 +2,14 @@ import jwt from "jsonwebtoken";
 
 import { env } from "@/lib/env";
 
-type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
+type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR' | 'EMPLOYER';
 type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
 export interface SessionPayload {
   sub: string;
   role: Role;
   status: UserStatus;
+  tenantId?: string | null;
 }
 
 export interface TokenPair {
