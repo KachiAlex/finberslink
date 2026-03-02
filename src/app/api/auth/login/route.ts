@@ -35,7 +35,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (errorMessage.includes("Cannot read properties of undefined") || errorMessage.includes("db.collection is not a function")) {
+    if (
+      errorMessage.includes("Cannot read properties of undefined") ||
+      errorMessage.includes("db.collection is not a function") ||
+      errorMessage.includes("collection is not a function") ||
+      errorMessage.includes("Firebase not initialized")
+    ) {
       console.error("Firebase not initialized properly");
       return NextResponse.json(
         { error: "Database connection failed. Please try again later." },

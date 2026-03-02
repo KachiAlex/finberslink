@@ -47,7 +47,7 @@ export const db = new Proxy({} as any, {
   get: (target, prop: string | symbol) => {
     const { db: firestore } = initializeFirebase();
     if (!firestore) {
-      return undefined;
+      throw new Error("Firebase not initialized");
     }
     const value = (firestore as any)[prop];
     if (typeof value === 'function') {
@@ -61,7 +61,7 @@ export const auth = new Proxy({} as any, {
   get: (target, prop: string | symbol) => {
     const { auth: authService } = initializeFirebase();
     if (!authService) {
-      return undefined;
+      throw new Error("Firebase not initialized");
     }
     const value = (authService as any)[prop];
     if (typeof value === 'function') {

@@ -17,11 +17,18 @@ type EnvShape = Record<RequiredEnvKey, string> & {
 function loadEnv(): EnvShape {
   const env: Partial<EnvShape> = {};
 
+  const isBuildTime =
+    process.env.NEXT_PHASE === "phase-production-build" ||
+    process.env.NEXT_PHASE === "phase-development-server";
+
   for (const key of requiredEnv) {
     const value = process.env[key];
     if (!value) {
-      // During build time or when not in production runtime, use placeholder values
-      env[key] = `placeholder_${key}`;
+      if (isBuildTime || process.env.NODE_ENV !== "production") {
+        env[key] = `placeholder_${key}`;
+      } else {
+        throw new Error(`Missing required environment variable: ${key}`);
+      }
     } else {
       env[key] = value;
     }

@@ -1,8 +1,10 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAIClient() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 export interface ResumeSummaryRequest {
   currentSummary?: string;
@@ -53,6 +55,7 @@ Requirements:
 Return only the optimized summary without any additional text.`;
 
   try {
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
@@ -98,6 +101,7 @@ Requirements:
 Format as a numbered list without any additional text.`;
 
   try {
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
@@ -148,6 +152,7 @@ Format the response as JSON:
 }`;
 
   try {
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
@@ -200,6 +205,7 @@ Format the response as JSON:
 }`;
 
   try {
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
@@ -246,6 +252,7 @@ Requirements:
 Format as a complete cover letter without any additional text.`;
 
   try {
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
