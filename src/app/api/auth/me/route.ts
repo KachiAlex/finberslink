@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import * as FirestoreService from "@/lib/firestore-service";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
     }
 
     const payload = verifyToken(accessToken);
-    const user = await FirestoreService.findUserById(payload.sub);
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
 
     if (!user) {
       return NextResponse.json(
