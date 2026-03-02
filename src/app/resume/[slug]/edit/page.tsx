@@ -182,14 +182,14 @@ export default async function ResumeEditPage({
             </CardHeader>
             <CardContent>
               <form className="space-y-4" action={updateResumeAction}>
-                <input type="hidden" name="slug" value={resume.slug} />
+                <input type="hidden" name="slug" value={(resume as any).slug} />
                 <div className="space-y-2">
                   <Label htmlFor="title">Title</Label>
-                  <Input id="title" name="title" defaultValue={resume.title} required />
+                  <Input id="title" name="title" defaultValue={(resume as any).title} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="summary">Summary</Label>
-                  <Textarea id="summary" name="summary" defaultValue={resume.summary ?? ""} rows={4} />
+                  <Textarea id="summary" name="summary" defaultValue={(resume as any).summary ?? ""} rows={4} />
                 </div>
                 <Button type="submit">Save changes</Button>
               </form>
@@ -227,9 +227,9 @@ export default async function ResumeEditPage({
             <CardDescription>Add your work experience with AI assistance.</CardDescription>
           </CardHeader>
           <CardContent>
-            {resume.experiences.length > 0 ? (
+            {(resume as any).experiences.length > 0 ? (
               <div className="space-y-4">
-                {resume.experiences.map((experience) => (
+                {(resume as any).experiences.map((experience: any) => (
                   <div key={experience.id} className="border rounded-lg p-4">
                     <div className="flex justify-between items-start mb-2">
                       <div>
@@ -244,7 +244,7 @@ export default async function ResumeEditPage({
                       </Button>
                     </div>
                     <ul className="text-sm text-slate-700 space-y-1">
-                      {experience.achievements.map((achievement, index) => (
+                      {experience.achievements.map((achievement: any, index: number) => (
                         <li key={index} className="flex items-start">
                           <span className="text-blue-500 mr-2">•</span>
                           {achievement}
