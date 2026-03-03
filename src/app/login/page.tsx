@@ -36,7 +36,14 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      const role = data?.user?.role;
+      if (role === "SUPER_ADMIN") {
+        router.push("/superadmin");
+      } else if (role === "TUTOR") {
+        router.push("/tutor");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       setError("An error occurred. Please try again.");
       setLoading(false);

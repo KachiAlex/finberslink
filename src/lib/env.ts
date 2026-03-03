@@ -26,7 +26,14 @@ function loadEnv(): EnvShape {
     const value = process.env[key];
     if (!value) {
       if (isBuildTime || process.env.NODE_ENV !== "production") {
-        env[key] = `placeholder_${key}`;
+        // Generate development secrets if not provided
+        if (key === "JWT_ACCESS_SECRET") {
+          env[key] = "dev-jwt-access-secret-change-in-production";
+        } else if (key === "JWT_REFRESH_SECRET") {
+          env[key] = "dev-jwt-refresh-secret-change-in-production";
+        } else {
+          env[key] = `placeholder_${key}`;
+        }
       } else {
         throw new Error(`Missing required environment variable: ${key}`);
       }

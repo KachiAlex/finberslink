@@ -7,6 +7,382 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                           String                 @id @default(cuid())
+  email                        String                 @unique
+  passwordHash                 String
+  firstName                    String
+  lastName                     String
+  avatarUrl                    String?
+  role                         Role                   @default(STUDENT)
+  status                       UserStatus             @default(ACTIVE)
+  createdAt                    DateTime               @default(now())
+  updatedAt                    DateTime               @updatedAt
+  tenantId                     String?
+  postedCompanies              Company[]              @relation("CompanyPostedBy")
+  coursesTaught                Course[]               @relation("CourseInstructor")
+  enrollments                  Enrollment[]
+  forumPosts                   ForumPost[]
+  forumThreads                 ForumThread[]
+  jobAlerts                    JobAlert[]
+  jobApplications              JobApplication[]
+  jobOpportunitiesPosted       JobOpportunity[]       @relation("JobPostedBy")
+  newsPosts                    News[]
+  notifications                Notification[]
+  profile                      Profile?
+  resumes                      Resume[]
+  createdInvites               TenantInvite[]         @relation("InviteCreator")
+  tenant                       Tenant?                @relation(fields: [tenantId], references: [id])
+  volunteerApps                VolunteerApplication[]
+  volunteerOpportunitiesPosted VolunteerOpportunity[] @relation("VolunteerPostedBy")
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  headline  String?
+  bio       String?
+  location  String?
+  skills    String[] @default([])
+  interests String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Course {
+  id                   String        @id @default(cuid())
+  slug                 String        @unique
+  title                String
+  tagline              String
+  description          String
+  level                CourseLevel
+  category             String
+  coverImage           String
+  certificateAvailable Boolean       @default(false)
+  instructorId         String
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  outcomes             String[]      @default([])
+  skills               String[]      @default([])
+  instructor           User          @relation("CourseInstructor", fields: [instructorId], references: [id])
+  enrollments          Enrollment[]
+  forumThreads         ForumThread[]
+  lessons              Lesson[]
+}
+
+model Lesson {
+  id              String           @id @default(cuid())
+  courseId        String
+  title           String
+  slug            String
+  order           Int
+  durationMinutes Int
+  format          LessonFormat
+  summary         String
+  content         String?
+  videoUrl        String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  forumPosts      ForumPost[]
+  course          Course           @relation(fields: [courseId], references: [id])
+  lessonProgress  LessonProgress[]
+  resources       LessonResource[]
+
+  @@unique([courseId, slug])
+  @@index([courseId, order])
+}
+
+model LessonResource {
+  id       String       @id @default(cuid())
+  lessonId String
+  title    String
+  type     ResourceType
+  url      String
+  lesson   Lesson       @relation(fields: [lessonId], references: [id])
+}
+
+model Enrollment {
+  id                 String           @id @default(cuid())
+  userId             String
+  courseId           String
+  status             EnrollmentStatus @default(ACTIVE)
+  progressPercentage Int              @default(0)
+  lastAccessedAt     DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  course             Course           @relation(fields: [courseId], references: [id])
+  user               User             @relation(fields: [userId], references: [id])
+  lessonProgress     LessonProgress[]
+
+  @@unique([userId, courseId])
+}
+
+model LessonProgress {
+  id           String               @id @default(cuid())
+  enrollmentId String
+  lessonId     String
+  status       LessonProgressStatus @default(NOT_STARTED)
+  completedAt  DateTime?
+  enrollment   Enrollment           @relation(fields: [enrollmentId], references: [id])
+  lesson       Lesson               @relation(fields: [lessonId], references: [id])
+
+  @@unique([enrollmentId, lessonId])
+}
+
+model ForumThread {
+  id        String      @id @default(cuid())
+  title     String
+  courseId  String
+  authorId  String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  posts     ForumPost[]
+  author    User        @relation(fields: [authorId], references: [id])
+  course    Course      @relation(fields: [courseId], references: [id])
+}
+
+model ForumPost {
+  id        String      @id @default(cuid())
+  threadId  String
+  authorId  String
+  lessonId  String?
+  parentId  String?
+  content   String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  author    User        @relation(fields: [authorId], references: [id])
+  lesson    Lesson?     @relation(fields: [lessonId], references: [id])
+  parent    ForumPost?  @relation("PostReplies", fields: [parentId], references: [id])
+  replies   ForumPost[] @relation("PostReplies")
+  thread    ForumThread @relation(fields: [threadId], references: [id])
+}
+
+model Resume {
+  id              String             @id @default(cuid())
+  userId          String
+  title           String
+  summary         String?
+  skills          String[]           @default([])
+  slug            String             @unique
+  visibility      ResumeVisibility   @default(PRIVATE)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  jobApplications JobApplication[]
+  user            User               @relation(fields: [userId], references: [id])
+  experiences     ResumeExperience[]
+  projects        ResumeProject[]
+}
+
+model ResumeExperience {
+  id           String    @id @default(cuid())
+  resumeId     String
+  company      String
+  role         String
+  startDate    DateTime
+  endDate      DateTime?
+  description  String?
+  achievements String[]  @default([])
+  order        Int       @default(0)
+  resume       Resume    @relation(fields: [resumeId], references: [id])
+}
+
+model ResumeProject {
+  id        String   @id @default(cuid())
+  resumeId  String
+  name      String
+  summary   String?
+  link      String?
+  techStack String[] @default([])
+  order     Int      @default(0)
+  resume    Resume   @relation(fields: [resumeId], references: [id])
+}
+
+model JobOpportunity {
+  id               String           @id @default(cuid())
+  title            String
+  company          String
+  location         String
+  country          String
+  jobType          JobType
+  remoteOption     RemoteOption
+  salaryRange      String?
+  description      String?
+  requirements     String[]         @default([])
+  tags             String[]         @default([])
+  postedById       String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  applicationCount Int              @default(0)
+  deadline         DateTime?
+  featured         Boolean          @default(false)
+  isActive         Boolean          @default(true)
+  slug             String?          @unique
+  viewCount        Int              @default(0)
+  applications     JobApplication[]
+  postedBy         User?            @relation("JobPostedBy", fields: [postedById], references: [id])
+}
+
+model JobApplication {
+  id               String               @id @default(cuid())
+  userId           String
+  jobOpportunityId String
+  resumeId         String?
+  status           JobApplicationStatus @default(SUBMITTED)
+  submittedAt      DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  coverLetter      String?
+  opportunity      JobOpportunity       @relation(fields: [jobOpportunityId], references: [id])
+  resume           Resume?              @relation(fields: [resumeId], references: [id])
+  user             User                 @relation(fields: [userId], references: [id])
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  website     String?
+  logo        String?
+  size        String?
+  industry    String?
+  location    String?
+  postedById  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  postedBy    User?    @relation("CompanyPostedBy", fields: [postedById], references: [id])
+}
+
+model JobAlert {
+  id        String   @id @default(cuid())
+  userId    String
+  keywords  String[]
+  location  String?
+  jobType   JobType?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model VolunteerOpportunity {
+  id           String                 @id @default(cuid())
+  title        String
+  organization String
+  location     String
+  country      String
+  description  String?
+  commitment   String?
+  skills       String[]               @default([])
+  isRemote     Boolean                @default(false)
+  postedById   String?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  applications VolunteerApplication[]
+  postedBy     User?                  @relation("VolunteerPostedBy", fields: [postedById], references: [id])
+}
+
+model VolunteerApplication {
+  id                     String                     @id @default(cuid())
+  userId                 String
+  volunteerOpportunityId String
+  status                 VolunteerApplicationStatus @default(SUBMITTED)
+  submittedAt            DateTime                   @default(now())
+  user                   User                       @relation(fields: [userId], references: [id])
+  opportunity            VolunteerOpportunity       @relation(fields: [volunteerOpportunityId], references: [id])
+}
+
+model News {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  content     String
+  summary     String?
+  tags        String[]
+  status      String    @default("DRAFT")
+  authorId    String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  author      User      @relation(fields: [authorId], references: [id])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id])
+}
+
+model Tenant {
+  id               String          @id @default(cuid())
+  name             String
+  slug             String          @unique
+  contactName      String?
+  contactEmail     String?
+  logoUrl          String?
+  planTier         TenantPlanTier  @default(PROFESSIONAL)
+  status           TenantStatus    @default(ACTIVE)
+  seatLimit        Int             @default(100)
+  seatAllocated    Int             @default(0)
+  licenseExpiresAt DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  archivedAt       DateTime?
+  invites          TenantInvite[]
+  settings         TenantSettings?
+  usage            TenantUsage[]
+  users            User[]
+}
+
+model TenantSettings {
+  id             String   @id @default(cuid())
+  tenantId       String   @unique
+  primaryColor   String?  @default("#4f46e5")
+  secondaryColor String?  @default("#2dd4bf")
+  featureFlags   Json     @default("{}")
+  themeOverrides Json?
+  domain         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+model TenantInvite {
+  id          String       @id @default(cuid())
+  tenantId    String
+  email       String
+  role        Role
+  token       String       @unique
+  status      InviteStatus @default(PENDING)
+  expiresAt   DateTime
+  createdById String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   User?        @relation("InviteCreator", fields: [createdById], references: [id])
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, status])
+}
+
+model TenantUsage {
+  id             String   @id @default(cuid())
+  tenantId       String
+  year           Int
+  month          Int
+  activeStudents Int      @default(0)
+  activeTutors   Int      @default(0)
+  activeJobs     Int      @default(0)
+  storageUsedMb  Int      @default(0)
+  applications   Int      @default(0)
+  createdAt      DateTime @default(now())
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, year, month])
+}
+
 enum Role {
   STUDENT
   TUTOR
@@ -115,404 +491,4 @@ enum InviteStatus {
   ACCEPTED
   EXPIRED
   CANCELLED
-}
-
-model User {
-  id            String              @id @default(cuid())
-  email         String              @unique
-  passwordHash  String
-  firstName     String
-  lastName      String
-  avatarUrl     String?
-  role          Role                @default(STUDENT)
-  status        UserStatus          @default(ACTIVE)
-  tenantId      String?
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-
-  profile       Profile?
-  coursesTaught Course[]            @relation("CourseInstructor")
-  enrollments   Enrollment[]
-  resumes       Resume[]
-  jobApplications JobApplication[]
-  volunteerApps VolunteerApplication[]
-  notifications Notification[]
-  forumThreads  ForumThread[]
-  forumPosts    ForumPost[]
-  newsPosts     News[]
-  jobOpportunitiesPosted    JobOpportunity[]       @relation("JobPostedBy")
-  volunteerOpportunitiesPosted VolunteerOpportunity[] @relation("VolunteerPostedBy")
-  postedCompanies Company[]         @relation("CompanyPostedBy")
-  jobAlerts     JobAlert[]
-  tenant        Tenant?             @relation(fields: [tenantId], references: [id])
-  createdInvites TenantInvite[]     @relation("InviteCreator")
-}
-
-model Profile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  headline  String?
-  bio       String?
-  location  String?
-  skills    String[] @default([])
-  interests String[] @default([])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
-}
-
-model Course {
-  id                   String      @id @default(cuid())
-  slug                 String      @unique
-  title                String
-  tagline              String
-  description          String
-  level                CourseLevel
-  category             String
-  outcomes             String[]    @default([])
-  skills               String[]    @default([])
-  coverImage           String
-  certificateAvailable Boolean     @default(false)
-  instructorId         String
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
-
-  instructor  User           @relation("CourseInstructor", fields: [instructorId], references: [id])
-  lessons      Lesson[]
-  enrollments  Enrollment[]
-  forumThreads ForumThread[]
-}
-
-model Lesson {
-  id              String      @id @default(cuid())
-  courseId        String
-  title           String
-  slug            String
-  order           Int
-  durationMinutes Int
-  format          LessonFormat
-  summary         String
-  content         String?
-  videoUrl        String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-
-  course        Course          @relation(fields: [courseId], references: [id])
-  resources     LessonResource[]
-  lessonProgress LessonProgress[]
-  forumPosts    ForumPost[]
-
-  @@unique([courseId, slug])
-  @@index([courseId, order])
-}
-
-model LessonResource {
-  id       String       @id @default(cuid())
-  lessonId String
-  title    String
-  type     ResourceType
-  url      String
-
-  lesson Lesson @relation(fields: [lessonId], references: [id])
-}
-
-model Enrollment {
-  id                 String             @id @default(cuid())
-  userId             String
-  courseId           String
-  status             EnrollmentStatus   @default(ACTIVE)
-  progressPercentage Int                @default(0)
-  lastAccessedAt     DateTime?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-
-  user          User            @relation(fields: [userId], references: [id])
-  course        Course          @relation(fields: [courseId], references: [id])
-  lessonProgress LessonProgress[]
-
-  @@unique([userId, courseId])
-}
-
-model LessonProgress {
-  id           String               @id @default(cuid())
-  enrollmentId String
-  lessonId     String
-  status       LessonProgressStatus @default(NOT_STARTED)
-  completedAt  DateTime?
-
-  enrollment Enrollment @relation(fields: [enrollmentId], references: [id])
-  lesson     Lesson     @relation(fields: [lessonId], references: [id])
-
-  @@unique([enrollmentId, lessonId])
-}
-
-model ForumThread {
-  id        String   @id @default(cuid())
-  title     String
-  courseId  String
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  course Course @relation(fields: [courseId], references: [id])
-  author User   @relation(fields: [authorId], references: [id])
-  posts  ForumPost[]
-}
-
-model ForumPost {
-  id        String    @id @default(cuid())
-  threadId  String
-  authorId  String
-  lessonId  String?
-  parentId  String?
-  content   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  thread ForumThread @relation(fields: [threadId], references: [id])
-  author User        @relation(fields: [authorId], references: [id])
-  lesson Lesson?     @relation(fields: [lessonId], references: [id])
-  parent ForumPost?  @relation("PostReplies", fields: [parentId], references: [id])
-  replies ForumPost[] @relation("PostReplies")
-}
-
-model Resume {
-  id         String           @id @default(cuid())
-  userId     String
-  title      String
-  summary    String?
-  skills     String[]         @default([])
-  slug       String           @unique
-  visibility ResumeVisibility @default(PRIVATE)
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-
-  user        User             @relation(fields: [userId], references: [id])
-  experiences ResumeExperience[]
-  projects    ResumeProject[]
-  jobApplications JobApplication[]
-}
-
-model ResumeExperience {
-  id         String   @id @default(cuid())
-  resumeId   String
-  company    String
-  role       String
-  startDate  DateTime
-  endDate    DateTime?
-  description String?
-  achievements String[] @default([])
-  order      Int      @default(0)
-
-  resume Resume @relation(fields: [resumeId], references: [id])
-}
-
-model ResumeProject {
-  id          String   @id @default(cuid())
-  resumeId    String
-  name        String
-  summary     String?
-  link        String?
-  techStack   String[] @default([])
-  order       Int      @default(0)
-
-  resume Resume @relation(fields: [resumeId], references: [id])
-}
-
-model JobOpportunity {
-  id               String               @id @default(cuid())
-  slug             String?              @unique
-  title            String
-  company          String
-  location         String
-  country          String
-  jobType          JobType
-  remoteOption     RemoteOption
-  salaryRange      String?
-  description      String?
-  requirements     String[]             @default([])
-  tags             String[]             @default([])
-  isActive         Boolean              @default(true)
-  featured         Boolean              @default(false)
-  deadline         DateTime?
-  viewCount        Int                  @default(0)
-  applicationCount Int                  @default(0)
-  postedById       String?
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-
-  postedBy         User?                @relation("JobPostedBy", fields: [postedById], references: [id])
-  applications     JobApplication[]
-}
-
-model JobApplication {
-  id               String               @id @default(cuid())
-  userId           String
-  jobOpportunityId String
-  resumeId         String?
-  coverLetter      String?
-  status           JobApplicationStatus @default(SUBMITTED)
-  submittedAt      DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-
-  user          User           @relation(fields: [userId], references: [id])
-  opportunity   JobOpportunity @relation(fields: [jobOpportunityId], references: [id])
-  resume        Resume?        @relation(fields: [resumeId], references: [id])
-}
-
-model Company {
-  id          String    @id @default(cuid())
-  slug        String    @unique
-  name        String
-  description String?
-  website     String?
-  logo        String?
-  size        String?
-  industry    String?
-  location    String?
-  postedById  String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  postedBy    User?     @relation("CompanyPostedBy", fields: [postedById], references: [id])
-}
-
-model JobAlert {
-  id         String   @id @default(cuid())
-  userId     String
-  keywords   String[]
-  location   String?
-  jobType    JobType?
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  
-  user       User     @relation(fields: [userId], references: [id])
-}
-
-model VolunteerOpportunity {
-  id           String    @id @default(cuid())
-  title        String
-  organization String
-  location     String
-  country      String
-  description  String?
-  commitment   String?
-  skills       String[]  @default([])
-  isRemote     Boolean   @default(false)
-  postedById   String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  postedBy     User?                  @relation("VolunteerPostedBy", fields: [postedById], references: [id])
-  applications VolunteerApplication[]
-}
-
-model VolunteerApplication {
-  id                     String                     @id @default(cuid())
-  userId                 String
-  volunteerOpportunityId String
-  status                 VolunteerApplicationStatus @default(SUBMITTED)
-  submittedAt            DateTime                   @default(now())
-
-  user        User                 @relation(fields: [userId], references: [id])
-  opportunity VolunteerOpportunity @relation(fields: [volunteerOpportunityId], references: [id])
-}
-
-model News {
-  id          String    @id @default(cuid())
-  slug        String    @unique
-  title       String
-  content     String
-  summary     String?
-  tags        String[]
-  status      String    @default("DRAFT")
-  authorId    String
-  publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  author User @relation(fields: [authorId], references: [id])
-}
-
-model Notification {
-  id        String           @id @default(cuid())
-  userId    String
-  type      NotificationType
-  payload   Json
-  readAt    DateTime?
-  createdAt DateTime          @default(now())
-
-  user User @relation(fields: [userId], references: [id])
-}
-
-model Tenant {
-  id               String           @id @default(cuid())
-  name             String
-  slug             String           @unique
-  contactName      String?
-  contactEmail     String?
-  logoUrl          String?
-  planTier         TenantPlanTier   @default(PROFESSIONAL)
-  status           TenantStatus     @default(ACTIVE)
-  seatLimit        Int              @default(100)
-  seatAllocated    Int              @default(0)
-  licenseExpiresAt DateTime?
-  archivedAt       DateTime?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  settings TenantSettings?
-  usage    TenantUsage[]
-  users    User[]
-  invites  TenantInvite[]
-}
-
-model TenantSettings {
-  id             String   @id @default(cuid())
-  tenantId       String   @unique
-  primaryColor   String?  @default("#4f46e5")
-  secondaryColor String?  @default("#2dd4bf")
-  featureFlags   Json     @default("{}")
-  themeOverrides Json?
-  domain         String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-}
-
-model TenantInvite {
-  id          String       @id @default(cuid())
-  tenantId    String
-  email       String
-  role        Role
-  token       String       @unique
-  status      InviteStatus @default(PENDING)
-  expiresAt   DateTime
-  createdById String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  tenant    Tenant @relation(fields: [tenantId], references: [id])
-  createdBy User?  @relation("InviteCreator", fields: [createdById], references: [id])
-
-  @@index([tenantId, status])
-}
-
-model TenantUsage {
-  id              String   @id @default(cuid())
-  tenantId        String
-  year            Int
-  month           Int
-  activeStudents  Int      @default(0)
-  activeTutors    Int      @default(0)
-  activeJobs      Int      @default(0)
-  storageUsedMb   Int      @default(0)
-  applications    Int      @default(0)
-  createdAt       DateTime @default(now())
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-
-  @@unique([tenantId, year, month])
 }

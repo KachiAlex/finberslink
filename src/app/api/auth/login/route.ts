@@ -3,32 +3,42 @@ import { NextRequest, NextResponse } from "next/server";
 import { loginUser } from "@/features/auth/service";
 import { LoginSchema } from "@/features/auth/schemas";
 import { setAuthCookies } from "@/lib/auth/cookies";
+import { verifyToken } from "@/lib/auth/jwt";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log("Login attempt with email:", body.email);
+    
     const parsed = LoginSchema.safeParse(body);
 
     if (!parsed.success) {
+      console.error("Validation error:", parsed.error.issues);
       return NextResponse.json(
         { error: "Invalid input", details: parsed.error.issues },
         { status: 400 }
       );
     }
 
+    console.log("Calling loginUser service...");
     const tokens = await loginUser(parsed.data);
+    const payload = verifyToken(tokens.accessToken);
+    console.log("Tokens generated successfully");
+    
     const response = NextResponse.json(
-      { message: "Login successful", user: { email: parsed.data.email } },
+      { message: "Login successful", user: { email: parsed.data.email, role: payload.role } },
       { status: 200 }
     );
 
     setAuthCookies(response, tokens);
+    console.log("Auth cookies set, returning response");
     return response;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Login error:", errorMessage, error);
+    console.error("Login error:", errorMessage);
+    console.error("Full error:", error);
     
     if (error instanceof Error && error.message === "Invalid credentials") {
       return NextResponse.json(
@@ -51,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: errorMessage },
       { status: 500 }
     );
   }
