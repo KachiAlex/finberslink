@@ -45,6 +45,12 @@ export function middleware(request: NextRequest) {
   try {
     // Verify token
     const payload = verifyToken(accessToken);
+
+    // Route SUPER_ADMIN away from learner dashboard to superadmin console
+    if (pathname.startsWith("/dashboard") && payload.role === "SUPER_ADMIN") {
+      const superAdminUrl = new URL("/superadmin", request.url);
+      return NextResponse.redirect(superAdminUrl);
+    }
     
     // Check role-based access
     for (const [route, allowedRoles] of Object.entries(roleBasedRoutes)) {

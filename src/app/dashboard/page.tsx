@@ -45,37 +45,43 @@ export default async function DashboardPage() {
   const resumeCount = resumes.length;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#04050d] text-white">
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(76,76,255,0.15),_transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(255,94,188,0.15),_transparent_45%)]" />
-        <div className="absolute inset-0 opacity-30 mix-blend-screen">
-          <div className="h-full w-full bg-[linear-gradient(120deg,_rgba(255,255,255,0.06)_1px,_transparent_1px),_linear-gradient(240deg,_rgba(255,255,255,0.04)_1px,_transparent_1px)] bg-[length:140px_140px]" />
-        </div>
-      </div>
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900">
+      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-br from-blue-100/70 via-white to-cyan-50 blur-2xl" />
 
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-16 sm:px-6 lg:px-8">
-        <header className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-16 sm:px-6 lg:px-8">
+        <header className="rounded-4xl relative overflow-hidden rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-lg shadow-slate-200/70">
+          <div className="absolute -right-16 top-6 h-48 w-48 rounded-full bg-gradient-to-br from-blue-500/10 to-cyan-400/10 blur-3xl" />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.35em] text-white/60">Finbers Link</p>
-              <h1 className="mt-2 text-4xl font-semibold text-white sm:text-5xl">
-                Your Career Command Center
+              <p className="text-xs uppercase tracking-[0.45em] text-slate-500">Finbers Link</p>
+              <h1 className="mt-3 text-4xl font-semibold text-slate-900 sm:text-5xl">
+                Your career command center
               </h1>
+              <p className="mt-3 max-w-2xl text-base text-slate-600">
+                Track your learning velocity, craft high-converting resumes, and manage every application from a single,
+                high-fidelity cockpit.
+              </p>
             </div>
-            <Button
-              asChild
-              className="rounded-full bg-white/10 px-5 text-white shadow-[0_0_30px_rgba(79,70,229,0.35)] transition hover:bg-white/20"
-            >
-              <Link href="/dashboard/applications" className="flex items-center gap-2 text-sm font-medium">
-                Quick Apply <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+              <Button
+                variant="outline"
+                className="border-slate-200 text-slate-700 hover:bg-slate-100"
+                asChild
+              >
+                <Link href="/courses" className="flex items-center gap-2">
+                  Explore tracks
+                </Link>
+              </Button>
+              <Button
+                asChild
+                className="rounded-full bg-slate-900 px-5 text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800"
+              >
+                <Link href="/dashboard/applications" className="flex items-center gap-2 text-sm font-medium">
+                  Quick apply <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
-          <p className="max-w-2xl text-base text-white/70">
-            Track your learning velocity, craft high-converting resumes, and manage every application
-            from a single, high-fidelity cockpit.
-          </p>
         </header>
 
         <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -84,41 +90,41 @@ export default async function DashboardPage() {
             value={activeCourses}
             icon={GraduationCap}
             trend={{ value: 18, isPositive: true }}
-            className="bg-gradient-to-br from-[#6f6bff]/20 via-white/5 to-transparent"
+            variant="minimal"
           />
           <StatCard
             title="Resumes in Studio"
             value={resumeCount}
             icon={Sparkles}
             trend={{ value: 32, isPositive: true }}
-            className="bg-gradient-to-br from-[#ff5ebc]/20 via-white/5 to-transparent"
+            variant="minimal"
           />
           <StatCard
             title="Opportunities in Motion"
             value={totalApplications}
             icon={Briefcase}
             trend={{ value: 12, isPositive: true }}
-            className="bg-gradient-to-br from-[#2dd4bf]/20 via-white/5 to-transparent"
+            variant="minimal"
           />
         </section>
 
         <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <GlassCard className="p-6">
+          <GlassCard variant="bordered" className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm uppercase tracking-[0.25em] text-white/60">Learning arc</p>
-                <h2 className="mt-2 text-2xl font-semibold text-white">My Courses</h2>
-                <p className="text-white/70">Cohorts currently shaping your skill trajectory</p>
+                <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Learning arc</p>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-900">My courses</h2>
+                <p className="text-slate-600">Cohorts currently shaping your skill trajectory</p>
               </div>
-              <Button variant="secondary" asChild className="rounded-full bg-white/10 text-white hover:bg-white/20">
+              <Button variant="outline" asChild className="rounded-full border-slate-200 text-slate-700 hover:bg-slate-100">
                 <Link href="/courses">Explore tracks</Link>
               </Button>
             </div>
 
             <div className="mt-8 space-y-4">
               {enrollments.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-sm text-white/70">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                  <p className="text-sm text-slate-500">
                     No active cohorts. Jump into a new discipline to unlock premium tracks.
                   </p>
                 </div>
@@ -126,17 +132,17 @@ export default async function DashboardPage() {
                 enrollments.slice(0, 4).map((enrollment: any) => (
                   <div
                     key={enrollment.id}
-                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-white/5 to-transparent px-5 py-4"
+                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4"
                   >
                     <div>
-                      <p className="text-base font-semibold text-white">{enrollment.course.title}</p>
-                      <p className="text-xs uppercase tracking-wide text-white/60">
+                      <p className="text-base font-semibold text-slate-900">{enrollment.course.title}</p>
+                      <p className="text-xs uppercase tracking-wide text-slate-400">
                         {enrollment.course.level.toLowerCase()}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
                       <ProgressRing value={enrollment.progressPercentage} />
-                      <span className="text-sm font-medium text-white/80">
+                      <span className="text-sm font-medium text-slate-600">
                         {enrollment.progressPercentage}% mastery
                       </span>
                     </div>
@@ -147,34 +153,34 @@ export default async function DashboardPage() {
           </GlassCard>
 
           <div className="space-y-8">
-            <GlassCard className="p-6">
+            <GlassCard variant="bordered" className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-white/60">Resume studio</p>
-                  <h2 className="mt-1 text-2xl font-semibold text-white">AI-grade resumes</h2>
-                  <p className="text-white/70">Hand off a polished narrative every time</p>
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Resume studio</p>
+                  <h2 className="mt-1 text-2xl font-semibold text-slate-900">AI-grade resumes</h2>
+                  <p className="text-slate-600">Hand off a polished narrative every time</p>
                 </div>
-                <Button asChild variant="default" className="rounded-full bg-white text-slate-900 shadow-lg">
+                <Button asChild variant="default" className="rounded-full bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800">
                   <Link href="/resume/builder">Launch studio</Link>
                 </Button>
               </div>
 
               <div className="mt-6 space-y-3">
                 {resumes.length === 0 ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
                     No resumes yet. Build your signature profile with ATS-tuned prompts.
                   </div>
                 ) : (
                   resumes.slice(0, 3).map((resume: any) => (
                     <div
                       key={resume.id}
-                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4"
+                      className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4"
                     >
                       <div>
-                        <p className="text-sm font-semibold text-white">{resume.title}</p>
-                        <p className="text-xs text-white/60 capitalize">{resume.visibility.toLowerCase()}</p>
+                        <p className="text-sm font-semibold text-slate-900">{resume.title}</p>
+                        <p className="text-xs text-slate-500 capitalize">{resume.visibility.toLowerCase()}</p>
                       </div>
-                      <Button variant="ghost" size="sm" asChild className="text-white/80 hover:bg-white/10">
+                      <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:bg-slate-100">
                         <Link href={`/resume/${resume.slug}`}>Preview</Link>
                       </Button>
                     </div>
@@ -183,39 +189,39 @@ export default async function DashboardPage() {
               </div>
             </GlassCard>
 
-            <GlassCard className="p-6">
+            <GlassCard variant="bordered" className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-white/60">Pipeline</p>
-                  <h2 className="mt-1 text-2xl font-semibold text-white">Applications</h2>
-                  <p className="text-white/70">Opportunities currently in play</p>
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Pipeline</p>
+                  <h2 className="mt-1 text-2xl font-semibold text-slate-900">Applications</h2>
+                  <p className="text-slate-600">Opportunities currently in play</p>
                 </div>
-                <Button variant="ghost" size="sm" asChild className="text-white/80 hover:bg-white/10">
+                <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:bg-slate-100">
                   <Link href="/applications">See all</Link>
                 </Button>
               </div>
 
               <div className="mt-6 space-y-4">
                 {totalApplications === 0 ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
                     No applications yet. Ready talent is one click away — browse curated roles.
                   </div>
                 ) : (
                   [...applications.jobs.slice(0, 2), ...applications.volunteer.slice(0, 1)].map((app: any) => (
                     <div
                       key={app.id}
-                      className="rounded-2xl border border-white/10 bg-gradient-to-r from-white/5 to-transparent p-4"
+                      className="rounded-2xl border border-slate-200 bg-white p-4"
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-semibold text-white">{app.opportunity.title}</p>
-                          <p className="text-xs text-white/60">
+                          <p className="text-sm font-semibold text-slate-900">{app.opportunity.title}</p>
+                          <p className="text-xs text-slate-500">
                             {"company" in app.opportunity ? app.opportunity.company : app.opportunity.organization}
                           </p>
                         </div>
                         <Badge
                           variant="outline"
-                          className="border-white/30 bg-white/5 text-xs font-medium uppercase tracking-wide text-white"
+                          className="border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-600"
                         >
                           {app.status.toLowerCase().replace("_", " ")}
                         </Badge>

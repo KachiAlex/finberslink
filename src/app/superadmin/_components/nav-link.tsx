@@ -23,12 +23,12 @@ export function SuperAdminNavLink({ href, title, icon }: SuperAdminNavLinkProps)
       className={cn(
         "group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition",
         isActive
-          ? "bg-white/15 text-white shadow-lg shadow-indigo-500/20"
-          : "text-white/60 hover:bg-white/10 hover:text-white"
+          ? "bg-slate-900 text-white shadow-lg shadow-slate-900/10"
+          : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
       )}
     >
       {icon ? (
-        <span className={cn("text-white/50", isActive && "text-white")}>{icon}</span>
+        <span className={cn("text-slate-400", isActive && "text-white")}>{icon}</span>
       ) : null}
       <span>{title}</span>
     </Link>
