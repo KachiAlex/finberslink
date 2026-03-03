@@ -45,6 +45,13 @@ export async function getJobs(filters: JobFilters = {}) {
     skip,
     take: limit,
     orderBy: { createdAt: 'desc' },
+    include: {
+      _count: {
+        select: {
+          applications: true,
+        },
+      },
+    },
   });
 
   const total = await prisma.jobOpportunity.count({ where });
@@ -119,6 +126,13 @@ export async function getFeaturedJobs(limit = 5) {
     where: { isActive: true, featured: true },
     take: limit,
     orderBy: { createdAt: 'desc' },
+    include: {
+      _count: {
+        select: {
+          applications: true,
+        },
+      },
+    },
   });
 }
 
