@@ -6,7 +6,7 @@ import {
   listTenants,
 } from "@/features/superadmin/tenant-service";
 import { requireSuperAdminUser } from "@/features/superadmin/service";
-import { parseUserFromRequest } from "@/lib/http/parse-user";
+import { verifyToken } from "@/lib/auth/jwt";
 
 const ListTenantSchema = z.object({
   search: z.string().optional(),
@@ -32,9 +32,26 @@ const CreateTenantSchema = z.object({
   featureFlags: z.record(z.boolean()).optional(),
 });
 
+function getUserFromRequest(request: NextRequest) {
+  const token = request.cookies.get("access_token")?.value;
+  if (!token) {
+    return null;
+  }
+
+  try {
+    return verifyToken(token);
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
-  const user = await parseUserFromRequest(request);
-  await requireSuperAdminUser(user?.sub);
+  const session = getUserFromRequest(request);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  await requireSuperAdminUser(session.sub);
 
   const { searchParams } = new URL(request.url);
   const filters = ListTenantSchema.parse(Object.fromEntries(searchParams));
@@ -44,8 +61,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await parseUserFromRequest(request);
-  await requireSuperAdminUser(user?.sub);
+  const session = getUserFromRequest(request);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  await requireSuperAdminUser(session.sub);
 
   const body = await request.json();
   const data = CreateTenantSchema.parse(body);

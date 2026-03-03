@@ -28,6 +28,16 @@ const FEATURE_FLAG_BLUEPRINT = [
 
 const featureFlagOverrides: Record<string, boolean> = {};
 
+type CourseInput = {
+  slug: string;
+  title: string;
+  tagline: string;
+  description: string;
+  category: string;
+  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  coverImage: string;
+};
+
 type AdminUserWithTenant = Prisma.UserGetPayload<{ include: { tenant: true } }>;
 
 export async function requireAdminUser(userId?: string): Promise<AdminUserWithTenant> {
@@ -49,39 +59,22 @@ export async function requireAdminUser(userId?: string): Promise<AdminUserWithTe
   return admin;
 }
 
-export async function getAdminOverview(tenantId: string) {
-  const [studentCount, jobCount, recentStudents, recentJobs, recentCourses] = await Promise.all([
-    prisma.user.count({ where: { role: 'STUDENT', tenantId } }),
-    prisma.jobOpportunity.count({ where: { isActive: true, tenantId } }),
-    prisma.user.findMany({
-      where: { role: 'STUDENT', tenantId },
-      take: 4,
-      orderBy: { createdAt: 'desc' },
-    }),
-    prisma.jobOpportunity.findMany({
-      where: { isActive: true, tenantId },
-      take: 3,
-      orderBy: { createdAt: 'desc' },
-    }),
-    prisma.course.findMany({
-      where: { tenantId },
-      take: 3,
-      orderBy: { createdAt: 'desc' },
-    }),
+export async function getAdminOverview() {
+  const [studentCount, jobCount, recentStudents, recentJobs] = await Promise.all([
+    prisma.user.count({ where: { role: 'STUDENT' } }),
+    prisma.jobOpportunity.count({ where: { isActive: true } }),
+    prisma.user.findMany({ where: { role: 'STUDENT' }, take: 4, orderBy: { createdAt: 'desc' } }),
+    prisma.jobOpportunity.findMany({ where: { isActive: true }, take: 3, orderBy: { createdAt: 'desc' } }),
   ]);
-
-  const enrollmentCount = await prisma.enrollment.count({
-    where: { user: { tenantId } },
-  });
 
   return {
     stats: {
-      courses: recentCourses.length,
+      courses: 0,
       students: studentCount,
       jobs: jobCount,
-      enrollments: enrollmentCount,
+      enrollments: 0,
     },
-    recentCourses,
+    recentCourses: [],
     recentStudents,
     recentJobs,
   };
@@ -218,6 +211,94 @@ export async function toggleFeatureFlag(key: string, enabled: boolean) {
   featureFlagOverrides[key] = enabled;
 }
 
+export async function getCourseManagementSnapshot() {
+  const [totalCourses, tutorLedCourses, adminDrafts, levelGroups, recentCourses] = await Promise.all([
+    prisma.course.count(),
+    prisma.course.count({
+      where: { instructor: { role: 'TUTOR' } },
+    }),
+    prisma.course.count({
+      where: { instructor: { role: 'ADMIN' } },
+    }),
+    prisma.course.groupBy({
+      by: ['level'],
+      _count: {
+        level: true,
+      },
+    }),
+    prisma.course.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+      include: {
+        instructor: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  const levelMap: Record<string, number> = {
+    BEGINNER: 0,
+    INTERMEDIATE: 0,
+    ADVANCED: 0,
+  };
+
+  for (const group of levelGroups) {
+    levelMap[group.level] = group._count.level;
+  }
+
+  return {
+    totals: {
+      totalCourses,
+      tutorLedCourses,
+      adminDrafts,
+    },
+    levelMap,
+    recentCourses: recentCourses.map(course => ({
+      id: course.id,
+      title: course.title,
+      level: course.level,
+      category: course.category,
+      createdAt: course.createdAt,
+      instructor: course.instructor
+        ? {
+            firstName: course.instructor.firstName,
+            lastName: course.instructor.lastName,
+            role: course.instructor.role,
+          }
+        : null,
+    })),
+  };
+}
+
+export async function listAdminCourses() {
+  return prisma.course.findMany({
+    take: 100,
+    orderBy: { createdAt: 'desc' },
+    include: {
+      instructor: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          role: true,
+        },
+      },
+      _count: {
+        select: {
+          enrollments: true,
+        },
+      },
+    },
+  });
+}
+
 function generateInviteToken() {
   return randomBytes(12).toString("hex");
 }
@@ -293,29 +374,6 @@ export async function markInviteStatus(inviteId: string, status: InviteStatus) {
   return prisma.tenantInvite.update({
     where: { id: inviteId },
     data: { status },
-  });
-}
-
-export async function listAdminCourses() {
-  return prisma.course.findMany({
-    take: 100,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      instructor: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          role: true,
-        },
-      },
-      _count: {
-        select: {
-          enrollments: true,
-        },
-      },
-    },
   });
 }
 

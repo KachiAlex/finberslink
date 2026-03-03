@@ -9,7 +9,7 @@ import {
   updateTenant,
 } from "@/features/superadmin/tenant-service";
 import { requireSuperAdminUser } from "@/features/superadmin/service";
-import { parseUserFromRequest } from "@/lib/http/parse-user";
+import { verifyToken } from "@/lib/auth/jwt";
 
 const ParamsSchema = z.object({
   tenantId: z.string().min(1),
@@ -39,12 +39,29 @@ const AdminInviteSchema = z.object({
   expiresAt: z.coerce.date().optional(),
 });
 
+function getUserFromRequest(request: NextRequest) {
+  const token = request.cookies.get("access_token")?.value;
+  if (!token) {
+    return null;
+  }
+
+  try {
+    return verifyToken(token);
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ tenantId: string }> }
 ) {
-  const user = await parseUserFromRequest(request);
-  await requireSuperAdminUser(user?.sub);
+  const session = getUserFromRequest(request);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  await requireSuperAdminUser(session.sub);
 
   const { tenantId } = ParamsSchema.parse(await params);
   const tenant = await getTenantById(tenantId);
@@ -60,8 +77,12 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ tenantId: string }> }
 ) {
-  const user = await parseUserFromRequest(request);
-  await requireSuperAdminUser(user?.sub);
+  const session = getUserFromRequest(request);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  await requireSuperAdminUser(session.sub);
 
   const { tenantId } = ParamsSchema.parse(await params);
   const body = await request.json();
@@ -75,8 +96,12 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ tenantId: string }> }
 ) {
-  const user = await parseUserFromRequest(request);
-  await requireSuperAdminUser(user?.sub);
+  const session = getUserFromRequest(request);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  await requireSuperAdminUser(session.sub);
 
   const { tenantId } = ParamsSchema.parse(await params);
   const body = await request.json();
@@ -97,7 +122,7 @@ export async function POST(
     const invite = await createTenantAdminInvite({
       tenantId,
       email: payload.email,
-      createdById: user?.sub ?? "system",
+      createdById: session.sub ?? "system",
       expiresAt: payload.expiresAt,
     });
     return NextResponse.json({ invite }, { status: 201 });
