@@ -175,10 +175,12 @@ model Course {
   coverImage           String
   certificateAvailable Boolean     @default(false)
   instructorId         String
+  tenantId             String
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 
   instructor  User           @relation("CourseInstructor", fields: [instructorId], references: [id])
+  tenant      Tenant         @relation(fields: [tenantId], references: [id])
   lessons      Lesson[]
   enrollments  Enrollment[]
   forumThreads ForumThread[]
@@ -458,6 +460,7 @@ model Tenant {
   seatLimit        Int              @default(100)
   seatAllocated    Int              @default(0)
   licenseExpiresAt DateTime?
+  archivedAt       DateTime?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 

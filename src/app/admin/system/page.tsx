@@ -1,11 +1,19 @@
 import { revalidatePath } from "next/cache";
-import { Users, ShieldCheck, Crown, UserCog } from "lucide-react";
+import { Users, ShieldCheck, Crown, UserCog, Link2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { StatCard } from "@/components/ui/stat-card";
-import { updateUserRole, requireAdminUser, getSystemSnapshot, toggleFeatureFlag } from "@/features/admin/service";
+import {
+  updateUserRole,
+  requireAdminUser,
+  getSystemSnapshot,
+  toggleFeatureFlag,
+  createTenantInvite,
+  listTenantInvites,
+} from "@/features/admin/service";
 
 import { AdminShell } from "../_components/admin-shell";
 
@@ -43,8 +51,38 @@ async function toggleFeatureFlagAction(formData: FormData) {
   revalidatePath("/admin/system");
 }
 
+async function createInviteAction(formData: FormData) {
+  "use server";
+
+  const admin = await requireAdminUser();
+  if (!admin.tenantId) {
+    throw new Error("Invites require tenant context");
+  }
+
+  const email = String(formData.get("email") ?? "").toLowerCase();
+  const role = String(formData.get("role") ?? "");
+  const days = Number(formData.get("expiresIn") ?? "7");
+
+  if (!email || !role) return;
+
+  const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+  await createTenantInvite({
+    tenantId: admin.tenantId,
+    email,
+    role: role as "STUDENT" | "TUTOR",
+    createdById: admin.id,
+    expiresAt,
+  });
+
+  revalidatePath("/admin/system");
+}
+
 export default async function AdminSystemPage() {
-  const [admin, system] = await Promise.all([requireAdminUser(), getSystemSnapshot()]);
+  const admin = await requireAdminUser();
+  const system = await getSystemSnapshot();
+  const invites = admin.tenantId ? await listTenantInvites(admin.tenantId) : [];
+  const inviteBaseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? "";
 
   const statCards = [
     {
@@ -159,6 +197,91 @@ export default async function AdminSystemPage() {
           </Card>
 
           <div className="space-y-6">
+            <Card className="border border-slate-200/70 bg-white/95">
+              <CardHeader>
+                <CardTitle className="text-base font-semibold text-slate-900">
+                  Invite tutors & students
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <form action={createInviteAction} className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-600" htmlFor="invite-email">
+                      Email
+                    </label>
+                    <Input id="invite-email" name="email" type="email" placeholder="person@org.com" required />
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">Role</label>
+                      <select
+                        name="role"
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                        defaultValue="STUDENT"
+                      >
+                        <option value="STUDENT">Student</option>
+                        <option value="TUTOR">Tutor</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600">Expires in</label>
+                      <select
+                        name="expiresIn"
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                        defaultValue="7"
+                      >
+                        <option value="3">3 days</option>
+                        <option value="7">7 days</option>
+                        <option value="14">14 days</option>
+                      </select>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Generate invite link
+                  </Button>
+                </form>
+
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Recent invites</p>
+                  {invites.length === 0 && (
+                    <p className="text-sm text-slate-500">No invites yet. Generated links will appear here.</p>
+                  )}
+                  <div className="space-y-2">
+                    {invites.map((invite) => {
+                      const inviteLink = `${inviteBaseUrl}/join/${invite.token}`;
+                      return (
+                        <div
+                          key={invite.id}
+                          className="rounded-2xl border border-slate-100 bg-slate-50/80 p-3 text-xs text-slate-600"
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="outline" className="capitalize">
+                              {invite.role.toLowerCase()}
+                            </Badge>
+                            <Badge variant={invite.status === "PENDING" ? "secondary" : "outline"} className="uppercase">
+                              {invite.status.toLowerCase()}
+                            </Badge>
+                            <span className="text-slate-500">{invite.email}</span>
+                          </div>
+                          <p className="mt-1 text-[11px] text-slate-500">
+                            Exp.{" "}
+                            {new Intl.DateTimeFormat("en", {
+                              month: "short",
+                              day: "numeric",
+                            }).format(invite.expiresAt)}
+                          </p>
+                          <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1">
+                            <Link2 className="h-3.5 w-3.5 text-slate-400" />
+                            <span className="truncate text-[11px] text-slate-500">{inviteLink}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="border border-slate-200/70 bg-white/95">
               <CardHeader>
                 <CardTitle className="text-base font-semibold text-slate-900">

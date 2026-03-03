@@ -37,6 +37,7 @@
   - Tenants list with filters + quick actions (impersonate, suspend, upgrade, feature toggles).
   - Tenant detail tabs (Summary, Usage, Billing, Members, Settings).
   - Usage dashboards pulling from `TenantUsage` metrics.
+- [ ] Implement superadmin tenant lifecycle controls: create tenant, update license seat limits/tier/expiry, suspend/activate, archive, and regenerate tenant admin access (invites/resets) with audit logging.
 - [ ] Connect feature flag toggles to `TenantSettings.featureFlags` (persist changes + surface in admin interface).
 - [ ] Implement automation hooks: renewal reminders, overage alerts, onboarding checklists (triggered via cron/queue).
 - [ ] Harden middleware to handle tenant-aware redirects for mixed-role accounts (e.g., ADMIN vs SUPER_ADMIN).

@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import type { InviteStatus, Role, UserStatus } from "@prisma/client";
+import type { InviteStatus, Prisma, Role, UserStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
@@ -28,7 +28,9 @@ const FEATURE_FLAG_BLUEPRINT = [
 
 const featureFlagOverrides: Record<string, boolean> = {};
 
-export async function requireAdminUser(userId?: string) {
+type AdminUserWithTenant = Prisma.UserGetPayload<{ include: { tenant: true } }>;
+
+export async function requireAdminUser(userId?: string): Promise<AdminUserWithTenant> {
   const admin = await prisma.user.findUnique({
     where: { id: userId ?? DEFAULT_ADMIN_ID },
     include: {
@@ -47,22 +49,39 @@ export async function requireAdminUser(userId?: string) {
   return admin;
 }
 
-export async function getAdminOverview() {
-  const [studentCount, jobCount, recentStudents, recentJobs] = await Promise.all([
-    prisma.user.count({ where: { role: 'STUDENT' } }),
-    prisma.jobOpportunity.count({ where: { isActive: true } }),
-    prisma.user.findMany({ where: { role: 'STUDENT' }, take: 4, orderBy: { createdAt: 'desc' } }),
-    prisma.jobOpportunity.findMany({ where: { isActive: true }, take: 3, orderBy: { createdAt: 'desc' } }),
+export async function getAdminOverview(tenantId: string) {
+  const [studentCount, jobCount, recentStudents, recentJobs, recentCourses] = await Promise.all([
+    prisma.user.count({ where: { role: 'STUDENT', tenantId } }),
+    prisma.jobOpportunity.count({ where: { isActive: true, tenantId } }),
+    prisma.user.findMany({
+      where: { role: 'STUDENT', tenantId },
+      take: 4,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.jobOpportunity.findMany({
+      where: { isActive: true, tenantId },
+      take: 3,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.course.findMany({
+      where: { tenantId },
+      take: 3,
+      orderBy: { createdAt: 'desc' },
+    }),
   ]);
+
+  const enrollmentCount = await prisma.enrollment.count({
+    where: { user: { tenantId } },
+  });
 
   return {
     stats: {
-      courses: 0,
+      courses: recentCourses.length,
       students: studentCount,
       jobs: jobCount,
-      enrollments: 0,
+      enrollments: enrollmentCount,
     },
-    recentCourses: [],
+    recentCourses,
     recentStudents,
     recentJobs,
   };
@@ -77,62 +96,6 @@ export async function getSystemSnapshot() {
     recentJobs,
     recentCourses,
     recentUserUpdates,
-  ] = await Promise.all([
-    prisma.user.findMany({
-      where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
-      orderBy: { createdAt: 'asc' },
-      take: 12,
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        role: true,
-        status: true,
-        createdAt: true,
-        _count: {
-          select: {
-            jobOpportunitiesPosted: true,
-            coursesTaught: true,
-          },
-        },
-      },
-    }),
-    prisma.user.count(),
-    prisma.user.count({ where: { status: 'INVITED' } }),
-    prisma.user.count({ where: { status: 'SUSPENDED' } }),
-    prisma.jobOpportunity.findMany({
-      orderBy: { updatedAt: 'desc' },
-      take: 5,
-      select: {
-        id: true,
-        title: true,
-        company: true,
-        updatedAt: true,
-        isActive: true,
-      },
-    }),
-    prisma.course.findMany({
-      orderBy: { updatedAt: 'desc' },
-      take: 5,
-      select: {
-        id: true,
-        title: true,
-        updatedAt: true,
-      },
-    }),
-    prisma.user.findMany({
-      orderBy: { updatedAt: 'desc' },
-      take: 5,
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        status: true,
-        updatedAt: true,
-      },
-    }),
   ] = await Promise.all([
     prisma.user.findMany({
       where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
@@ -286,6 +249,50 @@ export async function listTenantInvites(tenantId: string, status: InviteStatus[]
     },
     orderBy: { createdAt: 'desc' },
     take: 20,
+    include: {
+      createdBy: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+    },
+  });
+}
+
+export async function getInviteByToken(token: string) {
+  const invite = await prisma.tenantInvite.findUnique({
+    where: { token },
+    include: {
+      tenant: true,
+    },
+  });
+
+  if (!invite) {
+    return null;
+  }
+
+  if (invite.status !== 'PENDING') {
+    return invite;
+  }
+
+  if (invite.expiresAt < new Date()) {
+    return prisma.tenantInvite.update({
+      where: { id: invite.id },
+      data: { status: 'EXPIRED' },
+      include: {
+        tenant: true,
+      },
+    });
+  }
+
+  return invite;
+}
+
+export async function markInviteStatus(inviteId: string, status: InviteStatus) {
+  return prisma.tenantInvite.update({
+    where: { id: inviteId },
+    data: { status },
   });
 }
 

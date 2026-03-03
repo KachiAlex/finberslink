@@ -10,7 +10,7 @@ interface CliArgs {
   password: string;
   firstName: string;
   lastName: string;
-  tenantSlug?: string;
+  tenantSlug?: string | null;
 }
 
 function parseArgs(): CliArgs {
@@ -39,17 +39,22 @@ function parseArgs(): CliArgs {
     password: parsed.password,
     firstName: parsed.firstName ?? "Super",
     lastName: parsed.lastName ?? "Admin",
-    tenantSlug: parsed.tenant,
+    tenantSlug: parsed.tenant ?? null,
   } as CliArgs;
 }
 
 async function main() {
   const { email, password, firstName, lastName, tenantSlug } = parseArgs();
-  const defaultTenantSlug = tenantSlug ?? process.env.NEXT_PUBLIC_DEFAULT_TENANT_SLUG ?? "finbers-link";
+  let tenantId: string | null = null;
+  let tenantLabel = "platform";
 
-  const tenant = await prisma.tenant.findUnique({ where: { slug: defaultTenantSlug } });
-  if (!tenant) {
-    throw new Error(`Tenant with slug "${defaultTenantSlug}" not found. Seed tenants before creating a superadmin.`);
+  if (tenantSlug) {
+    const tenant = await prisma.tenant.findUnique({ where: { slug: tenantSlug } });
+    if (!tenant) {
+      throw new Error(`Tenant with slug "${tenantSlug}" not found. Provide a valid tenant slug or omit --tenant to create a platform superadmin.`);
+    }
+    tenantId = tenant.id;
+    tenantLabel = tenant.slug;
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
@@ -62,7 +67,7 @@ async function main() {
       passwordHash,
       role: "SUPER_ADMIN",
       status: "ACTIVE",
-      tenantId: tenant.id,
+      tenantId,
     },
     create: {
       email,
@@ -71,11 +76,13 @@ async function main() {
       passwordHash,
       role: "SUPER_ADMIN",
       status: "ACTIVE",
-      tenantId: tenant.id,
+      tenantId,
     },
   });
 
-  console.log(`Superadmin ready: ${user.firstName} ${user.lastName} <${user.email}> (tenant: ${tenant.slug})`);
+  console.log(
+    `Superadmin ready: ${user.firstName} ${user.lastName} <${user.email}> (${tenantId ? `tenant: ${tenantLabel}` : "platform-wide"})`
+  );
 }
 
 main()

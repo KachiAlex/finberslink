@@ -4,11 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
-    "vercel-build": "prisma generate && prisma migrate deploy && next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "postinstall": "prisma generate"
+    "lint": "next lint",
+    "schema:studio": "npx prisma studio",
+    "schema:generate": "npx prisma generate",
+    "schema:migrate": "npx prisma migrate dev",
+    "postinstall": "prisma generate",
+    "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
@@ -40,6 +43,7 @@
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.17",
     "babel-plugin-react-compiler": "1.0.0",
+    "dotenv": "^17.3.1",
     "eslint": "8.57.0",
     "eslint-config-next": "^15.5.7",
     "postcss": "^8.4.35",
