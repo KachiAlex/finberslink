@@ -28,6 +28,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 
 type TenantStatus = "ACTIVE" | "TRIAL" | "SUSPENDED" | "CANCELLED";
@@ -780,6 +781,7 @@ export default function TenantsPage() {
         >
           <SheetHeader>
             <SheetTitle>Tenant detail</SheetTitle>
+            <SheetDescription>Review tenant profile, licensing, admins, and status.</SheetDescription>
           </SheetHeader>
           {detailLoading || !selectedTenant ? (
             <div className="flex items-center justify-center py-12">
