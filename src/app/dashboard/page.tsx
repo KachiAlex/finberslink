@@ -6,13 +6,16 @@ import {
   getStudentEnrollments,
   getStudentResumes,
 } from "@/features/dashboard/service";
+import { listRecommendedJobs } from "@/features/dashboard/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { StatCard } from "@/components/ui/stat-card";
 import { ProgressRing } from "@/components/ui/progress-ring";
-import { ArrowRight, Briefcase, GraduationCap, Sparkles } from "lucide-react";
+import { ArrowRight, Briefcase, GraduationCap, MessageSquare, Sparkles } from "lucide-react";
+import { getUnreadCount } from "@/features/notifications/service";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -34,21 +37,57 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const [enrollments, resumes, applications] = await Promise.all([
-    getStudentEnrollments(user.sub),
-    getStudentResumes(user.sub),
-    getStudentApplications(user.sub),
-  ]);
+  let enrollments: any[] | null = null;
+  let resumes: any[] | null = null;
+  let applications: { jobs: any[]; volunteer: any[] } | null = null;
+  let recommendedJobs: any[] | null = null;
+  let unreadCount = 0;
+  let loadError: unknown = null;
 
-  const totalApplications = applications.jobs.length + applications.volunteer.length;
-  const activeCourses = enrollments.length;
-  const resumeCount = resumes.length;
+  try {
+    [enrollments, resumes, applications, unreadCount, recommendedJobs] = await Promise.all([
+      getStudentEnrollments(user.sub),
+      getStudentResumes(user.sub),
+      getStudentApplications(user.sub),
+      getUnreadCount(user.sub),
+      listRecommendedJobs(5),
+    ]);
+  } catch (err) {
+    console.error("Dashboard load failed", err);
+    loadError = err;
+  }
+
+  const safeEnrollments = enrollments ?? [];
+  const safeResumes = resumes ?? [];
+  const safeApplications = applications ?? { jobs: [], volunteer: [] };
+  const safeRecommended = recommendedJobs ?? [];
+
+  const totalApplications = safeApplications.jobs.length + safeApplications.volunteer.length;
+  const activeCourses = safeEnrollments.length;
+  const resumeCount = safeResumes.length;
+
+  const SectionError = ({ label }: { label: string }) =>
+    loadError ? (
+      <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        {label} unavailable. Try reloading.
+      </div>
+    ) : null;
+
+  const statusBadge = (status: string) => {
+    const s = status.toLowerCase();
+    if (s.includes("interview")) return "bg-indigo-50 text-indigo-700 border-indigo-100";
+    if (s.includes("offer")) return "bg-emerald-50 text-emerald-700 border-emerald-100";
+    if (s.includes("rejected")) return "bg-rose-50 text-rose-700 border-rose-100";
+    return "bg-amber-50 text-amber-700 border-amber-100";
+  };
+
+  const isLoading = enrollments === null || resumes === null || applications === null;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900">
       <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-br from-blue-100/70 via-white to-cyan-50 blur-2xl" />
 
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-16 sm:px-6 lg:px-8">
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
         <header className="rounded-4xl relative overflow-hidden rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-lg shadow-slate-200/70">
           <div className="absolute -right-16 top-6 h-48 w-48 rounded-full bg-gradient-to-br from-blue-500/10 to-cyan-400/10 blur-3xl" />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
@@ -80,6 +119,13 @@ export default async function DashboardPage() {
                   Quick apply <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-sm">
+                <MessageSquare className="h-4 w-4 text-blue-600" />
+                <span>Messages</span>
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+                  {unreadCount}
+                </Badge>
+              </div>
             </div>
           </div>
         </header>
@@ -122,14 +168,33 @@ export default async function DashboardPage() {
             </div>
 
             <div className="mt-8 space-y-4">
-              {enrollments.length === 0 ? (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                  <p className="text-sm text-slate-500">
+              <SectionError label="Courses" />
+              {isLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4"
+                    >
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                      <Skeleton className="h-8 w-20 rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : safeEnrollments.length === 0 ? (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+                  <p className="text-sm text-slate-600">
                     No active cohorts. Jump into a new discipline to unlock premium tracks.
                   </p>
+                  <Button size="sm" asChild>
+                    <Link href="/courses">Browse courses</Link>
+                  </Button>
                 </div>
               ) : (
-                enrollments.slice(0, 4).map((enrollment: any) => (
+                safeEnrollments.slice(0, 4).map((enrollment: any) => (
                   <div
                     key={enrollment.id}
                     className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4"
@@ -166,22 +231,100 @@ export default async function DashboardPage() {
               </div>
 
               <div className="mt-6 space-y-3">
-                {resumes.length === 0 ? (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                    No resumes yet. Build your signature profile with ATS-tuned prompts.
+                <SectionError label="Resumes" />
+                {isLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 2 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4"
+                      >
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-40" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                        <Skeleton className="h-8 w-16 rounded-full" />
+                      </div>
+                    ))}
+                  </div>
+                ) : safeResumes.length === 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 space-y-3">
+                    <p>No resumes yet. Build your signature profile with ATS-tuned prompts.</p>
+                    <Button size="sm" asChild>
+                      <Link href="/resume/builder">Create resume</Link>
+                    </Button>
                   </div>
                 ) : (
-                  resumes.slice(0, 3).map((resume: any) => (
+                  safeResumes.slice(0, 3).map((resume: any) => (
                     <div
                       key={resume.id}
                       className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4"
                     >
                       <div>
                         <p className="text-sm font-semibold text-slate-900">{resume.title}</p>
-                        <p className="text-xs text-slate-500 capitalize">{resume.visibility.toLowerCase()}</p>
+                        <p className="text-xs text-slate-500 capitalize">
+                          Visibility: {resume.visibility.toLowerCase()}
+                        </p>
                       </div>
                       <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:bg-slate-100">
                         <Link href={`/resume/${resume.slug}`}>Preview</Link>
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </GlassCard>
+
+            <GlassCard variant="bordered" className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Recommended</p>
+                  <h2 className="mt-1 text-2xl font-semibold text-slate-900">Roles curated for you</h2>
+                  <p className="text-slate-600">Based on your enrollments and recent activity</p>
+                </div>
+                <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:bg-slate-100">
+                  <Link href="/jobs">See all</Link>
+                </Button>
+              </div>
+
+              <div className="mt-6 space-y-3">
+                <SectionError label="Recommended roles" />
+                {isLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4"
+                      >
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-48" />
+                          <Skeleton className="h-3 w-32" />
+                        </div>
+                        <Skeleton className="h-8 w-20 rounded-full" />
+                      </div>
+                    ))}
+                  </div>
+                ) : safeRecommended.length === 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 space-y-3">
+                    <p>No recommendations yet. Start a course or update your profile to get tailored roles.</p>
+                    <Button size="sm" asChild>
+                      <Link href="/jobs">Browse roles</Link>
+                    </Button>
+                  </div>
+                ) : (
+                  safeRecommended.map((job: any) => (
+                    <div
+                      key={job.id}
+                      className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{job.title}</p>
+                        <p className="text-xs text-slate-500">
+                          {job.company} · {job.location ?? job.remoteOption ?? "Remote-friendly"}
+                        </p>
+                      </div>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href={`/jobs/${job.id}`}>View</Link>
                       </Button>
                     </div>
                   ))
@@ -202,12 +345,33 @@ export default async function DashboardPage() {
               </div>
 
               <div className="mt-6 space-y-4">
-                {totalApplications === 0 ? (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                    No applications yet. Ready talent is one click away — browse curated roles.
+                <SectionError label="Applications" />
+                {isLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 2 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded-2xl border border-slate-200 bg-white p-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-48" />
+                            <Skeleton className="h-3 w-32" />
+                          </div>
+                          <Skeleton className="h-6 w-20 rounded-full" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : totalApplications === 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 space-y-3">
+                    <p>No applications yet. Ready talent is one click away — browse curated roles.</p>
+                    <Button size="sm" asChild>
+                      <Link href="/jobs">Find roles</Link>
+                    </Button>
                   </div>
                 ) : (
-                  [...applications.jobs.slice(0, 2), ...applications.volunteer.slice(0, 1)].map((app: any) => (
+                  [...safeApplications.jobs.slice(0, 2), ...safeApplications.volunteer.slice(0, 1)].map((app: any) => (
                     <div
                       key={app.id}
                       className="rounded-2xl border border-slate-200 bg-white p-4"
@@ -221,7 +385,9 @@ export default async function DashboardPage() {
                         </div>
                         <Badge
                           variant="outline"
-                          className="border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-600"
+                          className={`border text-xs font-medium uppercase tracking-wide ${statusBadge(
+                            app.status
+                          )}`}
                         >
                           {app.status.toLowerCase().replace("_", " ")}
                         </Badge>

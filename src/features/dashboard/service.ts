@@ -34,3 +34,18 @@ export async function getStudentApplications(userId: string) {
     volunteer: volunteerApplications,
   };
 }
+
+export async function listRecommendedJobs(limit = 5) {
+  return prisma.jobOpportunity.findMany({
+    where: { isActive: true },
+    orderBy: { updatedAt: "desc" },
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      company: true,
+      location: true,
+      remoteOption: true,
+    },
+  });
+}
