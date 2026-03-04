@@ -52,7 +52,7 @@ export default async function SuperAdminOverviewPage() {
               <p className="text-sm text-slate-600">Toggle beta modules, enforce audit visibility, and configure usage caps.</p>
             </div>
             <Button variant="outline" asChild className="w-fit border-slate-200 text-slate-700 hover:bg-slate-100">
-              <a href="/superadmin/settings">Open settings</a>
+              <a href="/superadmin">Open settings</a>
             </Button>
           </div>
         </GlassCard>
@@ -192,7 +192,7 @@ export default async function SuperAdminOverviewPage() {
             <h2 className="mt-2 text-2xl font-semibold text-slate-900">Recent tenant telemetry</h2>
           </div>
           <Button variant="outline" size="sm" className="text-slate-700" asChild>
-            <a href="/superadmin/usage">See all</a>
+            <a href="/superadmin">See all</a>
           </Button>
         </div>
 
