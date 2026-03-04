@@ -224,24 +224,31 @@ export default async function AdminOverviewPage({
             </CardHeader>
             <CardContent className="space-y-3">
               <DashboardError label="Jobs unavailable" error={dashboardError} />
-              <Button className="w-full" asChild>
-                <a href="/admin/jobs/new">
-                  <Briefcase className="mr-2 h-4 w-4" />
-                  Create job posting
-                </a>
-              </Button>
-              <Button variant="outline" className="w-full" asChild>
-                <a href="/admin/jobs">
-                  <ClipboardCheck className="mr-2 h-4 w-4" />
-                  Manage jobs & approvals
-                </a>
-              </Button>
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Activity</p>
-                <div className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
-                  Total jobs: {overview.stats.jobs}
-                </div>
+              <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                <span>Open roles</span>
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+                  {overview.stats.jobs}
+                </Badge>
               </div>
+              <div className="flex gap-2">
+                <Button className="w-full" asChild>
+                  <a href="/admin/jobs/new">
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    Create job posting
+                  </a>
+                </Button>
+                <Button variant="outline" className="w-full" asChild>
+                  <a href="/admin/jobs">
+                    <ClipboardCheck className="mr-2 h-4 w-4" />
+                    View all jobs
+                  </a>
+                </Button>
+              </div>
+              <Button variant="ghost" className="w-full justify-start text-blue-700 hover:text-blue-900" asChild>
+                <a href="/admin/jobs/new">
+                  Feature a role to boost visibility
+                </a>
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -260,11 +267,16 @@ export default async function AdminOverviewPage({
                   Open student roster
                 </a>
               </Button>
-              <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                <span>Active students</span>
-                <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
-                  {overview.stats.students}
-                </Badge>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                  <span>Active students</span>
+                  <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
+                    {overview.stats.students}
+                  </Badge>
+                </div>
+                <Button size="sm" variant="ghost" className="w-full justify-start text-slate-700 hover:text-slate-900" asChild>
+                  <a href="/admin/students?view=inactive">View inactive or flagged learners</a>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -282,11 +294,16 @@ export default async function AdminOverviewPage({
                   Open tutor roster
                 </a>
               </Button>
-              <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                <span>Total tutors</span>
-                <Badge variant="secondary" className="bg-indigo-50 text-indigo-700">
-                  {dashboard.tutorCount}
-                </Badge>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                  <span>Total tutors</span>
+                  <Badge variant="secondary" className="bg-indigo-50 text-indigo-700">
+                    {dashboard.tutorCount}
+                  </Badge>
+                </div>
+                <Button size="sm" variant="ghost" className="w-full justify-start text-slate-700 hover:text-slate-900" asChild>
+                  <a href="/admin/courses?status=pending">Jump to pending course approvals</a>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -297,14 +314,22 @@ export default async function AdminOverviewPage({
               <CardDescription>Keep an eye on course conversations.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full" variant="outline" asChild>
-                <a href="/forum">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  View course forums
-                </a>
-              </Button>
-              <div className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-sm text-slate-700">
-                Monitor threads, escalate flags, and create new forums for upcoming cohorts.
+              <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                Keep conversations moving. Review threads, escalate flags, and seed helpful answers.
+              </div>
+              <div className="flex gap-2">
+                <Button className="w-full" asChild>
+                  <a href="/forum">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    View forums
+                  </a>
+                </Button>
+                <Button variant="outline" className="w-full" asChild>
+                  <a href="/forum/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create cohort forum
+                  </a>
+                </Button>
               </div>
             </CardContent>
           </Card>

@@ -8,6 +8,7 @@ const CreatePostSchema = z.object({
   content: z.string().min(1),
   lessonId: z.string().optional(),
   parentId: z.string().optional(),
+  mentions: z.array(z.string()).optional(),
 });
 
 export async function GET(
@@ -63,6 +64,7 @@ export async function POST(
       ...parsed.data,
       threadId: id,
       authorId: user.sub,
+      mentions: parsed.data.mentions,
     });
 
     return NextResponse.json(

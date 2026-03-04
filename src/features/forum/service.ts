@@ -111,6 +111,18 @@ export async function getForumThreadById(id: string) {
           slug: true,
         },
       },
+      mentions: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+      },
       posts: {
         orderBy: { createdAt: "asc" },
         include: {
@@ -141,17 +153,41 @@ export async function getForumThreadById(id: string) {
         },
       },
     },
-  });
+  } as any);
 }
 
-export async function createForumPost(input: {
+type CreateForumPostInput = {
   content: string;
   threadId: string;
   authorId: string;
   lessonId?: string;
   parentId?: string;
-}) {
-  return prisma.forumPost.create({
+  mentions?: string[]; // handles (e.g., @handle)
+};
+
+async function resolveMentionHandles(handles: string[]) {
+  if (!handles.length) return [];
+  const uniqueHandles = Array.from(new Set(handles.map((h) => h.toLowerCase())));
+  const users = await prisma.user.findMany({
+    where: {
+      OR: uniqueHandles.map((h) => ({
+        email: { startsWith: `${h}@`, mode: "insensitive" },
+      })),
+    },
+    select: { id: true, email: true },
+  });
+
+  // Filter to exact username match on email local-part to avoid prefix collisions.
+  const matches = users.filter((u) => {
+    const local = u.email.split("@")[0].toLowerCase();
+    return uniqueHandles.includes(local);
+  });
+
+  return matches.map((u) => u.id);
+}
+
+export async function createForumPost(input: CreateForumPostInput) {
+  const createPost = prisma.forumPost.create({
     data: {
       content: input.content,
       threadId: input.threadId,
@@ -175,4 +211,20 @@ export async function createForumPost(input: {
       },
     },
   });
+
+  const mentionUserIds = input.mentions && input.mentions.length > 0 ? await resolveMentionHandles(input.mentions) : [];
+  const mentionClient = (prisma as any).threadMention;
+  const mentionCreate =
+    mentionUserIds.length > 0
+      ? mentionClient?.createMany({
+          data: mentionUserIds.map((userId) => ({
+            userId,
+            threadId: input.threadId,
+          })),
+          skipDuplicates: true,
+        })
+      : null;
+
+  const [post] = await prisma.$transaction([createPost, ...(mentionCreate ? [mentionCreate] : [])]);
+  return post as Awaited<typeof createPost>;
 }

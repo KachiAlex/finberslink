@@ -35,6 +35,9 @@ model User {
   tenant                       Tenant?                @relation(fields: [tenantId], references: [id])
   volunteerApps                VolunteerApplication[]
   volunteerOpportunitiesPosted VolunteerOpportunity[] @relation("VolunteerPostedBy")
+  exams                        Exam[]                 @relation("ExamCreatedBy")
+  threadReads                  ThreadRead[]
+  threadMentions               ThreadMention[]
 }
 
 model Profile {
@@ -69,6 +72,7 @@ model Course {
   enrollments          Enrollment[]
   forumThreads         ForumThread[]
   lessons              Lesson[]
+  exams                Exam[]
 }
 
 model Lesson {
@@ -102,6 +106,30 @@ model LessonResource {
   lesson   Lesson       @relation(fields: [lessonId], references: [id])
 }
 
+model Exam {
+  id           String      @id @default(cuid())
+  courseId     String
+  createdById  String
+  type         ExamType
+  status       ExamStatus  @default(DRAFT)
+  title        String
+  description  String?
+  sectionId    String?
+  sectionLabel String?
+  passingScore Int?
+  timeLimit    Int?
+  modules      Json        @default("[]")
+  version      Int         @default(1)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  course    Course @relation(fields: [courseId], references: [id])
+  createdBy User   @relation("ExamCreatedBy", fields: [createdById], references: [id])
+
+  @@index([courseId, status])
+  @@index([createdById, status])
+}
+
 model Enrollment {
   id                 String           @id @default(cuid())
   userId             String
@@ -131,15 +159,17 @@ model LessonProgress {
 }
 
 model ForumThread {
-  id        String      @id @default(cuid())
-  title     String
-  courseId  String
-  authorId  String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  posts     ForumPost[]
-  author    User        @relation(fields: [authorId], references: [id])
-  course    Course      @relation(fields: [courseId], references: [id])
+  id         String       @id @default(cuid())
+  courseId   String
+  authorId   String
+  title      String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  author     User         @relation(fields: [authorId], references: [id])
+  course     Course       @relation(fields: [courseId], references: [id])
+  posts      ForumPost[]
+  reads      ThreadRead[]
+  mentions   ThreadMention[]
 }
 
 model ForumPost {
@@ -316,6 +346,33 @@ model Notification {
   user      User             @relation(fields: [userId], references: [id])
 }
 
+model ThreadRead {
+  id         String      @id @default(cuid())
+  userId     String
+  threadId   String
+  lastReadAt DateTime    @default(now())
+  createdAt  DateTime    @default(now())
+
+  user   User        @relation(fields: [userId], references: [id])
+  thread ForumThread @relation(fields: [threadId], references: [id])
+
+  @@unique([userId, threadId])
+  @@index([threadId])
+}
+
+model ThreadMention {
+  id        String      @id @default(cuid())
+  userId    String
+  threadId  String
+  createdAt DateTime    @default(now())
+
+  user   User        @relation(fields: [userId], references: [id])
+  thread ForumThread @relation(fields: [threadId], references: [id])
+
+  @@index([userId])
+  @@index([threadId])
+}
+
 model Tenant {
   id               String          @id @default(cuid())
   name             String
@@ -471,6 +528,18 @@ enum NotificationType {
   FORUM_REPLY
   APPLICATION_STATUS
   SYSTEM
+}
+
+enum ExamStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  CHANGES
+}
+
+enum ExamType {
+  SECTION
+  FINAL
 }
 
 enum TenantStatus {

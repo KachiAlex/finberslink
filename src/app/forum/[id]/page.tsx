@@ -4,10 +4,10 @@ import { revalidatePath } from "next/cache";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { getForumThreadById, createForumPost } from "@/features/forum/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { cookies } from "next/headers";
+import ReplyForm from "./_components/reply-form";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -31,13 +31,26 @@ async function replyAction(formData: FormData) {
 
   const threadId = String(formData.get("threadId") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
+  const mentionsField = String(formData.get("mentions") ?? "").trim();
 
   if (!threadId || !content) return;
+
+  const mentions =
+    mentionsField.length > 0
+      ? mentionsField.split(",").map((m) => m.trim()).filter(Boolean)
+      : Array.from(
+          new Set(
+            [...content.matchAll(/@([\w-]+)/g)]
+              .map((m) => m[1])
+              .filter(Boolean)
+          )
+        );
 
   await createForumPost({
     content,
     threadId,
     authorId: user.sub,
+    mentions,
   });
 
   revalidatePath(`/forum/${threadId}`);
@@ -69,6 +82,15 @@ export default async function ForumThreadPage({
               By {(thread as any).author.firstName} {(thread as any).author.lastName} ·{" "}
               {(thread as any).createdAt.toLocaleDateString()}
             </CardDescription>
+            {(thread as any).mentions?.length ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(thread as any).mentions.map((m: any) => (
+                  <Badge key={m.user.id} variant="secondary" className="bg-indigo-50 text-indigo-700">
+                    @{m.user.email?.split("@")?.[0] ?? m.user.firstName}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
           </CardHeader>
         </Card>
 
@@ -103,23 +125,11 @@ export default async function ForumThreadPage({
         </div>
 
         {user && (
-          <Card className="border border-slate-200/70 bg-white/95">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold text-slate-900">Reply</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-4" action={replyAction}>
-                <input type="hidden" name="threadId" value={(thread as any).id} />
-                <Textarea
-                  name="content"
-                  placeholder="Share your thoughts..."
-                  rows={4}
-                  required
-                />
-                <Button type="submit">Post reply</Button>
-              </form>
-            </CardContent>
-          </Card>
+          <ReplyForm
+            threadId={(thread as any).id}
+            courseId={(thread as any).course?.id}
+            action={replyAction}
+          />
         )}
       </div>
     </main>
