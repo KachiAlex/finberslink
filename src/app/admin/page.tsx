@@ -28,7 +28,22 @@ const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(date));
 
 export default async function AdminOverviewPage() {
-  const dashboard = await getTenantAdminDashboard();
+  let dashboard;
+  try {
+    dashboard = await getTenantAdminDashboard();
+  } catch (err) {
+    console.error("Failed to load tenant admin dashboard", err);
+    dashboard = {
+      overview: {
+        stats: { courses: 0, students: 0, jobs: 0, enrollments: 0 },
+        recentCourses: [],
+        recentStudents: [],
+        recentJobs: [],
+      },
+      courseSnapshot: { totals: { totalCourses: 0, tutorLedCourses: 0, adminDrafts: 0 }, levelMap: {}, recentCourses: [] },
+      tutorCount: 0,
+    };
+  }
   const overview = dashboard.overview;
   const courses = dashboard.courseSnapshot;
 
