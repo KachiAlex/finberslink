@@ -434,37 +434,35 @@ export default async function AdminUsersPage({
                               const newRole = formData.get("role") as AdminRole;
                               await updateUserRole(user.id, newRole);
                             }}
+                            className="flex items-center gap-1"
                           >
-                            <select
-                              name="role"
-                              defaultValue={user.role}
-                              className="text-xs px-2 py-1 border rounded"
-                              onChange={(e) => e.target.form?.requestSubmit()}
-                            >
+                            <select name="role" defaultValue={user.role} className="text-xs px-2 py-1 border rounded">
                               <option value="STUDENT">Student</option>
                               <option value="TUTOR">Tutor</option>
                               <option value="ADMIN">Admin</option>
                               <option value="SUPER_ADMIN">Super Admin</option>
                             </select>
+                            <Button type="submit" size="xs" variant="outline">
+                              Update
+                            </Button>
                           </form>
-                          
+
                           <form
                             action={async (formData: FormData) => {
                               "use server";
                               const newStatus = formData.get("status") as UserStatus;
                               await updateUserStatus(user.id, newStatus);
                             }}
+                            className="flex items-center gap-1"
                           >
-                            <select
-                              name="status"
-                              defaultValue={user.status}
-                              className="text-xs px-2 py-1 border rounded"
-                              onChange={(e) => e.target.form?.requestSubmit()}
-                            >
+                            <select name="status" defaultValue={user.status} className="text-xs px-2 py-1 border rounded">
                               <option value="ACTIVE">Active</option>
                               <option value="SUSPENDED">Suspended</option>
                               <option value="INVITED">Invited</option>
                             </select>
+                            <Button type="submit" size="xs" variant="outline">
+                              Update
+                            </Button>
                           </form>
                         </div>
                       </td>
