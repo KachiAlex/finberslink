@@ -21,6 +21,18 @@ import { getTenantAdminDashboard } from "@/features/admin/service";
 
 import { AdminShell } from "./_components/admin-shell";
 
+function DashboardError({ label, error }: { label: string; error?: unknown }) {
+  if (!error) return null;
+  return (
+    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <p className="font-semibold">{label}</p>
+      <p className="text-xs text-red-600/80">
+        {error instanceof Error ? error.message : "Something went wrong. Try again."}
+      </p>
+    </div>
+  );
+}
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -29,10 +41,12 @@ const formatDate = (date: Date) =>
 
 export default async function AdminOverviewPage() {
   let dashboard;
+  let dashboardError: unknown = null;
   try {
     dashboard = await getTenantAdminDashboard();
   } catch (err) {
     console.error("Failed to load tenant admin dashboard", err);
+    dashboardError = err;
     dashboard = {
       overview: {
         stats: { courses: 0, students: 0, jobs: 0, enrollments: 0 },
@@ -79,6 +93,16 @@ export default async function AdminOverviewPage() {
       <AdminShell
         title="Tenant admin console"
         description="Manage courses, tutors, students, jobs, and forums across your tenant."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild>
+              <a href="/admin/users?role=STUDENT">Create student</a>
+            </Button>
+            <Button variant="outline" asChild>
+              <a href="/admin/users?role=TUTOR">Create tutor</a>
+            </Button>
+          </div>
+        }
       >
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {statConfig.map(({ key, label, icon, accent }) => (
@@ -107,6 +131,7 @@ export default async function AdminOverviewPage() {
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
+              <DashboardError label="Courses unavailable" error={dashboardError} />
               {courses.recentCourses.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                   No tutor submissions yet. Encourage tutors to submit their first course.
@@ -129,6 +154,9 @@ export default async function AdminOverviewPage() {
                           ? `${course.instructor.firstName} ${course.instructor.lastName}`
                           : "Unknown tutor"}
                       </Badge>
+                      <Badge variant="secondary" className="bg-amber-50 text-amber-600">
+                        Pending review
+                      </Badge>
                       <Button size="sm" variant="outline">
                         Approve
                       </Button>
@@ -148,6 +176,7 @@ export default async function AdminOverviewPage() {
               <CardDescription>Create and feature roles for your learners.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              <DashboardError label="Jobs unavailable" error={dashboardError} />
               <Button className="w-full" asChild>
                 <a href="/admin/jobs/new">
                   <Briefcase className="mr-2 h-4 w-4" />
@@ -177,6 +206,7 @@ export default async function AdminOverviewPage() {
               <CardDescription>Suspend, activate, view, edit learner details.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              <DashboardError label="Students unavailable" error={dashboardError} />
               <Button className="w-full" variant="outline" asChild>
                 <a href="/admin/students">
                   <Users className="mr-2 h-4 w-4" />
@@ -198,6 +228,7 @@ export default async function AdminOverviewPage() {
               <CardDescription>Review tutor courses and manage statuses.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              <DashboardError label="Tutors unavailable" error={dashboardError} />
               <Button className="w-full" variant="outline" asChild>
                 <a href="/admin/tutors">
                   <BookOpen className="mr-2 h-4 w-4" />
