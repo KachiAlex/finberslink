@@ -79,6 +79,12 @@ export default async function AdminJobsPage() {
     getJobManagementSnapshot(),
   ]);
 
+  const formatJobType = (jobType?: string) =>
+    (jobType ?? "FULL_TIME").toString().toLowerCase().replace("_", " ");
+  const formatRemote = (remote?: string) => (remote ?? "REMOTE").toString().toLowerCase();
+  const formatDate = (date?: Date | string) =>
+    date ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(date)) : "—";
+
   const statCards = [
     {
       title: "Active roles",
@@ -148,7 +154,9 @@ export default async function AdminJobsPage() {
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-slate-900">{job.title}</p>
-                            <p className="text-xs text-slate-500">{job.company} · {job.location}</p>
+                            <p className="text-xs text-slate-500">
+                              {job.company} · {job.location ?? job.country ?? "Remote-friendly"}
+                            </p>
                           </div>
                           {job.featured ? (
                             <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
@@ -157,21 +165,19 @@ export default async function AdminJobsPage() {
                           ) : null}
                         </div>
                         <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-                          <span className="capitalize">{job.jobType.toLowerCase().replace("_", " ")}</span>
+                          <span className="capitalize">{formatJobType(job.jobType)}</span>
                           <span>{job._count?.applications ?? 0} applications</span>
                         </div>
                         <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-                          <span>Remote: {job.remoteOption.toLowerCase()}</span>
-                          <span>
-                            {new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(job.createdAt)}
-                          </span>
+                          <span>Remote: {formatRemote(job.remoteOption)}</span>
+                          <span>{formatDate(job.createdAt)}</span>
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <form action={toggleJobAction}>
                             <input type="hidden" name="jobId" value={job.id} />
                             <input type="hidden" name="field" value="isActive" />
                             <input type="hidden" name="value" value="false" />
-                            <Button size="xs" variant="outline">
+                            <Button size="sm" variant="outline">
                               Pause
                             </Button>
                           </form>
@@ -179,7 +185,7 @@ export default async function AdminJobsPage() {
                             <input type="hidden" name="jobId" value={job.id} />
                             <input type="hidden" name="field" value="featured" />
                             <input type="hidden" name="value" value={(!job.featured).toString()} />
-                            <Button size="xs" variant={job.featured ? "secondary" : "outline"}>
+                            <Button size="sm" variant={job.featured ? "secondary" : "outline"}>
                               {job.featured ? "Remove highlight" : "Promote"}
                             </Button>
                           </form>
@@ -203,19 +209,21 @@ export default async function AdminJobsPage() {
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-slate-900">{job.title}</p>
-                            <p className="text-xs text-slate-500">{job.company} · {job.location}</p>
+                            <p className="text-xs text-slate-500">
+                              {job.company} · {job.location ?? job.country ?? "Remote-friendly"}
+                            </p>
                           </div>
                           <Badge variant="outline" className="capitalize">
-                            {job.jobType.toLowerCase().replace("_", " ")}
+                            {formatJobType(job.jobType)}
                           </Badge>
                         </div>
-                        <p className="mt-3 text-xs text-slate-500">Remote: {job.remoteOption.toLowerCase()}</p>
+                        <p className="mt-3 text-xs text-slate-500">Remote: {formatRemote(job.remoteOption)}</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <form action={toggleJobAction}>
                             <input type="hidden" name="jobId" value={job.id} />
                             <input type="hidden" name="field" value="isActive" />
                             <input type="hidden" name="value" value="true" />
-                            <Button size="xs">
+                            <Button size="sm">
                               Launch
                             </Button>
                           </form>
@@ -223,7 +231,7 @@ export default async function AdminJobsPage() {
                             <input type="hidden" name="jobId" value={job.id} />
                             <input type="hidden" name="field" value="featured" />
                             <input type="hidden" name="value" value={(!job.featured).toString()} />
-                            <Button size="xs" variant="outline">
+                            <Button size="sm" variant="outline">
                               {job.featured ? "Remove highlight" : "Pre-feature"}
                             </Button>
                           </form>
@@ -341,10 +349,8 @@ export default async function AdminJobsPage() {
                   <Badge variant={job.isActive ? "secondary" : "outline"} className="capitalize">
                     {job.isActive ? "live" : "draft"}
                   </Badge>
-                  <span>{job.jobType.toLowerCase().replace("_", " ")}</span>
-                  <span>
-                    {new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(job.createdAt)}
-                  </span>
+                  <span>{formatJobType(job.jobType)}</span>
+                  <span>{formatDate(job.createdAt)}</span>
                 </div>
               </div>
             ))}

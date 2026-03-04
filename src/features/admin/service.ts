@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes } from "crypto";
 import type { InviteStatus, Prisma, Role, UserStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
@@ -40,7 +40,10 @@ type CourseInput = {
 
 type AdminUserWithTenant = Prisma.UserGetPayload<{ include: { tenant: true } }>;
 
-export async function requireAdminUser(userId?: string): Promise<AdminUserWithTenant> {
+export async function requireAdminUser(
+  userId?: string,
+  options?: { allowNoTenant?: boolean },
+): Promise<AdminUserWithTenant> {
   const admin = await prisma.user.findUnique({
     where: { id: userId ?? DEFAULT_ADMIN_ID },
     include: {
@@ -52,7 +55,9 @@ export async function requireAdminUser(userId?: string): Promise<AdminUserWithTe
     throw new Error("Not authorized");
   }
 
-  if (!admin.tenantId) {
+  const allowNoTenant = options?.allowNoTenant || admin.role === 'SUPER_ADMIN';
+
+  if (!admin.tenantId && !allowNoTenant) {
     throw new Error("Admin is not associated with a tenant");
   }
 
@@ -448,32 +453,58 @@ export async function listAllUsers(filters?: {
   page?: number;
   limit?: number;
 }) {
-  const { role, page = 1, limit = 20 } = filters || {};
-  
-  const where: any = {};
-  if (role) where.role = role;
+  const page = Math.max(filters?.page ?? 1, 1);
+  const limit = filters?.limit ?? 20;
 
-  let users = await prisma.user.findMany({ where, take: 100 });
-  
-  if (filters?.search) {
-    const searchLower = filters.search.toLowerCase();
-    users = users.filter(user =>
-      user.firstName.toLowerCase().includes(searchLower) ||
-      user.lastName.toLowerCase().includes(searchLower) ||
-      user.email.toLowerCase().includes(searchLower)
-    );
+  const where: Prisma.UserWhereInput = {};
+
+  if (filters?.role) {
+    where.role = filters.role as Role;
   }
 
-  const skip = (page - 1) * limit;
-  const paginatedUsers = users.slice(skip, skip + limit);
+  if (filters?.status) {
+    where.status = filters.status;
+  }
+
+  if (filters?.search) {
+    where.OR = [
+      { firstName: { contains: filters.search, mode: 'insensitive' } },
+      { lastName: { contains: filters.search, mode: 'insensitive' } },
+      { email: { contains: filters.search, mode: 'insensitive' } },
+    ];
+  }
+
+  const [total, users] = await Promise.all([
+    prisma.user.count({ where }),
+    prisma.user.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        profile: {
+          select: {
+            headline: true,
+          },
+        },
+        _count: {
+          select: {
+            enrollments: true,
+            jobApplications: true,
+            forumThreads: true,
+          },
+        },
+      },
+    }),
+  ]);
 
   return {
-    users: paginatedUsers,
+    users,
     pagination: {
       page,
       limit,
-      total: users.length,
-      totalPages: Math.ceil(users.length / limit),
+      total,
+      totalPages: Math.max(Math.ceil(total / limit), 1),
     },
   };
 }

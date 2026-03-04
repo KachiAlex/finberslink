@@ -1,9 +1,7 @@
 import { revalidatePath } from "next/cache";
+import type { UserStatus as PrismaUserStatus } from "@prisma/client";
 
-type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
-
-const UserStatusValues = ['ACTIVE', 'INACTIVE', 'SUSPENDED'] as const;
-
+const UserStatusValues: PrismaUserStatus[] = ['ACTIVE', 'SUSPENDED', 'INVITED'];
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +22,7 @@ async function updateStudentStatusAction(formData: FormData) {
   await requireAdminUser();
 
   const userId = String(formData.get("userId") ?? "").trim();
-  const status = String(formData.get("status") ?? "").toUpperCase() as UserStatus;
+  const status = String(formData.get("status") ?? "").toUpperCase() as PrismaUserStatus;
 
   if (!userId) {
     return;
@@ -61,7 +59,9 @@ export default async function AdminStudentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {students.map((student) => (
+                  {students.map((student) => {
+                    const statusLabel = (student.status ?? "ACTIVE").toString().toLowerCase();
+                    return (
                     <tr key={student.id} className="text-slate-700">
                       <td className="py-3 font-semibold">
                         {student.firstName} {student.lastName}
@@ -69,7 +69,7 @@ export default async function AdminStudentsPage() {
                       <td>{student.email}</td>
                       <td>
                         <Badge variant="outline" className="capitalize">
-                          {student.status.toLowerCase()}
+                          {statusLabel}
                         </Badge>
                       </td>
                       <td>
@@ -83,7 +83,7 @@ export default async function AdminStudentsPage() {
                           <input type="hidden" name="userId" value={student.id} />
                           <select
                             name="status"
-                            defaultValue={student.status}
+                            defaultValue={student.status ?? "ACTIVE"}
                             className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
                           >
                             {UserStatusValues.map((option) => (
@@ -98,7 +98,8 @@ export default async function AdminStudentsPage() {
                         </form>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                   {students.length === 0 && (
                     <tr>
                       <td colSpan={5} className="py-8 text-center text-sm text-slate-500">

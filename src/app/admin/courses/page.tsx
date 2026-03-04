@@ -126,29 +126,33 @@ export default async function AdminCoursesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {courses.map((course: any) => (
-                      <tr key={course.id} className="text-slate-700">
-                        <td className="py-3">
-                          <div className="font-semibold">{course.title}</div>
-                          <p className="text-xs text-slate-500">{course.category}</p>
-                        </td>
-                        <td>
-                          <div className="text-sm font-medium">
-                            {course.instructor?.firstName} {course.instructor?.lastName}
-                          </div>
-                          <p className="text-xs text-slate-500">
-                            {course.instructor?.role === "TUTOR" ? "Tutor" : "Admin"} author
-                          </p>
-                        </td>
-                        <td className="capitalize">{course.level.toLowerCase()}</td>
-                        <td>{course._count?.enrollments || 0}</td>
-                        <td>
-                          {new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(
-                            new Date(course.createdAt),
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                    {courses.map((course: any) => {
+                      const levelLabel = (course.level ?? "BEGINNER").toString().toLowerCase();
+                      const categoryLabel = course.category ?? "general";
+                      return (
+                        <tr key={course.id} className="text-slate-700">
+                          <td className="py-3">
+                            <div className="font-semibold">{course.title}</div>
+                            <p className="text-xs text-slate-500">{categoryLabel}</p>
+                          </td>
+                          <td>
+                            <div className="text-sm font-medium">
+                              {course.instructor?.firstName} {course.instructor?.lastName}
+                            </div>
+                            <p className="text-xs text-slate-500">
+                              {course.instructor?.role === "TUTOR" ? "Tutor" : "Admin"} author
+                            </p>
+                          </td>
+                          <td className="capitalize">{levelLabel}</td>
+                          <td>{course._count?.enrollments || 0}</td>
+                          <td>
+                            {new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(
+                              new Date(course.createdAt),
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {courses.length === 0 && (
                       <tr>
                         <td colSpan={5} className="py-8 text-center text-sm text-slate-500">

@@ -79,7 +79,7 @@ async function createInviteAction(formData: FormData) {
 }
 
 export default async function AdminSystemPage() {
-  const admin = await requireAdminUser();
+  const admin = await requireAdminUser(undefined, { allowNoTenant: true });
   const system = await getSystemSnapshot();
   const invites = admin.tenantId ? await listTenantInvites(admin.tenantId) : [];
   const inviteBaseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? "";

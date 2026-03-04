@@ -46,19 +46,18 @@ const statusColors = {
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{
+  searchParams?: {
     role?: string;
     status?: string;
     search?: string;
     page?: string;
-  }>;
+  };
 }) {
-  const params = await searchParams;
   const filters = {
-    role: params.role as AdminRole | undefined,
-    status: params.status as UserStatus | undefined,
-    search: params.search,
-    page: params.page ? parseInt(params.page) : 1,
+    role: searchParams?.role as AdminRole | undefined,
+    status: searchParams?.status as UserStatus | undefined,
+    search: searchParams?.search,
+    page: searchParams?.page ? parseInt(searchParams.page, 10) || 1 : 1,
   };
 
   const result = await listAllUsers(filters);
@@ -348,7 +347,11 @@ export default async function AdminUsersPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {result.users.map((user: any) => (
+                  {result.users.map((user: any) => {
+                    const roleLabel = (user.role ?? "STUDENT").toString().replace("_", " ");
+                    const statusLabel = (user.status ?? "ACTIVE").toString();
+                    const created = user.createdAt ? new Date(user.createdAt) : null;
+                    return (
                     <tr key={user.id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div>
@@ -366,13 +369,13 @@ export default async function AdminUsersPage({
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <Badge className={roleColors[user.role as keyof typeof roleColors]}>
-                          {user.role.replace("_", " ")}
+                        <Badge className={roleColors[user.role as keyof typeof roleColors] ?? "bg-slate-100 text-slate-700"}>
+                          {roleLabel}
                         </Badge>
                       </td>
                       <td className="py-3 px-4">
-                        <Badge className={statusColors[user.status as keyof typeof statusColors]}>
-                          {user.status}
+                        <Badge className={statusColors[user.status as keyof typeof statusColors] ?? "bg-slate-100 text-slate-700"}>
+                          {statusLabel}
                         </Badge>
                       </td>
                       <td className="py-3 px-4">
@@ -390,7 +393,7 @@ export default async function AdminUsersPage({
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm text-gray-500">
-                          {new Date(user.createdAt).toLocaleDateString()}
+                          {created ? created.toLocaleDateString() : "—"}
                         </div>
                       </td>
                       <td className="py-3 px-4">
@@ -436,7 +439,8 @@ export default async function AdminUsersPage({
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
