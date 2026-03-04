@@ -82,6 +82,13 @@ export default async function SuperAdminLayout({
                 <Button variant="outline" asChild className="border-slate-200 text-slate-700 hover:bg-slate-100">
                   <Link href="/superadmin/tenants">View tenants</Link>
                 </Button>
+                <Button
+                  variant="ghost"
+                  asChild
+                  className="text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                >
+                  <Link href="/logout">Log out</Link>
+                </Button>
                 <Button className="rounded-full bg-slate-900 text-white shadow-lg shadow-slate-900/15 hover:bg-slate-800">
                   <span className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4" />
