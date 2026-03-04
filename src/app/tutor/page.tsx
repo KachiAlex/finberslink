@@ -79,9 +79,6 @@ export default async function TutorPage() {
           </div>
           <div className="flex items-center gap-3">
             <NotificationsBell unreadCount={unreadCount} />
-            <Button variant="outline" asChild>
-              <Link href="/dashboard">Student view</Link>
-            </Button>
           </div>
         </header>
 
@@ -104,9 +101,6 @@ export default async function TutorPage() {
               {cohorts.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                   <p>No cohorts yet. Start by proposing a course and outlining its sections.</p>
-                  <Button className="mt-3" asChild>
-                    <Link href="/tutor/courses/new">Create your first course</Link>
-                  </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
