@@ -1,6 +1,7 @@
-import { ExamStatus, ExamType, Prisma } from "@prisma/client";
+import { CourseLevel, ExamStatus, ExamType, LessonFormat, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { slugify } from "@/lib/slugify";
 
 export type TutorExam = {
   id: string;
@@ -139,5 +140,131 @@ export async function submitTutorExam(examId: string, tutorId: string) {
   return prisma.exam.update({
     where: { id: examId },
     data: { status: ExamStatus.SUBMITTED, updatedAt: new Date() },
+  });
+}
+
+type TutorCourseModuleInput = {
+  title: string;
+  format: LessonFormat;
+  durationMinutes: number;
+  summary?: string;
+  content?: string;
+  videoUrl?: string | null;
+};
+
+type TutorExamConfigInput = {
+  title: string;
+  description?: string | null;
+  passingScore?: number | null;
+  timeLimit?: number | null;
+  modules: Prisma.JsonValue;
+};
+
+type TutorCourseSectionInput = {
+  title: string;
+  order: number;
+  modules: TutorCourseModuleInput[];
+  exam?: TutorExamConfigInput;
+};
+
+export type TutorCourseCreationInput = {
+  tutorId: string;
+  coverImage: string;
+  title: string;
+  slug: string;
+  tagline: string;
+  description: string;
+  category: string;
+  level: CourseLevel;
+  outcomes?: string[];
+  skills?: string[];
+  sections: TutorCourseSectionInput[];
+  finalExam?: TutorExamConfigInput;
+};
+
+export async function createTutorCourseWithAssessments(input: TutorCourseCreationInput) {
+  const normalizedSlug = slugify(input.slug || input.title);
+  if (!normalizedSlug) {
+    throw new Error("Invalid slug");
+  }
+
+  const existing = await prisma.course.findUnique({ where: { slug: normalizedSlug } });
+  if (existing) {
+    throw new Error("Course slug already in use");
+  }
+
+  if (!input.sections.length) {
+    throw new Error("At least one section is required");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const course = await tx.course.create({
+      data: {
+        slug: normalizedSlug,
+        title: input.title,
+        tagline: input.tagline,
+        description: input.description,
+        category: input.category,
+        level: input.level,
+        coverImage: input.coverImage,
+        instructorId: input.tutorId,
+        outcomes: input.outcomes ?? [],
+        skills: input.skills ?? [],
+      },
+    });
+
+    let lessonOrder = 1;
+    for (const section of input.sections) {
+      for (const module of section.modules) {
+        await tx.lesson.create({
+          data: {
+            courseId: course.id,
+            title: module.title,
+            slug: slugify(`${section.title}-${module.title}-${lessonOrder}`),
+            order: lessonOrder++,
+            durationMinutes: module.durationMinutes || 0,
+            format: module.format,
+            summary: module.summary ?? "",
+            content: module.content ?? "",
+            videoUrl: module.videoUrl ?? null,
+          },
+        });
+      }
+
+      if (section.exam) {
+        await tx.exam.create({
+          data: {
+            courseId: course.id,
+            createdById: input.tutorId,
+            type: ExamType.SECTION,
+            status: ExamStatus.DRAFT,
+            title: section.exam.title,
+            description: section.exam.description ?? null,
+            sectionLabel: section.title,
+            passingScore: section.exam.passingScore ?? null,
+            timeLimit: section.exam.timeLimit ?? null,
+            modules: section.exam.modules,
+          },
+        });
+      }
+    }
+
+    if (input.finalExam) {
+      await tx.exam.create({
+        data: {
+          courseId: course.id,
+          createdById: input.tutorId,
+          type: ExamType.FINAL,
+          status: ExamStatus.DRAFT,
+          title: input.finalExam.title,
+          description: input.finalExam.description ?? null,
+          passingScore: input.finalExam.passingScore ?? null,
+          timeLimit: input.finalExam.timeLimit ?? null,
+          modules: input.finalExam.modules,
+        },
+      });
+    }
+
+    return course;
   });
 }

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, CheckCircle2, CircleDashed, MessageSquare, PenSquare } from "lucide-react";
+import { ArrowRight, CheckCircle2, CircleDashed, MessageSquare, PenSquare, Plus } from "lucide-react";
 import { verifyToken } from "@/lib/auth/jwt";
 import {
   getTutorCohorts,
@@ -87,14 +87,27 @@ export default async function TutorPage() {
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="border border-slate-200/70 bg-white/95">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold text-slate-900">My Cohorts</CardTitle>
-              <CardDescription>Courses you are instructing</CardDescription>
+            <CardHeader className="flex items-start justify-between gap-3">
+              <div>
+                <CardTitle className="text-lg font-semibold text-slate-900">My Cohorts</CardTitle>
+                <CardDescription>Courses you are instructing</CardDescription>
+              </div>
+              <Button asChild>
+                <Link href="/tutor/courses/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create course
+                </Link>
+              </Button>
             </CardHeader>
             <CardContent>
               <DashboardError label="Cohorts unavailable" error={dashboardError} />
               {cohorts.length === 0 ? (
-                <p className="text-sm text-slate-500">No cohorts assigned yet.</p>
+                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  <p>No cohorts yet. Start by proposing a course and outlining its sections.</p>
+                  <Button className="mt-3" asChild>
+                    <Link href="/tutor/courses/new">Create your first course</Link>
+                  </Button>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {cohorts.map((course: any) => (
