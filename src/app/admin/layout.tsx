@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
+import { cookies } from "next/headers";
 import { Sparkles, ShieldCheck } from "lucide-react";
 
 import { adminNav } from "@/features/admin/nav";
 import { requireAdminUser } from "@/features/admin/service";
 import { getUnreadCount } from "@/features/notifications/service";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
+import { verifyToken } from "@/lib/auth/jwt";
 
 import { AdminNavLink } from "./_components/admin-nav-link";
 
@@ -13,7 +15,14 @@ export default async function AdminLayout({
 }: {
   children: ReactNode;
 }) {
-  const admin = await requireAdminUser();
+  const store = await cookies();
+  const accessToken = store.get("access_token")?.value;
+  if (!accessToken) {
+    throw new Error("Not authorized");
+  }
+
+  const payload = verifyToken(accessToken);
+  const admin = await requireAdminUser(payload.sub);
   const unreadCount = await getUnreadCount(admin.id);
 
   return (

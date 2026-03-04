@@ -160,7 +160,6 @@ export default async function AdminOverviewPage() {
                   Manage jobs & approvals
                 </a>
               </Button>
-              <Separator />
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-wide text-slate-500">Activity</p>
                 <div className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
