@@ -39,7 +39,11 @@ export const revalidate = 0;
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(date));
 
-export default async function AdminOverviewPage() {
+export default async function AdminOverviewPage({
+  searchParams,
+}: {
+  searchParams?: { courseStatus?: string };
+}) {
   let dashboard;
   let dashboardError: unknown = null;
   try {
@@ -60,6 +64,14 @@ export default async function AdminOverviewPage() {
   }
   const overview = dashboard.overview;
   const courses = dashboard.courseSnapshot;
+
+  const courseStatusFilter = searchParams?.courseStatus?.toUpperCase();
+  const filteredCourses =
+    courseStatusFilter && courses.recentCourses.length
+      ? courses.recentCourses.filter((course: any) =>
+          (course.status ?? "PENDING").toUpperCase() === courseStatusFilter
+        )
+      : courses.recentCourses;
 
   const statConfig = [
     {
@@ -124,48 +136,83 @@ export default async function AdminOverviewPage() {
                 <CardTitle>Course submissions</CardTitle>
                 <CardDescription>Review and publish courses submitted by tutors.</CardDescription>
               </div>
-              <Button variant="outline" asChild>
-                <a href="/admin/courses">
-                  Manage courses <ArrowRight className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" asChild>
+                  <a href="/admin/courses">
+                    Manage courses <ArrowRight className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <DashboardError label="Courses unavailable" error={dashboardError} />
-              {courses.recentCourses.length === 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {["PENDING", "APPROVED", "CHANGES"].map((status) => {
+                  const isActive = courseStatusFilter === status;
+                  const href = status === "PENDING" ? "/admin?courseStatus=PENDING" : `/admin?courseStatus=${status}`;
+                  return (
+                    <Button
+                      key={status}
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      asChild
+                      className={isActive ? "bg-slate-900 text-white" : "border-slate-200 text-slate-700"}
+                    >
+                      <a href={href}>{status === "CHANGES" ? "Needs edits" : status}</a>
+                    </Button>
+                  );
+                })}
+                {courseStatusFilter ? (
+                  <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-slate-900">
+                    <a href="/admin">Clear filter</a>
+                  </Button>
+                ) : null}
+              </div>
+              {(filteredCourses.length === 0 && courseStatusFilter) || courses.recentCourses.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                  No tutor submissions yet. Encourage tutors to submit their first course.
+                  No tutor submissions match this filter. Encourage tutors to submit their first course.
                 </div>
               ) : (
-                courses.recentCourses.map((course: any) => (
-                  <div
-                    key={course.id}
-                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">{course.title}</p>
-                      <p className="text-xs text-slate-500">
-                        {course.category} · {course.level}
-                      </p>
+                filteredCourses.map((course: any) => {
+                  const status = (course.status ?? "PENDING").toUpperCase();
+                  const statusLabel =
+                    status === "APPROVED" ? "Approved" : status === "CHANGES" ? "Needs edits" : "Pending review";
+                  const statusClass =
+                    status === "APPROVED"
+                      ? "bg-emerald-50 text-emerald-600"
+                      : status === "CHANGES"
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-amber-50 text-amber-600";
+                  return (
+                    <div
+                      key={course.id}
+                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{course.title}</p>
+                        <p className="text-xs text-slate-500">
+                          {course.category} · {course.level}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs text-slate-600">
+                          {course.instructor
+                            ? `${course.instructor.firstName} ${course.instructor.lastName}`
+                            : "Unknown tutor"}
+                        </Badge>
+                        <Badge variant="secondary" className={statusClass}>
+                          {statusLabel}
+                        </Badge>
+                        <Button size="sm" variant="outline">
+                          Approve
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-orange-600">
+                          Request edits
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs text-slate-600">
-                        {course.instructor
-                          ? `${course.instructor.firstName} ${course.instructor.lastName}`
-                          : "Unknown tutor"}
-                      </Badge>
-                      <Badge variant="secondary" className="bg-amber-50 text-amber-600">
-                        Pending review
-                      </Badge>
-                      <Button size="sm" variant="outline">
-                        Approve
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-orange-600">
-                        Request edits
-                      </Button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </CardContent>
           </Card>
