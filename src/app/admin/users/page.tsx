@@ -16,6 +16,7 @@ import { cookies } from "next/headers";
 import { hashPassword } from "@/lib/auth/password";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdminUser } from "@/features/admin/service";
 import { verifyToken } from "@/lib/auth/jwt";
 
@@ -51,6 +52,8 @@ export default async function AdminUsersPage({
     status?: string;
     search?: string;
     page?: string;
+    error?: string;
+    success?: string;
   };
 }) {
   const filters = {
@@ -61,6 +64,8 @@ export default async function AdminUsersPage({
   };
 
   const result = await listAllUsers(filters);
+  const error = searchParams?.error;
+  const success = searchParams?.success;
 
   async function createUserAction(formData: FormData) {
     "use server";
@@ -86,8 +91,7 @@ export default async function AdminUsersPage({
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      // silently skip on duplicate to avoid breaking the server action
-      return;
+      redirect("/admin/users?error=email-exists");
     }
 
     const passwordHash = await hashPassword(password);
@@ -105,12 +109,13 @@ export default async function AdminUsersPage({
       });
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-        return;
+        redirect("/admin/users?error=email-exists");
       }
       throw err;
     }
 
     revalidatePath("/admin/users");
+    redirect("/admin/users?success=user-created");
   }
 
   async function createInviteAction(formData: FormData) {
@@ -152,6 +157,18 @@ export default async function AdminUsersPage({
         title="User Management"
         description="Manage all platform users, roles, and permissions."
       >
+        {(error || success) && (
+          <Card className={error ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}>
+            <CardContent className="py-3 text-sm">
+              {error === "email-exists" && (
+                <div className="text-red-700">
+                  Email already exists. Use a different email or invite the existing user.
+                </div>
+              )}
+              {success === "user-created" && <div className="text-emerald-700">User created successfully.</div>}
+            </CardContent>
+          </Card>
+        )}
         {/* Create or invite tenant users */}
         <div className="grid gap-4 md:grid-cols-2">
           <Card className="border border-slate-200/70 bg-white/95">
