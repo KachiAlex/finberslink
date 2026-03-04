@@ -79,6 +79,14 @@ type TenantSummary = {
     domain?: string | null;
     featureFlags?: Record<string, boolean> | null;
   } | null;
+  users?: {
+    id: string;
+    email: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    status: "ACTIVE" | "SUSPENDED" | "INVITED" | "CANCELLED" | string;
+    createdAt: string;
+  }[];
   _count?: {
     users: number;
   };
@@ -149,6 +157,7 @@ export default function TenantsPage() {
   const [adminInvitePassword, setAdminInvitePassword] = useState("");
   const [isInviteSending, setIsInviteSending] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [isAdminActioning, setIsAdminActioning] = useState<string | null>(null);
 
   useEffect(() => {
     loadTenants();
@@ -358,6 +367,46 @@ export default function TenantsPage() {
       showToast(err instanceof Error ? err.message : "Failed to save admin", "error");
     } finally {
       setIsInviteSending(false);
+    }
+  }
+
+  async function handleAdminPasswordReset(userId: string) {
+    if (!selectedTenant) return;
+    const tempPassword = `Admin#${Math.random().toString(36).slice(-6)}`;
+    setIsAdminActioning(userId);
+    try {
+      await mutateTenant(
+        selectedTenant.id,
+        {
+          action: "admin-reset-password",
+          payload: { userId, password: tempPassword },
+        },
+        "POST",
+        `Password reset. Temp: ${tempPassword}`
+      );
+    } catch (err) {
+      setDetailError(err instanceof Error ? err.message : "Failed to reset password");
+      showToast(err instanceof Error ? err.message : "Failed to reset password", "error");
+    } finally {
+      setIsAdminActioning(null);
+    }
+  }
+
+  async function handleAdminStatusChange(userId: string, status: "ACTIVE" | "SUSPENDED") {
+    if (!selectedTenant) return;
+    setIsAdminActioning(userId);
+    try {
+      await mutateTenant(
+        selectedTenant.id,
+        { action: "admin-status", payload: { userId, status } },
+        "POST",
+        `Admin ${status === "ACTIVE" ? "activated" : "suspended"}`
+      );
+    } catch (err) {
+      setDetailError(err instanceof Error ? err.message : "Failed to update admin");
+      showToast(err instanceof Error ? err.message : "Failed to update admin", "error");
+    } finally {
+      setIsAdminActioning(null);
     }
   }
 
@@ -855,7 +904,12 @@ export default function TenantsPage() {
               </div>
 
               <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-sm font-semibold text-slate-900">Admin access</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-slate-900">Admin access</p>
+                  <span className="text-xs text-slate-500">
+                    {selectedTenant.users?.length ?? 0} admin{(selectedTenant.users?.length ?? 0) === 1 ? "" : "s"}
+                  </span>
+                </div>
                 <form className="flex flex-col gap-2" onSubmit={handleAdminSave}>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <Input
@@ -902,6 +956,75 @@ export default function TenantsPage() {
                     </Button>
                   </div>
                 </form>
+                <div className="mt-4 space-y-2 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                  {selectedTenant.users && selectedTenant.users.length > 0 ? (
+                    selectedTenant.users.map((admin) => (
+                      <div
+                        key={admin.id}
+                        className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-slate-900">
+                            {admin.firstName || admin.lastName
+                              ? `${admin.firstName ?? ""} ${admin.lastName ?? ""}`.trim()
+                              : admin.email}
+                          </p>
+                          <p className="text-xs text-slate-500">{admin.email}</p>
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            <Badge variant={admin.status === "ACTIVE" ? "default" : "outline"}>
+                              {admin.status}
+                            </Badge>
+                            <span className="text-slate-500">
+                              Created {new Date(admin.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isAdminActioning === admin.id}
+                            onClick={() => handleAdminPasswordReset(admin.id)}
+                          >
+                            {isAdminActioning === admin.id ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            Reset password
+                          </Button>
+                          {admin.status === "SUSPENDED" ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-emerald-200 text-emerald-600"
+                              disabled={isAdminActioning === admin.id}
+                              onClick={() => handleAdminStatusChange(admin.id, "ACTIVE")}
+                            >
+                              {isAdminActioning === admin.id ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : null}
+                              Activate
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-orange-200 text-orange-500"
+                              disabled={isAdminActioning === admin.id}
+                              onClick={() => handleAdminStatusChange(admin.id, "SUSPENDED")}
+                            >
+                              {isAdminActioning === admin.id ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : null}
+                              Suspend
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-500">No admins yet. Create or invite one above.</p>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">

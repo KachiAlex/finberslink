@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { UserStatus } from "@prisma/client";
 
 import {
   archiveTenant,
@@ -47,6 +48,16 @@ const AdminCreateSchema = z.object({
   password: z.string().min(6),
   firstName: z.string().optional().nullable(),
   lastName: z.string().optional().nullable(),
+});
+
+const AdminStatusSchema = z.object({
+  userId: z.string().min(1),
+  status: z.enum(["ACTIVE", "SUSPENDED"]),
+});
+
+const AdminResetSchema = z.object({
+  userId: z.string().min(1),
+  password: z.string().min(6),
 });
 
 function getUserFromRequest(request: NextRequest) {
@@ -165,6 +176,25 @@ export async function POST(
     });
 
     return NextResponse.json({ user }, { status: existing ? 200 : 201 });
+  }
+
+  if (body.action === "admin-status") {
+    const payload = AdminStatusSchema.parse(body.payload);
+    const user = await prisma.user.update({
+      where: { id: payload.userId, tenantId },
+      data: { status: payload.status as UserStatus },
+    });
+    return NextResponse.json({ user });
+  }
+
+  if (body.action === "admin-reset-password") {
+    const payload = AdminResetSchema.parse(body.payload);
+    const passwordHash = await hashPassword(payload.password);
+    const user = await prisma.user.update({
+      where: { id: payload.userId, tenantId },
+      data: { passwordHash },
+    });
+    return NextResponse.json({ user });
   }
 
   return NextResponse.json({ error: "Unsupported action" }, { status: 400 });

@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import { randomBytes } from "node:crypto";
 import type { InviteStatus, Prisma, Role, UserStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
@@ -57,6 +57,20 @@ export async function requireAdminUser(userId?: string): Promise<AdminUserWithTe
   }
 
   return admin;
+}
+
+export async function getTenantAdminDashboard() {
+  const [overview, courseSnapshot, tutorCount] = await Promise.all([
+    getAdminOverview(),
+    getCourseManagementSnapshot(),
+    prisma.user.count({ where: { role: 'TUTOR' } }),
+  ]);
+
+  return {
+    overview,
+    courseSnapshot,
+    tutorCount,
+  };
 }
 
 export async function getAdminOverview() {

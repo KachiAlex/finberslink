@@ -89,6 +89,17 @@ export async function getTenantById(tenantId: string) {
     where: { id: tenantId },
     include: {
       settings: true,
+      users: {
+        where: { role: "ADMIN" },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          status: true,
+          createdAt: true,
+        },
+      },
       usage: {
         orderBy: { createdAt: "desc" },
         take: 6,
