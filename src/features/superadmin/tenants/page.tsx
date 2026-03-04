@@ -146,6 +146,7 @@ export default function TenantsPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [adminInviteEmail, setAdminInviteEmail] = useState("");
+  const [adminInvitePassword, setAdminInvitePassword] = useState("");
   const [isInviteSending, setIsInviteSending] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -331,9 +332,9 @@ export default function TenantsPage() {
     }
   }
 
-  async function handleAdminInvite(event: React.FormEvent) {
+  async function handleAdminSave(event: React.FormEvent) {
     event.preventDefault();
-    if (!selectedTenant || !adminInviteEmail) return;
+    if (!selectedTenant || !adminInviteEmail || !adminInvitePassword) return;
     setIsInviteSending(true);
     setDetailError(null);
 
@@ -344,12 +345,43 @@ export default function TenantsPage() {
           action: "admin-invite",
           payload: {
             email: adminInviteEmail,
+            password: adminInvitePassword,
+          },
+        },
+        "POST",
+        "Admin credentials saved"
+      );
+      setAdminInviteEmail("");
+      setAdminInvitePassword("");
+    } catch (err) {
+      setDetailError(err instanceof Error ? err.message : "Failed to save admin");
+      showToast(err instanceof Error ? err.message : "Failed to save admin", "error");
+    } finally {
+      setIsInviteSending(false);
+    }
+  }
+
+  async function handleAdminInvite(event: React.FormEvent) {
+    event.preventDefault();
+    if (!selectedTenant || !adminInviteEmail || !adminInvitePassword) return;
+    setIsInviteSending(true);
+    setDetailError(null);
+
+    try {
+      await mutateTenant(
+        selectedTenant.id,
+        {
+          action: "admin-invite",
+          payload: {
+            email: adminInviteEmail,
+            password: adminInvitePassword,
           },
         },
         "POST",
         "Admin invite sent"
       );
       setAdminInviteEmail("");
+      setAdminInvitePassword("");
     } catch (err) {
       setDetailError(err instanceof Error ? err.message : "Failed to send invite");
       showToast(err instanceof Error ? err.message : "Failed to send invite", "error");
@@ -821,22 +853,51 @@ export default function TenantsPage() {
 
               <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
                 <p className="text-sm font-semibold text-slate-900">Admin access</p>
-                <form onSubmit={handleAdminInvite} className="flex flex-col gap-2">
-                  <Input
-                    type="email"
-                    placeholder="admin@tenantdomain.com"
-                    value={adminInviteEmail}
-                    onChange={(event) => setAdminInviteEmail(event.target.value)}
-                    className="bg-slate-50"
-                  />
-                  <Button type="submit" disabled={isInviteSending || !adminInviteEmail}>
-                    {isInviteSending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <MoreHorizontal className="mr-2 h-4 w-4" />
-                    )}
-                    Send admin invite
-                  </Button>
+                <form className="flex flex-col gap-2" onSubmit={handleAdminSave}>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      type="email"
+                      placeholder="Admin email"
+                      value={adminInviteEmail}
+                      onChange={(event) => setAdminInviteEmail(event.target.value)}
+                      className="bg-slate-50"
+                      required
+                    />
+                    <Input
+                      type="password"
+                      placeholder="Admin password"
+                      value={adminInvitePassword}
+                      onChange={(event) => setAdminInvitePassword(event.target.value)}
+                      className="bg-slate-50"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="submit"
+                      disabled={isInviteSending || !adminInviteEmail || !adminInvitePassword}
+                    >
+                      {isInviteSending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <MoreHorizontal className="mr-2 h-4 w-4" />
+                      )}
+                      Save
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isInviteSending || !adminInviteEmail || !adminInvitePassword}
+                      onClick={handleAdminInvite}
+                    >
+                      {isInviteSending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <MoreHorizontal className="mr-2 h-4 w-4" />
+                      )}
+                      Send admin invite
+                    </Button>
+                  </div>
                 </form>
               </div>
 
