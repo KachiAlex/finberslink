@@ -1,5 +1,5 @@
 import { ArrowUpDown, Filter, MailPlus, Save, Search, Users } from "lucide-react";
-import { UserStatus as PrismaUserStatus, Role as PrismaRole } from "@prisma/client";
+import { Prisma, UserStatus as PrismaUserStatus, Role as PrismaRole } from "@prisma/client";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -84,18 +84,31 @@ export default async function AdminUsersPage({
 
     if (!email || !password) return;
 
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      // silently skip on duplicate to avoid breaking the server action
+      return;
+    }
+
     const passwordHash = await hashPassword(password);
-    await prisma.user.create({
-      data: {
-        email,
-        firstName,
-        lastName,
-        passwordHash,
-        role,
-        status: "ACTIVE",
-        tenantId: admin.tenantId,
-      },
-    });
+    try {
+      await prisma.user.create({
+        data: {
+          email,
+          firstName,
+          lastName,
+          passwordHash,
+          role,
+          status: "ACTIVE",
+          tenantId: admin.tenantId,
+        },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        return;
+      }
+      throw err;
+    }
 
     revalidatePath("/admin/users");
   }
