@@ -1,14 +1,26 @@
-import { ArrowUpDown, Filter, Search, Users } from "lucide-react";
+import { ArrowUpDown, Filter, MailPlus, Save, Search, Users } from "lucide-react";
+import { UserStatus as PrismaUserStatus, Role as PrismaRole } from "@prisma/client";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { listAllUsers, updateUserRole, updateUserStatus } from "@/features/admin/service";
+import {
+  createTenantInvite,
+  listAllUsers,
+  updateUserRole,
+  updateUserStatus,
+} from "@/features/admin/service";
+import { hashPassword } from "@/lib/auth/password";
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { requireAdminUser } from "@/features/admin/service";
 
-type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
-type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+type Role = PrismaRole;
+type UserStatus = PrismaUserStatus;
+type AdminRole = Extract<Role, "STUDENT" | "TUTOR" | "ADMIN" | "SUPER_ADMIN">;
+type TenantUserRole = Extract<Role, "STUDENT" | "TUTOR">;
 
 import { AdminShell } from "../_components/admin-shell";
 
@@ -41,13 +53,72 @@ export default async function AdminUsersPage({
 }) {
   const params = await searchParams;
   const filters = {
-    role: params.role as Role,
-    status: params.status as UserStatus,
+    role: params.role as AdminRole | undefined,
+    status: params.status as UserStatus | undefined,
     search: params.search,
     page: params.page ? parseInt(params.page) : 1,
   };
 
   const result = await listAllUsers(filters);
+
+  async function createUserAction(formData: FormData) {
+    "use server";
+
+    const admin = await requireAdminUser();
+    if (!admin.tenantId) {
+      throw new Error("Tenant context required to create users");
+    }
+
+    const email = String(formData.get("email") ?? "").toLowerCase();
+    const password = String(formData.get("password") ?? "");
+    const role = (String(formData.get("role") ?? "STUDENT") as TenantUserRole) ?? "STUDENT";
+    const firstName = String(formData.get("firstName") ?? "");
+    const lastName = String(formData.get("lastName") ?? "");
+
+    if (!email || !password) return;
+
+    const passwordHash = await hashPassword(password);
+    await prisma.user.create({
+      data: {
+        email,
+        firstName,
+        lastName,
+        passwordHash,
+        role,
+        status: "ACTIVE",
+        tenantId: admin.tenantId,
+      },
+    });
+
+    revalidatePath("/admin/users");
+  }
+
+  async function createInviteAction(formData: FormData) {
+    "use server";
+
+    const admin = await requireAdminUser();
+    if (!admin.tenantId) {
+      throw new Error("Invites require tenant context");
+    }
+
+    const email = String(formData.get("inviteEmail") ?? "").toLowerCase();
+    const role = String(formData.get("inviteRole") ?? "STUDENT") as TenantUserRole;
+    const days = Number(formData.get("expiresIn") ?? "7");
+
+    if (!email) return;
+
+    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+    await createTenantInvite({
+      tenantId: admin.tenantId,
+      email,
+      role,
+      createdById: admin.id,
+      expiresAt,
+    });
+
+    revalidatePath("/admin/users");
+  }
 
   return (
     <div className="space-y-6">
@@ -55,6 +126,105 @@ export default async function AdminUsersPage({
         title="User Management"
         description="Manage all platform users, roles, and permissions."
       >
+        {/* Create or invite tenant users */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="border border-slate-200/70 bg-white/95">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                <Save className="h-4 w-4 text-slate-500" />
+                Create tenant user (Student/Tutor)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form action={createUserAction} className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-slate-700">First name</Label>
+                    <Input name="firstName" placeholder="First name" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-slate-700">Last name</Label>
+                    <Input name="lastName" placeholder="Last name" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-slate-700">Email</Label>
+                  <Input name="email" type="email" placeholder="user@tenant.com" required />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-slate-700">Password</Label>
+                  <Input name="password" type="password" placeholder="Temp password" required />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-slate-700">Role</Label>
+                  <select
+                    name="role"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                    defaultValue="STUDENT"
+                  >
+                    <option value="STUDENT">Student</option>
+                    <option value="TUTOR">Tutor</option>
+                  </select>
+                </div>
+                <Button type="submit" className="w-full">
+                  Save user
+                </Button>
+                <p className="text-xs text-slate-500">
+                  Accounts are created ACTIVE and scoped to your tenant.
+                </p>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-slate-200/70 bg-white/95">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                <MailPlus className="h-4 w-4 text-slate-500" />
+                Invite tenant user (Student/Tutor)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form action={createInviteAction} className="space-y-3">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-slate-700">Email</Label>
+                  <Input name="inviteEmail" type="email" placeholder="user@tenant.com" required />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-slate-700">Role</Label>
+                    <select
+                      name="inviteRole"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      defaultValue="STUDENT"
+                    >
+                      <option value="STUDENT">Student</option>
+                      <option value="TUTOR">Tutor</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-slate-700">Expires in</Label>
+                    <select
+                      name="expiresIn"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      defaultValue="7"
+                    >
+                      <option value="3">3 days</option>
+                      <option value="7">7 days</option>
+                      <option value="14">14 days</option>
+                    </select>
+                  </div>
+                </div>
+                <Button type="submit" className="w-full" variant="outline">
+                  Generate invite
+                </Button>
+                <p className="text-xs text-slate-500">
+                  Invites are scoped to your tenant and expire automatically.
+                </p>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Filters */}
         <Card>
           <CardHeader>
@@ -214,7 +384,7 @@ export default async function AdminUsersPage({
                           <form
                             action={async (formData: FormData) => {
                               "use server";
-                              const newRole = formData.get("role") as Role;
+                              const newRole = formData.get("role") as AdminRole;
                               await updateUserRole(user.id, newRole);
                             }}
                           >
@@ -228,7 +398,6 @@ export default async function AdminUsersPage({
                               <option value="TUTOR">Tutor</option>
                               <option value="ADMIN">Admin</option>
                               <option value="SUPER_ADMIN">Super Admin</option>
-                              <option value="EMPLOYER">Employer</option>
                             </select>
                           </form>
                           

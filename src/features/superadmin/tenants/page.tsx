@@ -725,7 +725,10 @@ export default function TenantsPage() {
       </div>
 
       <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <SheetContent side="right" className="w-full bg-white text-slate-900 sm:max-w-xl">
+        <SheetContent
+          side="right"
+          className="w-full bg-white text-slate-900 sm:max-w-xl max-h-[90vh] overflow-y-auto px-4 sm:px-6"
+        >
           <SheetHeader>
             <SheetTitle>Tenant detail</SheetTitle>
           </SheetHeader>
