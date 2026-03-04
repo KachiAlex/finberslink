@@ -5,6 +5,7 @@ import {
   BookOpen,
   Briefcase,
   ClipboardCheck,
+  Plus,
   GraduationCap,
   LineChart,
   MessageSquare,
