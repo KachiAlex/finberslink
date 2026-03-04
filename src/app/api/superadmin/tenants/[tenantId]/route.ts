@@ -8,6 +8,9 @@ import {
   setTenantStatus,
   updateTenant,
 } from "@/features/superadmin/tenant-service";
+import { findUserByEmail } from "@/features/auth/repository";
+import { hashPassword } from "@/lib/auth/password";
+import { prisma } from "@/lib/prisma";
 import { requireSuperAdminUser } from "@/features/superadmin/service";
 import { verifyToken } from "@/lib/auth/jwt";
 
@@ -37,6 +40,13 @@ const StatusSchema = z.object({
 const AdminInviteSchema = z.object({
   email: z.string().email(),
   expiresAt: z.coerce.date().optional(),
+});
+
+const AdminCreateSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  firstName: z.string().optional().nullable(),
+  lastName: z.string().optional().nullable(),
 });
 
 function getUserFromRequest(request: NextRequest) {
@@ -126,6 +136,35 @@ export async function POST(
       expiresAt: payload.expiresAt,
     });
     return NextResponse.json({ invite }, { status: 201 });
+  }
+
+  if (body.action === "admin-create") {
+    const payload = AdminCreateSchema.parse(body.payload);
+    const existing = await findUserByEmail(payload.email.toLowerCase());
+    const passwordHash = await hashPassword(payload.password);
+
+    const user = await prisma.user.upsert({
+      where: { email: payload.email.toLowerCase() },
+      update: {
+        firstName: payload.firstName ?? undefined,
+        lastName: payload.lastName ?? undefined,
+        passwordHash,
+        role: "ADMIN",
+        status: "ACTIVE",
+        tenantId,
+      },
+      create: {
+        email: payload.email.toLowerCase(),
+        firstName: payload.firstName ?? "",
+        lastName: payload.lastName ?? "",
+        passwordHash,
+        role: "ADMIN",
+        status: "ACTIVE",
+        tenantId,
+      },
+    });
+
+    return NextResponse.json({ user }, { status: existing ? 200 : 201 });
   }
 
   return NextResponse.json({ error: "Unsupported action" }, { status: 400 });

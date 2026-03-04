@@ -342,14 +342,14 @@ export default function TenantsPage() {
       await mutateTenant(
         selectedTenant.id,
         {
-          action: "admin-invite",
+          action: "admin-create",
           payload: {
             email: adminInviteEmail,
             password: adminInvitePassword,
           },
         },
         "POST",
-        "Admin credentials saved"
+        "Admin created"
       );
       setAdminInviteEmail("");
       setAdminInvitePassword("");
