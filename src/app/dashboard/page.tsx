@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import {
   getStudentApplications,
@@ -7,6 +8,8 @@ import {
   getStudentResumes,
 } from "@/features/dashboard/service";
 import { listRecommendedJobs } from "@/features/dashboard/service";
+import { listSavedJobs } from "@/features/jobs/service";
+import { SaveJobButton } from "../jobs/_components/save-job-button";
 import { verifyToken } from "@/lib/auth/jwt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,41 +40,47 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  let enrollments: any[] | null = null;
-  let resumes: any[] | null = null;
-  let applications: { jobs: any[]; volunteer: any[] } | null = null;
-  let recommendedJobs: any[] | null = null;
-  let unreadCount = 0;
-  let loadError: unknown = null;
+  const cachedRecommendations = unstable_cache(() => listRecommendedJobs(5), ["recommended-jobs"], {
+    revalidate: 60,
+  });
 
-  try {
-    [enrollments, resumes, applications, unreadCount, recommendedJobs] = await Promise.all([
-      getStudentEnrollments(user.sub),
-      getStudentResumes(user.sub),
-      getStudentApplications(user.sub),
-      getUnreadCount(user.sub),
-      listRecommendedJobs(5),
-    ]);
-  } catch (err) {
-    console.error("Dashboard load failed", err);
-    loadError = err;
-  }
+  const [enrollmentsResult, resumesResult, applicationsResult, unreadResult, recommendedResult, savedResult] = await Promise.allSettled([
+    getStudentEnrollments(user.sub),
+    getStudentResumes(user.sub),
+    getStudentApplications(user.sub),
+    getUnreadCount(user.sub),
+    cachedRecommendations(),
+    listSavedJobs(user.sub),
+  ]);
 
-  const safeEnrollments = enrollments ?? [];
-  const safeResumes = resumes ?? [];
-  const safeApplications = applications ?? { jobs: [], volunteer: [] };
-  const safeRecommended = recommendedJobs ?? [];
+  const sectionErrors: Record<string, string | null> = {
+    enrollments: enrollmentsResult.status === "rejected" ? "Courses unavailable" : null,
+    resumes: resumesResult.status === "rejected" ? "Resumes unavailable" : null,
+    applications: applicationsResult.status === "rejected" ? "Applications unavailable" : null,
+    recommended: recommendedResult.status === "rejected" ? "Recommendations unavailable" : null,
+  };
+
+  const safeEnrollments = enrollmentsResult.status === "fulfilled" ? enrollmentsResult.value ?? [] : [];
+  const safeResumes = resumesResult.status === "fulfilled" ? resumesResult.value ?? [] : [];
+  const safeApplications = applicationsResult.status === "fulfilled" ? applicationsResult.value ?? { jobs: [], volunteer: [] } : { jobs: [], volunteer: [] };
+  const safeRecommended = recommendedResult.status === "fulfilled" ? recommendedResult.value ?? [] : [];
+  const savedIds = new Set(
+    savedResult.status === "fulfilled"
+      ? (savedResult.value ?? []).map((save: any) => save.jobOpportunityId)
+      : [],
+  );
+  const unreadCount = unreadResult.status === "fulfilled" ? unreadResult.value ?? 0 : 0;
 
   const totalApplications = safeApplications.jobs.length + safeApplications.volunteer.length;
   const activeCourses = safeEnrollments.length;
   const resumeCount = safeResumes.length;
 
-  const SectionError = ({ label }: { label: string }) =>
-    loadError ? (
-      <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-        {label} unavailable. Try reloading.
-      </div>
+  const SectionError = ({ message }: { message: string | null }) =>
+    message ? (
+      <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{message}</div>
     ) : null;
+
+  const isLoading = false;
 
   const statusBadge = (status: string) => {
     const s = status.toLowerCase();
@@ -80,8 +89,6 @@ export default async function DashboardPage() {
     if (s.includes("rejected")) return "bg-rose-50 text-rose-700 border-rose-100";
     return "bg-amber-50 text-amber-700 border-amber-100";
   };
-
-  const isLoading = enrollments === null || resumes === null || applications === null;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900">
@@ -168,7 +175,7 @@ export default async function DashboardPage() {
             </div>
 
             <div className="mt-8 space-y-4">
-              <SectionError label="Courses" />
+              <SectionError message={sectionErrors.enrollments} />
               {isLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 3 }).map((_, idx) => (
@@ -202,14 +209,24 @@ export default async function DashboardPage() {
                     <div>
                       <p className="text-base font-semibold text-slate-900">{enrollment.course.title}</p>
                       <p className="text-xs uppercase tracking-wide text-slate-400">
-                        {enrollment.course.level.toLowerCase()}
+                        {enrollment.course.level?.toLowerCase() ?? "self-paced"}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500 line-clamp-1">
+                        {enrollment.course.tagline ?? "Continue your momentum"}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <ProgressRing value={enrollment.progressPercentage} />
-                      <span className="text-sm font-medium text-slate-600">
-                        {enrollment.progressPercentage}% mastery
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
+                        <ProgressRing value={enrollment.progressPercentage ?? 0} />
+                        <span className="text-sm font-medium text-slate-600">
+                          {enrollment.progressPercentage ?? 0}% mastery
+                        </span>
+                      </div>
+                      <Button size="sm" asChild className="rounded-full">
+                        <Link href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}>
+                          Continue
+                        </Link>
+                      </Button>
                     </div>
                   </div>
                 ))
@@ -231,7 +248,7 @@ export default async function DashboardPage() {
               </div>
 
               <div className="mt-6 space-y-3">
-                <SectionError label="Resumes" />
+                <SectionError message={sectionErrors.resumes} />
                 {isLoading ? (
                   <div className="space-y-3">
                     {Array.from({ length: 2 }).map((_, idx) => (
@@ -288,7 +305,7 @@ export default async function DashboardPage() {
               </div>
 
               <div className="mt-6 space-y-3">
-                <SectionError label="Recommended roles" />
+                <SectionError message={sectionErrors.recommended} />
                 {isLoading ? (
                   <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, idx) => (
@@ -315,17 +332,35 @@ export default async function DashboardPage() {
                   safeRecommended.map((job: any) => (
                     <div
                       key={job.id}
-                      className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4"
+                      className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4"
                     >
-                      <div>
+                      <div className="space-y-1">
                         <p className="text-sm font-semibold text-slate-900">{job.title}</p>
                         <p className="text-xs text-slate-500">
                           {job.company} · {job.location ?? job.remoteOption ?? "Remote-friendly"}
                         </p>
+                        <div className="flex flex-wrap gap-2">
+                          {job.remoteOption && (
+                            <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
+                              {job.remoteOption}
+                            </Badge>
+                          )}
+                          {job.location && (
+                            <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                              {job.location}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                      <Button size="sm" variant="outline" asChild>
-                        <Link href={`/jobs/${job.id}`}>View</Link>
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="ghost" asChild className="text-slate-600 hover:bg-slate-100">
+                          <Link href={`/jobs/${job.id}`}>View</Link>
+                        </Button>
+                        <SaveJobButton jobId={job.id} initialSaved={savedIds.has(job.id)} />
+                        <Button size="sm" asChild>
+                          <Link href={`/jobs/${job.id}`}>Apply</Link>
+                        </Button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -345,7 +380,7 @@ export default async function DashboardPage() {
               </div>
 
               <div className="mt-6 space-y-4">
-                <SectionError label="Applications" />
+                <SectionError message={sectionErrors.applications} />
                 {isLoading ? (
                   <div className="space-y-3">
                     {Array.from({ length: 2 }).map((_, idx) => (
@@ -382,6 +417,14 @@ export default async function DashboardPage() {
                           <p className="text-xs text-slate-500">
                             {"company" in app.opportunity ? app.opportunity.company : app.opportunity.organization}
                           </p>
+                          <p className="text-[11px] text-slate-400">
+                            Last updated:{" "}
+                            {app.updatedAt
+                              ? new Date(app.updatedAt).toLocaleDateString()
+                              : app.submittedAt
+                                ? new Date(app.submittedAt).toLocaleDateString()
+                                : "—"}
+                          </p>
                         </div>
                         <Badge
                           variant="outline"
@@ -391,6 +434,14 @@ export default async function DashboardPage() {
                         >
                           {app.status.toLowerCase().replace("_", " ")}
                         </Badge>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <Button size="sm" variant="ghost" asChild className="text-slate-600 hover:bg-slate-100">
+                          <Link href={`/applications/${app.id}`}>View</Link>
+                        </Button>
+                        <Button size="sm" asChild>
+                          <Link href={`/jobs/${app.opportunity.id ?? app.opportunity.slug ?? ""}`}>Revisit role</Link>
+                        </Button>
                       </div>
                     </div>
                   ))

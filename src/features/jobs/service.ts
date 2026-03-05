@@ -213,6 +213,41 @@ export async function updateJobApplicationStatus(
   });
 }
 
+export async function saveJob(userId: string, jobOpportunityId: string) {
+  return prisma.jobSave.upsert({
+    where: { userId_jobOpportunityId: { userId, jobOpportunityId } },
+    update: {},
+    create: { userId, jobOpportunityId },
+  });
+}
+
+export async function unsaveJob(userId: string, jobOpportunityId: string) {
+  return prisma.jobSave.delete({
+    where: { userId_jobOpportunityId: { userId, jobOpportunityId } },
+  });
+}
+
+export async function listSavedJobs(userId: string) {
+  return prisma.jobSave.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      jobOpportunity: {
+        include: {
+          _count: { select: { applications: true } },
+        },
+      },
+    },
+  });
+}
+
+export async function isJobSaved(userId: string, jobOpportunityId: string) {
+  const existing = await prisma.jobSave.findUnique({
+    where: { userId_jobOpportunityId: { userId, jobOpportunityId } },
+  });
+  return Boolean(existing);
+}
+
 export async function getJobApplicationsForAdmin(jobId?: string) {
   const where = jobId ? { jobOpportunityId: jobId } : {};
   return prisma.jobApplication.findMany({

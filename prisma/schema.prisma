@@ -38,6 +38,7 @@ model User {
   exams                        Exam[]                 @relation("ExamCreatedBy")
   threadReads                  ThreadRead[]
   threadMentions               ThreadMention[]
+  jobSaves                     JobSave[]
 }
 
 model Profile {
@@ -250,6 +251,7 @@ model JobOpportunity {
   slug             String?          @unique
   viewCount        Int              @default(0)
   applications     JobApplication[]
+  saves            JobSave[]
   postedBy         User?            @relation("JobPostedBy", fields: [postedById], references: [id])
 }
 
@@ -265,6 +267,18 @@ model JobApplication {
   opportunity      JobOpportunity       @relation(fields: [jobOpportunityId], references: [id])
   resume           Resume?              @relation(fields: [resumeId], references: [id])
   user             User                 @relation(fields: [userId], references: [id])
+}
+
+model JobSave {
+  id               String     @id @default(cuid())
+  userId           String
+  jobOpportunityId String
+  createdAt        DateTime   @default(now())
+
+  user             User           @relation(fields: [userId], references: [id])
+  jobOpportunity   JobOpportunity @relation(fields: [jobOpportunityId], references: [id])
+
+  @@unique([userId, jobOpportunityId])
 }
 
 model Company {

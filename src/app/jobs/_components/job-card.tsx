@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SaveJobButton } from "./save-job-button";
 
 type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
 type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
@@ -27,6 +28,7 @@ interface JobCardProps {
     };
   };
   featured?: boolean;
+  saved?: boolean;
 }
 
 const jobTypeColors = {
@@ -43,7 +45,7 @@ const remoteOptionColors = {
   REMOTE: "bg-emerald-100 text-emerald-800",
 };
 
-export function JobCard({ job, featured = false }: JobCardProps) {
+export function JobCard({ job, featured = false, saved = false }: JobCardProps) {
   return (
     <Card className={`hover:shadow-lg transition-shadow ${featured ? 'border-2 border-blue-200 bg-blue-50/30' : ''}`}>
       <CardHeader className="pb-3">
@@ -138,6 +140,7 @@ export function JobCard({ job, featured = false }: JobCardProps) {
                 View Details
               </Link>
             </Button>
+            <SaveJobButton jobId={job.id} initialSaved={saved} />
             <Button size="sm" asChild>
               <Link href={`/jobs/${job.slug}/apply`}>
                 Apply Now
