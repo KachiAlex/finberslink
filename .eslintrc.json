@@ -1,0 +1,14 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "rules": {
+    "@next/next/no-img-element": "off",
+    "@next/next/no-assign-module-variable": "off",
+    "react/no-unescaped-entities": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "no-unused-vars": "off",
+    "react-hooks/exhaustive-deps": "off"
+  }
+}

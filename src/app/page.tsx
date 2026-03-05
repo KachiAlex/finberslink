@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 
@@ -9,6 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { siteConfig } from "@/config/site";
+
+export const metadata = {
+  title: "Finbers Link | Skill-to-Employment OS",
+  description: siteConfig.description,
+  openGraph: {
+    title: "Finbers Link",
+    description: siteConfig.description,
+    url: siteConfig.baseUrl,
+    siteName: "Finbers Link",
+  },
+};
 
 const stats = [
   { label: "Active learners", value: "42k" },
@@ -136,11 +145,11 @@ export default function Home() {
                 Finbers Link unifies a full LMS, AI resume builder, job & volunteer marketplace, and community messaging in one professional workspace for students, tutors, admins, and employers.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
-                <Button size="lg" className="text-base">
-                  Explore the platform
+                <Button asChild size="lg" className="text-base">
+                  <Link href="/dashboard">Launch platform</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="text-base">
-                  <Link href="/demo">Book a live demo</Link>
+                  <Link href="/courses">Browse courses</Link>
                 </Button>
               </div>
               <dl className="grid gap-6 sm:grid-cols-3">
@@ -178,6 +187,23 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="grid gap-4 rounded-3xl border border-slate-200/80 bg-white/95 px-6 py-6 shadow-sm sm:grid-cols-3 sm:px-8">
+          {[
+            { label: "See active courses", href: "/courses" },
+            { label: "Browse roles", href: "/jobs" },
+            { label: "Launch resume studio", href: "/resume/builder" },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary/40 hover:bg-white"
+            >
+              <span>{item.label}</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-primary">Go</span>
+            </Link>
+          ))}
         </section>
 
         <section className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
@@ -267,6 +293,7 @@ export default function Home() {
                     alt={person.name}
                     fill
                     sizes="(max-width: 640px) 50vw, 280px"
+                    loading="lazy"
                     className="object-cover"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/90 to-transparent p-4 text-white">

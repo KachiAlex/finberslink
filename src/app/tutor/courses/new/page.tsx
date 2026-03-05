@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { slugify } from "@/lib/slugify";
 import { TutorExamBuilder, ExamConfig } from "@/components/tutor/exam-builder";
+import { isVideoUrlValid, toEmbedUrl, isCloudinaryVideoUrl, isIframeVideoHost } from "@/lib/video";
 
 type SectionModule = {
   id: string;
@@ -23,12 +24,19 @@ type SectionModule = {
   durationMinutes: number;
   format: LessonFormat;
   summary?: string;
+  videoUrl?: string;
   resources: {
     id: string;
     title: string;
     type: ResourceType;
     url: string;
   }[];
+};
+
+type ResourceDraft = {
+  title: string;
+  type: ResourceType;
+  url: string;
 };
 
 type SectionState = {
@@ -92,16 +100,36 @@ const defaultExamConfig = (label: string): ExamConfig => ({
   modules: [],
 });
 
+const normalizeVideoUrlForSave = (url?: string) => {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (isIframeVideoHost(trimmed)) {
+    return toEmbedUrl(trimmed);
+  }
+  return trimmed;
+};
+
+const createSectionDraft = (): SectionState["draft"] => ({
+  title: "",
+  duration: "15",
+  format: "VIDEO",
+  summary: "",
+});
+
+const createResourceDraft = (): ResourceDraft => ({
+  title: "",
+  type: ResourceType.PDF,
+  url: "",
+});
+
+const ensureResourceDraft = (draft?: ResourceDraft): ResourceDraft => draft ?? createResourceDraft();
+
 const createSection = (index: number): SectionState => ({
   id: crypto.randomUUID(),
   title: `Section ${index}`,
   modules: [],
-  draft: {
-    title: "",
-    duration: "15",
-    format: "VIDEO",
-    summary: "",
-  },
+  draft: createSectionDraft(),
   examEnabled: false,
   exam: defaultExamConfig(`Section ${index} quiz`),
 });
@@ -120,8 +148,9 @@ export default function TutorCourseCreatePage() {
   const [coverPreview, setCoverPreview] = useState("");
   const [coverName, setCoverName] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [resourceDrafts, setResourceDrafts] = useState<Record<string, { title: string; type: ResourceType; url: string }>>({});
+  const [resourceDrafts, setResourceDrafts] = useState<Record<string, ResourceDraft>>({});
   const [uploadingResourceFor, setUploadingResourceFor] = useState<string | null>(null);
+  const [uploadingVideoFor, setUploadingVideoFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -232,23 +261,24 @@ export default function TutorCourseCreatePage() {
     const moduleId = crypto.randomUUID();
     updateSection(sectionId, (section) => {
       if (!section.draft.title.trim()) return section;
-      const module: SectionModule = {
+      const moduleEntry: SectionModule = {
         id: moduleId,
         title: section.draft.title.trim(),
         durationMinutes: Number(section.draft.duration) || 0,
         format: section.draft.format,
-        summary: section.draft.summary.trim() || undefined,
+        summary: section.draft.summary,
+        videoUrl: section.draft.format === "VIDEO" ? "" : undefined,
         resources: [],
       };
       return {
         ...section,
-        modules: [...section.modules, module],
-        draft: { ...section.draft, title: "", summary: "" },
+        modules: [...section.modules, moduleEntry],
+        draft: createSectionDraft(),
       };
     });
     setResourceDrafts((prev) => ({
       ...prev,
-      [moduleId]: { title: "", type: ResourceType.PDF, url: "" },
+      [moduleId]: createResourceDraft(),
     }));
   };
 
@@ -265,6 +295,7 @@ export default function TutorCourseCreatePage() {
     const newModules = template.modules.map((module) => ({
       ...module,
       id: crypto.randomUUID(),
+      videoUrl: module.format === "VIDEO" ? "" : undefined,
       resources: module.resources ?? [],
     }));
     updateSection(sectionId, (section) => ({
@@ -274,7 +305,7 @@ export default function TutorCourseCreatePage() {
     setResourceDrafts((prev) => {
       const next = { ...prev };
       newModules.forEach((m) => {
-        next[m.id] = next[m.id] ?? { title: "", type: ResourceType.PDF, url: "" };
+        next[m.id] = ensureResourceDraft(next[m.id]);
       });
       return next;
     });
@@ -326,19 +357,56 @@ export default function TutorCourseCreatePage() {
       }
       const data = (await res.json()) as { url?: string; name?: string };
       if (!data.url) throw new Error("Upload did not return URL");
-      setResourceDrafts((prev) => ({
-        ...prev,
-        [moduleId]: {
-          title: data.name || prev[moduleId]?.title || "",
-          type: prev[moduleId]?.type ?? ResourceType.PDF,
-          url: data.url,
-        },
-      }));
+      const uploadedUrl = data.url as string;
+      setResourceDrafts((prev) => {
+        const current = ensureResourceDraft(prev[moduleId]);
+        return {
+          ...prev,
+          [moduleId]: {
+            ...current,
+            title: data.name || current.title,
+            url: uploadedUrl,
+          },
+        };
+      });
     } catch (err: any) {
       console.error(err);
       setError(err.message ?? "Failed to upload resource");
     } finally {
       setUploadingResourceFor(null);
+    }
+  };
+
+  const handleVideoUpload = async (moduleId: string, file: File) => {
+    if (!file) return;
+    const MAX_VIDEO_SIZE = 250 * 1024 * 1024;
+    if (file.size > MAX_VIDEO_SIZE) {
+      setError("Video too large. Max 250MB.");
+      return;
+    }
+    setUploadingVideoFor(moduleId);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("intent", "lessonVideo");
+      const res = await fetch("/api/uploads/lesson", { method: "POST", body: formData });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Video upload failed");
+      }
+      const data = (await res.json()) as { url?: string };
+      if (!data.url) throw new Error("Upload did not return URL");
+      setSections((prev) =>
+        prev.map((section) => ({
+          ...section,
+          modules: section.modules.map((mod) => (mod.id === moduleId ? { ...mod, videoUrl: data.url } : mod)),
+        })),
+      );
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message ?? "Failed to upload video");
+    } finally {
+      setUploadingVideoFor(null);
     }
   };
 
@@ -413,6 +481,7 @@ export default function TutorCourseCreatePage() {
             format: module.format,
             durationMinutes: module.durationMinutes,
             summary: module.summary ?? "",
+            videoUrl: module.format === "VIDEO" ? normalizeVideoUrlForSave(module.videoUrl) : undefined,
             resources:
               module.resources?.map((resource) => ({
                 title: resource.title,
@@ -706,6 +775,98 @@ export default function TutorCourseCreatePage() {
                         <Trash className="h-4 w-4" />
                       </Button>
                     </div>
+
+                    {module.format === "VIDEO" ? (
+                      <div className="space-y-2 rounded-lg border border-blue-100/70 bg-blue-50/50 p-3">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="text-xs font-semibold text-slate-700">Lesson video</p>
+                          <p className="text-[11px] text-slate-500">
+                            Paste YouTube/Vimeo or upload mp4 (≤250&nbsp;MB)
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                          <Input
+                            value={module.videoUrl ?? ""}
+                            onChange={(e) =>
+                              updateSection(section.id, (prev) => ({
+                                ...prev,
+                                modules: prev.modules.map((m) =>
+                                  m.id === module.id ? { ...m, videoUrl: e.target.value } : m,
+                                ),
+                              }))
+                            }
+                            placeholder="https://youtu.be/... or https://vimeo.com/..."
+                            className={`${module.videoUrl && !isVideoUrlValid(module.videoUrl) ? "border-amber-400 bg-amber-50/60" : ""}`}
+                          />
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                updateSection(section.id, (prev) => ({
+                                  ...prev,
+                                  modules: prev.modules.map((m) =>
+                                    m.id === module.id
+                                      ? { ...m, videoUrl: toEmbedUrl(m.videoUrl ?? "") }
+                                      : m,
+                                  ),
+                                }))
+                              }
+                              disabled={!module.videoUrl?.trim() || !isVideoUrlValid(module.videoUrl)}
+                            >
+                              Preview
+                            </Button>
+                            <label className="inline-flex items-center justify-center rounded-md border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm hover:bg-blue-50">
+                              <input
+                                type="file"
+                                accept="video/mp4,video/*"
+                                className="hidden"
+                                onChange={(event) => {
+                                  const file = event.target.files?.[0];
+                                  if (file) {
+                                    handleVideoUpload(module.id, file);
+                                    event.target.value = "";
+                                  }
+                                }}
+                              />
+                              {uploadingVideoFor === module.id ? "Uploading..." : "Upload video"}
+                            </label>
+                          </div>
+                        </div>
+                        {module.videoUrl?.trim() ? (
+                          isVideoUrlValid(module.videoUrl) ? (
+                            isCloudinaryVideoUrl(module.videoUrl) ? (
+                              <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-black/60">
+                                <video
+                                  src={module.videoUrl}
+                                  controls
+                                  className="aspect-video w-full"
+                                />
+                              </div>
+                            ) : (
+                              <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-black/60">
+                                <div className="aspect-video w-full">
+                                  <iframe
+                                    src={toEmbedUrl(module.videoUrl)}
+                                    title={`${module.title} video`}
+                                    className="h-full w-full"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                  />
+                                </div>
+                              </div>
+                            )
+                          ) : (
+                            <p className="text-[11px] text-amber-600">
+                              Enter an approved YouTube, Vimeo, or uploaded video link.
+                            </p>
+                          )
+                        ) : (
+                          <p className="text-[11px] text-slate-500">Add a link or upload a file to show preview.</p>
+                        )}
+                      </div>
+                    ) : null}
 
                     <div className="rounded-lg border border-slate-200/70 bg-slate-50/60 p-3 space-y-2">
                       <div className="flex items-center justify-between">

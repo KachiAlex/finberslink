@@ -28,16 +28,6 @@ const FEATURE_FLAG_BLUEPRINT = [
 
 const featureFlagOverrides: Record<string, boolean> = {};
 
-type CourseInput = {
-  slug: string;
-  title: string;
-  tagline: string;
-  description: string;
-  category: string;
-  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
-  coverImage: string;
-};
-
 type AdminUserWithTenant = Prisma.UserGetPayload<{ include: { tenant: true } }>;
 
 export async function requireAdminUser(
