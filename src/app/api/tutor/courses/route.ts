@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CourseLevel, LessonFormat } from "@prisma/client";
+import { CourseLevel, LessonFormat, ResourceType } from "@prisma/client";
 import { z } from "zod";
 
 import { verifyToken } from "@/lib/auth/jwt";
 import { createTutorCourseWithAssessments } from "@/features/tutor/service";
+
+const LessonResourceSchema = z.object({
+  title: z.string().min(1),
+  type: z.nativeEnum(ResourceType),
+  url: z.string().url(),
+});
 
 const LessonModuleSchema = z.object({
   title: z.string().min(1),
@@ -12,6 +18,7 @@ const LessonModuleSchema = z.object({
   summary: z.string().optional(),
   content: z.string().optional(),
   videoUrl: z.string().url().optional(),
+  resources: z.array(LessonResourceSchema).optional(),
 });
 
 const ExamModuleSchema = z.object({

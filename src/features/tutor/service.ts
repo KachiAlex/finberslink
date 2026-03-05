@@ -1,4 +1,4 @@
-import { CourseLevel, ExamStatus, ExamType, LessonFormat, Prisma } from "@prisma/client";
+import { CourseLevel, ExamStatus, ExamType, LessonFormat, Prisma, ResourceType } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
@@ -143,6 +143,12 @@ export async function submitTutorExam(examId: string, tutorId: string) {
   });
 }
 
+type TutorCourseResourceInput = {
+  title: string;
+  type: ResourceType;
+  url: string;
+};
+
 type TutorCourseModuleInput = {
   title: string;
   format: LessonFormat;
@@ -150,6 +156,7 @@ type TutorCourseModuleInput = {
   summary?: string;
   content?: string;
   videoUrl?: string | null;
+  resources?: TutorCourseResourceInput[];
 };
 
 type TutorExamConfigInput = {
@@ -216,7 +223,7 @@ export async function createTutorCourseWithAssessments(input: TutorCourseCreatio
     let lessonOrder = 1;
     for (const section of input.sections) {
       for (const module of section.modules) {
-        await tx.lesson.create({
+        const lesson = await tx.lesson.create({
           data: {
             courseId: course.id,
             title: module.title,
@@ -229,6 +236,17 @@ export async function createTutorCourseWithAssessments(input: TutorCourseCreatio
             videoUrl: module.videoUrl ?? null,
           },
         });
+
+        if (module.resources?.length) {
+          await tx.lessonResource.createMany({
+            data: module.resources.map((resource) => ({
+              lessonId: lesson.id,
+              title: resource.title,
+              type: resource.type,
+              url: resource.url,
+            })),
+          });
+        }
       }
 
       if (section.exam) {

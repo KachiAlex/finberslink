@@ -4,7 +4,7 @@ import type { ChangeEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CourseLevel, LessonFormat } from "@prisma/client";
+import { CourseLevel, LessonFormat, ResourceType } from "@prisma/client";
 import { ArrowLeft, CheckCircle2, Circle, Layers3, Plus, Trash } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,12 @@ type SectionModule = {
   durationMinutes: number;
   format: LessonFormat;
   summary?: string;
+  resources: {
+    id: string;
+    title: string;
+    type: ResourceType;
+    url: string;
+  }[];
 };
 
 type SectionState = {
@@ -53,16 +59,16 @@ const SECTION_TEMPLATES: { label: string; description: string; modules: Omit<Sec
     label: "Video + recap",
     description: "Single video plus short summary task",
     modules: [
-      { title: "Watch: Core concept", durationMinutes: 18, format: "VIDEO", summary: "Primary lecture content" },
-      { title: "Recap worksheet", durationMinutes: 10, format: "TEXT", summary: "Short written recap" },
+      { title: "Watch: Core concept", durationMinutes: 18, format: "VIDEO", summary: "Primary lecture content", resources: [] },
+      { title: "Recap worksheet", durationMinutes: 10, format: "TEXT", summary: "Short written recap", resources: [] },
     ],
   },
   {
     label: "Workshop sprint",
     description: "Live session followed by async assignment",
     modules: [
-      { title: "Live workshop", durationMinutes: 45, format: "LIVE", summary: "Instructor-led session" },
-      { title: "Project upload", durationMinutes: 30, format: "TEXT", summary: "Learner submits assignment" },
+      { title: "Live workshop", durationMinutes: 45, format: "LIVE", summary: "Instructor-led session", resources: [] },
+      { title: "Project upload", durationMinutes: 30, format: "TEXT", summary: "Learner submits assignment", resources: [] },
     ],
   },
 ];
@@ -114,6 +120,8 @@ export default function TutorCourseCreatePage() {
   const [coverPreview, setCoverPreview] = useState("");
   const [coverName, setCoverName] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [resourceDrafts, setResourceDrafts] = useState<Record<string, { title: string; type: ResourceType; url: string }>>({});
+  const [uploadingResourceFor, setUploadingResourceFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -221,14 +229,16 @@ export default function TutorCourseCreatePage() {
   };
 
   const addModuleToSection = (sectionId: string) => {
+    const moduleId = crypto.randomUUID();
     updateSection(sectionId, (section) => {
       if (!section.draft.title.trim()) return section;
       const module: SectionModule = {
-        id: crypto.randomUUID(),
+        id: moduleId,
         title: section.draft.title.trim(),
         durationMinutes: Number(section.draft.duration) || 0,
         format: section.draft.format,
         summary: section.draft.summary.trim() || undefined,
+        resources: [],
       };
       return {
         ...section,
@@ -236,6 +246,10 @@ export default function TutorCourseCreatePage() {
         draft: { ...section.draft, title: "", summary: "" },
       };
     });
+    setResourceDrafts((prev) => ({
+      ...prev,
+      [moduleId]: { title: "", type: ResourceType.PDF, url: "" },
+    }));
   };
 
   const removeModuleFromSection = (sectionId: string, moduleId: string) => {
@@ -248,10 +262,84 @@ export default function TutorCourseCreatePage() {
   const applyTemplateToSection = (sectionId: string, templateIndex: number) => {
     const template = SECTION_TEMPLATES[templateIndex];
     if (!template) return;
+    const newModules = template.modules.map((module) => ({
+      ...module,
+      id: crypto.randomUUID(),
+      resources: module.resources ?? [],
+    }));
     updateSection(sectionId, (section) => ({
       ...section,
-      modules: template.modules.map((module) => ({ ...module, id: crypto.randomUUID() })),
+      modules: newModules,
     }));
+    setResourceDrafts((prev) => {
+      const next = { ...prev };
+      newModules.forEach((m) => {
+        next[m.id] = next[m.id] ?? { title: "", type: ResourceType.PDF, url: "" };
+      });
+      return next;
+    });
+  };
+
+  const addResourceToModule = (sectionId: string, moduleId: string) => {
+    const draft = resourceDrafts[moduleId];
+    if (!draft?.title || !draft.url) return;
+    updateSection(sectionId, (section) => ({
+      ...section,
+      modules: section.modules.map((mod) =>
+        mod.id === moduleId
+          ? {
+              ...mod,
+              resources: [...(mod.resources || []), { id: crypto.randomUUID(), title: draft.title, type: draft.type, url: draft.url }],
+            }
+          : mod,
+      ),
+    }));
+    setResourceDrafts((prev) => ({
+      ...prev,
+      [moduleId]: { title: "", type: ResourceType.PDF, url: "" },
+    }));
+  };
+
+  const removeResourceFromModule = (sectionId: string, moduleId: string, resourceId: string) => {
+    updateSection(sectionId, (section) => ({
+      ...section,
+      modules: section.modules.map((mod) =>
+        mod.id === moduleId ? { ...mod, resources: mod.resources.filter((r) => r.id !== resourceId) } : mod,
+      ),
+    }));
+  };
+
+  const handleResourceUpload = async (moduleId: string, file: File) => {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setError("File too large. Max 10MB.");
+      return;
+    }
+    setUploadingResourceFor(moduleId);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/uploads/lesson", { method: "POST", body: formData });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Upload failed");
+      }
+      const data = (await res.json()) as { url?: string; name?: string };
+      if (!data.url) throw new Error("Upload did not return URL");
+      setResourceDrafts((prev) => ({
+        ...prev,
+        [moduleId]: {
+          title: data.name || prev[moduleId]?.title || "",
+          type: prev[moduleId]?.type ?? ResourceType.PDF,
+          url: data.url,
+        },
+      }));
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message ?? "Failed to upload resource");
+    } finally {
+      setUploadingResourceFor(null);
+    }
   };
 
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -325,6 +413,12 @@ export default function TutorCourseCreatePage() {
             format: module.format,
             durationMinutes: module.durationMinutes,
             summary: module.summary ?? "",
+            resources:
+              module.resources?.map((resource) => ({
+                title: resource.title,
+                type: resource.type,
+                url: resource.url,
+              })) ?? [],
           })),
           exam:
             section.examEnabled && section.exam.modules.length
@@ -599,19 +693,122 @@ export default function TutorCourseCreatePage() {
             ) : (
               <div className="space-y-2">
                 {section.modules.map((module) => (
-                  <div
-                    key={module.id}
-                    className="flex items-center justify-between rounded border border-slate-100 bg-white px-3 py-2 text-sm"
-                  >
-                    <div>
-                      <p className="font-medium text-slate-800">{module.title}</p>
-                      <p className="text-xs text-slate-500">
-                        {module.format.toLowerCase()} · {module.durationMinutes} min
-                      </p>
+                  <div key={module.id} className="rounded border border-slate-100 bg-white px-3 py-3 text-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-slate-800">{module.title}</p>
+                        <p className="text-xs text-slate-500">
+                          {module.format.toLowerCase()} · {module.durationMinutes} min
+                        </p>
+                        {module.summary ? <p className="text-xs text-slate-500 mt-1">{module.summary}</p> : null}
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => removeModuleFromSection(section.id, module.id)}>
+                        <Trash className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => removeModuleFromSection(section.id, module.id)}>
-                      <Trash className="h-4 w-4" />
-                    </Button>
+
+                    <div className="rounded-lg border border-slate-200/70 bg-slate-50/60 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-slate-700">Resources</p>
+                        <p className="text-[11px] text-slate-500">
+                          {module.resources?.length ?? 0} attached
+                        </p>
+                      </div>
+
+                      <div className="grid gap-2 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.4fr)_120px] items-center">
+                        <Input
+                          value={resourceDrafts[module.id]?.title ?? ""}
+                          onChange={(e) =>
+                            setResourceDrafts((prev) => ({
+                              ...prev,
+                              [module.id]: { ...(prev[module.id] ?? { type: ResourceType.PDF, url: "" }), title: e.target.value },
+                            }))
+                          }
+                          placeholder="Resource title"
+                        />
+                        <select
+                          value={resourceDrafts[module.id]?.type ?? ResourceType.PDF}
+                          onChange={(e) =>
+                            setResourceDrafts((prev) => ({
+                              ...prev,
+                              [module.id]: {
+                                ...(prev[module.id] ?? { title: "", url: "" }),
+                                type: e.target.value as ResourceType,
+                              },
+                            }))
+                          }
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800"
+                        >
+                          <option value={ResourceType.PDF}>PDF</option>
+                          <option value={ResourceType.SLIDE}>SLIDE</option>
+                          <option value={ResourceType.LINK}>LINK</option>
+                        </select>
+                        <Input
+                          value={resourceDrafts[module.id]?.url ?? ""}
+                          onChange={(e) =>
+                            setResourceDrafts((prev) => ({
+                              ...prev,
+                              [module.id]: { ...(prev[module.id] ?? { title: "", type: ResourceType.PDF }), url: e.target.value },
+                            }))
+                          }
+                          placeholder="https://..."
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const input = document.createElement("input");
+                              input.type = "file";
+                              input.accept = ".pdf,.ppt,.pptx,.doc,.docx,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                              input.onchange = (ev) => {
+                                const target = ev.target as HTMLInputElement;
+                                const file = target.files?.[0];
+                                if (file) handleResourceUpload(module.id, file);
+                              };
+                              input.click();
+                            }}
+                            disabled={uploadingResourceFor === module.id}
+                          >
+                            {uploadingResourceFor === module.id ? "Uploading..." : "Upload file"}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => addResourceToModule(section.id, module.id)}
+                            disabled={!resourceDrafts[module.id]?.title || !resourceDrafts[module.id]?.url}
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+
+                      {module.resources?.length ? (
+                        <div className="space-y-2">
+                          {module.resources.map((res) => (
+                            <div key={res.id} className="flex items-center justify-between rounded border border-slate-200 bg-white px-2 py-2 text-xs">
+                              <div className="space-y-0.5">
+                                <p className="font-medium text-slate-800">{res.title}</p>
+                                <p className="text-[11px] text-slate-500">{res.type}</p>
+                                <a href={res.url} target="_blank" className="text-primary hover:underline">
+                                  Open
+                                </a>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeResourceFromModule(section.id, module.id, res.id)}
+                              >
+                                <Trash className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-500">No resources yet.</p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
