@@ -1,12 +1,11 @@
+import Link from "next/link";
 import { ArrowLeft, Calendar, Mail, MapPin, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getUserById, updateUserRole, updateUserStatus } from "@/features/admin/service";
-
-type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
-type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+import type { Role, UserStatus } from "@prisma/client";
 
 import { AdminShell } from "../../_components/admin-shell";
 
@@ -44,7 +43,7 @@ export default async function AdminUserDetailPage({
         <div className="text-center py-8">
           <p className="text-gray-500 mb-4">User not found</p>
           <Button asChild>
-            <a href="/admin/users">Back to Users</a>
+            <Link href="/admin/users">Back to Users</Link>
           </Button>
         </div>
       </AdminShell>
@@ -59,10 +58,10 @@ export default async function AdminUserDetailPage({
       >
         {/* Back Button */}
         <Button variant="outline" asChild>
-          <a href="/admin/users" className="flex items-center gap-2">
+          <Link href="/admin/users" className="flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" />
             Back to Users
-          </a>
+          </Link>
         </Button>
 
         {/* User Profile */}
@@ -93,14 +92,14 @@ export default async function AdminUserDetailPage({
 
                 <div>
                   <label className="text-sm font-medium text-gray-500">Headline</label>
-                  <p>{(user as any).profile?.headline || "No headline set"}</p>
+                  <p>{user.profile?.headline || "No headline set"}</p>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-gray-500">Location</label>
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-gray-400" />
-                    <p>{(user as any).profile?.location || "No location set"}</p>
+                    <p>{user.profile?.location || "No location set"}</p>
                   </div>
                 </div>
               </div>
@@ -188,31 +187,31 @@ export default async function AdminUserDetailPage({
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
-                  {(user as any)._count?.enrollments || 0}
+                  {user._count?.enrollments || 0}
                 </div>
                 <div className="text-sm text-gray-600">Enrollments</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {(user as any)._count?.jobApplications || 0}
+                  {user._count?.jobApplications || 0}
                 </div>
                 <div className="text-sm text-gray-600">Applications</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">
-                  {(user as any)._count?.forumThreads || 0}
+                  {user._count?.forumThreads || 0}
                 </div>
                 <div className="text-sm text-gray-600">Threads</div>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">
-                  {(user as any)._count?.forumPosts || 0}
+                  {user._count?.forumPosts || 0}
                 </div>
                 <div className="text-sm text-gray-600">Posts</div>
               </div>
               <div className="text-center p-4 bg-pink-50 rounded-lg">
                 <div className="text-2xl font-bold text-pink-600">
-                  {(user as any)._count?.resumes || 0}
+                  {user._count?.resumes || 0}
                 </div>
                 <div className="text-sm text-gray-600">Resumes</div>
               </div>
@@ -228,9 +227,9 @@ export default async function AdminUserDetailPage({
               <CardTitle>Recent Enrollments</CardTitle>
             </CardHeader>
             <CardContent>
-              {(user as any).enrollments?.length > 0 ? (
+              {user.enrollments?.length > 0 ? (
                 <div className="space-y-3">
-                  {(user as any).enrollments.map((enrollment: any) => (
+                  {user.enrollments.map((enrollment) => (
                     <div
                       key={enrollment.id}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -265,9 +264,9 @@ export default async function AdminUserDetailPage({
               <CardTitle>Recent Applications</CardTitle>
             </CardHeader>
             <CardContent>
-              {(user as any).jobApplications?.length > 0 ? (
+              {user.jobApplications?.length > 0 ? (
                 <div className="space-y-3">
-                  {(user as any).jobApplications.map((application: any) => (
+                  {user.jobApplications.map((application) => (
                     <div
                       key={application.id}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
