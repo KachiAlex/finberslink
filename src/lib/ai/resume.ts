@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { z } from "zod";
 
 function getOpenAIClient() {
   return new OpenAI({
@@ -30,6 +31,56 @@ export interface SkillAnalysisRequest {
 export interface ATSAnalysisRequest {
   resumeContent: string;
   jobDescription: string;
+}
+
+const skillAnalysisResponseSchema = z.object({
+  hardSkills: z.array(z.string()),
+  softSkills: z.array(z.string()),
+  suggestedSkills: z.array(z.string()),
+  prioritySkills: z.array(z.string()),
+});
+
+export type SkillAnalysisResponse = z.infer<typeof skillAnalysisResponseSchema>;
+
+const atsAnalysisResponseSchema = z.object({
+  matchScore: z.number().min(0).max(100),
+  missingKeywords: z.array(z.string()),
+  strongMatches: z.array(z.string()),
+  recommendations: z.array(z.string()),
+  improvements: z.array(z.string()),
+});
+
+export type ATSAnalysisResponse = z.infer<typeof atsAnalysisResponseSchema>;
+
+function extractJsonPayload(raw: string): string {
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) {
+    return fenced[1].trim();
+  }
+  return raw.trim();
+}
+
+function parseStructuredResponse<T>(rawContent: string, schema: z.ZodType<T>, context: string): T {
+  const content = extractJsonPayload(rawContent);
+  if (!content) {
+    throw new Error(`Empty ${context} response`);
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch (jsonError) {
+    console.error(`Failed to parse ${context} JSON`, jsonError);
+    throw new Error(`Failed to parse ${context} response`);
+  }
+
+  const result = schema.safeParse(parsed);
+  if (!result.success) {
+    console.error(`Invalid ${context} response shape`, result.error.flatten());
+    throw new Error(`Invalid ${context} response shape`);
+  }
+
+  return result.data;
 }
 
 export async function optimizeResumeSummary(request: ResumeSummaryRequest) {
@@ -126,7 +177,7 @@ Format as a numbered list without any additional text.`;
   }
 }
 
-export async function analyzeSkills(request: SkillAnalysisRequest) {
+export async function analyzeSkills(request: SkillAnalysisRequest): Promise<SkillAnalysisResponse> {
   const { experience, targetRole, jobDescription } = request;
 
   const prompt = `Analyze this experience and suggest relevant skills for a ${targetRole || 'professional'} role.
@@ -169,15 +220,15 @@ Format the response as JSON:
       temperature: 0.3,
     });
 
-    const content = response.choices[0]?.message?.content?.trim() || "";
-    return JSON.parse(content);
+    const content = response.choices[0]?.message?.content ?? "";
+    return parseStructuredResponse(content, skillAnalysisResponseSchema, "skill analysis");
   } catch (error) {
     console.error("Error analyzing skills:", error);
     throw new Error("Failed to analyze skills");
   }
 }
 
-export async function analyzeATSMatch(request: ATSAnalysisRequest) {
+export async function analyzeATSMatch(request: ATSAnalysisRequest): Promise<ATSAnalysisResponse> {
   const { resumeContent, jobDescription } = request;
 
   const prompt = `Analyze this resume against the job description for ATS optimization.
@@ -222,8 +273,8 @@ Format the response as JSON:
       temperature: 0.3,
     });
 
-    const content = response.choices[0]?.message?.content?.trim() || "";
-    return JSON.parse(content);
+    const content = response.choices[0]?.message?.content ?? "";
+    return parseStructuredResponse(content, atsAnalysisResponseSchema, "ATS analysis");
   } catch (error) {
     console.error("Error analyzing ATS match:", error);
     throw new Error("Failed to analyze ATS match");

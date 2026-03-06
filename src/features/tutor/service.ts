@@ -25,19 +25,19 @@ export async function getTutorCohorts(tutorId: string) {
     orderBy: { createdAt: "desc" },
   });
 
-  return courses.map((course: any) => ({
+  return courses.map((course) => ({
     ...course,
     lessons: course.lessons ?? [],
     enrollments: course.enrollments ?? [],
   }));
 }
 
-export async function getPendingForumPosts(tutorId: string) {
+export async function getPendingForumPosts(_tutorId: string) {
   // TODO: Implement once forum moderation endpoints are wired.
   return [];
 }
 
-export async function getTutorOfficeHours(tutorId: string) {
+export async function getTutorOfficeHours(_tutorId: string) {
   // TODO: Implement OfficeHour model and fetch upcoming sessions.
   return [];
 }
@@ -71,11 +71,11 @@ export async function getTutorForumThreads(tutorId: string, limit = 5, search?: 
     },
   });
 
-  return threads.map((t) => {
-    const unread = (t.reads?.length ?? 0) === 0;
-    const mentions = (t.mentions?.length ?? 0) > 0;
-    const { reads, mentions: mentionRows, ...rest } = t as any;
-    return { ...rest, unread, mentions } as ForumThreadWithFlags;
+  return threads.map((thread) => {
+    const { reads, mentions, ...rest } = thread;
+    const unread = (reads?.length ?? 0) === 0;
+    const hasMentions = (mentions?.length ?? 0) > 0;
+    return { ...rest, unread, mentions: hasMentions } as ForumThreadWithFlags;
   });
 }
 
@@ -93,7 +93,7 @@ export async function listTutorExams(tutorId: string) {
     },
   });
 
-  return exams.map((exam: any) => ({
+  return exams.map((exam) => ({
     ...exam,
     target: exam.type === "FINAL" ? "Final exam" : `Section: ${exam.sectionLabel ?? "Section"}`,
     updatedAt: exam.updatedAt.toISOString(),
@@ -110,7 +110,7 @@ type CreateExamInput = {
   description?: string | null;
   passingScore?: number | null;
   timeLimit?: number | null;
-  modules?: any;
+  modules?: Prisma.InputJsonValue;
 };
 
 export async function createTutorExam(input: CreateExamInput) {
@@ -126,7 +126,7 @@ export async function createTutorExam(input: CreateExamInput) {
       sectionLabel: input.sectionLabel ?? null,
       passingScore: input.passingScore ?? null,
       timeLimit: input.timeLimit ?? null,
-      modules: (input.modules ?? []) as Prisma.JsonValue,
+      modules: (input.modules ?? []) as Prisma.InputJsonValue,
     },
   });
 }
@@ -164,7 +164,7 @@ type TutorExamConfigInput = {
   description?: string | null;
   passingScore?: number | null;
   timeLimit?: number | null;
-  modules: Prisma.JsonValue;
+  modules: Prisma.InputJsonValue;
 };
 
 type TutorCourseSectionInput = {
@@ -222,24 +222,24 @@ export async function createTutorCourseWithAssessments(input: TutorCourseCreatio
 
     let lessonOrder = 1;
     for (const section of input.sections) {
-      for (const module of section.modules) {
+      for (const lessonModule of section.modules) {
         const lesson = await tx.lesson.create({
           data: {
             courseId: course.id,
-            title: module.title,
-            slug: slugify(`${section.title}-${module.title}-${lessonOrder}`),
+            title: lessonModule.title,
+            slug: slugify(`${section.title}-${lessonModule.title}-${lessonOrder}`),
             order: lessonOrder++,
-            durationMinutes: module.durationMinutes || 0,
-            format: module.format,
-            summary: module.summary ?? "",
-            content: module.content ?? "",
-            videoUrl: module.videoUrl ?? null,
+            durationMinutes: lessonModule.durationMinutes || 0,
+            format: lessonModule.format,
+            summary: lessonModule.summary ?? "",
+            content: lessonModule.content ?? "",
+            videoUrl: lessonModule.videoUrl ?? null,
           },
         });
 
-        if (module.resources?.length) {
+        if (lessonModule.resources?.length) {
           await tx.lessonResource.createMany({
-            data: module.resources.map((resource) => ({
+            data: lessonModule.resources.map((resource) => ({
               lessonId: lesson.id,
               title: resource.title,
               type: resource.type,

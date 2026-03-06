@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import type { InviteStatus, Prisma, Role, UserStatus } from "@prisma/client";
+import type { InviteStatus, JobType, Prisma, RemoteOption, Role, UserStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
@@ -437,7 +437,7 @@ export async function updateStudentStatus(userId: string, status: UserStatus) {
 }
 
 export async function listAllUsers(filters?: {
-  role?: string;
+  role?: Role;
   status?: UserStatus;
   search?: string;
   page?: number;
@@ -449,7 +449,7 @@ export async function listAllUsers(filters?: {
   const where: Prisma.UserWhereInput = {};
 
   if (filters?.role) {
-    where.role = filters.role as Role;
+    where.role = filters.role;
   }
 
   if (filters?.status) {
@@ -508,7 +508,7 @@ export async function listTutors(filters?: {
   const page = Math.max(filters?.page ?? 1, 1);
   const limit = filters?.limit ?? 20;
 
-  const where: any = {
+  const where: Prisma.UserWhereInput = {
     role: 'TUTOR',
   };
 
@@ -616,6 +616,38 @@ export async function updateUserStatus(userId: string, status: UserStatus) {
 export async function getUserById(userId: string) {
   return prisma.user.findUnique({
     where: { id: userId },
+    include: {
+      profile: {
+        select: {
+          headline: true,
+          location: true,
+        },
+      },
+      _count: {
+        select: {
+          enrollments: true,
+          jobApplications: true,
+          forumThreads: true,
+          forumPosts: true,
+          resumes: true,
+        },
+      },
+      enrollments: {
+        select: {
+          id: true,
+          status: true,
+          course: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      },
+    },
   });
 }
 
@@ -719,8 +751,8 @@ interface CreateJobInput {
   company: string;
   location: string;
   country: string;
-  jobType: string;
-  remoteOption: string;
+  jobType: JobType;
+  remoteOption: RemoteOption;
 }
 
 export async function createJobPosting(input: CreateJobInput) {
@@ -730,8 +762,8 @@ export async function createJobPosting(input: CreateJobInput) {
       company: input.company,
       location: input.location,
       country: input.country,
-      jobType: input.jobType as any,
-      remoteOption: input.remoteOption as any,
+      jobType: input.jobType,
+      remoteOption: input.remoteOption,
       description: '',
       requirements: [],
       tags: [],

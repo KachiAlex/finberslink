@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 
 import { NEWS_STATUSES } from "./constants";
@@ -96,7 +98,7 @@ export async function updateNewsPost(
     status?: (typeof NEWS_STATUSES)[number];
   }
 ) {
-  const data: any = {};
+  const data: Prisma.NewsUpdateInput = {};
 
   if (input.title) {
     data.title = input.title;

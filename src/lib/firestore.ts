@@ -1,73 +1,68 @@
-import * as admin from 'firebase-admin';
+import * as admin from "firebase-admin";
 
-let initialized = false;
-let dbInstance: any = null;
-let authInstance: any = null;
+type FirebaseServices = {
+  db: admin.firestore.Firestore;
+  auth: admin.auth.Auth;
+};
 
-export function initializeFirebase() {
-  if (initialized) {
-    return { db: dbInstance, auth: authInstance };
+let services: FirebaseServices | null = null;
+
+export function initializeFirebase(): FirebaseServices {
+  if (services) {
+    return services;
   }
 
-  const serviceAccount = {
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+
+  if (!projectId || !privateKey || !clientEmail) {
+    throw new Error("Firebase credentials are not configured");
+  }
+
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        privateKey,
+        clientEmail,
+      }),
+      databaseURL: process.env.FIREBASE_DATABASE_URL,
+    });
+  }
+
+  const dbInstance = admin.firestore();
+  dbInstance.settings({ ignoreUndefinedProperties: true });
+
+  services = {
+    db: dbInstance,
+    auth: admin.auth(),
   };
 
-  // Only initialize if we have valid credentials
-  if (serviceAccount.projectId && serviceAccount.privateKey && serviceAccount.clientEmail) {
-    try {
-      if (!admin.apps.length) {
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-          databaseURL: process.env.FIREBASE_DATABASE_URL,
-        });
-      }
-
-      dbInstance = admin.firestore();
-      authInstance = admin.auth();
-
-      // Enable offline persistence for better performance
-      dbInstance.settings({
-        ignoreUndefinedProperties: true,
-      });
-
-      initialized = true;
-    } catch (error) {
-      console.error('Failed to initialize Firebase:', error);
-    }
-  }
-
-  return { db: dbInstance, auth: authInstance };
+  return services;
 }
 
-// Export lazy-initialized instances using Proxy
-export const db = new Proxy({} as any, {
-  get: (target, prop: string | symbol) => {
-    const { db: firestore } = initializeFirebase();
-    if (!firestore) {
-      throw new Error("Firebase not initialized");
-    }
-    const value = (firestore as any)[prop];
-    if (typeof value === 'function') {
-      return value.bind(firestore);
-    }
-    return value;
+function getFirestoreInstance() {
+  return initializeFirebase().db;
+}
+
+function getAuthInstance() {
+  return initializeFirebase().auth;
+}
+
+export const db = new Proxy({} as admin.firestore.Firestore, {
+  get: (_target, prop: string | symbol) => {
+    const firestore = getFirestoreInstance();
+    const value = firestore[prop as keyof admin.firestore.Firestore];
+    return typeof value === "function" ? value.bind(firestore) : value;
   },
 });
 
-export const auth = new Proxy({} as any, {
-  get: (target, prop: string | symbol) => {
-    const { auth: authService } = initializeFirebase();
-    if (!authService) {
-      throw new Error("Firebase not initialized");
-    }
-    const value = (authService as any)[prop];
-    if (typeof value === 'function') {
-      return value.bind(authService);
-    }
-    return value;
+export const auth = new Proxy({} as admin.auth.Auth, {
+  get: (_target, prop: string | symbol) => {
+    const authService = getAuthInstance();
+    const value = authService[prop as keyof admin.auth.Auth];
+    return typeof value === "function" ? value.bind(authService) : value;
   },
 });
 

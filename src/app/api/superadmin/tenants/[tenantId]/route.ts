@@ -52,7 +52,7 @@ const AdminCreateSchema = z.object({
 
 const AdminStatusSchema = z.object({
   userId: z.string().min(1),
-  status: z.enum(["ACTIVE", "SUSPENDED"]),
+  status: z.nativeEnum(UserStatus),
 });
 
 const AdminResetSchema = z.object({
@@ -182,7 +182,7 @@ export async function POST(
     const payload = AdminStatusSchema.parse(body.payload);
     const user = await prisma.user.update({
       where: { id: payload.userId, tenantId },
-      data: { status: payload.status as UserStatus },
+      data: { status: payload.status },
     });
     return NextResponse.json({ user });
   }

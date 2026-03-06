@@ -1,3 +1,5 @@
+import type { Role, UserStatus } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 
 interface CreateUserInput {
@@ -5,7 +7,8 @@ interface CreateUserInput {
   lastName: string;
   email: string;
   passwordHash: string;
-  role?: 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR' | 'EMPLOYER';
+  role?: Role;
+  status?: UserStatus;
   tenantId?: string | null;
 }
 
@@ -22,8 +25,8 @@ export async function createUser(input: CreateUserInput) {
       lastName: input.lastName,
       email: input.email,
       passwordHash: input.passwordHash,
-      role: input.role ?? 'STUDENT',
-      status: 'ACTIVE',
+      role: input.role ?? "STUDENT",
+      status: input.status ?? "ACTIVE",
       tenantId: input.tenantId ?? undefined,
     },
   });

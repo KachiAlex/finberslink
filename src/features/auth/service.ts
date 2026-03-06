@@ -1,10 +1,12 @@
+import type { Role as PrismaRole, UserStatus as PrismaUserStatus } from "@prisma/client";
+
 import { createUser, findUserByEmail } from "@/features/auth/repository";
 import type { LoginInput, RegisterInput } from "@/features/auth/schemas";
 import { signAccessToken, signRefreshToken, verifyToken, type SessionPayload } from "@/lib/auth/jwt";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 
-type UserRole = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR' | 'EMPLOYER';
-type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+type UserRole = PrismaRole;
+type UserStatus = PrismaUserStatus;
 
 export async function registerUser(input: RegisterInput, tenantId?: string | null) {
   const existing = await findUserByEmail(input.email);

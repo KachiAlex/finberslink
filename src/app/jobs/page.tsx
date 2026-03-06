@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Search, MapPin, Briefcase, Clock, DollarSign, Building, Filter } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -159,9 +160,9 @@ export default async function JobsPage({
                           size="sm"
                           asChild
                         >
-                          <a href={`?page=${page}`}>
+                          <Link href={`?page=${page}`}>
                             {page}
-                          </a>
+                          </Link>
                         </Button>
                       ))}
                     </div>
@@ -176,7 +177,7 @@ export default async function JobsPage({
                   Try adjusting your search criteria or browse all opportunities.
                 </p>
                 <Button variant="outline" asChild>
-                  <a href="/jobs">Clear Filters</a>
+                  <Link href="/jobs">Clear Filters</Link>
                 </Button>
               </div>
             )}

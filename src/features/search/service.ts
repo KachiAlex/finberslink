@@ -1,12 +1,23 @@
 import { prisma } from "@/lib/prisma";
 
+type JobSearchMetadata = {
+  company: string;
+  location: string;
+};
+
+type CourseSearchMetadata = {
+  category: string;
+};
+
+type SearchMetadata = JobSearchMetadata | CourseSearchMetadata;
+
 export interface SearchResult {
   type: "course" | "job" | "forum" | "news";
   id: string;
   title: string;
   description?: string;
   url: string;
-  metadata?: Record<string, any>;
+  metadata?: SearchMetadata;
 }
 
 export async function searchAll(query: string, limit = 10): Promise<SearchResult[]> {

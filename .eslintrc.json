@@ -3,12 +3,19 @@
   "parserOptions": {
     "project": "./tsconfig.json"
   },
+  "plugins": ["@typescript-eslint"],
   "rules": {
-    "@next/next/no-img-element": "off",
-    "@next/next/no-assign-module-variable": "off",
-    "react/no-unescaped-entities": "off",
-    "@typescript-eslint/no-explicit-any": "off",
-    "no-unused-vars": "off",
-    "react-hooks/exhaustive-deps": "off"
+    "@next/next/no-img-element": "error",
+    "@next/next/no-assign-module-variable": "error",
+    "react/no-unescaped-entities": "error",
+    "@typescript-eslint/no-explicit-any": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^ignored"
+      }
+    ],
+    "react-hooks/exhaustive-deps": "error"
   }
 }

@@ -1,16 +1,26 @@
+import type { JobApplicationStatus, JobOpportunity, JobType, RemoteOption } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
+
+type JobListing = JobOpportunity & {
+  _count?: {
+    applications: number;
+  };
+};
 
 export interface JobFilters {
   search?: string;
   location?: string;
-  jobType?: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
-  remoteOption?: 'REMOTE' | 'HYBRID' | 'ONSITE';
+  jobType?: JobType;
+  remoteOption?: RemoteOption;
   company?: string;
   tags?: string[];
   featured?: boolean;
   page?: number;
   limit?: number;
 }
+
+type JobWhereInput = NonNullable<Parameters<typeof prisma.jobOpportunity.findMany>[0]>["where"];
 
 export async function getJobs(filters: JobFilters = {}) {
   const {
@@ -25,7 +35,7 @@ export async function getJobs(filters: JobFilters = {}) {
     limit = 20,
   } = filters;
 
-  const where: any = { isActive: true };
+  const where: JobWhereInput = { isActive: true };
 
   if (jobType) {
     where.jobType = jobType;
@@ -39,60 +49,51 @@ export async function getJobs(filters: JobFilters = {}) {
     where.featured = featured;
   }
 
-  const skip = (page - 1) * limit;
-  const jobs = await prisma.jobOpportunity.findMany({
-    where,
-    skip,
-    take: limit,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      _count: {
-        select: {
-          applications: true,
-        },
-      },
-    },
-  });
-
-  const total = await prisma.jobOpportunity.count({ where });
-
-  let filteredJobs = jobs;
-
-  if (search || location || company || (tags && tags.length > 0)) {
-    filteredJobs = jobs.filter(job => {
-      if (search) {
-        const searchLower = search.toLowerCase();
-        const matchesSearch = 
-          job.title.toLowerCase().includes(searchLower) ||
-          job.company.toLowerCase().includes(searchLower) ||
-          (job.description?.toLowerCase().includes(searchLower) ?? false) ||
-          job.tags.some(tag => tag.toLowerCase().includes(searchLower));
-        if (!matchesSearch) return false;
-      }
-
-      if (location) {
-        const locationLower = location.toLowerCase();
-        const matchesLocation = 
-          job.location.toLowerCase().includes(locationLower) ||
-          job.country.toLowerCase().includes(locationLower);
-        if (!matchesLocation) return false;
-      }
-
-      if (company) {
-        if (!job.company.toLowerCase().includes(company.toLowerCase())) return false;
-      }
-
-      if (tags && tags.length > 0) {
-        const hasAllTags = tags.every(tag => job.tags.includes(tag));
-        if (!hasAllTags) return false;
-      }
-
-      return true;
-    });
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: "insensitive" } },
+      { company: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+      { tags: { hasSome: [search] } },
+    ];
   }
 
+  if (location) {
+    where.OR = [
+      ...(where.OR ?? []),
+      { location: { contains: location, mode: "insensitive" } },
+      { country: { contains: location, mode: "insensitive" } },
+    ];
+  }
+
+  if (company) {
+    where.company = { contains: company, mode: "insensitive" };
+  }
+
+  if (tags && tags.length > 0) {
+    where.tags = { hasEvery: tags };
+  }
+
+  const skip = (page - 1) * limit;
+  const [jobs, total] = await Promise.all([
+    prisma.jobOpportunity.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: {
+          select: {
+            applications: true,
+          },
+        },
+      },
+    }) as Promise<JobListing[]>,
+    prisma.jobOpportunity.count({ where }),
+  ]);
+
   return {
-    jobs: filteredJobs,
+    jobs,
     pagination: {
       page,
       limit,
@@ -168,10 +169,10 @@ export async function getJobTags() {
   });
   
   const allTags = jobs.flatMap(job => job.tags).filter(tag => tag && tag.length > 0);
-  const tagCounts = allTags.reduce((acc, tag) => {
+  const tagCounts = allTags.reduce<Record<string, number>>((acc, tag) => {
     acc[tag] = (acc[tag] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>);
+  }, {});
 
   return Object.entries(tagCounts)
     .map(([tag, count]) => ({ tag, count }))
@@ -205,7 +206,7 @@ export async function getUserJobApplications(userId: string) {
 
 export async function updateJobApplicationStatus(
   applicationId: string,
-  status: 'SUBMITTED' | 'REVIEWING' | 'INTERVIEW' | 'OFFER' | 'REJECTED'
+  status: JobApplicationStatus
 ) {
   return prisma.jobApplication.update({
     where: { id: applicationId },

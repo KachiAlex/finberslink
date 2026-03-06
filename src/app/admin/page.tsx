@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Activity,
   AlertTriangle,
@@ -109,10 +110,10 @@ export default async function AdminOverviewPage({
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" asChild>
-              <a href="/admin/users?role=STUDENT">Create student</a>
+              <Link href="/admin/users?role=STUDENT">Create student</Link>
             </Button>
             <Button variant="outline" asChild>
-              <a href="/admin/users?role=TUTOR">Create tutor</a>
+              <Link href="/admin/users?role=TUTOR">Create tutor</Link>
             </Button>
           </div>
         }
@@ -139,9 +140,9 @@ export default async function AdminOverviewPage({
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" asChild>
-                  <a href="/admin/courses">
+                  <Link href="/admin/courses">
                     Manage courses <ArrowRight className="ml-2 h-4 w-4" />
-                  </a>
+                  </Link>
                 </Button>
               </div>
             </CardHeader>
@@ -159,13 +160,13 @@ export default async function AdminOverviewPage({
                       asChild
                       className={isActive ? "bg-slate-900 text-white" : "border-slate-200 text-slate-700"}
                     >
-                      <a href={href}>{status === "CHANGES" ? "Needs edits" : status}</a>
+                      <Link href={href}>{status === "CHANGES" ? "Needs edits" : status}</Link>
                     </Button>
                   );
                 })}
                 {courseStatusFilter ? (
                   <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-slate-900">
-                    <a href="/admin">Clear filter</a>
+                    <Link href="/admin">Clear filter</Link>
                   </Button>
                 ) : null}
               </div>
@@ -233,22 +234,22 @@ export default async function AdminOverviewPage({
               </div>
               <div className="flex gap-2">
                 <Button className="w-full" asChild>
-                  <a href="/admin/jobs/new">
+                  <Link href="/admin/jobs/new">
                     <Briefcase className="mr-2 h-4 w-4" />
                     Create job posting
-                  </a>
+                  </Link>
                 </Button>
                 <Button variant="outline" className="w-full" asChild>
-                  <a href="/admin/jobs">
+                  <Link href="/admin/jobs">
                     <ClipboardCheck className="mr-2 h-4 w-4" />
                     View all jobs
-                  </a>
+                  </Link>
                 </Button>
               </div>
               <Button variant="ghost" className="w-full justify-start text-blue-700 hover:text-blue-900" asChild>
-                <a href="/admin/jobs/new">
+                <Link href="/admin/jobs/new">
                   Feature a role to boost visibility
-                </a>
+                </Link>
               </Button>
             </CardContent>
           </Card>
@@ -263,10 +264,10 @@ export default async function AdminOverviewPage({
             <CardContent className="space-y-3">
               <DashboardError label="Students unavailable" error={dashboardError} />
               <Button className="w-full" variant="outline" asChild>
-                <a href="/admin/students">
+                <Link href="/admin/students">
                   <Users className="mr-2 h-4 w-4" />
                   Open student roster
-                </a>
+                </Link>
               </Button>
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
@@ -276,7 +277,7 @@ export default async function AdminOverviewPage({
                   </Badge>
                 </div>
                 <Button size="sm" variant="ghost" className="w-full justify-start text-slate-700 hover:text-slate-900" asChild>
-                  <a href="/admin/students?view=inactive">View inactive or flagged learners</a>
+                  <Link href="/admin/students?view=inactive">View inactive or flagged learners</Link>
                 </Button>
               </div>
             </CardContent>
@@ -290,10 +291,10 @@ export default async function AdminOverviewPage({
             <CardContent className="space-y-3">
               <DashboardError label="Tutors unavailable" error={dashboardError} />
               <Button className="w-full" variant="outline" asChild>
-                <a href="/admin/tutors">
+                <Link href="/admin/tutors">
                   <BookOpen className="mr-2 h-4 w-4" />
                   Open tutor roster
-                </a>
+                </Link>
               </Button>
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
@@ -303,7 +304,7 @@ export default async function AdminOverviewPage({
                   </Badge>
                 </div>
                 <Button size="sm" variant="ghost" className="w-full justify-start text-slate-700 hover:text-slate-900" asChild>
-                  <a href="/admin/courses?status=pending">Jump to pending course approvals</a>
+                  <Link href="/admin/courses?status=pending">Jump to pending course approvals</Link>
                 </Button>
               </div>
             </CardContent>
@@ -320,16 +321,16 @@ export default async function AdminOverviewPage({
               </div>
               <div className="flex gap-2">
                 <Button className="w-full" asChild>
-                  <a href="/forum">
+                  <Link href="/forum">
                     <MessageSquare className="mr-2 h-4 w-4" />
                     View forums
-                  </a>
+                  </Link>
                 </Button>
                 <Button variant="outline" className="w-full" asChild>
-                  <a href="/forum/new">
+                  <Link href="/forum/new">
                     <Plus className="mr-2 h-4 w-4" />
                     Create cohort forum
-                  </a>
+                  </Link>
                 </Button>
               </div>
             </CardContent>

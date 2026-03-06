@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import type { Role } from "@prisma/client";
+
+import type { SessionPayload } from "@/lib/auth/jwt";
 import { env } from "@/lib/env";
 
 // Routes that require authentication
-const protectedRoutes = [
+const protectedRoutes: readonly string[] = [
   "/dashboard",
   "/admin",
   "/superadmin",
@@ -15,19 +18,23 @@ const protectedRoutes = [
 ];
 
 // Routes that require specific roles
-const roleBasedRoutes = {
+const roleBasedRoutes: Record<string, Role[]> = {
   "/admin": ["ADMIN", "SUPER_ADMIN"],
   "/superadmin": ["SUPER_ADMIN"],
   "/tutor": ["TUTOR"],
 };
 
+function redirectToLogin(request: NextRequest, pathname: string) {
+  const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set("redirect", pathname);
+  return NextResponse.redirect(loginUrl);
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if route requires authentication
-  const isProtectedRoute = protectedRoutes.some(route => 
-    pathname.startsWith(route)
-  );
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
   if (!isProtectedRoute) {
     return NextResponse.next();
@@ -35,49 +42,44 @@ export async function middleware(request: NextRequest) {
 
   // Check for access token
   const accessToken = request.cookies.get("access_token")?.value;
-  
+
   if (!accessToken) {
-    // Redirect to login for protected routes
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    return redirectToLogin(request, pathname);
   }
 
   try {
     // Verify token using Web Crypto (edge-safe)
-    const { payload } = await jwtVerify(
+    const { payload } = await jwtVerify<SessionPayload>(
       accessToken,
       new TextEncoder().encode(env.JWT_ACCESS_SECRET),
       { algorithms: ["HS256"] }
     );
-    const role = (payload as any)?.role;
+
+    const role = payload.role;
+
+    if (!role) {
+      return redirectToLogin(request, pathname);
+    }
 
     // Route SUPER_ADMIN away from learner dashboard to superadmin console
     if (pathname.startsWith("/dashboard") && role === "SUPER_ADMIN") {
       const superAdminUrl = new URL("/superadmin", request.url);
       return NextResponse.redirect(superAdminUrl);
     }
-    
+
     // Check role-based access
     for (const [route, allowedRoles] of Object.entries(roleBasedRoutes)) {
-      if (pathname.startsWith(route)) {
-        if (!allowedRoles.includes(role as any)) {
-          // Redirect to appropriate dashboard based on role
-          const redirectUrl = new URL(
-            role === "TUTOR" ? "/tutor" : "/dashboard",
-            request.url
-          );
-          return NextResponse.redirect(redirectUrl);
-        }
+      if (pathname.startsWith(route) && !allowedRoles.includes(role)) {
+        // Redirect to appropriate dashboard based on role
+        const redirectUrl = new URL(role === "TUTOR" ? "/tutor" : "/dashboard", request.url);
+        return NextResponse.redirect(redirectUrl);
       }
     }
 
     return NextResponse.next();
-  } catch (error) {
+  } catch {
     // Token is invalid, redirect to login
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    return redirectToLogin(request, pathname);
   }
 }
 

@@ -1,6 +1,7 @@
 import { Search, Building, Briefcase, MapPin, Globe } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -168,7 +169,7 @@ export default async function CompaniesPage({
                 Try adjusting your search criteria or browse all companies.
               </p>
               <Button variant="outline" asChild>
-                <a href="/companies">Clear Search</a>
+                <Link href="/companies">Clear Search</Link>
               </Button>
             </CardContent>
           </Card>

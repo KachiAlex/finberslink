@@ -5,7 +5,7 @@ export class APIError extends Error {
   constructor(
     public statusCode: number,
     public message: string,
-    public details?: any
+    public details?: unknown,
   ) {
     super(message);
     this.name = "APIError";

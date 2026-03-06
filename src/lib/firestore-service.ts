@@ -1,5 +1,22 @@
-import { db } from './firestore';
-import { FieldValue } from 'firebase-admin/firestore';
+import type { DocumentData, DocumentSnapshot, Query, QueryDocumentSnapshot, Transaction } from "firebase-admin/firestore";
+import { db } from "./firestore";
+
+type DocData<T extends { id: string }> = Omit<T, "id">;
+type QueryDoc = QueryDocumentSnapshot<DocumentData>;
+
+function mapDoc<T extends { id: string }>(
+  doc: QueryDocumentSnapshot<DocumentData> | DocumentSnapshot<DocumentData>,
+): T {
+  const data = doc.data();
+  if (!data) {
+    throw new Error("Document data is undefined");
+  }
+  return { id: doc.id, ...(data as DocData<T>) } as T;
+}
+
+function mapDocs<T extends { id: string }>(docs: QueryDoc[]): T[] {
+  return docs.map((doc) => mapDoc<T>(doc));
+}
 
 // ============================================
 // TYPE DEFINITIONS
@@ -91,14 +108,13 @@ export interface Notification {
 export async function findUserByEmail(email: string): Promise<User | null> {
   const snapshot = await db.collection('users').where('email', '==', email).limit(1).get();
   if (snapshot.empty) return null;
-  const doc = snapshot.docs[0];
-  return { id: doc.id, ...doc.data() } as User;
+  return mapDoc<User>(snapshot.docs[0]);
 }
 
 export async function findUserById(id: string): Promise<User | null> {
   const doc = await db.collection('users').doc(id).get();
   if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() } as User;
+  return mapDoc<User>(doc);
 }
 
 export async function createUser(input: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
@@ -119,27 +135,27 @@ export async function updateUser(id: string, data: Partial<User>): Promise<void>
 }
 
 export async function listUsers(filters?: { role?: string; status?: string }, limit = 20): Promise<User[]> {
-  let query: any = db.collection('users');
+  let query: Query<DocumentData> = db.collection("users");
 
   if (filters?.role) {
-    query = query.where('role', '==', filters.role);
+    query = query.where("role", "==", filters.role);
   }
   if (filters?.status) {
-    query = query.where('status', '==', filters.status);
+    query = query.where("status", "==", filters.status);
   }
 
-  const snapshot = await query.orderBy('createdAt', 'desc').limit(limit).get();
-  return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as User));
+  const snapshot = await query.orderBy("createdAt", "desc").limit(limit).get();
+  return mapDocs<User>(snapshot.docs as QueryDoc[]);
 }
 
 export async function countUsers(filters?: { role?: string; status?: string }): Promise<number> {
-  let query: any = db.collection('users');
+  let query: Query<DocumentData> = db.collection("users");
 
   if (filters?.role) {
-    query = query.where('role', '==', filters.role);
+    query = query.where("role", "==", filters.role);
   }
   if (filters?.status) {
-    query = query.where('status', '==', filters.status);
+    query = query.where("status", "==", filters.status);
   }
 
   const snapshot = await query.count().get();
@@ -151,9 +167,9 @@ export async function countUsers(filters?: { role?: string; status?: string }): 
 // ============================================
 
 export async function getProfile(userId: string): Promise<Profile | null> {
-  const doc = await db.collection('profiles').doc(userId).get();
+  const doc = await db.collection("profiles").doc(userId).get();
   if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() } as Profile;
+  return mapDoc<Profile>(doc);
 }
 
 export async function createProfile(userId: string, data: Omit<Profile, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Profile> {
@@ -179,9 +195,9 @@ export async function updateProfile(userId: string, data: Partial<Profile>): Pro
 // ============================================
 
 export async function getJobById(id: string): Promise<JobOpportunity | null> {
-  const doc = await db.collection('jobs').doc(id).get();
+  const doc = await db.collection("jobs").doc(id).get();
   if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() } as JobOpportunity;
+  return mapDoc<JobOpportunity>(doc);
 }
 
 export async function createJob(data: Omit<JobOpportunity, 'id' | 'createdAt' | 'updatedAt'>): Promise<JobOpportunity> {
@@ -211,27 +227,27 @@ export async function listJobs(filters?: {
   remoteOption?: string;
   featured?: boolean;
 }, page = 1, limit = 20): Promise<{ jobs: JobOpportunity[]; total: number }> {
-  let query: any = db.collection('jobs');
+  let query: Query<DocumentData> = db.collection("jobs");
 
   if (filters?.isActive !== undefined) {
-    query = query.where('isActive', '==', filters.isActive);
+    query = query.where("isActive", "==", filters.isActive);
   }
   if (filters?.jobType) {
-    query = query.where('jobType', '==', filters.jobType);
+    query = query.where("jobType", "==", filters.jobType);
   }
   if (filters?.remoteOption) {
-    query = query.where('remoteOption', '==', filters.remoteOption);
+    query = query.where("remoteOption", "==", filters.remoteOption);
   }
   if (filters?.featured !== undefined) {
-    query = query.where('featured', '==', filters.featured);
+    query = query.where("featured", "==", filters.featured);
   }
 
   const countSnapshot = await query.count().get();
   const total = countSnapshot.data().count;
 
   const skip = (page - 1) * limit;
-  const snapshot = await query.orderBy('createdAt', 'desc').offset(skip).limit(limit).get();
-  const jobs = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as JobOpportunity));
+  const snapshot = await query.orderBy("createdAt", "desc").offset(skip).limit(limit).get();
+  const jobs = snapshot.docs.map((doc: QueryDoc) => mapDoc<JobOpportunity>(doc));
 
   return { jobs, total };
 }
@@ -239,18 +255,18 @@ export async function listJobs(filters?: {
 export async function searchJobs(searchTerm: string, page = 1, limit = 20): Promise<{ jobs: JobOpportunity[]; total: number }> {
   // Firestore doesn't support full-text search natively
   // This is a simple implementation - for production, use Algolia or Meilisearch
-  const snapshot = await db.collection('jobs')
-    .where('isActive', '==', true)
-    .orderBy('createdAt', 'desc')
+  const snapshot = await db.collection("jobs")
+    .where("isActive", "==", true)
+    .orderBy("createdAt", "desc")
     .get();
 
-  const allJobs = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as JobOpportunity));
+  const allJobs = snapshot.docs.map((doc: QueryDoc) => mapDoc<JobOpportunity>(doc));
   
-  const filtered = allJobs.filter((job: any) =>
+  const filtered = allJobs.filter((job: JobOpportunity) =>
     job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.tags.some((tag: any) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    job.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const skip = (page - 1) * limit;
@@ -264,9 +280,9 @@ export async function searchJobs(searchTerm: string, page = 1, limit = 20): Prom
 // ============================================
 
 export async function getApplicationById(id: string): Promise<JobApplication | null> {
-  const doc = await db.collection('jobApplications').doc(id).get();
+  const doc = await db.collection("jobApplications").doc(id).get();
   if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() } as JobApplication;
+  return mapDoc<JobApplication>(doc);
 }
 
 export async function createApplication(data: Omit<JobApplication, 'id' | 'appliedAt' | 'updatedAt'>): Promise<JobApplication> {
@@ -287,48 +303,49 @@ export async function updateApplication(id: string, data: Partial<JobApplication
 }
 
 export async function listApplicationsByUser(userId: string, page = 1, limit = 20): Promise<{ applications: JobApplication[]; total: number }> {
-  const countSnapshot = await db.collection('jobApplications')
-    .where('userId', '==', userId)
+  const countSnapshot = await db.collection("jobApplications")
+    .where("userId", "==", userId)
     .count()
     .get();
   const total = countSnapshot.data().count;
 
   const skip = (page - 1) * limit;
-  const snapshot = await db.collection('jobApplications')
-    .where('userId', '==', userId)
-    .orderBy('appliedAt', 'desc')
+  const snapshot = await db.collection("jobApplications")
+    .where("userId", "==", userId)
+    .orderBy("appliedAt", "desc")
     .offset(skip)
     .limit(limit)
     .get();
 
-  const applications = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as JobApplication));
+  const applications = snapshot.docs.map((doc: QueryDoc) => mapDoc<JobApplication>(doc));
   return { applications, total };
 }
 
 export async function listApplicationsByJob(jobId: string, page = 1, limit = 20): Promise<{ applications: JobApplication[]; total: number }> {
-  let query: any = db.collection('jobApplications');
+  let query: Query<DocumentData> = db.collection("jobApplications");
 
   if (jobId) {
-    query = query.where('jobOpportunityId', '==', jobId);
+    query = query.where("jobOpportunityId", "==", jobId);
   }
 
   const countSnapshot = await query.count().get();
   const total = countSnapshot.data().count;
 
   const skip = (page - 1) * limit;
-  const snapshot = await query.orderBy('appliedAt', 'desc').offset(skip).limit(limit).get();
-  const applications = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as JobApplication));
+  const snapshot = await query.orderBy("appliedAt", "desc").offset(skip).limit(limit).get();
+  const applications = snapshot.docs.map((doc: QueryDoc) => mapDoc<JobApplication>(doc));
   return { applications, total };
 }
 
 export async function countApplicationsByStatus(jobId: string): Promise<Record<string, number>> {
-  const snapshot = await db.collection('jobApplications')
-    .where('jobOpportunityId', '==', jobId)
+  const snapshot = await db.collection("jobApplications")
+    .where("jobOpportunityId", "==", jobId)
     .get();
 
   const counts: Record<string, number> = {};
-  snapshot.docs.forEach((doc: any) => {
-    const status = doc.data().status;
+  snapshot.docs.forEach((doc: QueryDoc) => {
+    const application = mapDoc<JobApplication>(doc);
+    const status = application.status;
     counts[status] = (counts[status] || 0) + 1;
   });
 
@@ -340,16 +357,15 @@ export async function countApplicationsByStatus(jobId: string): Promise<Record<s
 // ============================================
 
 export async function getCourseBySlug(slug: string): Promise<Course | null> {
-  const snapshot = await db.collection('courses').where('slug', '==', slug).limit(1).get();
+  const snapshot = await db.collection("courses").where("slug", "==", slug).limit(1).get();
   if (snapshot.empty) return null;
-  const doc = snapshot.docs[0];
-  return { id: doc.id, ...doc.data() } as Course;
+  return mapDoc<Course>(snapshot.docs[0]);
 }
 
 export async function getCourseById(id: string): Promise<Course | null> {
-  const doc = await db.collection('courses').doc(id).get();
+  const doc = await db.collection("courses").doc(id).get();
   if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() } as Course;
+  return mapDoc<Course>(doc);
 }
 
 export async function createCourse(data: Omit<Course, 'id' | 'createdAt' | 'updatedAt'>): Promise<Course> {
@@ -374,13 +390,13 @@ export async function listCourses(page = 1, limit = 20): Promise<{ courses: Cour
   const total = countSnapshot.data().count;
 
   const skip = (page - 1) * limit;
-  const snapshot = await db.collection('courses')
-    .orderBy('createdAt', 'desc')
+  const snapshot = await db.collection("courses")
+    .orderBy("createdAt", "desc")
     .offset(skip)
     .limit(limit)
     .get();
 
-  const courses = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Course));
+  const courses = snapshot.docs.map((doc: QueryDoc) => mapDoc<Course>(doc));
   return { courses, total };
 }
 
@@ -404,7 +420,7 @@ export async function listUserNotifications(userId: string, limit = 20): Promise
     .limit(limit)
     .get();
 
-  return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Notification));
+  return mapDocs<Notification>(snapshot.docs as QueryDoc[]);
 }
 
 export async function markNotificationAsRead(id: string): Promise<void> {
@@ -420,7 +436,7 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
     .get();
 
   const batch = db.batch();
-  snapshot.docs.forEach((doc: any) => {
+  snapshot.docs.forEach((doc: QueryDoc) => {
     batch.update(doc.ref, { readAt: new Date() });
   });
   await batch.commit();
@@ -440,12 +456,14 @@ export async function getUnreadCount(userId: string): Promise<number> {
 // BATCH OPERATIONS
 // ============================================
 
-export async function batchWrite(operations: Array<{
-  type: 'set' | 'update' | 'delete';
+type BatchOperation = {
+  type: "set" | "update" | "delete";
   collection: string;
   docId: string;
-  data?: any;
-}>): Promise<void> {
+  data?: DocumentData;
+};
+
+export async function batchWrite(operations: BatchOperation[]): Promise<void> {
   const batch = db.batch();
 
   operations.forEach(op => {
@@ -466,8 +484,6 @@ export async function batchWrite(operations: Array<{
 // TRANSACTION OPERATIONS
 // ============================================
 
-export async function runTransaction<T>(
-  callback: (transaction: any) => Promise<T>
-): Promise<T> {
-  return db.runTransaction(callback);
+export async function runTransaction<T>(callback: (_transaction: Transaction) => Promise<T>): Promise<T> {
+  return db.runTransaction((transaction: Transaction) => callback(transaction));
 }

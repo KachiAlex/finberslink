@@ -3,6 +3,7 @@
 import type { ChangeEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { CourseLevel, LessonFormat, ResourceType } from "@prisma/client";
 import { ArrowLeft, CheckCircle2, Circle, Layers3, Plus, Trash } from "lucide-react";
@@ -52,6 +53,8 @@ type SectionState = {
   examEnabled: boolean;
   exam: ExamConfig;
 };
+
+type SectionUpdater = (_section: SectionState) => SectionState;
 
 const STORAGE_KEY = "tutor-course-draft-v1";
 
@@ -244,7 +247,7 @@ export default function TutorCourseCreatePage() {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
-  const updateSection = (sectionId: string, updater: (section: SectionState) => SectionState) => {
+  const updateSection = (sectionId: string, updater: SectionUpdater) => {
     setSections((prev) => prev.map((section) => (section.id === sectionId ? updater(section) : section)));
   };
 
@@ -369,9 +372,10 @@ export default function TutorCourseCreatePage() {
           },
         };
       });
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message ?? "Failed to upload resource");
+    } catch (error) {
+      console.error(error);
+      const message = error instanceof Error ? error.message : "Failed to upload resource";
+      setError(message);
     } finally {
       setUploadingResourceFor(null);
     }
@@ -402,15 +406,16 @@ export default function TutorCourseCreatePage() {
           modules: section.modules.map((mod) => (mod.id === moduleId ? { ...mod, videoUrl: data.url } : mod)),
         })),
       );
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message ?? "Failed to upload video");
+    } catch (error) {
+      console.error(error);
+      const message = error instanceof Error ? error.message : "Failed to upload video";
+      setError(message);
     } finally {
       setUploadingVideoFor(null);
     }
   };
 
-  const [uploadingCover, setUploadingCover] = useState(false);
+  const [, setUploadingCover] = useState(false);
 
   const handleCoverUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -442,8 +447,8 @@ export default function TutorCourseCreatePage() {
       }
       setCoverPreview(data.url);
       setBasics((prev) => ({ ...prev, coverImage: data.url }));
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       // fallback to base64 preview to avoid blocking UX
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -526,8 +531,9 @@ export default function TutorCourseCreatePage() {
       window.localStorage.removeItem(STORAGE_KEY);
       setSuccess("Course created as draft. Awaiting admin review.");
       setTimeout(() => router.push("/tutor"), 1200);
-    } catch (err: any) {
-      setError(err.message ?? "Failed to create course");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create course";
+      setError(message);
     } finally {
       setSubmitting(false);
     }
@@ -593,7 +599,11 @@ export default function TutorCourseCreatePage() {
             </Label>
             <Input id="cover-upload" aria-label="Cover image" type="file" accept="image/*" onChange={handleCoverUpload} />
             {coverName ? <p className="text-xs text-slate-500">Selected: {coverName}</p> : null}
-            {coverPreview ? <img src={coverPreview} alt="Course cover preview" className="mt-2 h-32 w-full rounded-lg object-cover" /> : null}
+            {coverPreview ? (
+              <div className="relative mt-2 h-32 w-full overflow-hidden rounded-lg">
+                <Image src={coverPreview} alt="Course cover preview" fill className="object-cover" sizes="(max-width: 640px) 100vw, 50vw" />
+              </div>
+            ) : null}
           </div>
           <div className="space-y-1">
             <Label>Level</Label>

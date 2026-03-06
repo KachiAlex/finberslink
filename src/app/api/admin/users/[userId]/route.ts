@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import type { Role, UserStatus } from "@prisma/client";
+
 import { getUserById, updateUserRole, updateUserStatus } from "@/features/admin/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
 
-type Role = 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR';
-type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
-
 const UpdateUserRoleSchema = z.object({
-  role: z.enum(['ADMIN', 'SUPER_ADMIN', 'STUDENT', 'TUTOR']),
+  role: z.nativeEnum(Role),
 });
 
 const UpdateUserStatusSchema = z.object({
-  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED']),
+  status: z.nativeEnum(UserStatus),
 });
 
 export async function GET(

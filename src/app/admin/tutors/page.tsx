@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -133,10 +134,10 @@ export default async function AdminTutorsPage({
               </div>
               <div className="flex gap-2">
                 <Button asChild variant="secondary" size="sm">
-                  <a href="/admin/users?role=TUTOR">Invite tutor</a>
+                  <Link href="/admin/users?role=TUTOR">Invite tutor</Link>
                 </Button>
                 <Button asChild size="sm">
-                  <a href="/admin/courses">Review courses</a>
+                  <Link href="/admin/courses">Review courses</Link>
                 </Button>
               </div>
             </CardHeader>
