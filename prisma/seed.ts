@@ -205,5 +205,24 @@ async function seedCourse(instructorId: string) {
   });
 }
 
-async function seedLessons(courseId: string) { /* same as before */ }
-```
+async function seedLessons(courseId: string) {
+  // TODO: flesh out lesson seeding once lesson fixtures are finalized.
+  console.warn(`[seed] Skipping lesson seed for course ${courseId} (not yet implemented).`);
+}
+
+async function main() {
+  const tenant = await seedTenant();
+  const { instructor } = await seedUsers(tenant.id);
+  const course = await seedCourse(instructor.id);
+  await seedLessons(course.id);
+  console.log("Seeded tenant, users, and core course content.");
+}
+
+main()
+  .catch((error) => {
+    console.error("Seeding failed:", error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

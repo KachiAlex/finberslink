@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { BookOpenCheck, Layers3, Palette, Users2 } from "lucide-react";
 
 type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
@@ -18,6 +19,7 @@ import {
   listAdminCourses,
   requireAdminUser,
 } from "@/features/admin/service";
+import { verifyToken } from "@/lib/auth/jwt";
 
 import { AdminShell } from "../_components/admin-shell";
 
@@ -27,7 +29,17 @@ export const revalidate = 0;
 async function createCourseAction(formData: FormData) {
   "use server";
 
-  await requireAdminUser();
+  const store = await cookies();
+  const accessToken = store.get("access_token")?.value;
+  if (!accessToken) {
+    throw new Error("Not authorized");
+  }
+  const payload = verifyToken(accessToken);
+  const admin = await requireAdminUser(payload.sub);
+
+  if (!admin.tenantId) {
+    throw new Error("Tenant context required to create courses");
+  }
 
   const slug = String(formData.get("slug") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
@@ -55,8 +67,15 @@ async function createCourseAction(formData: FormData) {
 }
 
 export default async function AdminCoursesPage() {
+  const store = await cookies();
+  const accessToken = store.get("access_token")?.value;
+  if (!accessToken) {
+    throw new Error("Not authorized");
+  }
+  const payload = verifyToken(accessToken);
+
   const [admin, courses, snapshot] = await Promise.all([
-    requireAdminUser(),
+    requireAdminUser(payload.sub),
     listAdminCourses(),
     getCourseManagementSnapshot(),
   ]);
