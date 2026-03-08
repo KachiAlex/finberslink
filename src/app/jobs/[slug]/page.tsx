@@ -1,11 +1,15 @@
 import { notFound } from "next/navigation";
 import { MapPin, Briefcase, Clock, DollarSign, Building, Users, Eye, Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getJobBySlug, incrementJobViewCount } from "@/features/jobs/service";
+import { getJobBySlug, isJobSaved } from "@/features/jobs/service";
+import { verifyToken } from "@/lib/auth/jwt";
+import { JobViewTracker } from "./_components/job-view-tracker";
+import { SaveJobButton } from "../_components/save-job-button";
 
 type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
 type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
@@ -27,8 +31,15 @@ const remoteOptionColors = {
   REMOTE: "bg-emerald-100 text-emerald-800",
 };
 
-async function incrementView(jobId: string) {
-  await incrementJobViewCount(jobId);
+async function getUserFromSession() {
+  const store = await cookies();
+  const accessToken = store.get("access_token")?.value;
+  if (!accessToken) return null;
+  try {
+    return verifyToken(accessToken);
+  } catch {
+    return null;
+  }
 }
 
 export default async function JobDetailPage({
@@ -43,12 +54,12 @@ export default async function JobDetailPage({
     notFound();
   }
 
-  // Increment view count (fire and forget)
-  incrementView(job.id);
-
+  const user = await getUserFromSession();
+  const saved = user ? await isJobSaved(user.sub, job.id) : false;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
+      <JobViewTracker jobId={job.id} />
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Back Navigation */}
         <div className="mb-6">
@@ -100,7 +111,7 @@ export default async function JobDetailPage({
                 </div>
               </div>
               
-              <div className="text-right text-sm text-gray-500 ml-6">
+              <div className="flex flex-col items-end gap-3 text-right text-sm text-gray-500 ml-6">
                 <div className="flex items-center gap-1">
                   <Users className="w-3 h-3" />
                   {(job as any)._count?.applications || 0} applications
@@ -109,6 +120,7 @@ export default async function JobDetailPage({
                   <Calendar className="w-3 h-3" />
                   Posted {new Date(job.createdAt).toLocaleDateString()}
                 </div>
+                <SaveJobButton jobId={job.id} initialSaved={saved} size="default" />
               </div>
             </div>
           </CardHeader>
@@ -166,11 +178,14 @@ export default async function JobDetailPage({
                     Submit your application and join {job.company}
                   </p>
                 </div>
-                <Button size="lg" asChild>
-                  <Link href={`/jobs/${(job as any).slug}/apply`}>
-                    Apply Now
-                  </Link>
-                </Button>
+                <div className="flex gap-3">
+                  <SaveJobButton jobId={job.id} initialSaved={saved} />
+                  <Button size="lg" asChild>
+                    <Link href={`/jobs/${(job as any).slug}/apply`}>
+                      Apply Now
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>

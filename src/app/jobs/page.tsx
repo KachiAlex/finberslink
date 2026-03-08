@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { Search, MapPin, Briefcase, Clock, DollarSign, Building, Filter } from "lucide-react";
+import { cookies } from "next/headers";
+import { Search, MapPin, Briefcase, Clock, DollarSign, Building, Filter, Bookmark } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { getJobs, getFeaturedJobs, getPopularCompanies, getJobTags } from "@/features/jobs/service";
+import { getJobs, getFeaturedJobs, getPopularCompanies, getJobTags, listSavedJobs } from "@/features/jobs/service";
+import { verifyToken } from "@/lib/auth/jwt";
 
 type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
 type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
@@ -29,6 +31,17 @@ const remoteOptionColors = {
   HYBRID: "bg-indigo-100 text-indigo-800",
   REMOTE: "bg-emerald-100 text-emerald-800",
 };
+
+async function getUserFromSession() {
+  const store = await cookies();
+  const accessToken = store.get("access_token")?.value;
+  if (!accessToken) return null;
+  try {
+    return verifyToken(accessToken);
+  } catch {
+    return null;
+  }
+}
 
 export default async function JobsPage({
   searchParams,
@@ -56,12 +69,24 @@ export default async function JobsPage({
     page: params.page ? parseInt(params.page) : 1,
   };
 
-  const [jobsData, featuredJobs, popularCompanies, jobTags] = await Promise.all([
+  const user = await getUserFromSession();
+
+  const [jobsData, featuredJobs, popularCompanies, jobTags, savedJobs] = await Promise.all([
     getJobs(filters),
     getFeaturedJobs(5),
     getPopularCompanies(8),
     getJobTags(),
+    user ? listSavedJobs(user.sub) : Promise.resolve([]),
   ]);
+
+  const savedJobIds = new Set(
+    (savedJobs as Array<{ jobOpportunityId: string }>).map((save) => save.jobOpportunityId),
+  );
+
+  const savedJobOpportunities = (savedJobs as Array<{ jobOpportunity: any }>).
+    map((save) => save.jobOpportunity).
+    filter(Boolean).
+    slice(0, 3);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
@@ -110,13 +135,35 @@ export default async function JobsPage({
 
           {/* Main Content */}
           <div className="lg:col-span-3">
+            {/* Saved Jobs */}
+            {user && savedJobOpportunities.length > 0 && (
+              <div className="mb-8 rounded-2xl border border-blue-100 bg-blue-50/50 p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.3em] text-blue-500">Saved</p>
+                    <h2 className="text-2xl font-semibold text-slate-900">Jobs you're tracking</h2>
+                    <p className="text-sm text-slate-600">Quick access to your bookmarked roles.</p>
+                  </div>
+                  <Badge className="bg-white text-blue-700">
+                    <Bookmark className="mr-1 h-4 w-4" />
+                    {savedJobIds.size}
+                  </Badge>
+                </div>
+                <div className="grid gap-4">
+                  {savedJobOpportunities.map((save) => (
+                    <JobCard key={save.id} job={save} saved />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Featured Jobs */}
             {!params.search && !params.location && !params.jobType && !params.remoteOption && featuredJobs.length > 0 && (
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Featured Opportunities</h2>
                 <div className="grid gap-4">
                   {featuredJobs.map((job: any) => (
-                    <JobCard key={job.id} job={job} featured={true} />
+                    <JobCard key={job.id} job={job} featured={true} saved={savedJobIds.has(job.id)} />
                   ))}
                 </div>
               </div>
@@ -146,7 +193,7 @@ export default async function JobsPage({
             {jobsData.jobs.length > 0 ? (
               <div className="space-y-4">
                 {jobsData.jobs.map((job: any) => (
-                  <JobCard key={job.id} job={job} />
+                  <JobCard key={job.id} job={job} saved={savedJobIds.has(job.id)} />
                 ))}
 
                 {/* Pagination */}

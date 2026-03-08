@@ -634,19 +634,19 @@ export async function getUserById(userId: string) {
         },
       },
       jobApplications: {
-          select: {
-            id: true,
-            status: true,
-            opportunity: {
-              select: {
-                title: true,
-                company: true,
-              },
+        select: {
+          id: true,
+          status: true,
+          opportunity: {
+            select: {
+              title: true,
+              company: true,
             },
           },
-          orderBy: { createdAt: "desc" },
-          take: 5,
-        }
+        },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      },
     },
   });
 }
