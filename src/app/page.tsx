@@ -128,63 +128,82 @@ const footerLinks = {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-[hsl(215,60%,92%)]">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900/80 to-slate-50">
       <SiteHeader />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-4 py-12 sm:px-6 lg:px-8">
-        <section className="relative overflow-hidden rounded-[32px] border border-white/70 bg-white px-6 py-12 shadow-2xl shadow-blue-100/70 sm:px-12">
-          <div className="absolute inset-y-0 left-0 hidden h-full w-1/2 bg-[radial-gradient(circle_at_top,_rgba(25,118,210,0.18),_transparent_60%)] lg:block" />
+        <section className="relative overflow-hidden rounded-[32px] border border-white/20 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-900/80 px-6 py-12 shadow-[0_30px_80px_rgba(15,23,42,0.65)] text-white sm:px-12">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.35),_transparent_55%)]" />
+          <div className="absolute inset-y-8 right-4 hidden h-72 w-72 rounded-full bg-gradient-to-br from-cyan-500/30 via-blue-500/10 to-transparent blur-3xl lg:block" />
+          <div className="absolute inset-y-12 left-0 h-64 w-64 rounded-full bg-gradient-to-br from-amber-400/30 via-slate-900 to-transparent blur-3xl lg:hidden" />
           <div className="relative grid gap-10 text-center sm:text-left lg:grid-cols-[3fr_2fr]">
             <div className="space-y-6">
               <Badge variant="outline" className="border-primary/40 text-primary">
                 Skill-to-Employment Digital Ecosystem
               </Badge>
-              <h1 className="text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-                Build skills, resumes, and hiring outcomes the modern way.
+              <p className="text-sm uppercase tracking-[0.4em] text-primary/80">Integrated</p>
+              <h1 className="text-4xl font-serif italic tracking-tight sm:text-5xl lg:text-6xl">
+                Build skills, resumes, and hiring outcomes with cinematic precision.
               </h1>
-              <p className="text-lg text-slate-600 sm:text-xl">
-                Finbers Link unifies a full LMS, AI resume builder, job & volunteer marketplace, and community messaging in one professional workspace for students, tutors, admins, and employers.
+              <p className="text-lg text-slate-200 sm:text-xl">
+                Finbers Link unifies a full LMS, AI resume builder, jobs marketplace, and community workspace for every role in the skilling journey.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
-                <Button asChild size="lg" className="text-base">
+                <Button
+                  asChild
+                  size="lg"
+                  className="text-base bg-white text-slate-900 shadow-[0_15px_45px_rgba(56,189,248,0.45)] transition hover:-translate-y-0.5"
+                >
                   <Link href="/dashboard">Launch platform</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="text-base">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="text-base border-slate-200/60 text-white/90 hover:border-primary/70"
+                >
                   <Link href="/courses">Browse courses</Link>
                 </Button>
               </div>
-              <dl className="grid gap-6 sm:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-3">
                 {stats.map((stat) => (
-                  <div key={stat.label} className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
-                    <dt className="text-sm text-slate-500">{stat.label}</dt>
-                    <dd className="text-3xl font-semibold text-slate-900">{stat.value}</dd>
+                  <div key={stat.label} className="rounded-2xl border border-white/40 bg-white/5 p-4 backdrop-blur">
+                    <dt className="text-xs uppercase tracking-[0.3em] text-slate-300">{stat.label}</dt>
+                    <dd className="text-3xl font-semibold text-white">{stat.value}</dd>
                   </div>
                 ))}
-              </dl>
-            </div>
-            <div className="rounded-3xl border border-blue-100/80 bg-gradient-to-br from-blue-100 via-white to-amber-50 p-6 shadow-xl">
-              <div className="flex items-center justify-between text-sm text-slate-500">
-                <span>Resume completion</span>
-                <span>82%</span>
               </div>
-              <Progress value={82} className="mt-3" />
-              <div className="mt-8 space-y-5 rounded-2xl bg-white/80 p-5 shadow-sm">
+            </div>
+            <div className="relative rounded-3xl border border-white/30 bg-gradient-to-br from-blue-500/30 via-slate-900 to-slate-950 p-6 shadow-2xl">
+              <div className="flex items-center justify-between text-sm text-slate-200">
+                <span>Resume completion</span>
+                <span className="text-white/80">82%</span>
+              </div>
+              <Progress value={82} className="mt-3 h-3 border border-white/30" />
+              <div className="mt-8 space-y-5 rounded-2xl bg-white/10 p-5 shadow-inner">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-slate-500">Active course modules</p>
-                  <span className="text-sm font-semibold text-slate-900">6 / 8</span>
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-300">Active modules</p>
+                  <span className="text-sm font-semibold text-white">6 / 8</span>
                 </div>
                 <div className="space-y-3">
                   {["Product Thinking", "AI Resume Studio", "Career Coaching"].map((item) => (
-                    <div key={item} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
-                      <span className="text-sm font-semibold text-slate-700">{item}</span>
-                      <span className="text-xs text-slate-500">live</span>
+                    <div key={item} className="flex items-center justify-between rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm text-white/90">
+                      <span className="font-semibold">{item}</span>
+                      <span className="text-xs uppercase tracking-[0.3em] text-amber-300">live</span>
                     </div>
                   ))}
                 </div>
-                <div className="rounded-2xl border border-amber-200/80 bg-amber-50/90 p-4">
-                  <p className="text-sm font-medium text-amber-700">Badge unlocked</p>
-                  <p className="text-xs text-amber-700/80">Career Catalyst · +120 XP</p>
-                </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[28px] border border-slate-800/40 bg-gradient-to-r from-slate-950 via-slate-900/50 to-slate-900/70 px-6 py-4 text-white shadow-[0_20px_50px_rgba(15,23,42,0.6)]">
+          <div className="flex flex-wrap items-center justify-between gap-4 text-sm uppercase tracking-[0.3em] text-slate-300">
+            <span>Fueling modern cohorts</span>
+            <div className="flex items-center gap-6 text-base font-semibold text-white">
+              <span>Neutralize siloed stacks</span>
+              <span className="h-2 w-2 rounded-full bg-primary" />
+              <span>Live syllabus + AI prompts</span>
             </div>
           </div>
         </section>

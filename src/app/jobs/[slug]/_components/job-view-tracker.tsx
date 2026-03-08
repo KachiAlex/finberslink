@@ -18,7 +18,7 @@ export function JobViewTracker({ jobId }: JobViewTrackerProps) {
 
     const controller = new AbortController();
 
-    fetch(`/api/jobs/${jobId}/view`, {
+    fetch(`/api/jobs/view/${jobId}`, {
       method: "POST",
       signal: controller.signal,
     }).catch(() => {
