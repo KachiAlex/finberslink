@@ -48,7 +48,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const resume = await createResume(parsed.data);
+    const resume = await createResume({
+      userId: user.sub,
+      ...parsed.data,
+    });
     return NextResponse.json(
       { message: "Resume created successfully", resume },
       { status: 201 }

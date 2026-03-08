@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { forwardRef } from "react";
-import type { LucideIcon } from "lucide-react";
+import { Icon as LucideIcon } from "lucide-react";
 
 interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
@@ -32,7 +32,7 @@ const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
         {...props}
       >
         <div className="flex items-start justify-between">
-          <div className="space-y-2">
+          <div className="sm space-y-2">
             <p className="text-sm font-medium text-slate-600">{title}</p>
             <p className="text-3xl font-bold text-slate-900">{value}</p>
             {trend && (

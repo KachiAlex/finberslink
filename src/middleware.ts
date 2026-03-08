@@ -49,13 +49,8 @@ export async function middleware(request: NextRequest) {
 
   try {
     // Verify token using Web Crypto (edge-safe)
-    const { payload } = await jwtVerify<SessionPayload>(
-      accessToken,
-      new TextEncoder().encode(env.JWT_ACCESS_SECRET),
-      { algorithms: ["HS256"] }
-    );
-
-    const role = payload.role;
+    const { payload } = await jwtVerify(accessToken, new TextEncoder().encode(env.JWT_ACCESS_SECRET), { algorithms: ["HS256"] }) as any;
+    const role = (payload as SessionPayload).role;
 
     if (!role) {
       return redirectToLogin(request, pathname);

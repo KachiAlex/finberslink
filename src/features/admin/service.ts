@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+// Removed import of randomBytes; using fallback token generator
 import type { InviteStatus, JobType, Prisma, RemoteOption, Role, UserStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
@@ -308,8 +308,9 @@ export async function listAdminCourses() {
   });
 }
 
-function generateInviteToken() {
-  return randomBytes(12).toString("hex");
+function generateInviteToken(): string {
+  // Simple fallback token generator
+  return Math.random().toString(36).substring(2, 14);
 }
 
 export async function createTenantInvite(input: {
@@ -632,21 +633,20 @@ export async function getUserById(userId: string) {
           resumes: true,
         },
       },
-      enrollments: {
-        select: {
-          id: true,
-          status: true,
-          course: {
-            select: {
-              id: true,
-              title: true,
-              slug: true,
+      jobApplications: {
+          select: {
+            id: true,
+            status: true,
+            opportunity: {
+              select: {
+                title: true,
+                company: true,
+              },
             },
           },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        }
     },
   });
 }

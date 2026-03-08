@@ -442,7 +442,7 @@ export default async function AdminUsersPage({
                               <option value="ADMIN">Admin</option>
                               <option value="SUPER_ADMIN">Super Admin</option>
                             </select>
-                            <Button type="submit" size="xs" variant="outline">
+                            <Button type="submit" size="sm" variant="outline">
                               Update
                             </Button>
                           </form>
@@ -460,7 +460,7 @@ export default async function AdminUsersPage({
                               <option value="SUSPENDED">Suspended</option>
                               <option value="INVITED">Invited</option>
                             </select>
-                            <Button type="submit" size="xs" variant="outline">
+                            <Button type="submit" size="sm" variant="outline">
                               Update
                             </Button>
                           </form>

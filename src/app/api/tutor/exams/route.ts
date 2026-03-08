@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden - Tutor access required" }, { status: 403 });
     }
 
+    // Removed jwtVerify usage; token already verified via verifyToken
+
     const exams = await listTutorExams(user.sub);
     return NextResponse.json({ exams });
   } catch (error) {

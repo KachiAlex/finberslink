@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import type { Role, UserStatus } from "@prisma/client";
+import { Role, UserStatus } from "@prisma/client";
 
 import { getUserById, updateUserRole, updateUserStatus } from "@/features/admin/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
 
 const UpdateUserRoleSchema = z.object({
-  role: z.nativeEnum(Role),
+  role: z.enum(["ADMIN", "SUPER_ADMIN", "STUDENT", "TUTOR"]),
 });
 
 const UpdateUserStatusSchema = z.object({

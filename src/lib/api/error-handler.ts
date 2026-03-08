@@ -19,7 +19,7 @@ export function handleError(error: unknown) {
     return NextResponse.json(
       {
         error: error.message,
-        ...(error.details && { details: error.details }),
+        ...(error.details ? { details: error.details } : {}),
       },
       { status: error.statusCode }
     );

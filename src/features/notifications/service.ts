@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { NotificationType } from "@prisma/client";
 
 export async function createNotification(input: {
   userId: string;
-  type: string;
+  type: NotificationType;
   title: string;
   body?: string;
   actionUrl?: string;

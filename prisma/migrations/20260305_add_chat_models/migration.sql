@@ -1,4 +1,16 @@
-﻿-- CreateTable
+-- CreateEnum
+CREATE TYPE "ChatVisibility" AS ENUM ('COURSE_ONLY', 'TENANT_WIDE');
+
+-- CreateEnum
+CREATE TYPE "ChatRole" AS ENUM ('STUDENT', 'TUTOR', 'ADMIN', 'GUEST');
+
+-- CreateEnum
+CREATE TYPE "ChatThreadType" AS ENUM ('CHANNEL', 'LESSON', 'ANNOUNCEMENT', 'DM');
+
+-- CreateEnum
+CREATE TYPE "ChatNotificationType" AS ENUM ('MENTION', 'REPLY', 'ANNOUNCEMENT');
+
+-- CreateTable
 CREATE TABLE "ChatSpace" (
     "id" TEXT NOT NULL,
     "tenantId" TEXT NOT NULL,
@@ -6,7 +18,7 @@ CREATE TABLE "ChatSpace" (
     "slug" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "visibility" "ChatVisibility" NOT NULL DEFAULT 'COURSE_ONLY',
-    "settings" JSONB NOT NULL DEFAULT '{}',
+    "settings" JSONB NOT NULL DEFAULT '{}'::jsonb,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -49,8 +61,8 @@ CREATE TABLE "ChatMessage" (
     "authorId" TEXT NOT NULL,
     "parentId" TEXT,
     "content" TEXT NOT NULL,
-    "attachments" JSONB NOT NULL DEFAULT '[]',
-    "mentions" JSONB NOT NULL DEFAULT '[]',
+    "attachments" JSONB NOT NULL DEFAULT '[]'::jsonb,
+    "mentions" JSONB NOT NULL DEFAULT '[]'::jsonb,
     "sentAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "editedAt" TIMESTAMP(3),
     "deletedAt" TIMESTAMP(3),
@@ -149,4 +161,3 @@ ALTER TABLE "ChatNotification" ADD CONSTRAINT "ChatNotification_threadId_fkey" F
 
 -- AddForeignKey
 ALTER TABLE "ChatNotification" ADD CONSTRAINT "ChatNotification_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "ChatMessage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-

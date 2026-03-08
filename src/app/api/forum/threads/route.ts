@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const courseId = searchParams.get("courseId");
     const limit = parseInt(searchParams.get("limit") || "20");
 
-    const threads = await listForumThreads(courseId || undefined, limit);
+    const threads = await listForumThreads({ courseId: courseId || undefined, limit });
     return NextResponse.json({ threads });
   } catch (error) {
     console.error("Forum threads fetch error:", error);

@@ -201,6 +201,13 @@ model Resume {
   userId          String
   title           String
   summary         String?
+  personaName     String?
+  location        String?
+  targetIndustry  String?
+  targetRoles     String[]           @default([])
+  yearsExperience Int?
+  topSkills       String[]           @default([])
+  notableAchievements String?
   skills          String[]           @default([])
   slug            String             @unique
   visibility      ResumeVisibility   @default(PRIVATE)

@@ -100,6 +100,8 @@ export async function listTutorExams(tutorId: string) {
   }));
 }
 
+export { ExamType } from "@prisma/client";
+
 type CreateExamInput = {
   tutorId: string;
   courseId: string;

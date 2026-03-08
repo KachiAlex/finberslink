@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,9 +8,24 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createResume } from "@/features/resume/service";
 import { ResumeSchema } from "@/features/resume/schemas";
+import { verifyToken } from "@/lib/auth/jwt";
 
 async function createResumeAction(formData: FormData) {
   "use server";
+
+  const store = await cookies();
+  const token = store.get("access_token")?.value;
+  if (!token) {
+    redirect("/login");
+  }
+
+  let userId: string;
+  try {
+    const session = verifyToken(token);
+    userId = session.sub;
+  } catch {
+    redirect("/login");
+  }
 
   const parsed = ResumeSchema.safeParse({
     title: formData.get("title"),
@@ -21,7 +37,10 @@ async function createResumeAction(formData: FormData) {
   }
 
   try {
-    const resume = await createResume(parsed.data);
+    const resume = await createResume({
+      userId,
+      ...parsed.data,
+    });
     if (!resume) {
       return;
     }

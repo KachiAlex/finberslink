@@ -13,6 +13,8 @@ interface AIButtonProps {
   variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
   size?: "default" | "sm" | "lg" | "icon";
   formAction?: (formData: FormData) => Promise<any>;
+  type?: "button" | "submit" | "reset";
+  form?: string;
 }
 
 export function AIButton({
@@ -23,6 +25,8 @@ export function AIButton({
   variant = "outline",
   size = "default",
   formAction,
+  type = "button",
+  form,
 }: AIButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,6 +57,7 @@ export function AIButton({
         disabled={disabled || isLoading}
         variant={variant}
         size={size}
+        form={form}
         className={`relative ${className}`}
       >
         {isLoading ? (
@@ -67,6 +72,8 @@ export function AIButton({
 
   return (
     <Button
+      type={type}
+      form={form}
       onClick={handleClick}
       disabled={disabled || isLoading}
       variant={variant}

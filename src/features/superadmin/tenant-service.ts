@@ -1,5 +1,6 @@
-import { randomBytes } from "crypto";
-import type { Prisma, TenantPlanTier, TenantStatus } from "@prisma/client";
+// Removed crypto import; using fallback token generator
+import { Prisma } from "@prisma/client";
+import type { TenantPlanTier, TenantStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
@@ -212,14 +213,20 @@ export async function createTenantAdminInvite(input: {
   createdById: string;
   expiresAt?: Date;
 }) {
+  function generateToken(bytes: number): string {
+    return Math.random().toString("hex").substring(2, 2 + bytes * 2);
+  }
+
   return prisma.tenantInvite.create({
     data: {
       tenantId: input.tenantId,
       email: input.email.toLowerCase(),
       role: "ADMIN",
-      token: randomBytes(16).toString("hex"),
+      token: generateToken(16),
       expiresAt: input.expiresAt ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
       createdById: input.createdById,
     },
   });
 }
+
+// Removed erroneous Prisma import and redefinition

@@ -266,7 +266,7 @@ export default async function AdminUserDetailPage({
             <CardContent>
               {user.jobApplications?.length > 0 ? (
                 <div className="space-y-3">
-                  {user.jobApplications.map((application) => (
+                  {user.jobApplications.map((application: { id: string; status: string; opportunity: { title: string; company: string } }) => (
                     <div
                       key={application.id}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"

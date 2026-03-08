@@ -4,6 +4,9 @@ import {
   ChatRole,
   ChatThreadType,
   Prisma,
+  TenantPlanTier,
+  TenantStatus,
+  type Prisma as PrismaNamespace,
 } from "@prisma/client";
 
 const DEFAULT_THREAD_LIMIT = 20;
@@ -48,7 +51,7 @@ type Pagination = {
   cursor?: string | null;
 };
 
-async function ensureMembership(userId: string, chatSpaceId: string) {
+export async function ensureMembership({ userId, chatSpaceId }: { userId: string; chatSpaceId: string }) {
   const membership = await prisma.chatMembership.findFirst({
     where: { userId, chatSpaceId },
   });
@@ -79,15 +82,17 @@ export async function listChatSpacesForUser(input: { tenantId: string; userId: s
   });
 }
 
+type JsonValue = PrismaNamespace.JsonValue;
+
 export async function ensureChatSpace(input: {
   tenantId: string;
   slug: string;
   title: string;
   courseId?: string | null;
   visibility?: "COURSE_ONLY" | "TENANT_WIDE";
-  settings?: Record<string, unknown>;
+  settings?: PrismaNamespace.InputJsonValue;
 }) {
-  const { tenantId, slug, title, courseId, visibility = "COURSE_ONLY", settings = {} } = input;
+  const { tenantId, slug, title, courseId, visibility = "COURSE_ONLY", settings = {} as PrismaNamespace.InputJsonValue } = input;
   return prisma.chatSpace.upsert({
     where: { slug },
     update: { title, courseId: courseId ?? undefined, visibility, settings },
@@ -115,7 +120,7 @@ export async function listChatThreads(input: {
   type?: ChatThreadType;
 } & Pagination) {
   const { chatSpaceId, userId, type, limit = DEFAULT_THREAD_LIMIT, cursor } = input;
-  await ensureMembership(userId, chatSpaceId);
+  await ensureMembership({ userId, chatSpaceId });
   return prisma.chatThread.findMany({
     where: { chatSpaceId, type },
     take: limit,
@@ -133,7 +138,7 @@ export async function createChatThread(input: {
   lessonId?: string;
 }) {
   const { chatSpaceId, createdById, title, type = ChatThreadType.CHANNEL, lessonId } = input;
-  const membership = await ensureMembership(createdById, chatSpaceId);
+  const membership = await ensureMembership({ userId: createdById, chatSpaceId });
   if (membership.role === ChatRole.GUEST) {
     const error = new Error("CHAT_GUEST_CANNOT_CREATE_THREAD");
     (error as any).status = 403;
@@ -172,7 +177,7 @@ export async function listThreadMessages(input: {
     (error as any).status = 404;
     throw error;
   }
-  await ensureMembership(userId, thread.chatSpaceId);
+  await ensureMembership({ userId, chatSpaceId: thread.chatSpaceId });
   return prisma.chatMessage.findMany({
     where: { threadId },
     orderBy: { sentAt: "desc" },
@@ -198,7 +203,7 @@ type SendMessageInput = {
   threadId: string;
   authorId: string;
   content: string;
-  attachments?: Record<string, unknown>[];
+  attachments?: PrismaNamespace.InputJsonValue;
   parentId?: string;
   mentionUserIds?: string[];
 };
@@ -214,7 +219,7 @@ export async function sendChatMessage(input: SendMessageInput) {
     (error as any).status = 404;
     throw error;
   }
-  await ensureMembership(authorId, thread.chatSpaceId);
+  await ensureMembership({ userId: authorId, chatSpaceId: thread.chatSpaceId });
 
   const parent = input.parentId
     ? await prisma.chatMessage.findUnique({
@@ -232,7 +237,7 @@ export async function sendChatMessage(input: SendMessageInput) {
         authorId,
         content: input.content,
         parentId: input.parentId,
-        attachments: input.attachments ?? [],
+        attachments: (input.attachments ?? []) as any,
         mentions: mentionIds,
       },
       include: {
@@ -289,7 +294,7 @@ export async function markThreadRead(input: { threadId: string; userId: string; 
     (error as any).status = 404;
     throw error;
   }
-  await ensureMembership(userId, thread.chatSpaceId);
+  await ensureMembership({ userId, chatSpaceId: thread.chatSpaceId });
   return prisma.chatReadReceipt.upsert({
     where: { threadId_userId: { threadId, userId } },
     create: { threadId, userId, lastReadAt: readAt },
