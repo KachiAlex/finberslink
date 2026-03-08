@@ -766,48 +766,6 @@ export default async function ResumeEditPage({
                   </AIButton>
                 </div>
               </form>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="company">Company</Label>
-                    <Input id="company" name="company" placeholder="Company name" />
-                  </div>
-                  <div>
-                    <Label htmlFor="role">Role</Label>
-                    <Input id="role" name="role" placeholder="Job title" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="startDate">Start Date</Label>
-                    <Input id="startDate" name="startDate" type="month" />
-                  </div>
-                  <div>
-                    <Label htmlFor="endDate">End Date</Label>
-                    <Input id="endDate" name="endDate" type="month" placeholder="Present" />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="rawDescription">Job Description (optional)</Label>
-                  <Textarea
-                    id="rawDescription"
-                    name="rawDescription"
-                    placeholder="Describe your responsibilities and achievements..."
-                    rows={3}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit">Add Experience</Button>
-                  <AIButton
-                    variant="outline"
-                    onClick={() => {
-                      // TODO: Generate bullets from form data
-                      console.log('Generate bullets from form');
-                    }}
-                  >
-                    AI Generate Bullets First
-                  </AIButton>
-                </div>
-              </form>
             </div>
           </CardContent>
         </Card>
