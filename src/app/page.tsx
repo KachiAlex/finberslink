@@ -227,9 +227,9 @@ export default function Home() {
 
         <section className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
           <div className="space-y-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Modules</p>
-            <h2 className="text-3xl font-semibold text-slate-900">One connected platform, seven career pillars.</h2>
-            <p className="text-lg text-slate-600">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Modules</p>
+            <h2 className="text-3xl font-semibold text-white">One connected platform, seven career pillars.</h2>
+            <p className="text-lg text-white">
               From onboarding to employment, Finbers Link keeps learners, tutors, admins, and employers aligned with real-time data, RBAC, and secure infrastructure.
             </p>
             <div className="grid gap-4 md:grid-cols-2">
