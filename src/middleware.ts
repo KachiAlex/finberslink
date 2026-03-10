@@ -50,10 +50,19 @@ export async function middleware(request: NextRequest) {
   try {
     // Verify token using Web Crypto (edge-safe)
     const { payload } = await jwtVerify(accessToken, new TextEncoder().encode(env.JWT_ACCESS_SECRET), { algorithms: ["HS256"] }) as any;
-    const role = (payload as SessionPayload).role;
+    const session = payload as SessionPayload;
+    const role = session.role;
 
     if (!role) {
       return redirectToLogin(request, pathname);
+    }
+
+    const tenantId = session.tenantId;
+    const tenantOptional = role === "SUPER_ADMIN";
+
+    if (!tenantId && !tenantOptional) {
+      const homeUrl = new URL("/", request.url);
+      return NextResponse.redirect(homeUrl);
     }
 
     // Route SUPER_ADMIN away from learner dashboard to superadmin console

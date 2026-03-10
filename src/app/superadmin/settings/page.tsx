@@ -1,18 +1,29 @@
+import { revalidatePath } from "next/cache";
 import { CheckCircle, ShieldCheck, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
+import { requireSuperAdminSession } from "@/features/superadmin/auth";
+import { listFeatureFlags, toggleFeatureFlag } from "@/features/feature-flags";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const featureFlags = [
-  { key: "aiCourseQa", label: "AI Course QA", description: "Run AI-driven pre-flight checks on syllabi prior to publication.", enabled: true },
-  { key: "jobAutoSync", label: "Job board auto-sync", description: "Mirror approved jobs to partner marketplaces automatically.", enabled: false },
-  { key: "guardianMode", label: "Guardian monitoring", description: "Enable extra fraud detection for tutor payouts and employer invites.", enabled: true },
-];
+async function toggleFeatureFlagAction(formData: FormData) {
+  "use server";
 
-export default function SuperAdminSettingsPage() {
+  await requireSuperAdminSession();
+  const key = String(formData.get("key") ?? "");
+  const enabled = formData.get("enabled") === "true";
+  if (!key) return;
+
+  await toggleFeatureFlag(key, enabled);
+  revalidatePath("/superadmin/settings");
+}
+
+export default async function SuperAdminSettingsPage() {
+  const featureFlags = listFeatureFlags();
+
   return (
     <section className="space-y-8">
       <header>
@@ -31,7 +42,9 @@ export default function SuperAdminSettingsPage() {
             </div>
           </div>
           <div className="space-y-2 text-sm text-slate-600">
-            <p>Access policy: <strong>Strict</strong></p>
+            <p>
+              Access policy: <strong>Strict</strong>
+            </p>
             <p>Enforced sessions: 24 hours</p>
           </div>
           <Button variant="outline">Review policy</Button>
@@ -63,15 +76,24 @@ export default function SuperAdminSettingsPage() {
         <p className="text-sm font-semibold text-slate-900">Feature flag overrides</p>
         <div className="space-y-4 text-sm">
           {featureFlags.map((flag) => (
-            <div key={flag.key} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <form
+              key={flag.key}
+              action={toggleFeatureFlagAction}
+              className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+            >
               <div>
                 <p className="text-sm font-semibold text-slate-900">{flag.label}</p>
                 <p className="text-xs text-slate-500">{flag.description}</p>
+                <p className="text-xs text-slate-400">Source: {flag.source}</p>
               </div>
-              <Button size="sm" variant={flag.enabled ? "secondary" : "ghost"}>
-                {flag.enabled ? "Enabled" : "Disabled"}
-              </Button>
-            </div>
+              <div className="flex items-center gap-3">
+                <input type="hidden" name="key" value={flag.key} />
+                <input type="hidden" name="enabled" value={(!flag.enabled).toString()} />
+                <Button size="sm" variant={flag.enabled ? "secondary" : "ghost"}>
+                  {flag.enabled ? "Disable" : "Enable"}
+                </Button>
+              </div>
+            </form>
           ))}
         </div>
       </GlassCard>

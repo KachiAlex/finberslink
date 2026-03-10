@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SaveJobButton } from "@/jobs/_components/save-job-button";
+import { SaveJobButton } from "@/app/jobs/_components/save-job-button";
 import { GlassCardError } from "@/components/ui/glass-card-error";
 
 interface SectionData {

@@ -44,8 +44,9 @@ const formatDate = (date: Date) =>
 export default async function AdminOverviewPage({
   searchParams,
 }: {
-  searchParams?: { courseStatus?: string };
+  searchParams?: Promise<{ courseStatus?: string }>;
 }) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   let dashboard;
   let dashboardError: unknown = null;
   try {
@@ -67,7 +68,7 @@ export default async function AdminOverviewPage({
   const overview = dashboard.overview;
   const courses = dashboard.courseSnapshot;
 
-  const courseStatusFilter = searchParams?.courseStatus?.toUpperCase();
+  const courseStatusFilter = resolvedSearchParams?.courseStatus?.toUpperCase();
   const filteredCourses =
     courseStatusFilter && courses.recentCourses.length
       ? courses.recentCourses.filter((course: any) =>
