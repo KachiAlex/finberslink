@@ -19,31 +19,31 @@ model User {
   createdAt                    DateTime               @default(now())
   updatedAt                    DateTime               @updatedAt
   tenantId                     String?
+  chatMemberships              ChatMembership[]
+  chatMessages                 ChatMessage[]
+  chatNotifications            ChatNotification[]
+  chatReadReceipts             ChatReadReceipt[]
+  chatThreads                  ChatThread[]           @relation("ThreadCreator")
   postedCompanies              Company[]              @relation("CompanyPostedBy")
   coursesTaught                Course[]               @relation("CourseInstructor")
   enrollments                  Enrollment[]
+  exams                        Exam[]                 @relation("ExamCreatedBy")
   forumPosts                   ForumPost[]
   forumThreads                 ForumThread[]
   jobAlerts                    JobAlert[]
   jobApplications              JobApplication[]
   jobOpportunitiesPosted       JobOpportunity[]       @relation("JobPostedBy")
+  jobSaves                     JobSave[]
   newsPosts                    News[]
   notifications                Notification[]
   profile                      Profile?
   resumes                      Resume[]
   createdInvites               TenantInvite[]         @relation("InviteCreator")
+  threadMentions               ThreadMention[]
+  threadReads                  ThreadRead[]
   tenant                       Tenant?                @relation(fields: [tenantId], references: [id])
   volunteerApps                VolunteerApplication[]
   volunteerOpportunitiesPosted VolunteerOpportunity[] @relation("VolunteerPostedBy")
-  exams                        Exam[]                 @relation("ExamCreatedBy")
-  threadReads                  ThreadRead[]
-  threadMentions               ThreadMention[]
-  jobSaves                     JobSave[]
-  chatMemberships              ChatMembership[]
-  chatThreads                  ChatThread[]           @relation("ThreadCreator")
-  chatMessages                 ChatMessage[]
-  chatNotifications            ChatNotification[]
-  chatReadReceipts             ChatReadReceipt[]
 }
 
 model Profile {
@@ -74,12 +74,12 @@ model Course {
   updatedAt            DateTime      @updatedAt
   outcomes             String[]      @default([])
   skills               String[]      @default([])
+  chatSpaces           ChatSpace[]
   instructor           User          @relation("CourseInstructor", fields: [instructorId], references: [id])
   enrollments          Enrollment[]
-  forumThreads         ForumThread[]
-  chatSpaces           ChatSpace[]
-  lessons              Lesson[]
   exams                Exam[]
+  forumThreads         ForumThread[]
+  lessons              Lesson[]
 }
 
 model Lesson {
@@ -95,8 +95,8 @@ model Lesson {
   videoUrl        String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
-  forumPosts      ForumPost[]
   chatThreads     ChatThread[]
+  forumPosts      ForumPost[]
   course          Course           @relation(fields: [courseId], references: [id])
   lessonProgress  LessonProgress[]
   resources       LessonResource[]
@@ -130,9 +130,8 @@ model Exam {
   version      Int        @default(1)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-
-  course    Course @relation(fields: [courseId], references: [id])
-  createdBy User   @relation("ExamCreatedBy", fields: [createdById], references: [id])
+  course       Course     @relation(fields: [courseId], references: [id])
+  createdBy    User       @relation("ExamCreatedBy", fields: [createdById], references: [id])
 
   @@index([courseId, status])
   @@index([createdById, status])
@@ -168,16 +167,16 @@ model LessonProgress {
 
 model ForumThread {
   id        String          @id @default(cuid())
+  title     String
   courseId  String
   authorId  String
-  title     String
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
+  posts     ForumPost[]
   author    User            @relation(fields: [authorId], references: [id])
   course    Course          @relation(fields: [courseId], references: [id])
-  posts     ForumPost[]
-  reads     ThreadRead[]
   mentions  ThreadMention[]
+  reads     ThreadRead[]
 }
 
 model ForumPost {
@@ -197,26 +196,26 @@ model ForumPost {
 }
 
 model Resume {
-  id              String             @id @default(cuid())
-  userId          String
-  title           String
-  summary         String?
-  personaName     String?
-  location        String?
-  targetIndustry  String?
-  targetRoles     String[]           @default([])
-  yearsExperience Int?
-  topSkills       String[]           @default([])
+  id                  String             @id @default(cuid())
+  userId              String
+  title               String
+  summary             String?
+  skills              String[]           @default([])
+  slug                String             @unique
+  visibility          ResumeVisibility   @default(PRIVATE)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  location            String?
   notableAchievements String?
-  skills          String[]           @default([])
-  slug            String             @unique
-  visibility      ResumeVisibility   @default(PRIVATE)
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  jobApplications JobApplication[]
-  user            User               @relation(fields: [userId], references: [id])
-  experiences     ResumeExperience[]
-  projects        ResumeProject[]
+  personaName         String?
+  targetIndustry      String?
+  targetRoles         String[]           @default([])
+  topSkills           String[]           @default([])
+  yearsExperience     Int?
+  jobApplications     JobApplication[]
+  user                User               @relation(fields: [userId], references: [id])
+  experiences         ResumeExperience[]
+  projects            ResumeProject[]
 }
 
 model ResumeExperience {
@@ -265,8 +264,8 @@ model JobOpportunity {
   slug             String?          @unique
   viewCount        Int              @default(0)
   applications     JobApplication[]
-  saves            JobSave[]
   postedBy         User?            @relation("JobPostedBy", fields: [postedById], references: [id])
+  saves            JobSave[]
 }
 
 model JobApplication {
@@ -284,13 +283,12 @@ model JobApplication {
 }
 
 model JobSave {
-  id               String   @id @default(cuid())
+  id               String         @id @default(cuid())
   userId           String
   jobOpportunityId String
-  createdAt        DateTime @default(now())
-
-  user           User           @relation(fields: [userId], references: [id])
-  jobOpportunity JobOpportunity @relation(fields: [jobOpportunityId], references: [id])
+  createdAt        DateTime       @default(now())
+  jobOpportunity   JobOpportunity @relation(fields: [jobOpportunityId], references: [id])
+  user             User           @relation(fields: [userId], references: [id])
 
   @@unique([userId, jobOpportunityId])
 }
@@ -375,27 +373,25 @@ model Notification {
 }
 
 model ThreadRead {
-  id         String   @id @default(cuid())
+  id         String      @id @default(cuid())
   userId     String
   threadId   String
-  lastReadAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-
-  user   User        @relation(fields: [userId], references: [id])
-  thread ForumThread @relation(fields: [threadId], references: [id])
+  lastReadAt DateTime    @default(now())
+  createdAt  DateTime    @default(now())
+  thread     ForumThread @relation(fields: [threadId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
 
   @@unique([userId, threadId])
   @@index([threadId])
 }
 
 model ThreadMention {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   userId    String
   threadId  String
-  createdAt DateTime @default(now())
-
-  user   User        @relation(fields: [userId], references: [id])
-  thread ForumThread @relation(fields: [threadId], references: [id])
+  createdAt DateTime    @default(now())
+  thread    ForumThread @relation(fields: [threadId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([threadId])
@@ -416,11 +412,11 @@ model Tenant {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   archivedAt       DateTime?
+  chatSpaces       ChatSpace[]
   invites          TenantInvite[]
   settings         TenantSettings?
   usage            TenantUsage[]
   users            User[]
-  chatSpaces       ChatSpace[]
 }
 
 model TenantSettings {
@@ -470,19 +466,18 @@ model TenantUsage {
 }
 
 model ChatSpace {
-  id         String         @id @default(cuid())
-  tenantId   String
-  courseId   String?
-  slug       String         @unique
-  title      String
-  visibility ChatVisibility @default(COURSE_ONLY)
-  settings   Json           @default("{}")
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-
-  tenant      Tenant           @relation(fields: [tenantId], references: [id])
-  course      Course?          @relation(fields: [courseId], references: [id])
+  id          String           @id @default(cuid())
+  tenantId    String
+  courseId    String?
+  slug        String           @unique
+  title       String
+  visibility  ChatVisibility   @default(COURSE_ONLY)
+  settings    Json             @default("{}")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   memberships ChatMembership[]
+  course      Course?          @relation(fields: [courseId], references: [id])
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
   threads     ChatThread[]
 
   @@index([tenantId, courseId])
@@ -496,65 +491,61 @@ model ChatMembership {
   mutedUntil  DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
-  chatSpace ChatSpace @relation(fields: [chatSpaceId], references: [id])
-  user      User      @relation(fields: [userId], references: [id])
+  chatSpace   ChatSpace @relation(fields: [chatSpaceId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
 
   @@unique([chatSpaceId, userId])
 }
 
 model ChatThread {
-  id            String         @id @default(cuid())
-  chatSpaceId   String
-  createdById   String
-  type          ChatThreadType @default(CHANNEL)
-  title         String?
-  lessonId      String?
-  lastMessageAt DateTime?
-  archivedAt    DateTime?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
+  id               String             @id @default(cuid())
+  chatSpaceId      String
+  createdById      String
+  type             ChatThreadType     @default(CHANNEL)
+  title            String?
+  lessonId         String?
+  lastMessageAt    DateTime?
+  archivedAt       DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  messages         ChatMessage[]
+  ChatNotification ChatNotification[]
+  reads            ChatReadReceipt[]
   chatSpace        ChatSpace          @relation(fields: [chatSpaceId], references: [id])
   createdBy        User               @relation("ThreadCreator", fields: [createdById], references: [id])
   lesson           Lesson?            @relation(fields: [lessonId], references: [id])
-  messages         ChatMessage[]
-  reads            ChatReadReceipt[]
-  ChatNotification ChatNotification[]
 
   @@index([chatSpaceId, type])
   @@index([lessonId])
 }
 
 model ChatMessage {
-  id          String    @id @default(cuid())
-  threadId    String
-  authorId    String
-  parentId    String?
-  content     String
-  attachments Json      @default("[]")
-  mentions    Json      @default("[]")
-  sentAt      DateTime  @default(now())
-  editedAt    DateTime?
-  deletedAt   DateTime?
-
-  thread        ChatThread         @relation(fields: [threadId], references: [id])
+  id            String             @id @default(cuid())
+  threadId      String
+  authorId      String
+  parentId      String?
+  content       String
+  attachments   Json               @default("[]")
+  mentions      Json               @default("[]")
+  sentAt        DateTime           @default(now())
+  editedAt      DateTime?
+  deletedAt     DateTime?
   author        User               @relation(fields: [authorId], references: [id])
   parent        ChatMessage?       @relation("MessageReplies", fields: [parentId], references: [id])
   replies       ChatMessage[]      @relation("MessageReplies")
+  thread        ChatThread         @relation(fields: [threadId], references: [id])
   notifications ChatNotification[]
 
   @@index([threadId, sentAt])
 }
 
 model ChatReadReceipt {
-  id         String   @id @default(cuid())
+  id         String     @id @default(cuid())
   threadId   String
   userId     String
-  lastReadAt DateTime @default(now())
-
-  thread ChatThread @relation(fields: [threadId], references: [id])
-  user   User       @relation(fields: [userId], references: [id])
+  lastReadAt DateTime   @default(now())
+  thread     ChatThread @relation(fields: [threadId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
 
   @@unique([threadId, userId])
 }
@@ -567,10 +558,9 @@ model ChatNotification {
   type      ChatNotificationType
   sentAt    DateTime             @default(now())
   seenAt    DateTime?
-
-  user    User        @relation(fields: [userId], references: [id])
-  thread  ChatThread  @relation(fields: [threadId], references: [id])
-  message ChatMessage @relation(fields: [messageId], references: [id])
+  message   ChatMessage          @relation(fields: [messageId], references: [id])
+  thread    ChatThread           @relation(fields: [threadId], references: [id])
+  user      User                 @relation(fields: [userId], references: [id])
 
   @@index([userId, seenAt])
 }
