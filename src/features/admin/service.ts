@@ -2,9 +2,9 @@
 import type { InviteStatus, JobType, Prisma, RemoteOption, Role, UserStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/auth/session";
 
 const ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN'];
-const DEFAULT_ADMIN_ID = process.env.NEXT_PUBLIC_DEMO_ADMIN_ID ?? "user_admin";
 const FEATURE_FLAG_BLUEPRINT = [
   {
     key: 'aiCourseQa',
@@ -34,15 +34,26 @@ export async function requireAdminUser(
   userId?: string,
   options?: { allowNoTenant?: boolean },
 ): Promise<AdminUserWithTenant> {
+  let resolvedUserId = userId;
+
+  if (!resolvedUserId) {
+    const session = await requireSession({
+      allowedRoles: ADMIN_ROLES as Role[],
+      requireTenant: !(options?.allowNoTenant ?? false),
+      failureMode: "error",
+    });
+    resolvedUserId = session.sub;
+  }
+
   const admin = await prisma.user.findUnique({
-    where: { id: userId ?? DEFAULT_ADMIN_ID },
+    where: { id: resolvedUserId },
     include: {
       tenant: true,
     },
   });
 
   if (!admin || !ADMIN_ROLES.includes(admin.role)) {
-    throw new Error("Not authorized");
+    throw new Error("Not authenticated");
   }
 
   const allowNoTenant = options?.allowNoTenant || admin.role === 'SUPER_ADMIN';

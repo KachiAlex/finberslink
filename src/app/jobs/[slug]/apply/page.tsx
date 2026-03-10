@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getJobBySlug, createJobApplication, getUserJobApplications } from "@/features/jobs/service";
-import { verifyToken } from "@/lib/auth/jwt";
 import { listUserResumes } from "@/features/resume/service";
+import { requireSession } from "@/lib/auth/session";
 
 type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
 type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
@@ -35,12 +35,10 @@ const remoteOptionColors = {
 async function submitApplicationAction(formData: FormData) {
   "use server";
 
-  const accessToken = formData.get("accessToken") as string;
-  if (!accessToken) {
-    redirect("/login");
-  }
-
-  const user = verifyToken(accessToken);
+  const session = await requireSession({
+    allowedRoles: ["STUDENT"],
+    failureMode: "error",
+  });
   
   const jobSlug = String(formData.get("jobSlug")).trim();
   const resumeId = String(formData.get("resumeId")).trim();
@@ -57,7 +55,7 @@ async function submitApplicationAction(formData: FormData) {
       return;
     }
 
-    const existingApplications = await getUserJobApplications(user.sub);
+    const existingApplications = await getUserJobApplications(session.sub);
     const hasAlreadyApplied = existingApplications.some(
       app => app.jobOpportunityId === job.id
     );
@@ -68,7 +66,7 @@ async function submitApplicationAction(formData: FormData) {
 
     await createJobApplication({
       jobOpportunityId: job.id,
-      userId: user.sub,
+      userId: session.sub,
       resumeId,
       coverLetter: coverLetter || undefined,
     });
@@ -85,20 +83,13 @@ export default async function JobApplyPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  
-  let userResumes: any[] = [];
-  try {
-    const { cookies } = await import("next/headers");
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("access_token")?.value;
-    if (accessToken) {
-      const { verifyToken } = await import("@/lib/auth/jwt");
-      const user = verifyToken(accessToken);
-      userResumes = await listUserResumes(user.sub);
-    }
-  } catch {
-    // Handle non-authenticated users
-  }
+
+  const session = await requireSession({
+    allowedRoles: ["STUDENT"],
+    failureMode: "redirect",
+  });
+
+  const userResumes = await listUserResumes(session.sub);
 
   const job = await getJobBySlug(slug);
 
@@ -200,17 +191,11 @@ export default async function JobApplyPage({
                           Create Resume
                         </Link>
                       </Button>
-                      <Button variant="outline" asChild>
-                        <Link href="/login">
-                          Sign In
-                        </Link>
-                      </Button>
                     </div>
                   </div>
                 ) : (
                   <form className="space-y-6" action={submitApplicationAction}>
                     <input type="hidden" name="jobSlug" value={slug} />
-                    <input type="hidden" name="accessToken" />
                     
                     {/* Resume Selection */}
                     <div>

@@ -8,32 +8,22 @@ import { siteConfig } from "@/config/site";
 import { verifyToken } from "@/lib/auth/jwt";
 import { getUnreadCount } from "@/features/notifications/service";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
+import { requireSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-async function getUserFromSession() {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) return null;
-  try {
-    return verifyToken(accessToken);
-  } catch {
-    return null;
-  }
-}
 
 export default async function DashboardLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const user = await getUserFromSession();
-  if (!user) {
-    redirect("/login");
-  }
+  const session = await requireSession({
+    allowedRoles: ["STUDENT"],
+    failureMode: "error",
+  });
 
-  const unreadCount = await getUnreadCount(user.sub);
+  const unreadCount = await getUnreadCount(session.sub);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
@@ -48,7 +38,7 @@ export default async function DashboardLayout({
           <div className="flex items-center gap-3">
             <NotificationsBell unreadCount={unreadCount} />
             <span className="text-sm text-slate-600 capitalize">
-              {user.role.replace("_", " ")}
+              {session.role.replace("_", " ")}
             </span>
             <Button variant="outline" asChild>
               <Link href="/">Home</Link>

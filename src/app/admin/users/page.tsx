@@ -12,13 +12,11 @@ import {
   updateUserRole,
   updateUserStatus,
 } from "@/features/admin/service";
-import { cookies } from "next/headers";
 import { hashPassword } from "@/lib/auth/password";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminUser } from "@/features/admin/service";
-import { verifyToken } from "@/lib/auth/jwt";
 
 type Role = PrismaRole;
 type UserStatus = PrismaUserStatus;
@@ -70,16 +68,7 @@ export default async function AdminUsersPage({
   async function createUserAction(formData: FormData) {
     "use server";
 
-    const store = await cookies();
-    const accessToken = store.get("access_token")?.value;
-    if (!accessToken) {
-      throw new Error("Not authorized");
-    }
-    const payload = verifyToken(accessToken);
-    const admin = await requireAdminUser(payload.sub);
-    if (!admin.tenantId) {
-      throw new Error("Tenant context required to create users");
-    }
+    const admin = await requireAdminUser();
 
     const email = String(formData.get("email") ?? "").toLowerCase();
     const password = String(formData.get("password") ?? "");
@@ -121,16 +110,7 @@ export default async function AdminUsersPage({
   async function createInviteAction(formData: FormData) {
     "use server";
 
-    const store = await cookies();
-    const accessToken = store.get("access_token")?.value;
-    if (!accessToken) {
-      throw new Error("Not authorized");
-    }
-    const payload = verifyToken(accessToken);
-    const admin = await requireAdminUser(payload.sub);
-    if (!admin.tenantId) {
-      throw new Error("Invites require tenant context");
-    }
+    const admin = await requireAdminUser();
 
     const email = String(formData.get("inviteEmail") ?? "").toLowerCase();
     const role = String(formData.get("inviteRole") ?? "STUDENT") as TenantUserRole;

@@ -1,12 +1,11 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { Sparkles, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { superAdminNav } from "@/features/superadmin/nav";
 import { requireSuperAdminUser } from "@/features/superadmin/service";
-import { verifyToken } from "@/lib/auth/jwt";
+import { requireSession } from "@/lib/auth/session";
 
 import { SuperAdminNavLink } from "./_components/nav-link";
 
@@ -15,15 +14,13 @@ export default async function SuperAdminLayout({
 }: {
   children: ReactNode;
 }) {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
+  const session = await requireSession({
+    allowedRoles: ["SUPER_ADMIN"],
+    failureMode: "error",
+    requireTenant: false,
+  });
 
-  if (!accessToken) {
-    throw new Error("Not authorized");
-  }
-
-  const payload = verifyToken(accessToken);
-  const superAdmin = await requireSuperAdminUser(payload.sub);
+  const superAdmin = await requireSuperAdminUser(session.sub);
 
   return (
     <div className="relative min-h-screen bg-slate-50 text-slate-900">

@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
-import { cookies } from "next/headers";
+import Link from "next/link";
 import { Sparkles, ShieldCheck } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { adminNav } from "@/features/admin/nav";
 import { requireAdminUser } from "@/features/admin/service";
 import { getUnreadCount } from "@/features/notifications/service";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
-import { verifyToken } from "@/lib/auth/jwt";
+import { requireSession } from "@/lib/auth/session";
 
 import { AdminNavLink } from "./_components/admin-nav-link";
 
@@ -15,14 +16,12 @@ export default async function AdminLayout({
 }: {
   children: ReactNode;
 }) {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) {
-    throw new Error("Not authorized");
-  }
-
-  const payload = verifyToken(accessToken);
-  const admin = await requireAdminUser(payload.sub);
+  const session = await requireSession({
+    allowedRoles: ["ADMIN", "SUPER_ADMIN"],
+    requireTenant: false,
+    failureMode: "error",
+  });
+  const admin = await requireAdminUser(session.sub, { allowNoTenant: session.role === "SUPER_ADMIN" });
   const unreadCount = await getUnreadCount(admin.id);
 
   return (
@@ -79,6 +78,13 @@ export default async function AdminLayout({
                   <Sparkles className="h-4 w-4" />
                   <span className="text-sm font-semibold">Live data synced</span>
                 </div>
+                <Button
+                  variant="outline"
+                  asChild
+                  className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                >
+                  <Link href="/logout">Logout</Link>
+                </Button>
               </div>
             </div>
           </div>

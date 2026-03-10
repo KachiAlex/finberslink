@@ -1,11 +1,7 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, CheckCircle2, CircleDashed, MessageSquare, PenSquare, Plus } from "lucide-react";
-import { verifyToken } from "@/lib/auth/jwt";
 import {
   getTutorCohorts,
   getPendingForumPosts,
@@ -16,26 +12,17 @@ import {
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { getUnreadCount } from "@/features/notifications/service";
 import Link from "next/link";
+import { requireSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-async function getUserFromSession() {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) return null;
-  try {
-    return verifyToken(accessToken);
-  } catch {
-    return null;
-  }
-}
-
 export default async function TutorPage() {
-  const user = await getUserFromSession();
-  if (!user || user.role !== "TUTOR") {
-    redirect("/dashboard");
-  }
+  const session = await requireSession({
+    allowedRoles: ["TUTOR"],
+    requireTenant: true,
+    failureMode: "error",
+  });
 
   let dashboardError: unknown = null;
   let cohorts: any[] = [];
@@ -47,12 +34,12 @@ export default async function TutorPage() {
 
   try {
     [cohorts, pendingPosts, officeHours, unreadCount, exams, forumThreads] = await Promise.all([
-      getTutorCohorts(user.sub),
-      getPendingForumPosts(user.sub),
-      getTutorOfficeHours(user.sub),
-      getUnreadCount(user.sub),
-      listTutorExams(user.sub),
-      getTutorForumThreads(user.sub, 5),
+      getTutorCohorts(session.sub),
+      getPendingForumPosts(session.sub),
+      getTutorOfficeHours(session.sub),
+      getUnreadCount(session.sub),
+      listTutorExams(session.sub),
+      getTutorForumThreads(session.sub, 5),
     ]);
   } catch (err) {
     console.error("Failed to load tutor dashboard", err);

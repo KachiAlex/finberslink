@@ -4,6 +4,7 @@ import type { Role } from "@prisma/client";
 
 import type { SessionPayload } from "@/lib/auth/jwt";
 import { env } from "@/lib/env";
+import { NOT_AUTH_REDIRECT } from "@/lib/auth/constants";
 
 // Routes that require authentication
 const protectedRoutes: readonly string[] = [
@@ -25,7 +26,7 @@ const roleBasedRoutes: Record<string, Role[]> = {
 };
 
 function redirectToLogin(request: NextRequest, pathname: string) {
-  const loginUrl = new URL("/login", request.url);
+  const loginUrl = new URL(NOT_AUTH_REDIRECT, request.url);
   loginUrl.searchParams.set("redirect", pathname);
   return NextResponse.redirect(loginUrl);
 }
@@ -61,8 +62,7 @@ export async function middleware(request: NextRequest) {
     const tenantOptional = role === "SUPER_ADMIN";
 
     if (!tenantId && !tenantOptional) {
-      const homeUrl = new URL("/", request.url);
-      return NextResponse.redirect(homeUrl);
+      return redirectToLogin(request, pathname);
     }
 
     // Route SUPER_ADMIN away from learner dashboard to superadmin console
@@ -74,9 +74,7 @@ export async function middleware(request: NextRequest) {
     // Check role-based access
     for (const [route, allowedRoles] of Object.entries(roleBasedRoutes)) {
       if (pathname.startsWith(route) && !allowedRoles.includes(role)) {
-        // Redirect to appropriate dashboard based on role
-        const redirectUrl = new URL(role === "TUTOR" ? "/tutor" : "/dashboard", request.url);
-        return NextResponse.redirect(redirectUrl);
+        return redirectToLogin(request, pathname);
       }
     }
 

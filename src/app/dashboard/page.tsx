@@ -1,13 +1,11 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getDashboardSummary } from "@/features/dashboard/service";
-import { verifyToken } from "@/lib/auth/jwt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/stat-card";
 import { ArrowRight, Briefcase, GraduationCap, MessageSquare, Sparkles } from "lucide-react";
 import { DashboardSectionsClient } from "./sections-client";
+import { requireSession } from "@/lib/auth/session";
 
 export const metadata = {
   title: "Finbers Link | Student Dashboard",
@@ -17,24 +15,13 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-async function getUserFromSession() {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) return null;
-  try {
-    return verifyToken(accessToken);
-  } catch {
-    return null;
-  }
-}
-
 export default async function DashboardPage() {
-  const user = await getUserFromSession();
-  if (!user) {
-    redirect("/login");
-  }
+  const session = await requireSession({
+    allowedRoles: ["STUDENT"],
+    failureMode: "error",
+  });
 
-  const summary = await getDashboardSummary(user.sub);
+  const summary = await getDashboardSummary(session.sub);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900">

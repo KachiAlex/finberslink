@@ -1,32 +1,20 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { listForumThreads } from "@/features/forum/service";
-import { verifyToken } from "@/lib/auth/jwt";
+import { requireSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-async function getUserFromSession() {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) return null;
-  try {
-    return verifyToken(accessToken);
-  } catch {
-    return null;
-  }
-}
-
 export default async function TutorForumsPage() {
-  const user = await getUserFromSession();
-  if (!user || user.role !== "TUTOR") {
-    redirect("/dashboard");
-  }
+  await requireSession({
+    allowedRoles: ["TUTOR"],
+    requireTenant: true,
+    failureMode: "error",
+  });
 
   let threads: any[] = [];
   let error: unknown = null;

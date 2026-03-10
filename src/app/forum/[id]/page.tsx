@@ -2,32 +2,18 @@ import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getForumThreadById, createForumPost } from "@/features/forum/service";
-import { verifyToken } from "@/lib/auth/jwt";
-import { cookies } from "next/headers";
+import { getSessionFromCookies, requireSession } from "@/lib/auth/session";
 import ReplyForm from "./_components/reply-form";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-async function getUserFromSession() {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) return null;
-  try {
-    return verifyToken(accessToken);
-  } catch {
-    return null;
-  }
-}
-
 async function replyAction(formData: FormData) {
   "use server";
 
-  const user = await getUserFromSession();
-  if (!user) return;
+  const session = await requireSession({ failureMode: "error" });
 
   const threadId = String(formData.get("threadId") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
@@ -49,7 +35,7 @@ async function replyAction(formData: FormData) {
   await createForumPost({
     content,
     threadId,
-    authorId: user.sub,
+    authorId: session.sub,
     mentions,
   });
 
@@ -67,7 +53,7 @@ export default async function ForumThreadPage({
     notFound();
   }
 
-  const user = await getUserFromSession();
+  const session = await getSessionFromCookies();
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
@@ -124,7 +110,7 @@ export default async function ForumThreadPage({
           ))}
         </div>
 
-        {user && (
+        {session && (
           <ReplyForm
             threadId={(thread as any).id}
             courseId={(thread as any).course?.id}

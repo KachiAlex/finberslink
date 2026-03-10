@@ -1,30 +1,18 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { verifyToken } from "@/lib/auth/jwt";
 import { listUserNotifications, markNotificationAsRead, markAllNotificationsAsRead } from "@/features/notifications/service";
+import { requireSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-async function getUserFromSession() {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) return null;
-  try {
-    return verifyToken(accessToken);
-  } catch {
-    return null;
-  }
-}
-
 async function markAsReadAction(formData: FormData) {
   "use server";
 
+  await requireSession({ failureMode: "error" });
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return;
 
@@ -35,22 +23,14 @@ async function markAsReadAction(formData: FormData) {
 async function markAllAsReadAction() {
   "use server";
 
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) return;
-
-  const user = verifyToken(accessToken);
-  await markAllNotificationsAsRead(user.sub);
+  const session = await requireSession({ failureMode: "error" });
+  await markAllNotificationsAsRead(session.sub);
   revalidatePath("/notifications");
 }
 
 export default async function NotificationsPage() {
-  const user = await getUserFromSession();
-  if (!user) {
-    redirect("/login");
-  }
-
-  const notifications = await listUserNotifications(user.sub);
+  const session = await requireSession({ failureMode: "error" });
+  const notifications = await listUserNotifications(session.sub);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">

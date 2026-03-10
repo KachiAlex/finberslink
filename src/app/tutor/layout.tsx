@@ -1,39 +1,27 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
-import { verifyToken } from "@/lib/auth/jwt";
 import { getUnreadCount } from "@/features/notifications/service";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
+import { requireSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-async function getUserFromSession() {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) return null;
-  try {
-    return verifyToken(accessToken);
-  } catch {
-    return null;
-  }
-}
 
 export default async function TutorLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const user = await getUserFromSession();
-  if (!user || user.role !== "TUTOR") {
-    redirect("/dashboard");
-  }
+  const session = await requireSession({
+    allowedRoles: ["TUTOR"],
+    requireTenant: true,
+    failureMode: "error",
+  });
 
-  const unreadCount = await getUnreadCount(user.sub);
+  const unreadCount = await getUnreadCount(session.sub);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
@@ -48,7 +36,7 @@ export default async function TutorLayout({
           <div className="flex items-center gap-3">
             <NotificationsBell unreadCount={unreadCount} />
             <span className="text-sm text-slate-600 capitalize">
-              {user.role.replace("_", " ")}
+              {session.role.replace("_", " ")}
             </span>
             <Button variant="outline" asChild>
               <Link href="/dashboard">Student view</Link>

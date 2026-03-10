@@ -1,13 +1,12 @@
 import { notFound } from "next/navigation";
 import { MapPin, Briefcase, Clock, DollarSign, Building, Users, Eye, Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { cookies } from "next/headers";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJobBySlug, isJobSaved } from "@/features/jobs/service";
-import { verifyToken } from "@/lib/auth/jwt";
+import { getSessionFromCookies } from "@/lib/auth/session";
 import { JobViewTracker } from "./_components/job-view-tracker";
 import { SaveJobButton } from "../_components/save-job-button";
 
@@ -31,17 +30,6 @@ const remoteOptionColors = {
   REMOTE: "bg-emerald-100 text-emerald-800",
 };
 
-async function getUserFromSession() {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) return null;
-  try {
-    return verifyToken(accessToken);
-  } catch {
-    return null;
-  }
-}
-
 export default async function JobDetailPage({
   params,
 }: {
@@ -54,8 +42,8 @@ export default async function JobDetailPage({
     notFound();
   }
 
-  const user = await getUserFromSession();
-  const saved = user ? await isJobSaved(user.sub, job.id) : false;
+  const session = await getSessionFromCookies();
+  const saved = session ? await isJobSaved(session.sub, job.id) : false;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">

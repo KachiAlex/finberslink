@@ -7,28 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createForumThread } from "@/features/forum/service";
-import { verifyToken } from "@/lib/auth/jwt";
-import { cookies } from "next/headers";
+import { requireSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-async function getUserFromSession() {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) return null;
-  try {
-    return verifyToken(accessToken);
-  } catch {
-    return null;
-  }
-}
-
 async function createThreadAction(formData: FormData) {
   "use server";
 
-  const user = await getUserFromSession();
-  if (!user) return;
+  const session = await requireSession({ failureMode: "error" });
 
   const title = String(formData.get("title") ?? "").trim();
   const courseId = String(formData.get("courseId") ?? "").trim();
@@ -38,17 +25,14 @@ async function createThreadAction(formData: FormData) {
   const thread = await createForumThread({
     title,
     courseId,
-    authorId: user.sub,
+    authorId: session.sub,
   });
 
   redirect(`/forum/${thread.id}`);
 }
 
 export default async function NewThreadPage() {
-  const user = await getUserFromSession();
-  if (!user) {
-    redirect("/login");
-  }
+  await requireSession();
 
   // TODO: fetch user's enrolled courses
   const courses: any[] = []; // placeholder

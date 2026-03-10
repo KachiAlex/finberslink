@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { Search, MapPin, Briefcase, Clock, DollarSign, Building, Filter, Bookmark } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getJobs, getFeaturedJobs, getPopularCompanies, getJobTags, listSavedJobs } from "@/features/jobs/service";
-import { verifyToken } from "@/lib/auth/jwt";
+import { getSessionFromCookies } from "@/lib/auth/session";
 
 type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
 type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
@@ -31,17 +30,6 @@ const remoteOptionColors = {
   HYBRID: "bg-indigo-100 text-indigo-800",
   REMOTE: "bg-emerald-100 text-emerald-800",
 };
-
-async function getUserFromSession() {
-  const store = await cookies();
-  const accessToken = store.get("access_token")?.value;
-  if (!accessToken) return null;
-  try {
-    return verifyToken(accessToken);
-  } catch {
-    return null;
-  }
-}
 
 export default async function JobsPage({
   searchParams,
@@ -69,14 +57,14 @@ export default async function JobsPage({
     page: params.page ? parseInt(params.page) : 1,
   };
 
-  const user = await getUserFromSession();
+  const session = await getSessionFromCookies();
 
   const [jobsData, featuredJobs, popularCompanies, jobTags, savedJobs] = await Promise.all([
     getJobs(filters),
     getFeaturedJobs(5),
     getPopularCompanies(8),
     getJobTags(),
-    user ? listSavedJobs(user.sub) : Promise.resolve([]),
+    session ? listSavedJobs(session.sub) : Promise.resolve([]),
   ]);
 
   const savedJobIds = new Set(
@@ -136,7 +124,7 @@ export default async function JobsPage({
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Saved Jobs */}
-            {user && savedJobOpportunities.length > 0 && (
+            {session && savedJobOpportunities.length > 0 && (
               <div className="mb-8 rounded-2xl border border-blue-100 bg-blue-50/50 p-6 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
