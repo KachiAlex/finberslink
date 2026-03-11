@@ -41,6 +41,8 @@ async function addExperienceAction(formData: FormData) {
     achievements: [],
   });
 
+  await invalidateDashboardInsights(user.sub);
+
   revalidatePath(`/resume/${slug}/edit`);
 }
 
@@ -82,6 +84,8 @@ async function addProjectAction(formData: FormData) {
     link: parsed.data.link ?? null,
     techStack: parsed.data.techStack ?? [],
   });
+
+  await invalidateDashboardInsights(user.sub);
 
   revalidatePath(`/resume/${slug}/edit`);
 }
@@ -133,6 +137,7 @@ import {
   getResumeBySlug,
   updateResume,
   updateResumeExperience,
+  updateResumeSkillSnapshot,
 } from "@/features/resume/service";
 import { ResumeExperienceSchema, ResumeProjectSchema } from "@/features/resume/schemas";
 import {
@@ -143,6 +148,7 @@ import {
   optimizeResumeSummary,
 } from "@/lib/ai/resume";
 import { verifyToken } from "@/lib/auth/jwt";
+import { invalidateDashboardInsights } from "@/features/dashboard/service";
 import type {
   ATSActionState,
   BulletActionState,
@@ -314,6 +320,8 @@ async function updateResumeAction(formData: FormData) {
     summary,
   });
 
+  await invalidateDashboardInsights(user.sub);
+
   revalidatePath(`/resume/${slug}/edit`);
 }
 
@@ -339,6 +347,7 @@ async function updateVisibilityAction(formData: FormData) {
   }
 
   await updateResume(slug, { visibility });
+  await invalidateDashboardInsights(user.sub);
   revalidatePath(`/resume/${slug}/edit`);
 }
 
@@ -465,6 +474,9 @@ export async function analyzeSkillsAction(
       jobDescription: jobDescription || undefined,
     });
 
+    await updateResumeSkillSnapshot(resume.id, analysis);
+    await invalidateDashboardInsights(user.sub);
+
     return { status: "success", analysis, message: "Skill analysis ready." };
   } catch (error) {
     console.error("Error analyzing skills:", error);
@@ -509,6 +521,11 @@ async function applyGeneratedBulletsAction(input: {
   }
 
   await updateResumeExperience(input.experienceId, { achievements: input.bullets });
+  await updateResumeSkillSnapshot(resume.id, await analyzeSkills({
+    experience: collectExperienceHighlights(resume.experiences as any),
+    targetRole: resume.targetRoles?.[0] || undefined,
+  }));
+  await invalidateDashboardInsights(user.sub);
   revalidatePath(`/resume/${input.slug}/edit`);
 }
 
@@ -538,6 +555,7 @@ async function applySkillSelectionAction(input: {
     skills: mergedSkills,
     topSkills: input.hard.slice(0, 6),
   });
+  await invalidateDashboardInsights(user.sub);
   revalidatePath(`/resume/${input.slug}/edit`);
 }
 

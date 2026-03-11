@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
 import {
+  getDashboardInsights,
   getStudentApplications,
   getStudentEnrollments,
   getStudentResumes,
@@ -33,16 +34,23 @@ export async function GET(request: NextRequest) {
 
     const user = verifyToken(accessToken);
 
-    const [enrollmentsResult, resumesResult, applicationsResult, recommendedResult, savedIdsResult] =
-      await Promise.all([
-        measure("enrollments", () => getStudentEnrollments(user.sub, 4)),
-        measure("resumes", () => getStudentResumes(user.sub, 3)),
-        measure("applications", () =>
-          getStudentApplications(user.sub, { jobsLimit: 2, volunteerLimit: 1 })
-        ),
-        measure("recommended", () => listRecommendedJobs(4)),
-        measure("saved-ids", () => listSavedJobIds(user.sub, 50)),
-      ]);
+    const [
+      enrollmentsResult,
+      resumesResult,
+      applicationsResult,
+      recommendedResult,
+      savedIdsResult,
+      insightsResult,
+    ] = await Promise.all([
+      measure("enrollments", () => getStudentEnrollments(user.sub, 4)),
+      measure("resumes", () => getStudentResumes(user.sub, 3)),
+      measure("applications", () =>
+        getStudentApplications(user.sub, { jobsLimit: 2, volunteerLimit: 1 })
+      ),
+      measure("recommended", () => listRecommendedJobs(4)),
+      measure("saved-ids", () => listSavedJobIds(user.sub, 50)),
+      measure("insights", () => getDashboardInsights(user.sub)),
+    ]);
 
     return NextResponse.json({
       data: {
@@ -51,12 +59,14 @@ export async function GET(request: NextRequest) {
         applications: applicationsResult.data ?? { jobs: [], volunteer: [] },
         recommended: recommendedResult.data ?? [],
         savedIds: savedIdsResult.data ?? [],
+        insights: insightsResult.data ?? { focus: [], skills: null },
       },
       errors: {
         enrollments: enrollmentsResult.error,
         resumes: resumesResult.error,
         applications: applicationsResult.error,
         recommended: recommendedResult.error,
+        insights: insightsResult.error,
       },
     });
   } catch (error) {

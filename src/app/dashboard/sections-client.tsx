@@ -17,6 +17,7 @@ interface SectionData {
   applications: { jobs: ApplicationSection[]; volunteer: ApplicationSection[] };
   recommended: RecommendedJob[];
   savedIds: string[];
+  insights: DashboardInsights;
 }
 
 interface SectionErrors {
@@ -24,6 +25,7 @@ interface SectionErrors {
   resumes?: string | null;
   applications?: string | null;
   recommended?: string | null;
+  insights?: string | null;
 }
 
 interface EnrollmentSection {
@@ -134,9 +136,154 @@ export function DashboardSectionsClient() {
       <GlassCardError className="mb-4" message={message} />
     ) : null;
 
+  const accentStyles: Record<FocusCard["accent"], string> = {
+    blue: "border-blue-100 bg-blue-50",
+    amber: "border-amber-100 bg-amber-50",
+    emerald: "border-emerald-100 bg-emerald-50",
+    violet: "border-violet-100 bg-violet-50",
+  };
+
+  const renderFocusCards = () => {
+    if (errors?.insights) {
+      return <SectionError message={errors.insights} />;
+    }
+
+    if (loading) {
+      return (
+        <div className="grid gap-4 md:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, idx) => (
+            <GlassCard key={idx} className="p-0">
+              <div className="space-y-3 p-4">
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-3 w-3/4" />
+                <Skeleton className="h-9 w-28 rounded-full" />
+              </div>
+            </GlassCard>
+          ))}
+        </div>
+      );
+    }
+
+    if (!data?.insights.focus.length) {
+      return (
+        <GlassCard className="border border-slate-200 bg-white/70 p-5 text-sm text-slate-600">
+          Momentum looks good. Keep following your personalized recommendations as they appear here.
+        </GlassCard>
+      );
+    }
+
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        {data.insights.focus.map((card) => (
+          <GlassCard
+            key={card.id}
+            className={`border-2 p-5 transition hover:-translate-y-0.5 ${accentStyles[card.accent]}`}
+          >
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Focus</p>
+            <h3 className="mt-2 text-lg font-semibold text-slate-900">{card.title}</h3>
+            <p className="mt-1 text-sm text-slate-600">{card.description}</p>
+            <Button size="sm" asChild className="mt-4 rounded-full">
+              <Link href={card.actionHref}>{card.actionLabel}</Link>
+            </Button>
+          </GlassCard>
+        ))}
+      </div>
+    );
+  };
+
+  const renderSkillInsights = () => {
+    if (errors?.insights) {
+      return <SectionError message={errors.insights} />;
+    }
+
+    if (loading) {
+      return (
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-3 w-2/3" />
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <Skeleton key={idx} className="h-6 w-24 rounded-full" />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (!data?.insights.skills) {
+      return (
+        <p className="text-sm text-slate-600">
+          Build at least one resume to unlock AI-powered skill insights for your target roles.
+        </p>
+      );
+    }
+
+    const { personaName, targetRoles, targetIndustry, highlightSkills, gapSkills, recommendation } = data.insights.skills;
+
+    return (
+      <div className="space-y-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Persona signal</p>
+          <h3 className="text-xl font-semibold text-slate-900">
+            {personaName || targetRoles[0] || "Your skill graph"}
+          </h3>
+          {(targetIndustry || targetRoles.length > 0) && (
+            <p className="text-sm text-slate-600">
+              Target: {targetRoles.join(" • ") || "Open"}
+              {targetIndustry ? ` · ${targetIndustry}` : ""}
+            </p>
+          )}
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Signature skills</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {highlightSkills.map((skill) => (
+              <Badge key={skill} variant="secondary" className="rounded-full bg-slate-900/5 text-slate-700">
+                {skill}
+              </Badge>
+            ))}
+          </div>
+        </div>
+        {!!gapSkills.length && (
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Gaps to reinforce</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {gapSkills.map((skill) => (
+                <Badge key={skill} className="rounded-full bg-amber-100 text-amber-800">
+                  {skill}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+        <p className="text-sm text-slate-600">{recommendation}</p>
+      </div>
+    );
+  };
+
   return (
-    <section className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-      <GlassCard variant="bordered" className="p-6">
+    <section className="space-y-8">
+      <GlassCard variant="frosted" className="p-6">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="lg:w-2/3">
+            <p className="text-xs uppercase tracking-[0.45em] text-slate-400">Guidance</p>
+            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Personalized mission control</h2>
+            <p className="text-slate-600">
+              These cards prioritize the highest-leverage moves based on your enrollments, resumes, and pipeline.
+            </p>
+            <div className="mt-6">{renderFocusCards()}</div>
+          </div>
+          <GlassCard variant="bordered" className="lg:w-1/3">
+            <div className="space-y-3">
+              <p className="text-xs uppercase tracking-[0.45em] text-slate-400">Skill intelligence</p>
+              {renderSkillInsights()}
+            </div>
+          </GlassCard>
+        </div>
+      </GlassCard>
+
+      <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+        <GlassCard variant="bordered" className="p-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Learning arc</p>

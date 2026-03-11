@@ -18,6 +18,17 @@ export interface CreateResumeInput {
   visibility?: ResumeVisibility;
 }
 
+export async function updateResumeSkillSnapshot(resumeId: string, snapshot: Prisma.JsonValue) {
+  return prisma.resume.update({
+    where: { id: resumeId },
+    data: {
+      skillAnalysisSnapshot: snapshot,
+      updatedAt: new Date(),
+    },
+    select: { id: true },
+  });
+}
+
 export interface UpdateResumeInput extends Partial<Omit<CreateResumeInput, "userId">> {
   userId?: string;
 }

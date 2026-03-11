@@ -41,9 +41,11 @@ model User {
   createdInvites               TenantInvite[]         @relation("InviteCreator")
   threadMentions               ThreadMention[]
   threadReads                  ThreadRead[]
+  dashboardInsight             DashboardInsight?
   tenant                       Tenant?                @relation(fields: [tenantId], references: [id])
   volunteerApps                VolunteerApplication[]
   volunteerOpportunitiesPosted VolunteerOpportunity[] @relation("VolunteerPostedBy")
+  interviewSessions            InterviewSession[]
 }
 
 model Profile {
@@ -212,10 +214,12 @@ model Resume {
   targetRoles         String[]           @default([])
   topSkills           String[]           @default([])
   yearsExperience     Int?
+  skillAnalysisSnapshot Json?
   jobApplications     JobApplication[]
   user                User               @relation(fields: [userId], references: [id])
   experiences         ResumeExperience[]
   projects            ResumeProject[]
+  interviewSessions  InterviewSession[]
 }
 
 model ResumeExperience {
@@ -242,6 +246,51 @@ model ResumeProject {
   resume    Resume   @relation(fields: [resumeId], references: [id])
 }
 
+model InterviewSession {
+  id               String                  @id @default(cuid())
+  userId           String
+  resumeId         String?
+  jobOpportunityId String?
+  targetRole       String
+  status           InterviewSessionStatus  @default(PENDING)
+  currentStep      InterviewFlowStep       @default(QUESTION_PHASE)
+  summary          String?
+  rating           Int?
+  recommendation   String?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  user             User                    @relation(fields: [userId], references: [id])
+  resume           Resume?                 @relation(fields: [resumeId], references: [id])
+  jobOpportunity   JobOpportunity?         @relation(fields: [jobOpportunityId], references: [id])
+  questions        InterviewQuestion[]
+
+  @@index([userId, status])
+}
+
+model InterviewQuestion {
+  id             String               @id @default(cuid())
+  sessionId      String
+  sequence       Int
+  prompt         String
+  rubric         Json?
+  createdAt      DateTime             @default(now())
+  session        InterviewSession     @relation(fields: [sessionId], references: [id])
+  responses      InterviewResponse[]
+
+  @@unique([sessionId, sequence])
+}
+
+model InterviewResponse {
+  id             String             @id @default(cuid())
+  questionId     String
+  audioUrl       String?
+  transcript     String
+  aiFeedback     String?
+  score          Float?
+  submittedAt    DateTime           @default(now())
+  question       InterviewQuestion  @relation(fields: [questionId], references: [id])
+}
+
 model JobOpportunity {
   id               String           @id @default(cuid())
   title            String
@@ -266,6 +315,7 @@ model JobOpportunity {
   applications     JobApplication[]
   postedBy         User?            @relation("JobPostedBy", fields: [postedById], references: [id])
   saves            JobSave[]
+  interviewSessions InterviewSession[]
 }
 
 model JobApplication {
@@ -565,6 +615,17 @@ model ChatNotification {
   @@index([userId, seenAt])
 }
 
+model DashboardInsight {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  focus       Json
+  skills      Json?
+  refreshedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+}
+
 enum Role {
   STUDENT
   TUTOR
@@ -634,10 +695,23 @@ enum RemoteOption {
 
 enum JobApplicationStatus {
   SUBMITTED
-  REVIEWING
+  IN_REVIEW
   INTERVIEW
-  OFFER
+  OFFERED
   REJECTED
+}
+
+enum InterviewSessionStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum InterviewFlowStep {
+  QUESTION_PHASE
+  FEEDBACK_PHASE
+  RATING_PHASE
 }
 
 enum VolunteerApplicationStatus {
