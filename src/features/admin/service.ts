@@ -30,6 +30,45 @@ const featureFlagOverrides: Record<string, boolean> = {};
 
 type AdminUserWithTenant = Prisma.UserGetPayload<{ include: { tenant: true } }>;
 
+function isSuperAdmin(admin: AdminUserWithTenant) {
+  return admin.role === "SUPER_ADMIN";
+}
+
+function getTenantContext(admin: AdminUserWithTenant) {
+  if (isSuperAdmin(admin)) {
+    return undefined;
+  }
+
+  if (!admin.tenantId) {
+    throw new Error("Admin is not associated with a tenant");
+  }
+
+  return admin.tenantId;
+}
+
+function buildUserTenantWhere(admin: AdminUserWithTenant): Prisma.UserWhereInput {
+  const tenantId = getTenantContext(admin);
+  return tenantId ? { tenantId } : {};
+}
+
+function buildCourseTenantWhere(admin: AdminUserWithTenant): Prisma.CourseWhereInput {
+  const tenantId = getTenantContext(admin);
+  return tenantId ? { instructor: { tenantId } } : {};
+}
+
+function buildJobTenantWhere(admin: AdminUserWithTenant): Prisma.JobOpportunityWhereInput {
+  const tenantId = getTenantContext(admin);
+  return tenantId ? { postedBy: { tenantId } } : {};
+}
+
+async function resolveAdmin(admin?: AdminUserWithTenant, options?: { allowNoTenant?: boolean }) {
+  if (admin) {
+    return admin;
+  }
+
+  return requireAdminUser(undefined, options);
+}
+
 export async function requireAdminUser(
   userId?: string,
   options?: { allowNoTenant?: boolean },
@@ -65,11 +104,14 @@ export async function requireAdminUser(
   return admin;
 }
 
-export async function getTenantAdminDashboard() {
+export async function getTenantAdminDashboard(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantUserWhere = buildUserTenantWhere(resolvedAdmin);
+
   const [overview, courseSnapshot, tutorCount] = await Promise.all([
-    getAdminOverview(),
-    getCourseManagementSnapshot(),
-    prisma.user.count({ where: { role: 'TUTOR' } }),
+    getAdminOverview(resolvedAdmin),
+    getCourseManagementSnapshot(resolvedAdmin),
+    prisma.user.count({ where: { role: 'TUTOR', ...tenantUserWhere } }),
   ]);
 
   return {
@@ -79,12 +121,16 @@ export async function getTenantAdminDashboard() {
   };
 }
 
-export async function getAdminOverview() {
+export async function getAdminOverview(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantUserWhere = buildUserTenantWhere(resolvedAdmin);
+  const tenantJobWhere = buildJobTenantWhere(resolvedAdmin);
+
   const [studentCount, jobCount, recentStudents, recentJobs] = await Promise.all([
-    prisma.user.count({ where: { role: 'STUDENT' } }),
-    prisma.jobOpportunity.count({ where: { isActive: true } }),
-    prisma.user.findMany({ where: { role: 'STUDENT' }, take: 4, orderBy: { createdAt: 'desc' } }),
-    prisma.jobOpportunity.findMany({ where: { isActive: true }, take: 3, orderBy: { createdAt: 'desc' } }),
+    prisma.user.count({ where: { role: 'STUDENT', ...tenantUserWhere } }),
+    prisma.jobOpportunity.count({ where: { isActive: true, ...tenantJobWhere } }),
+    prisma.user.findMany({ where: { role: 'STUDENT', ...tenantUserWhere }, take: 4, orderBy: { createdAt: 'desc' } }),
+    prisma.jobOpportunity.findMany({ where: { isActive: true, ...tenantJobWhere }, take: 3, orderBy: { createdAt: 'desc' } }),
   ]);
 
   return {
@@ -100,7 +146,12 @@ export async function getAdminOverview() {
   };
 }
 
-export async function getSystemSnapshot() {
+export async function getSystemSnapshot(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin, { allowNoTenant: true });
+  if (!isSuperAdmin(resolvedAdmin)) {
+    throw new Error("System snapshot is only available to super admins");
+  }
+
   const [
     adminUsers,
     totalUsers,
@@ -231,22 +282,38 @@ export async function toggleFeatureFlag(key: string, enabled: boolean) {
   featureFlagOverrides[key] = enabled;
 }
 
-export async function getCourseManagementSnapshot() {
+export async function getCourseManagementSnapshot(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+  const tenantId = getTenantContext(resolvedAdmin);
+
   const [totalCourses, tutorLedCourses, adminDrafts, levelGroups, recentCourses] = await Promise.all([
-    prisma.course.count(),
+    prisma.course.count({ where: tenantCourseWhere }),
     prisma.course.count({
-      where: { instructor: { role: 'TUTOR' } },
+      where: {
+        instructor: {
+          role: 'TUTOR',
+          ...(tenantId ? { tenantId } : {}),
+        },
+      },
     }),
     prisma.course.count({
-      where: { instructor: { role: 'ADMIN' } },
+      where: {
+        instructor: {
+          role: 'ADMIN',
+          ...(tenantId ? { tenantId } : {}),
+        },
+      },
     }),
     prisma.course.groupBy({
       by: ['level'],
       _count: {
         level: true,
       },
+      where: tenantCourseWhere,
     }),
     prisma.course.findMany({
+      where: tenantCourseWhere,
       orderBy: { createdAt: 'desc' },
       take: 6,
       include: {
@@ -296,8 +363,12 @@ export async function getCourseManagementSnapshot() {
   };
 }
 
-export async function listAdminCourses() {
+export async function listAdminCourses(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+
   return prisma.course.findMany({
+    where: tenantCourseWhere,
     take: 100,
     orderBy: { createdAt: 'desc' },
     include: {
@@ -398,19 +469,21 @@ export async function markInviteStatus(inviteId: string, status: InviteStatus) {
   });
 }
 
-export async function listCourses() {
-  return prisma.course.findMany({ take: 100 });
-}
+export async function createAdminCourse(
+  input: {
+    slug: string;
+    title: string;
+    tagline: string;
+    description: string;
+    category: string;
+    level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+    coverImage: string;
+  },
+  admin?: AdminUserWithTenant,
+) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const instructorId = resolvedAdmin.id;
 
-export async function createAdminCourse(input: {
-  slug: string;
-  title: string;
-  tagline: string;
-  description: string;
-  category: string;
-  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
-  coverImage: string;
-}) {
   return prisma.course.create({
     data: {
       slug: input.slug,
@@ -420,7 +493,7 @@ export async function createAdminCourse(input: {
       category: input.category,
       level: input.level,
       coverImage: input.coverImage,
-      instructorId: DEFAULT_ADMIN_ID,
+      instructorId,
     },
   });
 }
@@ -437,11 +510,31 @@ export async function createCourse(input: {
   return createAdminCourse(input);
 }
 
-export async function listStudents() {
-  return prisma.user.findMany({ where: { role: 'STUDENT' }, take: 100 });
+export async function listStudents(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantWhere = buildUserTenantWhere(resolvedAdmin);
+
+  return prisma.user.findMany({
+    where: { role: 'STUDENT', ...tenantWhere },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+  });
 }
 
-export async function updateStudentStatus(userId: string, status: UserStatus) {
+export async function updateStudentStatus(userId: string, status: UserStatus, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantWhere = buildUserTenantWhere(resolvedAdmin);
+
+  if (!isSuperAdmin(resolvedAdmin)) {
+    const student = await prisma.user.findFirst({
+      where: { id: userId, role: 'STUDENT', ...tenantWhere },
+    });
+
+    if (!student) {
+      throw new Error('Student does not belong to your tenant');
+    }
+  }
+
   return prisma.user.update({
     where: { id: userId },
     data: { status },
@@ -454,11 +547,12 @@ export async function listAllUsers(filters?: {
   search?: string;
   page?: number;
   limit?: number;
-}) {
+}, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
   const page = Math.max(filters?.page ?? 1, 1);
   const limit = filters?.limit ?? 20;
 
-  const where: Prisma.UserWhereInput = {};
+  const where: Prisma.UserWhereInput = { ...buildUserTenantWhere(resolvedAdmin) };
 
   if (filters?.role) {
     where.role = filters.role;
@@ -516,12 +610,14 @@ export async function listTutors(filters?: {
   search?: string;
   page?: number;
   limit?: number;
-}) {
+}, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
   const page = Math.max(filters?.page ?? 1, 1);
   const limit = filters?.limit ?? 20;
 
   const where: Prisma.UserWhereInput = {
     role: 'TUTOR',
+    ...buildUserTenantWhere(resolvedAdmin),
   };
 
   if (filters?.status) {
@@ -577,14 +673,23 @@ export async function listTutors(filters?: {
   };
 }
 
-export async function getTutorManagementSnapshot() {
+export async function getTutorManagementSnapshot(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantId = getTenantContext(resolvedAdmin);
+  const tenantWhere = buildUserTenantWhere(resolvedAdmin);
+
   const [totalTutors, activeTutors, invitedTutors, suspendedTutors, recentTutorCourses] = await Promise.all([
-    prisma.user.count({ where: { role: 'TUTOR' } }),
-    prisma.user.count({ where: { role: 'TUTOR', status: 'ACTIVE' } }),
-    prisma.user.count({ where: { role: 'TUTOR', status: 'INVITED' } }),
-    prisma.user.count({ where: { role: 'TUTOR', status: 'SUSPENDED' } }),
+    prisma.user.count({ where: { role: 'TUTOR', ...tenantWhere } }),
+    prisma.user.count({ where: { role: 'TUTOR', status: 'ACTIVE', ...tenantWhere } }),
+    prisma.user.count({ where: { role: 'TUTOR', status: 'INVITED', ...tenantWhere } }),
+    prisma.user.count({ where: { role: 'TUTOR', status: 'SUSPENDED', ...tenantWhere } }),
     prisma.course.findMany({
-      where: { instructor: { role: 'TUTOR' } },
+      where: {
+        instructor: {
+          role: 'TUTOR',
+          ...(tenantId ? { tenantId } : {}),
+        },
+      },
       orderBy: { createdAt: 'desc' },
       take: 6,
       include: {
@@ -611,14 +716,32 @@ export async function getTutorManagementSnapshot() {
   };
 }
 
-export async function updateUserRole(userId: string, role: 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR') {
+export async function updateUserRole(userId: string, role: 'ADMIN' | 'SUPER_ADMIN' | 'STUDENT' | 'TUTOR', admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin, { allowNoTenant: true });
+  if (!isSuperAdmin(resolvedAdmin)) {
+    throw new Error('Only super admins can change user roles');
+  }
+
   return prisma.user.update({
     where: { id: userId },
     data: { role },
   });
 }
 
-export async function updateUserStatus(userId: string, status: UserStatus) {
+export async function updateUserStatus(userId: string, status: UserStatus, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantWhere = buildUserTenantWhere(resolvedAdmin);
+
+  if (!isSuperAdmin(resolvedAdmin)) {
+    const targetUser = await prisma.user.findFirst({
+      where: { id: userId, ...tenantWhere },
+    });
+
+    if (!targetUser) {
+      throw new Error('User does not belong to your tenant');
+    }
+  }
+
   return prisma.user.update({
     where: { id: userId },
     data: { status },
@@ -662,8 +785,12 @@ export async function getUserById(userId: string) {
   });
 }
 
-export async function listAdminJobs() {
+export async function listAdminJobs(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantJobWhere = buildJobTenantWhere(resolvedAdmin);
+
   return prisma.jobOpportunity.findMany({
+    where: tenantJobWhere,
     take: 100,
     orderBy: { createdAt: 'desc' },
     include: {
@@ -684,19 +811,36 @@ export async function listAdminJobs() {
   });
 }
 
-export async function updateJobVisibility(jobId: string, updates: { isActive?: boolean; featured?: boolean }) {
+export async function updateJobVisibility(jobId: string, updates: { isActive?: boolean; featured?: boolean }, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantJobWhere = buildJobTenantWhere(resolvedAdmin);
+
+  if (!isSuperAdmin(resolvedAdmin)) {
+    const job = await prisma.jobOpportunity.findFirst({
+      where: { id: jobId, ...tenantJobWhere },
+    });
+
+    if (!job) {
+      throw new Error('Job does not belong to your tenant');
+    }
+  }
+
   return prisma.jobOpportunity.update({
     where: { id: jobId },
     data: updates,
   });
 }
 
-export async function getJobManagementSnapshot() {
+export async function getJobManagementSnapshot(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantJobWhere = buildJobTenantWhere(resolvedAdmin);
+
   const [totalJobs, activeJobs, featuredJobs, recentJobs] = await Promise.all([
-    prisma.jobOpportunity.count(),
-    prisma.jobOpportunity.count({ where: { isActive: true } }),
-    prisma.jobOpportunity.count({ where: { featured: true } }),
+    prisma.jobOpportunity.count({ where: tenantJobWhere }),
+    prisma.jobOpportunity.count({ where: { isActive: true, ...tenantJobWhere } }),
+    prisma.jobOpportunity.count({ where: { featured: true, ...tenantJobWhere } }),
     prisma.jobOpportunity.findMany({
+      where: tenantJobWhere,
       take: 5,
       orderBy: { createdAt: 'desc' },
       select: {
@@ -723,11 +867,18 @@ export async function getJobManagementSnapshot() {
   };
 }
 
-export async function getAnalyticsOverview() {
-  const totalStudents = await prisma.user.count({ where: { role: 'STUDENT' } });
-  const totalTutors = await prisma.user.count({ where: { role: 'TUTOR' } });
-  const totalJobs = await prisma.jobOpportunity.count();
-  const totalApplications = await prisma.jobApplication.count();
+export async function getAnalyticsOverview(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantUserWhere = buildUserTenantWhere(resolvedAdmin);
+  const tenantJobWhere = buildJobTenantWhere(resolvedAdmin);
+  const tenantId = getTenantContext(resolvedAdmin);
+
+  const totalStudents = await prisma.user.count({ where: { role: 'STUDENT', ...tenantUserWhere } });
+  const totalTutors = await prisma.user.count({ where: { role: 'TUTOR', ...tenantUserWhere } });
+  const totalJobs = await prisma.jobOpportunity.count({ where: tenantJobWhere });
+  const totalApplications = await prisma.jobApplication.count({
+    where: tenantId ? { user: { tenantId } } : {},
+  });
 
   return {
     overview: {
@@ -766,7 +917,9 @@ interface CreateJobInput {
   remoteOption: RemoteOption;
 }
 
-export async function createJobPosting(input: CreateJobInput) {
+export async function createJobPosting(input: CreateJobInput, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+
   return prisma.jobOpportunity.create({
     data: {
       title: input.title,
@@ -780,7 +933,7 @@ export async function createJobPosting(input: CreateJobInput) {
       tags: [],
       featured: false,
       isActive: true,
-      postedById: DEFAULT_ADMIN_ID,
+      postedById: resolvedAdmin.id,
     },
   });
 }

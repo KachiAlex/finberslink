@@ -69,6 +69,29 @@ interface RecommendedJob {
   slug: string;
 }
 
+type FocusCard = {
+  id: string;
+  title: string;
+  description: string;
+  actionLabel: string;
+  actionHref: string;
+  accent: "blue" | "amber" | "emerald" | "violet";
+};
+
+type SkillInsights = {
+  personaName?: string | null;
+  targetRoles: string[];
+  targetIndustry?: string | null;
+  highlightSkills: string[];
+  gapSkills: string[];
+  recommendation: string;
+};
+
+type DashboardInsights = {
+  focus: FocusCard[];
+  skills: SkillInsights | null;
+};
+
 type SectionResponse = {
   data: SectionData;
   errors: SectionErrors;

@@ -9,7 +9,7 @@ const responseSchema = z.object({
   transcript: z.string().min(5, "Transcript is required"),
   audioUrl: z.string().url().optional(),
   aiFeedback: z.string().optional(),
-  score: z.number().min(0).max(1).optional(),
+  score: z.number().min(1).max(5).optional(),
 });
 
 export async function POST(

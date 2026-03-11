@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   AlertCircle,
@@ -135,7 +135,7 @@ function InterviewSessionContent({ sessionId }: InterviewSessionViewProps) {
 interface QuestionTimelineProps {
   session: InterviewSession;
   selectedQuestionId: string | null;
-  onSelectQuestion: (questionId: string) => void;
+  onSelectQuestion: (_questionId: string) => void;
 }
 
 function QuestionTimeline({ session, selectedQuestionId, onSelectQuestion }: QuestionTimelineProps) {
@@ -206,6 +206,7 @@ function RecorderWorkspace({ session, question }: RecorderWorkspaceProps) {
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState<string | null>(null);
   const [transcriptionNote, setTranscriptionNote] = useState<string | null>(null);
+  const isProcessingSubmission = recordResponse.isPending || audioUploader.isPending;
 
   useEffect(() => {
     if (!question) {
@@ -344,7 +345,7 @@ function RecorderWorkspace({ session, question }: RecorderWorkspaceProps) {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-slate-700">Transcript draft</p>
-            <span className="text-xs text-slate-400">Auto transcription coming next</span>
+            <span className="text-xs text-slate-400">Audio uploads auto-populate this field</span>
           </div>
           <Textarea
             value={transcriptDraft}
@@ -357,7 +358,7 @@ function RecorderWorkspace({ session, question }: RecorderWorkspaceProps) {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-slate-700">AI feedback notes</p>
-            <span className="text-xs text-slate-400">We'll pipe in AI coaching soon</span>
+            <span className="text-xs text-slate-400">We&apos;ll pipe in AI coaching soon</span>
           </div>
           <Textarea
             value={aiFeedbackDraft}
@@ -393,11 +394,12 @@ function RecorderWorkspace({ session, question }: RecorderWorkspaceProps) {
           <Button
             className="w-full"
             onClick={handleSubmitResponse}
-            disabled={!question || recordResponse.isPending}
+            disabled={!question || isProcessingSubmission}
           >
-            {recordResponse.isPending ? (
+            {isProcessingSubmission ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving response
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {audioUploader.isPending ? "Processing audio" : "Saving response"}
               </>
             ) : (
               "Save response & feedback"
