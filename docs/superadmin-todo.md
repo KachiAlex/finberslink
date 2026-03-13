@@ -1,9 +1,9 @@
 # Superadmin Program TODO
 
 ## Phase 1 – Foundational work
-- [ ] Extend Prisma schema for tenants (Tenant, TenantSettings, TenantUsage) and link existing entities via `tenantId`
-- [ ] Seed default "Finbers Link" tenant and migration script for existing users/data
-- [ ] Update session payload + middleware to carry `tenantId`
+- [x] Extend Prisma schema for tenants (Tenant, TenantSettings, TenantUsage) and link existing entities via `tenantId`
+- [x] Seed default "Finbers Link" tenant and migration script for existing users/data
+- [x] Update session payload + middleware to carry `tenantId`
 - [ ] Restrict public registration roles (default STUDENT, optional tutor/employer via tenant setting)
 
 ## Phase 2 – Superadmin application shell
@@ -29,8 +29,12 @@
 ---
 
 ## Immediate follow-ups (in progress)
+- [x] Create migration script to assign existing users to default tenant: `scripts/migrate-users-to-default-tenant.ts`
+- [x] Document multi-tenant setup in `docs/MULTI_TENANT_SETUP.md`
+- [x] Add npm script: `npm run migrate:users-to-tenant`
 - [ ] Refresh Prisma-generated types in your editor (rerun `npx prisma generate` + restart TS server) so new Tenant models resolve in TypeScript.
 - [ ] Run `prisma/seed.ts` (now tenant-aware) to create the default Finbers tenant plus SUPER_ADMIN demo accounts.
+- [ ] Run migration script: `npm run migrate:users-to-tenant` to assign existing users to default tenant.
 - [ ] Add `NEXT_PUBLIC_DEMO_SUPERADMIN_ID` env var (matching seeded superadmin ID) for local impersonation.
 - [ ] Use `npm run ts-node scripts/create-superadmin.ts --email <email> --password <password>` to provision extra superadmins as needed (script handles tenant slug + hashing).
 - [ ] Flesh out `/superadmin/tenants`, `/superadmin/usage`, `/superadmin/billing` pages:

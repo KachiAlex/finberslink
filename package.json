@@ -13,7 +13,8 @@
     "schema:generate": "npx prisma generate",
     "schema:migrate": "npx prisma migrate dev",
     "postinstall": "prisma generate",
-    "seed": "npx tsx prisma/seed.ts"
+    "seed": "npx tsx prisma/seed.ts",
+    "migrate:users-to-tenant": "npx tsx scripts/migrate-users-to-default-tenant.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.540.0",
