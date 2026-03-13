@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { RegisterSchema } from "@/features/auth/schemas";
-import { prisma } from "@/lib/prisma";
+import { registerUser } from "@/features/auth/service";
 import { setAuthCookies } from "@/lib/auth/cookies";
-import { hashPassword } from "@/lib/auth/password";
-import { signAccessToken, signRefreshToken, type SessionPayload } from "@/lib/auth/jwt";
+import { verifyToken } from "@/lib/auth/jwt";
 import { getOrCreateDefaultTenant } from "@/features/tenant/service";
 
 export const runtime = "nodejs";
@@ -21,42 +20,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } });
-    if (existing) {
-      return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 409 }
-      );
-    }
+    // Get default tenant for the registration
+    const defaultTenant = await getOrCreateDefaultTenant();
 
-    const [passwordHash, defaultTenant] = await Promise.all([
-      hashPassword(parsed.data.password),
-      getOrCreateDefaultTenant(),
-    ]);
+    // Register user using auth service
+    const tokens = await registerUser(parsed.data, defaultTenant.id);
+    const payload = verifyToken(tokens.accessToken);
 
-    const user = await prisma.user.create({
-      data: {
-        firstName: parsed.data.firstName,
-        lastName: parsed.data.lastName,
-        email: parsed.data.email,
-        passwordHash,
-        role: parsed.data.role ?? "STUDENT",
-        status: "ACTIVE",
-        tenantId: defaultTenant.id,
-      },
-    });
-
-    const sessionPayload: SessionPayload = {
-      sub: user.id,
-      role: user.role as SessionPayload["role"],
-      status: user.status as SessionPayload["status"],
-      tenantId: user.tenantId,
-    };
-
-    const tokens = {
-      accessToken: signAccessToken(sessionPayload),
-      refreshToken: signRefreshToken(sessionPayload),
-    };
     const response = NextResponse.json(
       { message: "User registered successfully", user: { email: parsed.data.email } },
       { status: 201 }

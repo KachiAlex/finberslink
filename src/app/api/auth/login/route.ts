@@ -10,22 +10,17 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log("Login attempt with email:", body.email);
-    
     const parsed = LoginSchema.safeParse(body);
 
     if (!parsed.success) {
-      console.error("Validation error:", parsed.error.issues);
       return NextResponse.json(
         { error: "Invalid input", details: parsed.error.issues },
         { status: 400 }
       );
     }
 
-    console.log("Calling loginUser service...");
     const tokens = await loginUser(parsed.data);
     const payload = verifyToken(tokens.accessToken);
-    console.log("Tokens generated successfully");
     
     const response = NextResponse.json(
       { message: "Login successful", user: { email: parsed.data.email, role: payload.role } },
@@ -33,12 +28,9 @@ export async function POST(request: NextRequest) {
     );
 
     setAuthCookies(response, tokens);
-    console.log("Auth cookies set, returning response");
     return response;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Login error:", errorMessage);
-    console.error("Full error:", error);
     
     if (error instanceof Error && error.message === "Invalid credentials") {
       return NextResponse.json(
@@ -47,21 +39,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (
-      errorMessage.includes("Cannot read properties of undefined") ||
-      errorMessage.includes("db.collection is not a function") ||
-      errorMessage.includes("collection is not a function") ||
-      errorMessage.includes("Firebase not initialized")
-    ) {
-      console.error("Firebase not initialized properly");
-      return NextResponse.json(
-        { error: "Database connection failed. Please try again later." },
-        { status: 503 }
-      );
-    }
-
+    console.error("Login error:", errorMessage);
     return NextResponse.json(
-      { error: "Internal server error", details: errorMessage },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
