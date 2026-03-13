@@ -36,7 +36,7 @@ export async function exportResumeAsJSON(resumeId: string) {
     id: resume.id,
     title: resume.title,
     summary: resume.summary,
-    objective: resume.objective,
+    skills: resume.skills,
     user: {
       email: resume.user.email,
       firstName: resume.user.firstName,
@@ -164,13 +164,13 @@ export async function convertResumTtoPlainText(resumeId: string): Promise<string
     plainText += resume.summary + "\n\n";
   }
 
-  // Objective
-  if (resume.objective) {
-    plainText += "OBJECTIVE\n";
-    plainText += resume.objective + "\n\n";
+  // Skills
+  if (resume.skills && resume.skills.length > 0) {
+    plainText += "SKILLS\n";
+    plainText += resume.skills.join(", ") + "\n\n";
   }
 
-  // TODO: Add sections for experience, education, skills, etc.
+  // TODO: Add sections for experience, education, projects, etc.
   // once full resume data structure is loaded
 
   return plainText;

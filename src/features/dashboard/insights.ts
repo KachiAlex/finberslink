@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { differenceInDays, startOfMonth, endOfMonth, startOfDay } from "date-fns";
+import type { Role } from "@prisma/client";
 
 export interface DashboardInsight {
   title: string;
@@ -14,372 +14,251 @@ export interface DashboardInsight {
  * Get student dashboard insights (courses, progress, achievements)
  */
 export async function getStudentDashboardInsights(userId: string) {
-  const [enrollments, courses, totalProgress, badges, upcomingDeadlines, recentActivity] =
-    await Promise.all([
+  try {
+    const [enrollments, recentEnrollments] = await Promise.all([
       prisma.enrollment.count({ where: { userId } }),
       prisma.enrollment.findMany({
-        where: { userId },
+        where: { userId, status: "ACTIVE" },
+        take: 5,
+        orderBy: { createdAt: "desc" },
         include: {
-          course: { select: { id: true, title: true, image: true } },
-          progress: { select: { progress: true } },
+          course: { select: { id: true, title: true, coverImage: true } },
         },
-        take: 5,
-      }),
-      prisma.enrollmentProgress.aggregate({
-        where: { enrollment: { userId } },
-        _avg: { progress: true },
-      }),
-      prisma.badge.count({ where: { users: { some: { id: userId } } } }),
-      prisma.lesson.findMany({
-        where: { course: { enrollments: { some: { userId } } } },
-        select: { id: true, title: true, deadline: true },
-        orderBy: { deadline: "asc" },
-        take: 5,
-      }),
-      prisma.enrollmentProgress.findMany({
-        where: { enrollment: { userId } },
-        orderBy: { updatedAt: "desc" },
-        take: 5,
-        include: { enrollment: { select: { course: { select: { title: true } } } } },
       }),
     ]);
 
-  return {
-    stats: [
-      {
-        title: "Courses Enrolled",
-        value: enrollments,
-        icon: "book",
-        description: "Active course enrollments",
-      },
-      {
-        title: "Average Progress",
-        value: `${Math.round(totalProgress._avg.progress || 0)}%`,
-        icon: "progress",
-        description: "Across all courses",
-      },
-      {
-        title: "Badges Earned",
-        value: badges,
-        icon: "award",
-        description: "Achievements unlocked",
-      },
-      {
-        title: "Study Streak",
-        value: "7 days",
-        icon: "flame",
-        description: "Keep it up!",
-        trend: "up",
-      },
-    ],
-    enrollments: courses.map((e) => ({
-      id: e.id,
-      courseTitle: e.course.title,
-      image: e.course.image,
-      progress: e.progress?.[0]?.progress || 0,
-    })),
-    upcomingDeadlines: upcomingDeadlines.map((l) => ({
-      lessonTitle: l.title,
-      deadline: l.deadline,
-      daysUntil: l.deadline
-        ? Math.max(0, differenceInDays(l.deadline, startOfDay(new Date())))
-        : null,
-    })),
-    recentActivity: recentActivity.map((p) => ({
-      courseTitle: p.enrollment.course.title,
-      progress: p.progress,
-      updatedAt: p.updatedAt,
-    })),
-  };
+    const totalProgress =
+      recentEnrollments.length > 0
+        ? Math.round(
+            recentEnrollments.reduce((sum, e) => sum + e.progressPercentage, 0) /
+              recentEnrollments.length
+          )
+        : 0;
+
+    return {
+      coursesEnrolled: enrollments,
+      activeProgress: totalProgress,
+      recentCourses: recentEnrollments.map((e) => ({
+        id: e.course.id,
+        title: e.course.title,
+        progress: e.progressPercentage,
+        image: e.course.coverImage,
+      })),
+    };
+  } catch (error) {
+    console.error("Error fetching student insights:", error);
+    return { coursesEnrolled: 0, activeProgress: 0, recentCourses: [] };
+  }
 }
 
 /**
- * Get tutor dashboard insights (students, courses, ratings)
+ * Get tutor dashboard insights
  */
 export async function getTutorDashboardInsights(userId: string) {
-  const [courses, totalStudents, reviews, upcomingLessons, recentEnrollments] =
-    await Promise.all([
-      prisma.course.count({ where: { createdById: userId } }),
-      prisma.enrollment.aggregate({
-        where: { course: { createdById: userId } },
-        _count: { userId: true },
-      }),
-      prisma.courseReview.findMany({
-        where: { course: { createdById: userId } },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      }),
-      prisma.lesson.findMany({
-        where: { course: { createdById: userId } },
-        select: { id: true, title: true, createdAt: true },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      }),
-      prisma.enrollment.findMany({
-        where: { course: { createdById: userId } },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        include: { user: { select: { firstName: true, lastName: true, email: true } } },
+  try {
+    const [coursesCreated, studentEnrollments] = await Promise.all([
+      prisma.course.count({ where: { instructorId: userId } }),
+      prisma.enrollment.count({
+        where: {
+          course: { instructorId: userId },
+        },
       }),
     ]);
 
-  const avgRating =
-    reviews.length > 0
-      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-      : 0;
+    const courses = await prisma.course.findMany({
+      where: { instructorId: userId },
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        coverImage: true,
+        enrollments: { select: { progressPercentage: true } },
+      },
+    });
 
-  return {
-    stats: [
-      {
-        title: "Courses Published",
-        value: courses,
-        icon: "book",
-        description: "Active courses",
-      },
-      {
-        title: "Total Students",
-        value: totalStudents._count.userId || 0,
-        icon: "users",
-        description: "Enrolled learners",
-      },
-      {
-        title: "Average Rating",
-        value: avgRating,
-        icon: "star",
-        description: `From ${reviews.length} reviews`,
-        trend: "up",
-      },
-      {
-        title: "Completion Rate",
-        value: "68%",
-        icon: "checkmark",
-        description: "Student completions",
-      },
-    ],
-    recentReviews: reviews.map((r) => ({
-      rating: r.rating,
-      comment: r.comment,
-      createdAt: r.createdAt,
-    })),
-    recentEnrollments: recentEnrollments.map((e) => ({
-      studentName: `${e.user.firstName} ${e.user.lastName}`,
-      email: e.user.email,
-      enrolledAt: e.createdAt,
-    })),
-    upcomingLessons,
-  };
+    const avgCompletion =
+      courses.length > 0
+        ? Math.round(
+            courses.reduce(
+              (sum, c) =>
+                sum +
+                (c.enrollments.length > 0
+                  ? c.enrollments.reduce((s, e) => s + e.progressPercentage, 0) /
+                    c.enrollments.length
+                  : 0),
+              0
+            ) / courses.length
+          )
+        : 0;
+
+    return {
+      coursesCreated,
+      studentEnrollments,
+      avgCompletion,
+      recentCourses: courses.map((c) => ({
+        id: c.id,
+        title: c.title,
+        image: c.coverImage,
+      })),
+    };
+  } catch (error) {
+    console.error("Error fetching tutor insights:", error);
+    return { coursesCreated: 0, studentEnrollments: 0, avgCompletion: 0, recentCourses: [] };
+  }
 }
 
 /**
- * Get employer dashboard insights (jobs, applications, hires)
+ * Get employer dashboard insights
  */
 export async function getEmployerDashboardInsights(userId: string) {
-  const [jobs, applications, hires, viewCount, totalSpent] = await Promise.all([
-    prisma.jobOpportunity.count({ where: { postedById: userId, isActive: true } }),
-    prisma.jobApplication.count({ where: { job: { postedById: userId } } }),
-    prisma.jobApplication.count({
-      where: { job: { postedById: userId }, status: "SELECTED" },
-    }),
-    prisma.jobOpportunity.aggregate({
-      where: { postedById: userId },
-      _sum: { viewCount: true },
-    }),
-    prisma.jobOpportunity.aggregate({
-      where: { postedById: userId },
-      _count: { id: true },
-    }),
-  ]);
-
-  const conversionRate =
-    applications > 0 ? ((hires / applications) * 100).toFixed(1) : 0;
-
-  return {
-    stats: [
-      {
-        title: "Active Jobs",
-        value: jobs,
-        icon: "briefcase",
-        description: "Open positions",
-      },
-      {
-        title: "Total Applications",
-        value: applications,
-        icon: "mail",
-        description: "Received",
-      },
-      {
-        title: "Hires",
-        value: hires,
-        icon: "check",
-        description: "Candidates selected",
-      },
-      {
-        title: "Conversion Rate",
-        value: `${conversionRate}%`,
-        icon: "trending",
-        description: "Applications to hires",
-        trend: applications > 0 && hires > 0 ? "up" : "stable",
-      },
-    ],
-    topJobs: await getTopJobs(userId, 5),
-    applicationTrend: await getApplicationTrend(userId),
-  };
-}
-
-/**
- * Get admin dashboard insights (users, courses, activity)
- */
-export async function getAdminDashboardInsights() {
-  const [totalUsers, activeUsers, courses, jobs, totalRevenue, recentSignups] =
-    await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({
-        where: { lastLoginAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+  try {
+    const [jobsPosted, totalApplications, offeredCandidates] = await Promise.all([
+      prisma.jobOpportunity.count({ where: { postedById: userId, isActive: true } }),
+      prisma.jobApplication.count({
+        where: {
+          opportunity: { postedById: userId },
+        },
       }),
-      prisma.course.count(),
-      prisma.jobOpportunity.count({ where: { isActive: true } }),
-      0, // TODO: Calculate total revenue
-      prisma.user.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: { firstName: true, lastName: true, email: true, createdAt: true },
+      prisma.jobApplication.count({
+        where: {
+          opportunity: { postedById: userId },
+          status: "OFFERED",
+        },
       }),
     ]);
 
-  return {
-    stats: [
-      {
-        title: "Total Users",
-        value: totalUsers,
-        icon: "users",
-        description: "Registered",
-        trend: "up",
-      },
-      {
-        title: "Active Users (7d)",
-        value: activeUsers,
-        icon: "active",
-        description: "Last 7 days",
-      },
-      {
-        title: "Courses",
-        value: courses,
-        icon: "book",
-        description: "Published",
-      },
-      {
-        title: "Job Openings",
-        value: jobs,
-        icon: "briefcase",
-        description: "Active",
-      },
-    ],
-    recentSignups,
-  };
+    const conversionRate =
+      totalApplications > 0
+        ? Math.round((offeredCandidates / totalApplications) * 100)
+        : 0;
+
+    return {
+      jobsPosted,
+      applicationsReceived: totalApplications,
+      offeredCandidates,
+      conversionRate,
+    };
+  } catch (error) {
+    console.error("Error fetching employer insights:", error);
+    return {
+      jobsPosted: 0,
+      applicationsReceived: 0,
+      offeredCandidates: 0,
+      conversionRate: 0,
+    };
+  }
 }
 
 /**
- * Helper: Get top jobs by views
+ * Get admin dashboard insights
  */
-async function getTopJobs(userId: string, limit = 5) {
-  return prisma.jobOpportunity.findMany({
-    where: { postedById: userId },
-    orderBy: { viewCount: "desc" },
-    take: limit,
-    select: { id: true, title: true, viewCount: true, applicationCount: true },
-  });
-}
+export async function getAdminDashboardInsights() {
+  try {
+    const [totalUsers, activeUsers, totalCourses, totalJobs] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { status: "ACTIVE" } }),
+      prisma.course.count({ where: { lessons: { some: {} } } }),
+      prisma.jobOpportunity.count({ where: { isActive: true } }),
+    ]);
 
-/**
- * Helper: Get application trend for employer
- */
-async function getApplicationTrend(userId: string) {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-  const trend = await prisma.jobApplication.groupBy({
-    by: ["submittedAt"],
-    where: {
-      job: { postedById: userId },
-      submittedAt: { gte: thirtyDaysAgo },
-    },
-    _count: { id: true },
-  });
-
-  return trend.map((t) => ({
-    date: t.submittedAt,
-    count: t._count.id,
-  }));
+    return {
+      platformMetrics: {
+        totalUsers,
+        activeUsers,
+        totalCourses,
+        activeJobs: totalJobs,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching admin insights:", error);
+    return {
+      platformMetrics: {
+        totalUsers: 0,
+        activeUsers: 0,
+        totalCourses: 0,
+        activeJobs: 0,
+      },
+    };
+  }
 }
 
 /**
  * Get trending courses
  */
-export async function getTrendingCourses(limit = 10) {
-  return prisma.course.findMany({
-    orderBy: { enrollments: { _count: "desc" } },
-    take: limit,
-    select: {
-      id: true,
-      title: true,
-      image: true,
-      _count: { select: { enrollments: true } },
-    },
-  });
+export async function getTrendingCourses(limit: number = 5) {
+  try {
+    const courses = await prisma.course.findMany({
+      orderBy: {
+        enrollments: { _count: "desc" },
+      },
+      take: limit,
+      include: {
+        _count: { select: { enrollments: true, lessons: true } },
+      },
+    });
+
+    return courses.map((c) => ({
+      id: c.id,
+      title: c.title,
+      enrollmentCount: c._count.enrollments,
+      lessonCount: c._count.lessons,
+    }));
+  } catch (error) {
+    console.error("Error fetching trending courses:", error);
+    return [];
+  }
 }
 
 /**
  * Get user activity feed
  */
-export async function getUserActivityFeed(userId: string, limit = 20) {
-  const [courseProgress, enrollments, applications, publishedCourses] = await Promise.all([
-    prisma.enrollmentProgress.findMany({
-      where: { enrollment: { userId } },
-      orderBy: { updatedAt: "desc" },
+export async function getUserActivityFeed(userId: string, limit: number = 10) {
+  try {
+    const activities: any[] = [];
+
+    // Course enrollments
+    const enrollments = await prisma.enrollment.findMany({
+      where: { userId },
       take: limit,
-      include: { enrollment: { select: { course: { select: { title: true } } } } },
-    }),
-    prisma.enrollment.findMany({
-      where: { userId },
       orderBy: { createdAt: "desc" },
-      take: limit / 2,
-      include: { course: { select: { title: true } } },
-    }),
-    prisma.jobApplication.findMany({
+      include: { course: { select: { id: true, title: true } } },
+    });
+
+    activities.push(
+      ...enrollments.map((e) => ({
+        type: "ENROLLMENT",
+        timestamp: e.createdAt,
+        description: `Enrolled in ${e.course.title}`,
+        courseId: e.course.id,
+      }))
+    );
+
+    // Job applications
+    const applications = await prisma.jobApplication.findMany({
       where: { userId },
+      take: limit,
       orderBy: { submittedAt: "desc" },
-      take: limit / 2,
-      include: { job: { select: { title: true } } },
-    }),
-    prisma.course.findMany({
-      where: { createdById: userId },
-      orderBy: { createdAt: "desc" },
-      take: limit / 2,
-      select: { title: true, createdAt: true },
-    }),
-  ]);
+      include: {
+        opportunity: { select: { id: true, title: true } },
+      },
+    });
 
-  const activities = [
-    ...courseProgress.map((p) => ({
-      type: "progress",
-      action: `Updated progress in ${p.enrollment.course.title}`,
-      timestamp: p.updatedAt,
-    })),
-    ...enrollments.map((e) => ({
-      type: "enrollment",
-      action: `Enrolled in ${e.course.title}`,
-      timestamp: e.createdAt,
-    })),
-    ...applications.map((a) => ({
-      type: "application",
-      action: `Applied for ${a.job.title}`,
-      timestamp: a.submittedAt,
-    })),
-    ...publishedCourses.map((c) => ({
-      type: "publish",
-      action: `Published ${c.title}`,
-      timestamp: c.createdAt,
-    })),
-  ];
+    activities.push(
+      ...applications.map((a) => ({
+        type: "JOB_APPLICATION",
+        timestamp: a.submittedAt,
+        description: `Applied for ${a.opportunity.title}`,
+        jobId: a.opportunity.id,
+      }))
+    );
 
-  return activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, limit);
+    // Sort by timestamp and return top N
+    return activities
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
+  } catch (error) {
+    console.error("Error fetching user activity feed:", error);
+    return [];
+  }
 }
