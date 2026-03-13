@@ -12,7 +12,6 @@ import {
 } from "@/features/jobs/alerts.service";
 import { requireAuth } from "@/lib/auth/guards";
 import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
-import { validateInput } from "@/lib/validation/schemas";
 import type { JobType } from "@prisma/client";
 
 export const runtime = "nodejs";
@@ -52,8 +51,15 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
     const session = requireAuth(request);
     const body = await request.json();
 
-    const validated = validateInput(CreateAlertSchema, body);
+    const validation = CreateAlertSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Invalid input", issues: validation.error.issues },
+        { status: 400 }
+      );
+    }
 
+    const validated = validation.data;
     const alert = await createJobAlert({
       userId: session.sub,
       keywords: validated.keywords,

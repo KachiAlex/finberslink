@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-
-import { verifyToken } from "@/lib/auth/jwt";
-import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+
+import { getAllJobs, getJobStats, bulkUpdateJobFeatured } from "@/features/jobs/admin-service";
+import { requireAuth, requireRole } from "@/lib/auth/guards";
+import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
+import { prisma } from "@/lib/prisma";
+
+export const runtime = "nodejs";
 
 const CreateJobSchema = z.object({
   title: z.string().min(1),
@@ -17,71 +21,65 @@ const CreateJobSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
-export async function GET(request: NextRequest) {
-  try {
-    const accessToken = request.cookies.get("access_token")?.value;
-    if (!accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+const ListJobsSchema = z.object({
+  skip: z.coerce.number().int().nonnegative().optional(),
+  take: z.coerce.number().int().positive().max(100).optional(),
+  search: z.string().optional(),
+  featured: z.coerce.boolean().optional(),
+  sortBy: z.enum(["recent", "featured", "views"]).optional(),
+});
 
-    const user = verifyToken(accessToken);
-    
-    // Check if user is admin
-    if (!["ADMIN", "SUPER_ADMIN"].includes(user.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
+
+/**
+ * GET /api/admin/jobs
+ * Get all jobs with filtering and pagination (admin only)
+ */
+export const GET = rateLimitMiddleware(async (request: NextRequest) => {
+  try {
+    const session = requireAuth(request);
+    requireRole(session, "ADMIN", "SUPER_ADMIN");
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const params = ListJobsSchema.parse(Object.fromEntries(searchParams));
 
-    const skip = (page - 1) * limit;
-    const jobs = await prisma.jobOpportunity.findMany({
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
+    const jobs = await getAllJobs({
+      skip: params.skip || 0,
+      take: params.take || 20,
+      search: params.search,
+      featured: params.featured,
+      active: undefined,
+      sortBy: params.sortBy || "recent",
     });
 
-    const total = await prisma.jobOpportunity.count();
-
-    return NextResponse.json({
-      jobs,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
+    return NextResponse.json(jobs, { status: 200 });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Invalid query parameters", issues: error.issues },
+        { status: 400 }
+      );
+    }
     console.error("Get jobs error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch jobs" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch jobs" }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/admin/jobs
+ * Create a new job posting (admin only)
+ */
+export const POST = rateLimitMiddleware(async (request: NextRequest) => {
   try {
-    const accessToken = request.cookies.get("access_token")?.value;
-    if (!accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = verifyToken(accessToken);
-    
-    // Check if user is admin
-    if (!["ADMIN", "SUPER_ADMIN"].includes(user.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const session = requireAuth(request);
+    requireRole(session, "ADMIN", "SUPER_ADMIN");
 
     const body = await request.json();
     const parsed = CreateJobSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid input", details: parsed.error.issues },
+        { error: "Invalid input", issues: parsed.error.issues },
         { status: 400 }
       );
     }
@@ -99,7 +97,7 @@ export async function POST(request: NextRequest) {
         tags: parsed.data.tags || [],
         featured: false,
         isActive: true,
-        postedById: user.sub,
+        postedById: session.sub,
       },
     });
 
@@ -109,9 +107,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Create job error:", error);
-    return NextResponse.json(
-      { error: "Failed to create job" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create job" }, { status: 500 });
   }
-}
+});
