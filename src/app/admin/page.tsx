@@ -23,6 +23,23 @@ import { getTenantAdminDashboard } from "@/features/admin/service";
 
 import { AdminShell } from "./_components/admin-shell";
 
+type TenantDashboard = Awaited<ReturnType<typeof getTenantAdminDashboard>>;
+type CourseSnapshot = TenantDashboard["courseSnapshot"];
+type SnapshotCourse = CourseSnapshot["recentCourses"][number];
+type CourseApprovalStatus = "PENDING" | "APPROVED" | "CHANGES";
+type SnapshotCourseWithStatus = SnapshotCourse & { status?: CourseApprovalStatus | null };
+
+const COURSE_STATUS_OPTIONS: readonly CourseApprovalStatus[] = ["PENDING", "APPROVED", "CHANGES"] as const;
+const DEFAULT_COURSE_STATUS: CourseApprovalStatus = "PENDING";
+
+const getCourseStatus = (course: SnapshotCourseWithStatus): CourseApprovalStatus => {
+  const rawStatus = course.status?.toUpperCase() as CourseApprovalStatus | undefined;
+  if (rawStatus && COURSE_STATUS_OPTIONS.includes(rawStatus)) {
+    return rawStatus;
+  }
+  return DEFAULT_COURSE_STATUS;
+};
+
 function DashboardError({ label, error }: { label: string; error?: unknown }) {
   if (!error) return null;
   return (
@@ -44,9 +61,8 @@ const formatDate = (date: Date) =>
 export default async function AdminOverviewPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ courseStatus?: string }>;
+  searchParams?: { courseStatus?: string };
 }) {
-  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   let dashboard;
   let dashboardError: unknown = null;
   try {
@@ -66,15 +82,17 @@ export default async function AdminOverviewPage({
     };
   }
   const overview = dashboard.overview;
-  const courses = dashboard.courseSnapshot;
+  const courseSnapshot = dashboard.courseSnapshot;
 
-  const courseStatusFilter = resolvedSearchParams?.courseStatus?.toUpperCase();
+  const requestedStatus = searchParams?.courseStatus?.toUpperCase() as CourseApprovalStatus | undefined;
+  const courseStatusFilter = requestedStatus && COURSE_STATUS_OPTIONS.includes(requestedStatus) ? requestedStatus : undefined;
+
   const filteredCourses =
-    courseStatusFilter && courses.recentCourses.length
-      ? courses.recentCourses.filter((course: any) =>
-          (course.status ?? "PENDING").toUpperCase() === courseStatusFilter
+    courseStatusFilter && courseSnapshot.recentCourses.length
+      ? courseSnapshot.recentCourses.filter(
+          (course) => getCourseStatus(course as SnapshotCourseWithStatus) === courseStatusFilter
         )
-      : courses.recentCourses;
+      : courseSnapshot.recentCourses;
 
   const statConfig = [
     {
@@ -150,7 +168,7 @@ export default async function AdminOverviewPage({
             <CardContent className="space-y-3">
               <DashboardError label="Courses unavailable" error={dashboardError} />
               <div className="flex flex-wrap gap-2">
-                {["PENDING", "APPROVED", "CHANGES"].map((status) => {
+                {COURSE_STATUS_OPTIONS.map((status) => {
                   const isActive = courseStatusFilter === status;
                   const href = status === "PENDING" ? "/admin?courseStatus=PENDING" : `/admin?courseStatus=${status}`;
                   return (
@@ -171,13 +189,14 @@ export default async function AdminOverviewPage({
                   </Button>
                 ) : null}
               </div>
-              {(filteredCourses.length === 0 && courseStatusFilter) || courses.recentCourses.length === 0 ? (
+              {(filteredCourses.length === 0 && courseStatusFilter) || courseSnapshot.recentCourses.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                   No tutor submissions match this filter. Encourage tutors to submit their first course.
                 </div>
               ) : (
-                filteredCourses.map((course: any) => {
-                  const status = (course.status ?? "PENDING").toUpperCase();
+                filteredCourses.map((course) => {
+                  const courseWithStatus = course as SnapshotCourseWithStatus;
+                  const status = getCourseStatus(courseWithStatus);
                   const statusLabel =
                     status === "APPROVED" ? "Approved" : status === "CHANGES" ? "Needs edits" : "Pending review";
                   const statusClass =

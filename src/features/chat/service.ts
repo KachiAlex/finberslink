@@ -1,16 +1,16 @@
 ﻿import { prisma } from "@/lib/prisma";
-import {
-  ChatNotificationType,
-  ChatRole,
-  ChatThreadType,
-  Prisma,
-  TenantPlanTier,
-  TenantStatus,
-  type Prisma as PrismaNamespace,
-} from "@prisma/client";
+import { ChatNotificationType, ChatRole, ChatThreadType, Prisma, type Prisma as PrismaNamespace } from "@prisma/client";
 
 const DEFAULT_THREAD_LIMIT = 20;
 const DEFAULT_MESSAGE_LIMIT = 50;
+
+type StatusError = Error & { status?: number };
+
+function createStatusError(message: string, status: number): StatusError {
+  const error: StatusError = new Error(message);
+  error.status = status;
+  return error;
+}
 
 const THREAD_CARD_INCLUDE = {
   createdBy: {
@@ -56,9 +56,7 @@ export async function ensureMembership({ userId, chatSpaceId }: { userId: string
     where: { userId, chatSpaceId },
   });
   if (!membership) {
-    const error = new Error("CHAT_ACCESS_DENIED");
-    (error as any).status = 403;
-    throw error;
+    throw createStatusError("NOT_MEMBER", 403);
   }
   return membership;
 }
@@ -81,8 +79,6 @@ export async function listChatSpacesForUser(input: { tenantId: string; userId: s
     orderBy: { title: "asc" },
   });
 }
-
-type JsonValue = PrismaNamespace.JsonValue;
 
 export async function ensureChatSpace(input: {
   tenantId: string;
@@ -140,9 +136,7 @@ export async function createChatThread(input: {
   const { chatSpaceId, createdById, title, type = ChatThreadType.CHANNEL, lessonId } = input;
   const membership = await ensureMembership({ userId: createdById, chatSpaceId });
   if (membership.role === ChatRole.GUEST) {
-    const error = new Error("CHAT_GUEST_CANNOT_CREATE_THREAD");
-    (error as any).status = 403;
-    throw error;
+    throw createStatusError("CHAT_GUEST_CANNOT_CREATE_THREAD", 403);
   }
   const thread = await prisma.chatThread.create({
     data: {
@@ -173,9 +167,7 @@ export async function listThreadMessages(input: {
     select: { chatSpaceId: true },
   });
   if (!thread) {
-    const error = new Error("CHAT_THREAD_NOT_FOUND");
-    (error as any).status = 404;
-    throw error;
+    throw createStatusError("NOT_FOUND", 404);
   }
   await ensureMembership({ userId, chatSpaceId: thread.chatSpaceId });
   return prisma.chatMessage.findMany({
@@ -215,9 +207,7 @@ export async function sendChatMessage(input: SendMessageInput) {
     select: { chatSpaceId: true },
   });
   if (!thread) {
-    const error = new Error("CHAT_THREAD_NOT_FOUND");
-    (error as any).status = 404;
-    throw error;
+    throw createStatusError("NOT_FOUND", 404);
   }
   await ensureMembership({ userId: authorId, chatSpaceId: thread.chatSpaceId });
 
@@ -237,7 +227,7 @@ export async function sendChatMessage(input: SendMessageInput) {
         authorId,
         content: input.content,
         parentId: input.parentId,
-        attachments: (input.attachments ?? []) as any,
+        attachments: input.attachments ?? [],
         mentions: mentionIds,
       },
       include: {
@@ -290,9 +280,7 @@ export async function markThreadRead(input: { threadId: string; userId: string; 
     select: { chatSpaceId: true },
   });
   if (!thread) {
-    const error = new Error("CHAT_THREAD_NOT_FOUND");
-    (error as any).status = 404;
-    throw error;
+    throw createStatusError("NOT_FOUND", 404);
   }
   await ensureMembership({ userId, chatSpaceId: thread.chatSpaceId });
   return prisma.chatReadReceipt.upsert({

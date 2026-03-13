@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 export class APIError extends Error {
-  constructor(
-    public statusCode: number,
-    public message: string,
-    public details?: unknown,
-  ) {
+  public statusCode: number;
+  public details?: unknown;
+
+  constructor(statusCode: number, message: string, details?: unknown) {
     super(message);
     this.name = "APIError";
+    this.statusCode = statusCode;
+    this.details = details;
   }
 }
 

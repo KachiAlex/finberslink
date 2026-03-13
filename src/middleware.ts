@@ -50,8 +50,8 @@ export async function middleware(request: NextRequest) {
 
   try {
     // Verify token using Web Crypto (edge-safe)
-    const { payload } = await jwtVerify(accessToken, new TextEncoder().encode(env.JWT_ACCESS_SECRET), { algorithms: ["HS256"] }) as any;
-    const session = payload as SessionPayload;
+    const verified = await jwtVerify(accessToken, new TextEncoder().encode(env.JWT_ACCESS_SECRET), { algorithms: ["HS256"] });
+    const session = verified.payload as unknown as SessionPayload;
     const role = session.role;
 
     if (!role) {

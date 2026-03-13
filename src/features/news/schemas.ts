@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { NEWS_STATUSES, type NewsStatus } from "./constants";
+import { NEWS_STATUSES } from "./constants";
 
 export const CreateNewsSchema = z.object({
   title: z.string().min(1, "Title is required"),

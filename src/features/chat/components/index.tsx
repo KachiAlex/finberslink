@@ -6,7 +6,7 @@ export function ChatSpaceList({
   onSelect,
 }: {
   selected?: ChatSpace;
-  onSelect: (space: ChatSpace) => void;
+  onSelect: (_space: ChatSpace) => void;
 }) {
   const { data: spaces = [], isLoading } = useChatSpaces();
 
@@ -16,13 +16,13 @@ export function ChatSpaceList({
     <div className="border-r border-gray-200 w-64 flex flex-col">
       <div className="px-4 py-2 font-semibold text-sm border-b border-gray-200">Spaces</div>
       <div className="flex-1 overflow-y-auto">
-        {spaces.map((s: ChatSpace) => (
+        {spaces.map((space: ChatSpace) => (
           <button
-            key={s.id}
-            onClick={() => onSelect(s)}
-            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selected?.id === s.id ? "bg-gray-100" : ""}`}
+            key={space.id}
+            onClick={() => onSelect(space)}
+            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selected?.id === space.id ? "bg-gray-100" : ""}`}
           >
-            {s.title}
+            {space.title}
           </button>
         ))}
       </div>
@@ -37,7 +37,7 @@ export function ChatThreadList({
 }: {
   spaceId: string | null;
   selected?: ChatThread;
-  onSelect: (thread: ChatThread) => void;
+  onSelect: (_thread: ChatThread) => void;
 }) {
   const { data: threads = [], isLoading } = useChatThreads(spaceId);
 
@@ -47,13 +47,13 @@ export function ChatThreadList({
     <div className="border-r border-gray-200 w-64 flex flex-col">
       <div className="px-4 py-2 font-semibold text-sm border-b border-gray-200">Threads</div>
       <div className="flex-1 overflow-y-auto">
-        {threads.map((t: ChatThread) => (
+        {threads.map((thread: ChatThread) => (
           <button
-            key={t.id}
-            onClick={() => onSelect(t)}
-            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selected?.id === t.id ? "bg-gray-100" : ""}`}
+            key={thread.id}
+            onClick={() => onSelect(thread)}
+            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selected?.id === thread.id ? "bg-gray-100" : ""}`}
           >
-            {t.title || t.type}
+            {thread.title || thread.type}
           </button>
         ))}
       </div>
@@ -66,8 +66,10 @@ export function ChatMessageList({ threadId }: { threadId: string | null }) {
   const markRead = useMarkThreadRead();
 
   useEffect(() => {
-    if (threadId) markRead.mutate({ threadId });
-  }, [threadId]);
+    if (threadId) {
+      markRead.mutate({ threadId });
+    }
+  }, [threadId, markRead]);
 
   if (isLoading) return <div className="p-4 text-sm text-gray-500">Loading messages…</div>;
 

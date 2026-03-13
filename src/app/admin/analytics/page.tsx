@@ -122,7 +122,7 @@ export default async function AdminAnalyticsPage() {
             <CardContent>
               <div className="space-y-3">
                 {analytics.topCourses && analytics.topCourses.length > 0 ? (
-                  analytics.topCourses.map((course: any, index: number) => (
+                  analytics.topCourses.map((course, index) => (
                     <div
                       key={course.id}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -142,7 +142,7 @@ export default async function AdminAnalyticsPage() {
                       </div>
                       <div className="text-right">
                         <div className="font-medium text-sm">
-                          {course._count?.enrollments || 0}
+                          {course._count?.enrollments ?? 0}
                         </div>
                         <div className="text-xs text-gray-500">
                           enrollments
@@ -169,29 +169,35 @@ export default async function AdminAnalyticsPage() {
             <CardContent>
               <div className="space-y-3">
                 {analytics.courseCompletionStats && analytics.courseCompletionStats.length > 0 ? (
-                  analytics.courseCompletionStats.map((stat: any) => (
-                    <div
-                      key={stat.status}
-                      className="flex items-center justify-between"
-                    >
-                      <span className="text-sm font-medium capitalize">
-                        {stat.status.toLowerCase()}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{
-                              width: `${(stat._count?.status / analytics.overview.totalEnrollments) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium">
-                          {stat._count?.status || 0}
+                  analytics.courseCompletionStats.map((stat) => {
+                    const completionTotal = analytics.overview.totalEnrollments || 1;
+                    const completionPercent = Math.min(
+                      100,
+                      Math.round(((stat._count?.status ?? 0) / completionTotal) * 100) || 0,
+                    );
+
+                    return (
+                      <div
+                        key={stat.status}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="text-sm font-medium capitalize">
+                          {stat.status.toLowerCase()}
                         </span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full"
+                              style={{ width: `${completionPercent}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-medium">
+                            {stat._count?.status ?? 0}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="text-center py-6 text-gray-500">
                     No completion data available
@@ -208,29 +214,35 @@ export default async function AdminAnalyticsPage() {
             <CardContent>
               <div className="space-y-3">
                 {analytics.jobPlacementStats && analytics.jobPlacementStats.length > 0 ? (
-                  analytics.jobPlacementStats.map((stat: any) => (
-                    <div
-                      key={stat.status}
-                      className="flex items-center justify-between"
-                    >
-                      <span className="text-sm font-medium capitalize">
-                        {stat.status.toLowerCase()}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-green-600 h-2 rounded-full"
-                            style={{
-                              width: `${(stat._count?.status / analytics.overview.totalApplications) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium">
-                          {stat._count?.status || 0}
+                  analytics.jobPlacementStats.map((stat) => {
+                    const applicationTotal = analytics.overview.totalApplications || 1;
+                    const placementPercent = Math.min(
+                      100,
+                      Math.round(((stat._count?.status ?? 0) / applicationTotal) * 100) || 0,
+                    );
+
+                    return (
+                      <div
+                        key={stat.status}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="text-sm font-medium capitalize">
+                          {stat.status.toLowerCase()}
                         </span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-green-600 h-2 rounded-full"
+                              style={{ width: `${placementPercent}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-medium">
+                            {stat._count?.status ?? 0}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="text-center py-6 text-gray-500">
                     No placement data available
@@ -249,7 +261,7 @@ export default async function AdminAnalyticsPage() {
           <CardContent>
             <div className="space-y-3">
               {analytics.recentUsers && analytics.recentUsers.length > 0 ? (
-                analytics.recentUsers.map((user: any) => (
+                analytics.recentUsers.map((user) => (
                   <div
                     key={user.id}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"

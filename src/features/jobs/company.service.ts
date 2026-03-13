@@ -15,15 +15,15 @@ export async function getCompanies(filters?: { search?: string; page?: number; l
   };
 }
 
-export async function getCompanyBySlug(slug: string) {
+export async function getCompanyBySlug(_slug: string) {
   return null;
 }
 
-export async function getCompanyJobs(companyId: string) {
+export async function getCompanyJobs(_companyId: string) {
   return [];
 }
 
-export async function createCompany(data: {
+export async function createCompany(_data: {
   name: string;
   description?: string;
   website?: string;
@@ -36,8 +36,8 @@ export async function createCompany(data: {
 }
 
 export async function updateCompany(
-  companyId: string,
-  data: {
+  _companyId: string,
+  _data: {
     name?: string;
     description?: string;
     website?: string;
@@ -45,16 +45,16 @@ export async function updateCompany(
     industry?: string;
     location?: string;
     size?: string;
-  }
+  },
 ) {
   return null;
 }
 
-export async function deleteCompany(companyId: string) {
+export async function deleteCompany(_companyId: string) {
   return null;
 }
 
-export async function getCompanyStats(companyId: string) {
+export async function getCompanyStats(_companyId: string) {
   return {
     jobCount: 0,
     applicationCount: 0,

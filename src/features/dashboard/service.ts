@@ -67,12 +67,21 @@ export async function getStudentApplications(userId: string, options?: { jobsLim
   };
 }
 
+async function safeCount<T>(label: string, action: () => Promise<T>): Promise<T | 0> {
+  try {
+    return await action();
+  } catch (error) {
+    console.error(`[Dashboard] Failed to load ${label} count`, error);
+    return 0;
+  }
+}
+
 export async function getDashboardSummary(userId: string) {
   const [enrollmentsCount, resumesCount, jobApplicationsCount, volunteerApplicationsCount] = await Promise.all([
-    prisma.enrollment.count({ where: { userId } }),
-    prisma.resume.count({ where: { userId } }),
-    prisma.jobApplication.count({ where: { userId } }),
-    prisma.volunteerApplication.count({ where: { userId } }),
+    safeCount("enrollments", () => prisma.enrollment.count({ where: { userId } })),
+    safeCount("resumes", () => prisma.resume.count({ where: { userId } })),
+    safeCount("job applications", () => prisma.jobApplication.count({ where: { userId } })),
+    safeCount("volunteer applications", () => prisma.volunteerApplication.count({ where: { userId } })),
   ]);
 
   return {

@@ -18,19 +18,32 @@ const ChatThreadSchema = z.object({
   createdAt: z.string(),
 });
 
+const ChatAttachmentSchema = z.record(z.string(), z.unknown());
+
 const ChatMessageSchema = z.object({
   id: z.string(),
   content: z.string(),
   authorId: z.string(),
   createdAt: z.string(),
-  attachments: z.array(z.record(z.any())).optional(),
+  attachments: z.array(ChatAttachmentSchema).optional(),
   parentId: z.string().nullable(),
   mentionUserIds: z.array(z.string()).optional(),
+});
+
+const ChatNotificationSchema = z.object({
+  id: z.string(),
+  threadId: z.string().nullable(),
+  messageId: z.string().nullable().optional(),
+  type: z.string(),
+  seenAt: z.string().nullable().optional(),
+  createdAt: z.string(),
 });
 
 export type ChatSpace = z.infer<typeof ChatSpaceSchema>;
 export type ChatThread = z.infer<typeof ChatThreadSchema>;
 export type ChatMessage = z.infer<typeof ChatMessageSchema>;
+export type ChatAttachment = z.infer<typeof ChatAttachmentSchema>;
+export type ChatNotification = z.infer<typeof ChatNotificationSchema>;
 
 async function fetcher<T>(url: string): Promise<T> {
   const res = await fetch(url, { credentials: "include" });
@@ -97,7 +110,7 @@ export function useChatMessages(threadId: string | null) {
 export function useSendChatMessage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { threadId: string; content: string; attachments?: any[]; parentId?: string; mentionUserIds?: string[] }) =>
+    mutationFn: (body: { threadId: string; content: string; attachments?: ChatAttachment[]; parentId?: string; mentionUserIds?: string[] }) =>
       poster<{ message: ChatMessage }, typeof body>("/api/chat/messages", body),
     onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["chat", "messages", vars.threadId] }),
   });
@@ -114,7 +127,7 @@ export function useChatNotifications(includeSeen = false) {
   return useQuery({
     queryKey: ["chat", "notifications", includeSeen],
     queryFn: () =>
-      fetcher<{ notifications: any[] }>(`/api/chat/notifications?includeSeen=${includeSeen}`),
+      fetcher<{ notifications: ChatNotification[] }>(`/api/chat/notifications?includeSeen=${includeSeen}`),
     select: (d) => d.notifications,
   });
 }
@@ -123,7 +136,7 @@ export function useMarkNotificationsSeen() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (notificationIds: string[]) =>
-      poster<{ result: any }, { notificationIds: string[] }>("/api/chat/notifications", {
+      poster<{ result: Record<string, unknown> }, { notificationIds: string[] }>("/api/chat/notifications", {
         notificationIds,
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["chat", "notifications"] }),

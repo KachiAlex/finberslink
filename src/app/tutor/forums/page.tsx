@@ -9,6 +9,8 @@ import { requireSession } from "@/lib/auth/session";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+type ForumThread = Awaited<ReturnType<typeof listForumThreads>> extends Array<infer T> ? T : never;
+
 export default async function TutorForumsPage() {
   await requireSession({
     allowedRoles: ["TUTOR"],
@@ -16,7 +18,7 @@ export default async function TutorForumsPage() {
     failureMode: "error",
   });
 
-  let threads: any[] = [];
+  let threads: ForumThread[] = [];
   let error: unknown = null;
 
   try {
@@ -60,7 +62,7 @@ export default async function TutorForumsPage() {
               <p className="text-sm text-slate-500">No threads yet.</p>
             ) : (
               <div className="space-y-2">
-                {threads.map((thread: any) => (
+                {threads.map((thread) => (
                   <div
                     key={thread.id}
                     className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700"

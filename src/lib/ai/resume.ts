@@ -1,11 +1,6 @@
-import OpenAI from "openai";
 import { z } from "zod";
 
-function getOpenAIClient() {
-  return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-}
+import { getOpenAIClient } from "@/lib/ai/client";
 
 export interface ResumeSummaryRequest {
   currentSummary?: string;
@@ -83,6 +78,26 @@ function parseStructuredResponse<T>(rawContent: string, schema: z.ZodType<T>, co
   return result.data;
 }
 
+function buildFallbackSummary(request: ResumeSummaryRequest) {
+  const roleLabel = request.targetRole?.trim() || "versatile professional";
+  const experienceHighlights = request.experience.filter(Boolean).slice(0, 2);
+  const skills = request.skills.filter(Boolean).slice(0, 5);
+
+  if (request.currentSummary?.trim()) {
+    return request.currentSummary.trim();
+  }
+
+  const sentences = [
+    `Results-driven ${roleLabel}${experienceHighlights.length ? " with" : " ready for"} ${
+      experienceHighlights.length ? experienceHighlights.join("; ") : "proven ability to deliver impact"
+    }`,
+    skills.length ? `Key strengths include ${skills.join(", ")}` : null,
+    "Committed to translating insights into measurable outcomes.",
+  ].filter(Boolean);
+
+  return sentences.join(". ");
+}
+
 export async function optimizeResumeSummary(request: ResumeSummaryRequest) {
   const { currentSummary, experience, skills, targetRole } = request;
 
@@ -123,10 +138,10 @@ Return only the optimized summary without any additional text.`;
       temperature: 0.7,
     });
 
-    return response.choices[0]?.message?.content?.trim() || "";
+    return response.choices[0]?.message?.content?.trim() || buildFallbackSummary(request);
   } catch (error) {
     console.error("Error optimizing resume summary:", error);
-    throw new Error("Failed to optimize resume summary");
+    return buildFallbackSummary(request);
   }
 }
 

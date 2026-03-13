@@ -1,5 +1,13 @@
 // Removed import of randomBytes; using fallback token generator
-import type { InviteStatus, JobType, Prisma, RemoteOption, Role, UserStatus } from "@prisma/client";
+import type {
+  InviteStatus,
+  JobApplicationStatus,
+  JobType,
+  Prisma,
+  RemoteOption,
+  Role,
+  UserStatus,
+} from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth/session";
@@ -778,7 +786,7 @@ export async function getUserById(userId: string) {
             },
           },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { submittedAt: "desc" },
         take: 5,
       },
     },
@@ -867,7 +875,61 @@ export async function getJobManagementSnapshot(admin?: AdminUserWithTenant) {
   };
 }
 
-export async function getAnalyticsOverview(admin?: AdminUserWithTenant) {
+export interface AdminAnalyticsOverview {
+  overview: {
+    totalUsers: number;
+    totalStudents: number;
+    totalTutors: number;
+    totalAdmins: number;
+    totalCourses: number;
+    totalEnrollments: number;
+    totalJobs: number;
+    totalApplications: number;
+    totalForumThreads: number;
+    totalForumPosts: number;
+    totalResumes: number;
+  };
+  metrics: {
+    completionRate: number;
+    placementRate: number;
+    recentEnrollments: number;
+    recentApplications: number;
+  };
+  topCourses: Array<{
+    id: string;
+    title: string;
+    category?: string | null;
+    _count?: {
+      enrollments?: number | null;
+    } | null;
+  }>;
+  recentUsers: Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: Role;
+    createdAt: Date;
+  }>;
+  courseCompletionStats: Array<{
+    status: string;
+    _count?: {
+      status?: number;
+    };
+  }>;
+  jobPlacementStats: Array<{
+    status: JobApplicationStatus;
+    _count?: {
+      status?: number;
+    };
+  }>;
+  userGrowthStats: Array<{
+    date: string;
+    users: number;
+  }>;
+}
+
+export async function getAnalyticsOverview(admin?: AdminUserWithTenant): Promise<AdminAnalyticsOverview> {
   const resolvedAdmin = await resolveAdmin(admin);
   const tenantUserWhere = buildUserTenantWhere(resolvedAdmin);
   const tenantJobWhere = buildJobTenantWhere(resolvedAdmin);
@@ -905,7 +967,7 @@ export async function getAnalyticsOverview(admin?: AdminUserWithTenant) {
     courseCompletionStats: [],
     jobPlacementStats: [],
     userGrowthStats: [],
-  };
+  } satisfies AdminAnalyticsOverview;
 }
 
 interface CreateJobInput {

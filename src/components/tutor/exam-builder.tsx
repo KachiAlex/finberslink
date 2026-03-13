@@ -26,7 +26,7 @@ export type ExamConfig = {
 
 type Props = {
   value: ExamConfig;
-  onChange: (config: ExamConfig) => void;
+  onChange: (_config: ExamConfig) => void;
   title?: string;
 };
 
@@ -37,12 +37,12 @@ export function TutorExamBuilder({ value, onChange, title = "Exam settings" }: P
 
   const handleAddModule = () => {
     if (!canAdd) return;
-    const module: ExamModule = {
+    const newModule: ExamModule = {
       id: crypto.randomUUID(),
       type: moduleType,
       prompt: modulePrompt.trim(),
     };
-    onChange({ ...value, modules: [...value.modules, module] });
+    onChange({ ...value, modules: [...value.modules, newModule] });
     setModulePrompt("");
   };
 

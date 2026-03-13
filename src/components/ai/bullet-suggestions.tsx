@@ -14,7 +14,7 @@ interface BulletSuggestion {
 
 interface BulletSuggestionsProps {
   suggestions: string[];
-  onAccept: (selectedBullets: string[]) => void;
+  onAccept: (_selectedBullets: string[]) => void;
   onReject: () => void;
   isLoading?: boolean;
 }
@@ -87,7 +87,7 @@ export function BulletSuggestions({
           AI-Generated Bullet Points
         </CardTitle>
         <p className="text-sm text-green-600">
-          Select the bullet points you'd like to include in your resume:
+          Select the bullet points you&apos;d like to include in your resume:
         </p>
       </CardHeader>
       <CardContent className="space-y-4">

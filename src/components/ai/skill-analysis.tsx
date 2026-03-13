@@ -15,7 +15,7 @@ interface SkillAnalysis {
 
 interface SkillAnalysisProps {
   analysis: SkillAnalysis;
-  onAccept: (selectedSkills: { hard: string[]; soft: string[]; suggested: string[] }) => void;
+  onAccept: (_selectedSkills: { hard: string[]; soft: string[]; suggested: string[] }) => void;
   onReject: () => void;
   isLoading?: boolean;
 }

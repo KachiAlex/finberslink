@@ -8,6 +8,11 @@ import {
   getTutorOfficeHours,
   getTutorForumThreads,
   listTutorExams,
+  type TutorCohort,
+  type PendingForumPost,
+  type TutorOfficeHourSession,
+  type TutorExam,
+  type ForumThreadWithFlags,
 } from "@/features/tutor/service";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { getUnreadCount } from "@/features/notifications/service";
@@ -25,12 +30,12 @@ export default async function TutorPage() {
   });
 
   let dashboardError: unknown = null;
-  let cohorts: any[] = [];
-  let pendingPosts: any[] = [];
-  let officeHours: any[] = [];
+  let cohorts: TutorCohort[] = [];
+  let pendingPosts: PendingForumPost[] = [];
+  let officeHours: TutorOfficeHourSession[] = [];
   let unreadCount = 0;
-  let exams: any[] = [];
-  let forumThreads: any[] = [];
+  let exams: TutorExam[] = [];
+  let forumThreads: ForumThreadWithFlags[] = [];
 
   try {
     [cohorts, pendingPosts, officeHours, unreadCount, exams, forumThreads] = await Promise.all([
@@ -54,6 +59,11 @@ export default async function TutorPage() {
         <p className="text-xs text-red-600">We couldn’t load this section. Try reloading.</p>
       </div>
     );
+  };
+
+  const formatDate = (value: Date | string) => {
+    const date = typeof value === "string" ? new Date(value) : value;
+    return `${date.toLocaleDateString()} · ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
   };
 
   return (
@@ -91,7 +101,7 @@ export default async function TutorPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {cohorts.map((course: any) => (
+                  {cohorts.map((course) => (
                     <div key={course.id} className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold text-slate-900">{course.title}</h3>
@@ -122,19 +132,23 @@ export default async function TutorPage() {
                 <p className="text-sm text-slate-500">No pending posts.</p>
               ) : (
                 <div className="space-y-3">
-                  {pendingPosts.slice(0, 5).map((post: any) => (
-                    <div key={post.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 truncate">{post.title}</p>
-                        <p className="text-xs text-slate-500">
-                          {post.author.firstName} {post.author.lastName} · {post.course.title}
-                        </p>
+                  {pendingPosts.slice(0, 5).map((post) => {
+                    const authorName = [post.author?.firstName, post.author?.lastName].filter(Boolean).join(" ") || "Unknown";
+                    const courseLabel = post.course?.title ?? "Course";
+                    return (
+                      <div key={post.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">{post.title}</p>
+                          <p className="text-xs text-slate-500">
+                            {authorName} · {courseLabel}
+                          </p>
+                        </div>
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link href={`/tutor/forum/${post.id}`}>Review</Link>
+                        </Button>
                       </div>
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/tutor/forum/${post.id}`}>Review</Link>
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {pendingPosts.length > 5 && (
                     <Button variant="ghost" size="sm" className="w-full">
                       View all {pendingPosts.length} pending posts
@@ -167,7 +181,7 @@ export default async function TutorPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {exams.slice(0, 5).map((exam: any) => {
+                {exams.slice(0, 5).map((exam) => {
                   const statusColor =
                     exam.status === "APPROVED"
                       ? "bg-emerald-50 text-emerald-700"
@@ -221,12 +235,10 @@ export default async function TutorPage() {
               <p className="text-sm text-slate-500">No office hours scheduled.</p>
             ) : (
               <div className="space-y-4">
-                {officeHours.slice(0, 3).map((session: any) => (
+                {officeHours.slice(0, 3).map((session) => (
                   <div key={session.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-3">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {session.startTime.toLocaleDateString()} · {session.startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </p>
+                      <p className="text-sm font-semibold text-slate-900">{formatDate(session.startTime)}</p>
                       <p className="text-xs text-slate-500">
                         {session.bookings.length} student{session.bookings.length !== 1 ? "s" : ""} booked
                       </p>
@@ -273,7 +285,7 @@ export default async function TutorPage() {
                 <p className="text-sm text-slate-500">No recent threads.</p>
               ) : (
                 <div className="space-y-2">
-                  {forumThreads.map((thread: any) => (
+                  {forumThreads.map((thread) => (
                     <div
                       key={thread.id}
                       className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700"

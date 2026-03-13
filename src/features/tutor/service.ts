@@ -3,6 +3,19 @@ import { CourseLevel, ExamStatus, ExamType, LessonFormat, Prisma, ResourceType }
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
 
+export type PendingForumPost = {
+  id: string;
+  title: string;
+  author?: { firstName?: string | null; lastName?: string | null } | null;
+  course?: { title?: string | null } | null;
+};
+
+export type TutorOfficeHourSession = {
+  id: string;
+  startTime: Date | string;
+  bookings: { id: string }[];
+};
+
 export type TutorExam = {
   id: string;
   title: string;
@@ -11,7 +24,16 @@ export type TutorExam = {
   updatedAt: string;
 };
 
-export async function getTutorCohorts(tutorId: string) {
+export type TutorCohort = {
+  id: string;
+  title: string;
+  category: string | null;
+  slug: string;
+  lessons: { id: string }[];
+  enrollments: { id: string }[];
+};
+
+export async function getTutorCohorts(tutorId: string): Promise<TutorCohort[]> {
   const courses = await prisma.course.findMany({
     where: { instructorId: tutorId },
     select: {
@@ -32,17 +54,17 @@ export async function getTutorCohorts(tutorId: string) {
   }));
 }
 
-export async function getPendingForumPosts(_tutorId: string) {
+export async function getPendingForumPosts(_tutorId: string): Promise<PendingForumPost[]> {
   // TODO: Implement once forum moderation endpoints are wired.
   return [];
 }
 
-export async function getTutorOfficeHours(_tutorId: string) {
+export async function getTutorOfficeHours(_tutorId: string): Promise<TutorOfficeHourSession[]> {
   // TODO: Implement OfficeHour model and fetch upcoming sessions.
   return [];
 }
 
-type ForumThreadWithFlags = Prisma.ForumThreadGetPayload<{
+export type ForumThreadWithFlags = Prisma.ForumThreadGetPayload<{
   include: {
     course: { select: { id: true; title: true } };
     author: { select: { firstName: true; lastName: true } };

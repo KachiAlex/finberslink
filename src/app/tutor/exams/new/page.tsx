@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Plus, ArrowLeft } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,21 @@ type ExamModule = {
 
 type TargetChoice = { courseId: string; sectionId?: string; kind: "SECTION" | "FINAL" };
 type CourseOption = { id: string; title: string; sections: string[] };
+
+type TutorCohortResponse = {
+  cohorts?: Array<{
+    id: string;
+    title: string;
+    lessons?: Array<{ title?: string | null } | null> | null;
+  }>;
+};
+
+type ExamApiResponse = {
+  exam?: { id?: string | null } | null;
+  error?: string;
+};
+
+const getErrorMessage = (err: unknown, fallback: string) => (err instanceof Error ? err.message : fallback);
 
 export default function NewExamPage() {
   const [courses, setCourses] = useState<CourseOption[]>([]);
@@ -39,11 +54,11 @@ export default function NewExamPage() {
       try {
         const res = await fetch("/api/tutor/cohorts");
         if (!res.ok) throw new Error("Failed to load courses");
-        const data = await res.json();
-        const normalized: CourseOption[] = (data.cohorts ?? []).map((c: any) => ({
+               const data: TutorCohortResponse = await res.json();
+        const normalized: CourseOption[] = (data.cohorts ?? []).map((c) => ({
           id: c.id,
           title: c.title,
-          sections: (c.lessons ?? []).map((l: any, idx: number) => l.title ?? `Section ${idx + 1}`),
+          sections: (c.lessons ?? []).map((lesson, idx: number) => lesson?.title ?? `Section ${idx + 1}`),
         }));
         setCourses(normalized);
         if (normalized.length > 0) {
@@ -53,8 +68,8 @@ export default function NewExamPage() {
             kind: "SECTION",
           });
         }
-      } catch (err: any) {
-        setError(err.message ?? "Failed to load courses");
+      } catch (err) {
+        setError(getErrorMessage(err, "Failed to load courses"));
       } finally {
         setLoadingCourses(false);
       }
@@ -101,12 +116,12 @@ export default function NewExamPage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        const data = await res.json();
+        const data: ExamApiResponse = await res.json();
         throw new Error(data.error ?? "Failed to save draft");
       }
       setSuccess("Draft saved. You can submit for approval from the dashboard.");
-    } catch (err: any) {
-      setError(err.message ?? "Failed to save draft");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to save draft"));
     } finally {
       setSaving(false);
     }
@@ -124,22 +139,22 @@ export default function NewExamPage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        const data = await res.json();
+        const data: ExamApiResponse = await res.json();
         throw new Error(data.error ?? "Failed to create exam");
       }
-      const data = await res.json();
+      const data: ExamApiResponse = await res.json();
       const examId = data.exam?.id;
       if (!examId) {
         throw new Error("Exam created but ID missing");
       }
       const submitRes = await fetch(`/api/tutor/exams/${examId}/submit`, { method: "POST" });
       if (!submitRes.ok) {
-        const errData = await submitRes.json();
+        const errData: ExamApiResponse = await submitRes.json();
         throw new Error(errData.error ?? "Failed to submit for approval");
       }
       setSuccess("Exam submitted for admin approval.");
-    } catch (err: any) {
-      setError(err.message ?? "Failed to submit exam");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to submit exam"));
     } finally {
       setSubmitting(false);
     }

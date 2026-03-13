@@ -1,3 +1,4 @@
+import type { JobApplicationStatus } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Mail, Phone, MapPin, FileText, CheckCircle, XCircle, Clock } from "lucide-react";
 import Link from "next/link";
@@ -8,9 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getJobById, getJobApplicationsForAdmin, updateJobApplicationStatus } from "@/features/jobs/service";
 import { AdminShell } from "../../../_components/admin-shell";
 
-type JobApplicationStatus = 'SUBMITTED' | 'REVIEWING' | 'INTERVIEW' | 'OFFER' | 'REJECTED';
-
-const JobApplicationStatusValues = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'REJECTED'] as const;
+const JOB_APPLICATION_STATUS_VALUES: JobApplicationStatus[] = [
+  "SUBMITTED",
+  "REVIEWING",
+  "INTERVIEW",
+  "OFFER",
+  "REJECTED",
+];
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,7 +26,7 @@ const statusColors = {
   INTERVIEW: "bg-indigo-100 text-indigo-800",
   OFFER: "bg-green-100 text-green-800",
   REJECTED: "bg-red-100 text-red-800",
-};
+} satisfies Record<JobApplicationStatus, string>;
 
 const statusIcons = {
   SUBMITTED: Clock,
@@ -29,7 +34,9 @@ const statusIcons = {
   INTERVIEW: CheckCircle,
   OFFER: CheckCircle,
   REJECTED: XCircle,
-};
+} satisfies Record<JobApplicationStatus, typeof Clock>;
+
+type AdminJobApplication = Awaited<ReturnType<typeof getJobApplicationsForAdmin>>[number];
 
 async function updateApplicationStatusAction(formData: FormData) {
   "use server";
@@ -37,7 +44,7 @@ async function updateApplicationStatusAction(formData: FormData) {
   const applicationId = String(formData.get("applicationId")).trim();
   const newStatus = String(formData.get("status")).trim() as JobApplicationStatus;
 
-  if (!applicationId || !newStatus) {
+  if (!applicationId || !JOB_APPLICATION_STATUS_VALUES.includes(newStatus)) {
     return;
   }
 
@@ -51,9 +58,9 @@ async function updateApplicationStatusAction(formData: FormData) {
 export default async function JobApplicantsPage({
   params,
 }: {
-  params: Promise<{ jobId: string }>;
+  params: { jobId: string };
 }) {
-  const { jobId } = await params;
+  const { jobId } = params;
   const [job, applications] = await Promise.all([
     getJobById(jobId),
     getJobApplicationsForAdmin(jobId),
@@ -63,7 +70,7 @@ export default async function JobApplicantsPage({
     notFound();
   }
 
-  const statusOptions = JobApplicationStatusValues;
+  const statusOptions = JOB_APPLICATION_STATUS_VALUES;
 
   return (
     <div className="space-y-6">
@@ -94,19 +101,19 @@ export default async function JobApplicantsPage({
               <div>
                 <div className="text-sm text-gray-600">Under Review</div>
                 <div className="text-2xl font-bold">
-                  {applications.filter((a: any) => a.status === "REVIEWING").length}
+                  {applications.filter((application) => application.status === "REVIEWING").length}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">Interviews</div>
                 <div className="text-2xl font-bold">
-                  {applications.filter((a: any) => a.status === "INTERVIEW").length}
+                  {applications.filter((application) => application.status === "INTERVIEW").length}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">Offers</div>
                 <div className="text-2xl font-bold">
-                  {applications.filter((a: any) => a.status === "OFFER").length}
+                  {applications.filter((application) => application.status === "OFFER").length}
                 </div>
               </div>
             </div>
@@ -116,8 +123,8 @@ export default async function JobApplicantsPage({
         {/* Applications List */}
         {applications.length > 0 ? (
           <div className="space-y-4">
-            {applications.map((application: any) => {
-              const StatusIcon = statusIcons[application.status as JobApplicationStatus];
+            {applications.map((application: AdminJobApplication) => {
+              const StatusIcon = statusIcons[application.status];
               
               return (
                 <Card key={application.id}>

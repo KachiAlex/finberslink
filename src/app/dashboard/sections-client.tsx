@@ -32,6 +32,7 @@ interface EnrollmentSection {
   id: string;
   progressPercentage?: number | null;
   course: {
+    id: string;
     title: string;
     slug?: string | null;
     level?: string | null;
@@ -286,7 +287,7 @@ export function DashboardSectionsClient() {
 
   return (
     <section className="space-y-8">
-      <GlassCard variant="frosted" className="p-6">
+      <GlassCard variant="gradient" className="p-6">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="lg:w-2/3">
             <p className="text-xs uppercase tracking-[0.45em] text-slate-400">Guidance</p>
@@ -307,67 +308,67 @@ export function DashboardSectionsClient() {
 
       <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
         <GlassCard variant="bordered" className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Learning arc</p>
-            <h2 className="mt-2 text-2xl font-semibold text-slate-900">My courses</h2>
-            <p className="text-slate-600">Cohorts currently shaping your skill trajectory</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Learning arc</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-900">My courses</h2>
+              <p className="text-slate-600">Cohorts currently shaping your skill trajectory</p>
+            </div>
+            <Button variant="outline" asChild className="rounded-full border-slate-200 text-slate-700 hover:bg-slate-100">
+              <Link href="/courses">Explore tracks</Link>
+            </Button>
           </div>
-          <Button variant="outline" asChild className="rounded-full border-slate-200 text-slate-700 hover:bg-slate-100">
-            <Link href="/courses">Explore tracks</Link>
-          </Button>
-        </div>
 
-        <div className="mt-8 space-y-4">
-          <SectionError message={errors?.enrollments} />
-          {loading && renderSkeletonEntries(3)}
-          {!loading && data?.enrollments && data.enrollments.length === 0 && (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
-              <p className="text-sm text-slate-600">
-                No active cohorts. Jump into a new discipline to unlock premium tracks.
-              </p>
-              <Button size="sm" asChild>
-                <Link href="/courses">Browse courses</Link>
-              </Button>
-            </div>
-          )}
-          {!loading && data?.enrollments && data.enrollments.length > 0 && (
-            <div className="space-y-4">
-              {data.enrollments.map((enrollment) => (
-                <div
-                  key={enrollment.id}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4"
-                >
-                  <div>
-                    <p className="text-base font-semibold text-slate-900">{enrollment.course.title}</p>
-                    <p className="text-xs uppercase tracking-wide text-slate-400">
-                      {enrollment.course.level?.toLowerCase() ?? "self-paced"}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500 line-clamp-1">
-                      {enrollment.course.tagline ?? "Continue your momentum"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      <ProgressRing value={enrollment.progressPercentage ?? 0} />
-                      <span className="text-sm font-medium text-slate-600">
-                        {enrollment.progressPercentage ?? 0}% mastery
-                      </span>
+          <div className="mt-8 space-y-4">
+            <SectionError message={errors?.enrollments} />
+            {loading && renderSkeletonEntries(3)}
+            {!loading && data?.enrollments && data.enrollments.length === 0 && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+                <p className="text-sm text-slate-600">
+                  No active cohorts. Jump into a new discipline to unlock premium tracks.
+                </p>
+                <Button size="sm" asChild>
+                  <Link href="/courses">Browse courses</Link>
+                </Button>
+              </div>
+            )}
+            {!loading && data?.enrollments && data.enrollments.length > 0 && (
+              <div className="space-y-4">
+                {data.enrollments.map((enrollment) => (
+                  <div
+                    key={enrollment.id}
+                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4"
+                  >
+                    <div>
+                      <p className="text-base font-semibold text-slate-900">{enrollment.course.title}</p>
+                      <p className="text-xs uppercase tracking-wide text-slate-400">
+                        {enrollment.course.level?.toLowerCase() ?? "self-paced"}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500 line-clamp-1">
+                        {enrollment.course.tagline ?? "Continue your momentum"}
+                      </p>
                     </div>
-                    <Button size="sm" asChild className="rounded-full">
-                      <Link href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}>
-                        Continue
-                      </Link>
-                    </Button>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
+                        <ProgressRing value={enrollment.progressPercentage ?? 0} />
+                        <span className="text-sm font-medium text-slate-600">
+                          {enrollment.progressPercentage ?? 0}% mastery
+                        </span>
+                      </div>
+                      <Button size="sm" asChild className="rounded-full">
+                        <Link href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}>
+                          Continue
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </GlassCard>
+                ))}
+              </div>
+            )}
+          </div>
+        </GlassCard>
 
-      <div className="space-y-8">
+        <div className="space-y-8">
         <GlassCard variant="bordered" className="p-6">
           <div className="flex items-start justify-between">
             <div>
@@ -540,6 +541,7 @@ export function DashboardSectionsClient() {
           </div>
         </GlassCard>
       </div>
-    </section>
+    </div>
+  </section>
   );
 }

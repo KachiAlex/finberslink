@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createCourse, listCourses } from "@/features/admin/service";
+import { createCourse, listAdminCourses } from "@/features/admin/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
 
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const courses = await listCourses();
+    const courses = await listAdminCourses();
     return NextResponse.json({ courses });
   } catch (error) {
     console.error("Admin courses fetch error:", error);

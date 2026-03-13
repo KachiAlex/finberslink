@@ -48,14 +48,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         ) : results.length === 0 ? (
           <Card className="border border-slate-200/70 bg-white/95">
             <CardContent className="py-12 text-center">
-              <p className="text-sm text-slate-500">No results found for "{query}".</p>
+              <p className="text-sm text-slate-500">No results found for &quot;{query}&quot;.</p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900">
-                Results for "{query}"
+                Results for &quot;{query}&quot;
               </h2>
               <Badge variant="outline">{results.length} results</Badge>
             </div>

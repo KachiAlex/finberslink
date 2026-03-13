@@ -46,6 +46,7 @@ model User {
   volunteerApps                VolunteerApplication[]
   volunteerOpportunitiesPosted VolunteerOpportunity[] @relation("VolunteerPostedBy")
   interviewSessions            InterviewSession[]
+  passwordResetTokens          PasswordResetToken[]
 }
 
 model Profile {
@@ -316,6 +317,18 @@ model JobOpportunity {
   postedBy         User?            @relation("JobPostedBy", fields: [postedById], references: [id])
   saves            JobSave[]
   interviewSessions InterviewSession[]
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
 }
 
 model JobApplication {

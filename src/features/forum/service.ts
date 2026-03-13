@@ -153,7 +153,7 @@ export async function getForumThreadById(id: string) {
         },
       },
     },
-  } as any);
+  });
 }
 
 type CreateForumPostInput = {
@@ -213,10 +213,9 @@ export async function createForumPost(input: CreateForumPostInput) {
   });
 
   const mentionUserIds = input.mentions && input.mentions.length > 0 ? await resolveMentionHandles(input.mentions) : [];
-  const mentionClient = (prisma as any).threadMention;
   const mentionCreate =
     mentionUserIds.length > 0
-      ? mentionClient?.createMany({
+      ? prisma.threadMention.createMany({
           data: mentionUserIds.map((userId) => ({
             userId,
             threadId: input.threadId,

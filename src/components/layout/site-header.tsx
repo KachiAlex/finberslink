@@ -87,7 +87,7 @@ function MobileNav({
 }: {
   className?: string;
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (_open: boolean) => void;
   pathname: string | null;
 }) {
   return (

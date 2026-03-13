@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 
 type VolunteerFilters = {
@@ -11,7 +13,7 @@ type VolunteerFilters = {
 export async function listVolunteerOpportunities(filters: VolunteerFilters = {}) {
   const { search, location, country, remoteOnly, limit = 12 } = filters;
 
-  const where: any = {};
+  const where: Prisma.VolunteerOpportunityWhereInput = {};
 
   if (remoteOnly) {
     where.isRemote = true;

@@ -31,3 +31,35 @@ export async function createUser(input: CreateUserInput) {
     },
   });
 }
+
+export async function updateUserPassword(userId: string, passwordHash: string) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash },
+  });
+}
+
+export async function deletePasswordResetTokensForUser(userId: string) {
+  return prisma.passwordResetToken.deleteMany({ where: { userId } });
+}
+
+export async function createPasswordResetToken(userId: string, token: string, expiresAt: Date) {
+  return prisma.passwordResetToken.create({
+    data: {
+      token,
+      userId,
+      expiresAt,
+    },
+  });
+}
+
+export async function findPasswordResetToken(token: string) {
+  return prisma.passwordResetToken.findUnique({ where: { token } });
+}
+
+export async function markPasswordResetTokenUsed(tokenId: string) {
+  return prisma.passwordResetToken.update({
+    where: { id: tokenId },
+    data: { consumedAt: new Date() },
+  });
+}

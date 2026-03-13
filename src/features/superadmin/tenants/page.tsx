@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Ban,
@@ -160,23 +160,19 @@ export default function TenantsPage() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isAdminActioning, setIsAdminActioning] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTenants();
-  }, [filters]);
-
-  function showToast(message: string, variant: ToastVariant = "success") {
+  const showToast = useCallback((message: string, variant: ToastVariant = "success") => {
     const id = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}`;
     setToasts(prev => [...prev, { id, message, variant }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(toast => toast.id !== id));
     }, 4000);
-  }
+  }, []);
 
-  function dismissToast(id: string) {
+  const dismissToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
-  }
+  }, []);
 
-  async function loadTenants() {
+  const loadTenants = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -200,7 +196,13 @@ export default function TenantsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [filters, showToast]);
+
+  useEffect(() => {
+    loadTenants();
+  }, [loadTenants]);
+
+  // keep references stable for render
 
   async function refreshTenantDetail(tenantId: string) {
     try {

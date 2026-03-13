@@ -20,10 +20,17 @@ type Thread = {
   mentions?: boolean;
 };
 
+type ThreadFilter = "all" | "unread" | "mentions";
+
+type UnreadCountResponse = { count?: number } | null;
+type ThreadsResponse = { threads?: Thread[] } | null;
+
+const getErrorMessage = (err: unknown, fallback: string) => (err instanceof Error ? err.message : fallback);
+
 export default function TutorMessagesPage() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [filter, setFilter] = useState<"all" | "unread" | "mentions">("all");
+  const [filter, setFilter] = useState<ThreadFilter>("all");
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -36,16 +43,15 @@ export default function TutorMessagesPage() {
           fetch("/api/tutor/forum-threads"),
         ]);
         if (unreadRes.ok) {
-          const data = await unreadRes.json();
-          setUnreadCount(data.count ?? 0);
+          const data = (await unreadRes.json()) as UnreadCountResponse;
+          setUnreadCount(data?.count ?? 0);
         }
         if (threadsRes.ok) {
-          const data = await threadsRes.json();
-          const forumThreads = (data?.threads ?? []) as Thread[];
-          setThreads(forumThreads);
+          const data = (await threadsRes.json()) as ThreadsResponse;
+          setThreads(data?.threads ?? []);
         }
-      } catch (err: any) {
-        setError(err.message ?? "Failed to load messages");
+      } catch (err) {
+        setError(getErrorMessage(err, "Failed to load messages"));
       }
     };
     fetchData();
@@ -57,7 +63,7 @@ export default function TutorMessagesPage() {
       setThreads((prev) =>
         prev.map((t) => (t.id === threadId ? { ...t, unread: false } : t))
       );
-    } catch (err) {
+    } catch (_err) {
       // ignore read marking failure
     } finally {
       router.push(`/forum/thread/${threadId}`);
@@ -111,7 +117,7 @@ export default function TutorMessagesPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="w-full sm:w-auto">
+              <Tabs value={filter} onValueChange={(v) => setFilter(v as ThreadFilter)} className="w-full sm:w-auto">
                 <TabsList>
                   <TabsTrigger value="all">All</TabsTrigger>
                   <TabsTrigger value="unread">Unread</TabsTrigger>
