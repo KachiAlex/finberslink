@@ -59,10 +59,11 @@ const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(date));
 
 export default async function AdminOverviewPage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams?: { courseStatus?: string };
+  searchParams?: Promise<{ courseStatus?: string }>;
 }) {
+  const searchParams = await searchParamsPromise;
   let dashboard;
   let dashboardError: unknown = null;
   try {

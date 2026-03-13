@@ -113,20 +113,35 @@ export async function requireAdminUser(
 }
 
 export async function getTenantAdminDashboard(admin?: AdminUserWithTenant) {
-  const resolvedAdmin = await resolveAdmin(admin);
-  const tenantUserWhere = buildUserTenantWhere(resolvedAdmin);
+  try {
+    const resolvedAdmin = await resolveAdmin(admin);
+    const tenantUserWhere = buildUserTenantWhere(resolvedAdmin);
 
-  const [overview, courseSnapshot, tutorCount] = await Promise.all([
-    getAdminOverview(resolvedAdmin),
-    getCourseManagementSnapshot(resolvedAdmin),
-    prisma.user.count({ where: { role: 'TUTOR', ...tenantUserWhere } }),
-  ]);
+    const [overview, courseSnapshot, tutorCount] = await Promise.all([
+      getAdminOverview(resolvedAdmin),
+      getCourseManagementSnapshot(resolvedAdmin),
+      prisma.user.count({ where: { role: 'TUTOR', ...tenantUserWhere } }),
+    ]);
 
-  return {
-    overview,
-    courseSnapshot,
-    tutorCount,
-  };
+    return {
+      overview,
+      courseSnapshot,
+      tutorCount,
+    };
+  } catch (error) {
+    console.error("Error loading admin dashboard:", error);
+    // Return empty data structure on error
+    return {
+      overview: {
+        stats: { courses: 0, students: 0, jobs: 0, enrollments: 0 },
+        recentCourses: [],
+        recentStudents: [],
+        recentJobs: [],
+      },
+      courseSnapshot: { totals: { totalCourses: 0, tutorLedCourses: 0, adminDrafts: 0 }, levelMap: {}, recentCourses: [] },
+      tutorCount: 0,
+    };
+  }
 }
 
 export async function getAdminOverview(admin?: AdminUserWithTenant) {
