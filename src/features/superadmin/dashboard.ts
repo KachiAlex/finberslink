@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getSuperAdminOverview() {
-  const [totalTenants, activeTenants, suspendedTenants, totalUsers, recentTenants, renewals, usageSnapshots] =
-    await Promise.all([
-      prisma.tenant.count(),
+  try {
+    const [totalTenants, activeTenants, suspendedTenants, totalUsers, recentTenants, renewals, usageSnapshots] =
+      await Promise.all([
+        prisma.tenant.count(),
       prisma.tenant.count({ where: { status: "ACTIVE" } }),
       prisma.tenant.count({ where: { status: "SUSPENDED" } }),
       prisma.user.count(),
@@ -66,4 +67,19 @@ export async function getSuperAdminOverview() {
     renewals,
     usageSnapshots,
   };
+  } catch (error) {
+    console.error("Failed to load superadmin dashboard:", error);
+    // Return empty data structure on database error to prevent page crash
+    return {
+      stats: {
+        totalTenants: 0,
+        activeTenants: 0,
+        suspendedTenants: 0,
+        totalUsers: 0,
+      },
+      recentTenants: [],
+      renewals: [],
+      usageSnapshots: [],
+    };
+  }
 }

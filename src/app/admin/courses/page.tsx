@@ -21,6 +21,13 @@ import {
 
 import { AdminShell } from "../_components/admin-shell";
 
+type AdminCourse = Awaited<ReturnType<typeof listAdminCourses>>[number];
+type CourseSnapshot = Awaited<ReturnType<typeof getCourseManagementSnapshot>>;
+type SnapshotCourse = CourseSnapshot["recentCourses"][number];
+
+const formatShortDate = (date: Date | string) =>
+  new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(date));
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -125,10 +132,13 @@ export default async function AdminCoursesPage() {
                       <th className="pb-3">Created</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {courses.map((course: any) => {
+                          <tbody className="divide-y divide-slate-100">
+                    {courses.map((course: AdminCourse) => {
                       const levelLabel = (course.level ?? "BEGINNER").toString().toLowerCase();
                       const categoryLabel = course.category ?? "general";
+                      const instructorRoleLabel = course.instructor?.role === "TUTOR" ? "Tutor" : "Admin";
+                      const enrollmentCount = course._count?.enrollments ?? 0;
+
                       return (
                         <tr key={course.id} className="text-slate-700">
                           <td className="py-3">
@@ -139,17 +149,11 @@ export default async function AdminCoursesPage() {
                             <div className="text-sm font-medium">
                               {course.instructor?.firstName} {course.instructor?.lastName}
                             </div>
-                            <p className="text-xs text-slate-500">
-                              {course.instructor?.role === "TUTOR" ? "Tutor" : "Admin"} author
-                            </p>
+                            <p className="text-xs text-slate-500">{instructorRoleLabel} author</p>
                           </td>
                           <td className="capitalize">{levelLabel}</td>
-                          <td>{course._count?.enrollments || 0}</td>
-                          <td>
-                            {new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(
-                              new Date(course.createdAt),
-                            )}
-                          </td>
+                          <td>{enrollmentCount}</td>
+                          <td>{formatShortDate(course.createdAt)}</td>
                         </tr>
                       );
                     })}
@@ -263,7 +267,7 @@ export default async function AdminCoursesPage() {
               {snapshot.recentCourses.length === 0 && (
                 <p className="text-sm text-slate-500">No course launches yet.</p>
               )}
-              {snapshot.recentCourses.map((course) => (
+              {snapshot.recentCourses.map((course: SnapshotCourse) => (
                 <div
                   key={course.id}
                   className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
@@ -279,12 +283,7 @@ export default async function AdminCoursesPage() {
                       {course.category}
                     </Badge>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500">
-                    Published{" "}
-                    {new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(
-                      course.createdAt,
-                    )}
-                  </p>
+                  <p className="mt-2 text-xs text-slate-500">Published {formatShortDate(course.createdAt)}</p>
                 </div>
               ))}
             </CardContent>
