@@ -852,27 +852,29 @@ export default function TutorCourseCreatePage() {
                         </div>
                         {module.videoUrl?.trim() ? (
                           isVideoUrlValid(module.videoUrl) ? (
-                            isCloudinaryVideoUrl(module.videoUrl) ? (
-                              <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-black/60">
-                                <video
-                                  src={module.videoUrl}
-                                  controls
-                                  className="aspect-video w-full"
-                                />
-                              </div>
-                            ) : (
-                              <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-black/60">
-                                <div className="aspect-video w-full">
-                                  <iframe
-                                    src={toEmbedUrl(module.videoUrl)}
-                                    title={`${module.title} video`}
-                                    className="h-full w-full"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                  />
+                            <div className="mx-auto w-full max-w-xl">
+                              <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-950/70 p-2 shadow-sm">
+                                <div className="aspect-video overflow-hidden rounded-lg">
+                                  {isCloudinaryVideoUrl(module.videoUrl) ? (
+                                    <video
+                                      src={module.videoUrl}
+                                      controls
+                                      preload="metadata"
+                                      playsInline
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <iframe
+                                      src={toEmbedUrl(module.videoUrl)}
+                                      title={`${module.title} video`}
+                                      className="h-full w-full"
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                      allowFullScreen
+                                    />
+                                  )}
                                 </div>
                               </div>
-                            )
+                            </div>
                           ) : (
                             <p className="text-[11px] text-amber-600">
                               Enter an approved YouTube, Vimeo, or uploaded video link.
