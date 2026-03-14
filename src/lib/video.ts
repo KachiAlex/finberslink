@@ -1,8 +1,9 @@
 const YOUTUBE_DOMAINS = ["youtube.com", "youtu.be"];
 const VIMEO_DOMAINS = ["vimeo.com"];
+const GOOGLE_DRIVE_DOMAINS = ["drive.google.com", "docs.google.com"];
 const CLOUDINARY_DOMAIN = "res.cloudinary.com";
 
-const allowedHosts = [...YOUTUBE_DOMAINS, ...VIMEO_DOMAINS, CLOUDINARY_DOMAIN];
+const allowedHosts = [...YOUTUBE_DOMAINS, ...VIMEO_DOMAINS, ...GOOGLE_DRIVE_DOMAINS, CLOUDINARY_DOMAIN];
 
 const matchesHost = (host: string, domain: string) =>
   host === domain || host.endsWith(`.${domain}`);
@@ -18,7 +19,7 @@ const getHost = (url: string) => {
 
 export const isIframeVideoHost = (url: string) => {
   const host = getHost(url);
-  return [...YOUTUBE_DOMAINS, ...VIMEO_DOMAINS].some((domain) => matchesHost(host, domain));
+  return [...YOUTUBE_DOMAINS, ...VIMEO_DOMAINS, ...GOOGLE_DRIVE_DOMAINS].some((domain) => matchesHost(host, domain));
 };
 
 export const isCloudinaryVideoUrl = (url: string) => {
@@ -89,6 +90,26 @@ const buildVimeoEmbedUrl = (parsed: URL) => {
   return `https://player.vimeo.com/video/${videoId}`;
 };
 
+const extractGoogleDriveFileId = (parsed: URL) => {
+  const segments = parsed.pathname.split("/").filter(Boolean);
+  const fileIndex = segments.findIndex((segment, idx) => segment === "d" && segments[idx - 1] === "file");
+  if (fileIndex > -1 && segments[fileIndex + 1]) {
+    return segments[fileIndex + 1];
+  }
+  if (segments[0] === "file" && segments[1] === "d" && segments[2]) {
+    return segments[2];
+  }
+  const idFromParams = parsed.searchParams.get("id") || parsed.searchParams.get("fileId");
+  if (idFromParams) return idFromParams;
+  return null;
+};
+
+const buildGoogleDriveEmbedUrl = (parsed: URL) => {
+  const fileId = extractGoogleDriveFileId(parsed);
+  if (!fileId) return null;
+  return `https://drive.google.com/file/d/${fileId}/preview`;
+};
+
 const ensureHttpsProtocol = (parsed: URL) => {
   if (parsed.protocol !== "https:") {
     parsed.protocol = "https:";
@@ -109,6 +130,10 @@ export const toEmbedUrl = (url: string) => {
 
     if (VIMEO_DOMAINS.some((domain) => matchesHost(host, domain))) {
       return buildVimeoEmbedUrl(parsed) ?? ensureHttpsProtocol(parsed).toString();
+    }
+
+    if (GOOGLE_DRIVE_DOMAINS.some((domain) => matchesHost(host, domain))) {
+      return buildGoogleDriveEmbedUrl(parsed) ?? ensureHttpsProtocol(parsed).toString();
     }
 
     return ensureHttpsProtocol(parsed).toString();

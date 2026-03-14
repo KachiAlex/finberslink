@@ -104,13 +104,14 @@ const defaultExamConfig = (label: string): ExamConfig => ({
 });
 
 const normalizeVideoUrlForSave = (url?: string) => {
-  if (!url) return "";
+  if (!url) return undefined;
   const trimmed = url.trim();
-  if (!trimmed) return "";
+  if (!trimmed) return undefined;
+  if (!isVideoUrlValid(trimmed)) return undefined;
   if (isIframeVideoHost(trimmed)) {
     return toEmbedUrl(trimmed);
   }
-  return trimmed;
+  return toEmbedUrl(trimmed);
 };
 
 const createSectionDraft = (): SectionState["draft"] => ({
@@ -481,19 +482,24 @@ export default function TutorCourseCreatePage() {
         sections: sections.map((section, index) => ({
           title: section.title.trim(),
           order: index + 1,
-          modules: section.modules.map((module) => ({
-            title: module.title,
-            format: module.format,
-            durationMinutes: module.durationMinutes,
-            summary: module.summary ?? "",
-            videoUrl: module.format === "VIDEO" ? normalizeVideoUrlForSave(module.videoUrl) : undefined,
-            resources:
-              module.resources?.map((resource) => ({
-                title: resource.title,
-                type: resource.type,
-                url: resource.url,
-              })) ?? [],
-          })),
+          modules: section.modules.map((module) => {
+            const normalizedVideoUrl =
+              module.format === "VIDEO" ? normalizeVideoUrlForSave(module.videoUrl) : undefined;
+
+            return {
+              title: module.title,
+              format: module.format,
+              durationMinutes: module.durationMinutes,
+              summary: module.summary ?? "",
+              videoUrl: normalizedVideoUrl,
+              resources:
+                module.resources?.map((resource) => ({
+                  title: resource.title,
+                  type: resource.type,
+                  url: resource.url,
+                })) ?? [],
+            };
+          }),
           exam:
             section.examEnabled && section.exam.modules.length
               ? {
