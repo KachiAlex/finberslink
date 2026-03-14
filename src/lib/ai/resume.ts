@@ -17,6 +17,12 @@ export interface BulletPointRequest {
   targetRole?: string;
 }
 
+export interface AchievementGenerationRequest {
+  jobTitle: string;
+  industry?: string;
+  contextHighlights?: string[];
+}
+
 export interface SkillAnalysisRequest {
   experience: string[];
   targetRole?: string;
@@ -189,6 +195,57 @@ Format as a numbered list without any additional text.`;
   } catch (error) {
     console.error("Error generating bullet points:", error);
     throw new Error("Failed to generate bullet points");
+  }
+}
+
+export async function generateAchievementsFromContext(request: AchievementGenerationRequest) {
+  const { jobTitle, industry, contextHighlights = [] } = request;
+
+  const prompt = `Generate 4 concise, achievement-style resume bullets tailored for a ${jobTitle}${industry ? ` in the ${industry} industry` : ""}.
+
+Context:
+${contextHighlights.length ? contextHighlights.map((highlight, index) => `${index + 1}. ${highlight}`).join("\n") : "No additional context provided."}
+
+Requirements:
+1. Start each bullet with a strong action verb.
+2. Highlight measurable impact; invent reasonable metrics if none are provided.
+3. Keep each bullet under 22 words.
+4. Use language relevant to ${industry || "the role"}.
+5. Return plain bullets separated by new lines without numbering.`;
+
+  try {
+    const openai = getOpenAIClient();
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an expert resume coach that crafts quantified, achievement-driven bullets tuned for ATS screening.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.65,
+      max_tokens: 220,
+    });
+
+    const content = response.choices[0]?.message?.content?.trim() ?? "";
+    const bullets = content
+      .split("\n")
+      .map((line) => line.replace(/^[-•\d.\s]+/, "").trim())
+      .filter(Boolean);
+
+    if (bullets.length === 0) {
+      throw new Error("No achievements generated");
+    }
+
+    return bullets;
+  } catch (error) {
+    console.error("Error generating AI achievements:", error);
+    throw new Error("Failed to generate achievements");
   }
 }
 

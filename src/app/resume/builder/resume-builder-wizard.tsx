@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Loader2,
-  Sparkles,
-  Wand2,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Sparkles, Wand2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -52,6 +46,8 @@ const initialForm = {
   topSkillsInput: "",
   notableAchievements: "",
   summary: "",
+  aiJobTitle: "",
+  aiIndustry: "",
 };
 
 type FormState = typeof initialForm;
@@ -76,6 +72,8 @@ export function ResumeBuilderWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiStatus, setAiStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [aiMessage, setAiMessage] = useState<string | null>(null);
+  const [achievementStatus, setAchievementStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [achievementMessage, setAchievementMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -115,6 +113,47 @@ export function ResumeBuilderWizard() {
       console.error("AI summary error", err);
       setAiStatus("error");
       setAiMessage("We couldn't reach the AI right now. Try again in a bit.");
+    }
+  }
+
+  async function handleGenerateAchievements() {
+    if (!form.aiJobTitle.trim()) {
+      setAchievementStatus("error");
+      setAchievementMessage("Please provide a job title so AI knows what to target.");
+      return;
+    }
+
+    setAchievementStatus("loading");
+    setAchievementMessage("Asking AI to craft quantified achievements...");
+
+    try {
+      const response = await fetch("/api/resume/ai/achievements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobTitle: form.aiJobTitle.trim(),
+          industry: form.aiIndustry.trim() || form.targetIndustry.trim() || undefined,
+          experienceHighlights: splitByLines(form.notableAchievements),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("AI service returned an error");
+      }
+
+      const data = await response.json();
+      const bullets: string[] = Array.isArray(data.achievements) ? data.achievements : [];
+      if (!bullets.length) {
+        throw new Error("AI did not return any bullets");
+      }
+
+      handleFieldChange("notableAchievements", bullets.join("\n"));
+      setAchievementStatus("success");
+      setAchievementMessage("Achievements drafted. Feel free to edit them before continuing.");
+    } catch (err) {
+      console.error("AI achievements error", err);
+      setAchievementStatus("error");
+      setAchievementMessage("We couldn't generate achievements right now. Try again or tweak the inputs.");
     }
   }
 
@@ -311,6 +350,59 @@ export function ResumeBuilderWizard() {
                 onChange={(event) => handleFieldChange("notableAchievements", event.target.value)}
                 placeholder={"Share your proudest wins. One per line works great for the AI."}
               />
+              <div className="mt-4 space-y-3">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="ai-job-title">Role for AI</Label>
+                    <Input
+                      id="ai-job-title"
+                      value={form.aiJobTitle}
+                      onChange={(event) => handleFieldChange("aiJobTitle", event.target.value)}
+                      placeholder="e.g., Senior Product Manager"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ai-industry">Industry focus</Label>
+                    <Input
+                      id="ai-industry"
+                      value={form.aiIndustry}
+                      onChange={(event) => handleFieldChange("aiIndustry", event.target.value)}
+                      placeholder={form.targetIndustry || "e.g., Fintech"}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-slate-500">
+                    Provide the role and industry so AI can tailor quantified bullets for this experience.
+                  </p>
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={handleGenerateAchievements}
+                    disabled={achievementStatus === "loading"}
+                  >
+                    {achievementStatus === "loading" ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Generate achievements
+                  </Button>
+                </div>
+                {achievementMessage && (
+                  <p
+                    className={`text-sm ${
+                      achievementStatus === "error"
+                        ? "text-rose-600"
+                        : achievementStatus === "success"
+                          ? "text-emerald-600"
+                          : "text-slate-500"
+                    }`}
+                  >
+                    {achievementMessage}
+                  </p>
+                )}
+              </div>
             </div>
             <Separator />
             <div className="space-y-3">
