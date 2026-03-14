@@ -1,5 +1,6 @@
 // Removed import of randomBytes; using fallback token generator
 import type {
+  CourseApprovalStatus,
   InviteStatus,
   JobApplicationStatus,
   JobType,
@@ -375,6 +376,7 @@ export async function getCourseManagementSnapshot(admin?: AdminUserWithTenant) {
       level: course.level,
       category: course.category,
       createdAt: course.createdAt,
+      approvalStatus: course.approvalStatus,
       instructor: course.instructor
         ? {
             firstName: course.instructor.firstName,
@@ -384,6 +386,32 @@ export async function getCourseManagementSnapshot(admin?: AdminUserWithTenant) {
         : null,
     })),
   };
+}
+
+export async function updateCourseApprovalStatus(courseId: string, status: CourseApprovalStatus, admin?: AdminUserWithTenant) {
+  if (!courseId) {
+    throw new Error("Course ID is required");
+  }
+
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+
+  const course = await prisma.course.findFirst({
+    where: {
+      id: courseId,
+      ...tenantCourseWhere,
+    },
+    select: { id: true },
+  });
+
+  if (!course) {
+    throw new Error("Course not found or access denied");
+  }
+
+  return prisma.course.update({
+    where: { id: courseId },
+    data: { approvalStatus: status },
+  });
 }
 
 export async function listAdminCourses(admin?: AdminUserWithTenant) {

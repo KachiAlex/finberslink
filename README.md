@@ -79,6 +79,24 @@ npx prisma migrate dev
 npx prisma db seed
 ```
 
+#### Optional: Run PostgreSQL via Docker
+
+If you can’t reach the managed database, spin up a local instance instead:
+
+1. Copy the docker env template:
+   ```bash
+   cp env.docker .env
+   ```
+   (Adjust usernames/passwords/ports if needed.)
+2. Start Postgres:
+   ```bash
+   docker compose up -d postgres
+   ```
+3. Point Prisma at the Docker DB by exporting the same `DATABASE_URL` (already defined in `env.docker`).
+4. Re-run `npx prisma migrate dev` and `npx prisma db seed` against the new database.
+
+Use `docker compose down` to stop the container when you’re done, or add `-v` to wipe the volume.
+
 ### 4. Start Development Server
 
 ```bash

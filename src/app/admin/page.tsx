@@ -22,18 +22,19 @@ import { StatCard } from "@/components/ui/stat-card";
 import { getTenantAdminDashboard } from "@/features/admin/service";
 
 import { AdminShell } from "./_components/admin-shell";
+import { CourseActionButtons } from "./_components/course-action-buttons";
 
 type TenantDashboard = Awaited<ReturnType<typeof getTenantAdminDashboard>>;
 type CourseSnapshot = TenantDashboard["courseSnapshot"];
 type SnapshotCourse = CourseSnapshot["recentCourses"][number];
 type CourseApprovalStatus = "PENDING" | "APPROVED" | "CHANGES";
-type SnapshotCourseWithStatus = SnapshotCourse & { status?: CourseApprovalStatus | null };
+type SnapshotCourseWithStatus = SnapshotCourse & { approvalStatus?: CourseApprovalStatus | null };
 
 const COURSE_STATUS_OPTIONS: readonly CourseApprovalStatus[] = ["PENDING", "APPROVED", "CHANGES"] as const;
 const DEFAULT_COURSE_STATUS: CourseApprovalStatus = "PENDING";
 
 const getCourseStatus = (course: SnapshotCourseWithStatus): CourseApprovalStatus => {
-  const rawStatus = course.status?.toUpperCase() as CourseApprovalStatus | undefined;
+  const rawStatus = course.approvalStatus?.toUpperCase() as CourseApprovalStatus | undefined;
   if (rawStatus && COURSE_STATUS_OPTIONS.includes(rawStatus)) {
     return rawStatus;
   }
@@ -226,12 +227,7 @@ export default async function AdminOverviewPage({
                         <Badge variant="secondary" className={statusClass}>
                           {statusLabel}
                         </Badge>
-                        <Button size="sm" variant="outline">
-                          Approve
-                        </Button>
-                        <Button size="sm" variant="ghost" className="text-orange-600">
-                          Request edits
-                        </Button>
+                        <CourseActionButtons courseId={course.id} currentStatus={status} />
                       </div>
                     </div>
                   );

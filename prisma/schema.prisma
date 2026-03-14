@@ -71,6 +71,7 @@ model Course {
   level                CourseLevel
   category             String
   coverImage           String
+  approvalStatus       CourseApprovalStatus @default(PENDING)
   certificateAvailable Boolean       @default(false)
   instructorId         String
   createdAt            DateTime      @default(now())
@@ -772,6 +773,12 @@ enum InviteStatus {
   ACCEPTED
   EXPIRED
   CANCELLED
+}
+
+enum CourseApprovalStatus {
+  PENDING
+  APPROVED
+  CHANGES
 }
 
 enum ChatVisibility {
