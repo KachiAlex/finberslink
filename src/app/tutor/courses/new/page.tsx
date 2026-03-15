@@ -722,7 +722,7 @@ export default function TutorCourseCreatePage() {
                   ))}
                 </div>
               </div>
-              <div className="grid gap-2 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_120px_40px]">
+              <div className="grid gap-2 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_120px]">
                 <Input
                   value={section.draft.title}
                   onChange={(e) =>
@@ -755,23 +755,27 @@ export default function TutorCourseCreatePage() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={section.draft.summary}
+                  onChange={(e) =>
+                    updateSection(section.id, (prev) => ({ ...prev, draft: { ...prev.draft, summary: e.target.value } }))
+                  }
+                  placeholder="Optional summary"
+                  className="flex-1"
+                />
                 <Button
                   type="button"
                   aria-label="Add module"
                   disabled={!section.draft.title.trim()}
                   onClick={() => addModuleToSection(section.id)}
                   variant="outline"
+                  className="flex-shrink-0"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <Input
-                value={section.draft.summary}
-                onChange={(e) =>
-                  updateSection(section.id, (prev) => ({ ...prev, draft: { ...prev.draft, summary: e.target.value } }))
-                }
-                placeholder="Optional summary"
-              />
             </div>
             {section.modules.length === 0 ? (
               <p className="rounded border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">No modules yet.</p>

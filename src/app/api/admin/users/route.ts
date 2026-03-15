@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { listAllUsers } from "@/features/admin/service";
+import { listAllUsers, requireAdminUser } from "@/features/admin/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
 
@@ -33,7 +33,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const filters = ListUsersSchema.parse(Object.fromEntries(searchParams));
 
-    const result = await listAllUsers(filters);
+    const admin = await requireAdminUser(user.sub, { allowNoTenant: user.role === "SUPER_ADMIN" });
+
+    const result = await listAllUsers(filters, admin);
     return NextResponse.json(result);
   } catch (error) {
     console.error("Users fetch error:", error);
