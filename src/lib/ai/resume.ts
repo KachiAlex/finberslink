@@ -9,6 +9,190 @@ export interface ResumeSummaryRequest {
   targetRole?: string;
 }
 
+const ATS_FALLBACK_STOPWORDS = new Set([
+  "and",
+  "with",
+  "that",
+  "this",
+  "will",
+  "your",
+  "from",
+  "team",
+  "into",
+  "work",
+  "able",
+  "have",
+  "experience",
+  "skills",
+  "skill",
+  "role",
+  "job",
+  "description",
+  "company",
+  "about",
+  "need",
+  "must",
+  "responsibilities",
+  "requirements",
+]);
+
+function capitalize(word: string) {
+  if (!word) {
+    return word;
+  }
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
+function extractJobKeywords(text: string) {
+  const rawKeywords = text.match(/\b[a-z]{4,}\b/gi) ?? [];
+  return Array.from(
+    new Set(
+      rawKeywords
+        .map((keyword) => keyword.toLowerCase())
+        .filter((keyword) => !ATS_FALLBACK_STOPWORDS.has(keyword)),
+    ),
+  );
+}
+
+function buildFallbackATSAnalysis(request: ATSAnalysisRequest): ATSAnalysisResponse {
+  const jobKeywords = extractJobKeywords(request.jobDescription).slice(0, 16);
+  const resumeText = request.resumeContent.toLowerCase();
+
+  const strongMatches = jobKeywords
+    .filter((keyword) => resumeText.includes(keyword))
+    .map(capitalize)
+    .slice(0, 6);
+
+  const missingKeywords = jobKeywords
+    .filter((keyword) => !resumeText.includes(keyword))
+    .map(capitalize)
+    .slice(0, 6);
+
+  const coverage = strongMatches.length / Math.max(1, jobKeywords.length);
+  const matchScore = Math.min(92, Math.max(38, Math.round(coverage * 100)));
+
+  const recommendations = [
+    `Mirror the language around ${missingKeywords.slice(0, 2).join(" and ") || "key responsibilities"} in your summary and bullets.`,
+    "Elevate quantified achievements near the top of your experience section to boost relevance.",
+    "Align project highlights with the KPIs called out in the job description.",
+  ];
+
+  const improvements = [
+    missingKeywords.length
+      ? `Incorporate references to ${missingKeywords.slice(0, 3).join(", ")} to improve keyword coverage.`
+      : "Double-check the posting for emerging tools or workflows you can mention.",
+    "Tighten bullet points so each one leads with an action verb and metric.",
+    "Ensure your summary states the industries and team sizes you've impacted.",
+  ];
+
+  return {
+    matchScore,
+    missingKeywords: missingKeywords.length ? missingKeywords : ["Strategic Planning", "Stakeholder Management"],
+    strongMatches: strongMatches.length ? strongMatches : ["Cross-functional Collaboration", "Process Optimization"],
+    recommendations,
+    improvements,
+  };
+}
+
+function buildFallbackCoverLetter(resumeContent: string, jobDescription: string, companyName: string) {
+  const resumeLines = resumeContent.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const personaLine = resumeLines[1] ?? resumeLines[0] ?? "Seasoned professional";
+  const highlightLine = resumeLines.find((line) => line.includes("%") || line.includes("$")) ??
+    "Delivered measurable impact across cross-functional teams.";
+
+  const jobLines = jobDescription.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const roleGuess = jobLines[0]?.slice(0, 80) || "this opportunity";
+  const companyLabel = companyName || "your team";
+
+  return `Dear Hiring Manager at ${companyLabel},
+
+I am excited to express my interest in ${roleGuess}. Throughout my career as ${personaLine.toLowerCase()}, I have helped teams ship complex initiatives while keeping stakeholders aligned and informed.
+
+${highlightLine}
+
+The responsibilities outlined in the job description mirror the work I enjoy most: translating ambiguous goals into prioritised roadmaps, partnering closely with cross-functional peers, and measuring results with rigor. I am particularly drawn to ${companyLabel}'s focus on innovative execution and would love to contribute my playbook to accelerate those priorities.
+
+Thank you for considering my application. I would welcome the opportunity to discuss how my background can advance ${companyLabel}'s goals.
+
+Best regards,
+Your next hire`; }
+
+function buildFallbackSkillAnalysis(request: SkillAnalysisRequest): SkillAnalysisResponse {
+  const baseText = [
+    ...request.experience,
+    request.jobDescription ?? "",
+    request.targetRole ?? "",
+  ]
+    .join(" \n ")
+    .toLowerCase();
+
+  const hardMatches: Array<[string, string]> = [
+    ["react", "React"],
+    ["node", "Node.js"],
+    ["python", "Python"],
+    ["sql", "SQL"],
+    ["typescript", "TypeScript"],
+    ["aws", "AWS"],
+    ["design", "Product Design"],
+    ["marketing", "Growth Marketing"],
+    ["data", "Data Analysis"],
+    ["salesforce", "Salesforce"],
+  ];
+
+  const softMatches: Array<[string, string]> = [
+    ["lead", "Leadership"],
+    ["mentor", "Mentorship"],
+    ["collaborat", "Collaboration"],
+    ["stakeholder", "Stakeholder Management"],
+    ["communicat", "Communication"],
+    ["strateg", "Strategic Thinking"],
+    ["deliver", "Execution"],
+  ];
+
+  const suggestedPool: Array<[string, string]> = [
+    ["product", "Product Strategy"],
+    ["engineer", "System Design"],
+    ["design", "User Research"],
+    ["marketing", "Lifecycle Marketing"],
+    ["sales", "Negotiation"],
+  ];
+
+  const collectMatches = (entries: Array<[string, string]>) => {
+    const set = new Set<string>();
+    for (const [needle, value] of entries) {
+      if (baseText.includes(needle)) {
+        set.add(value);
+      }
+    }
+    return Array.from(set);
+  };
+
+  const hardSkills = collectMatches(hardMatches);
+  const softSkills = collectMatches(softMatches);
+  const suggestedSkills = collectMatches(suggestedPool);
+
+  if (hardSkills.length === 0) {
+    hardSkills.push("Project Management", "Data Analysis");
+  }
+
+  if (softSkills.length === 0) {
+    softSkills.push("Collaboration", "Problem Solving");
+  }
+
+  if (suggestedSkills.length === 0) {
+    suggestedSkills.push("Stakeholder Management", "Process Optimization");
+  }
+
+  const prioritySkills = Array.from(new Set([...hardSkills.slice(0, 3), ...softSkills.slice(0, 2)]));
+
+  return {
+    hardSkills,
+    softSkills,
+    suggestedSkills,
+    prioritySkills: prioritySkills.length ? prioritySkills : hardSkills.slice(0, 3),
+  };
+}
+
 function buildFallbackBulletPoints(request: BulletPointRequest) {
   const normalized = (request.rawDescription ?? "")
     .split(/\r?\n/)
@@ -72,6 +256,11 @@ const skillAnalysisResponseSchema = z.object({
 
 export type SkillAnalysisResponse = z.infer<typeof skillAnalysisResponseSchema>;
 
+export interface SkillAnalysisResult {
+  analysis: SkillAnalysisResponse;
+  usedFallback: boolean;
+}
+
 const atsAnalysisResponseSchema = z.object({
   matchScore: z.number().min(0).max(100),
   missingKeywords: z.array(z.string()),
@@ -81,6 +270,16 @@ const atsAnalysisResponseSchema = z.object({
 });
 
 export type ATSAnalysisResponse = z.infer<typeof atsAnalysisResponseSchema>;
+
+export interface ATSAnalysisResult {
+  analysis: ATSAnalysisResponse;
+  usedFallback: boolean;
+}
+
+export interface CoverLetterResponse {
+  coverLetter: string;
+  usedFallback: boolean;
+}
 
 function extractJsonPayload(raw: string): string {
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -360,7 +559,7 @@ Requirements:
   }
 }
 
-export async function analyzeSkills(request: SkillAnalysisRequest): Promise<SkillAnalysisResponse> {
+export async function analyzeSkills(request: SkillAnalysisRequest): Promise<SkillAnalysisResult> {
   const { experience, targetRole, jobDescription } = request;
 
   const prompt = `Analyze this experience and suggest relevant skills for a ${targetRole || 'professional'} role.
@@ -404,14 +603,19 @@ Format the response as JSON:
     });
 
     const content = response.choices[0]?.message?.content ?? "";
-    return parseStructuredResponse(content, skillAnalysisResponseSchema, "skill analysis");
+    const analysis = parseStructuredResponse(content, skillAnalysisResponseSchema, "skill analysis");
+    return { analysis, usedFallback: false };
   } catch (error) {
     console.error("Error analyzing skills:", error);
+    if (isQuotaOrRateLimitError(error)) {
+      return { analysis: buildFallbackSkillAnalysis(request), usedFallback: true };
+    }
+
     throw new Error("Failed to analyze skills");
   }
 }
 
-export async function analyzeATSMatch(request: ATSAnalysisRequest): Promise<ATSAnalysisResponse> {
+export async function analyzeATSMatch(request: ATSAnalysisRequest): Promise<ATSAnalysisResult> {
   const { resumeContent, jobDescription } = request;
 
   const prompt = `Analyze this resume against the job description for ATS optimization.
@@ -457,14 +661,25 @@ Format the response as JSON:
     });
 
     const content = response.choices[0]?.message?.content ?? "";
-    return parseStructuredResponse(content, atsAnalysisResponseSchema, "ATS analysis");
+    return {
+      analysis: parseStructuredResponse(content, atsAnalysisResponseSchema, "ATS analysis"),
+      usedFallback: false,
+    };
   } catch (error) {
     console.error("Error analyzing ATS match:", error);
+    if (isQuotaOrRateLimitError(error)) {
+      return { analysis: buildFallbackATSAnalysis(request), usedFallback: true };
+    }
+
     throw new Error("Failed to analyze ATS match");
   }
 }
 
-export async function generateCoverLetter(resumeContent: string, jobDescription: string, companyName: string) {
+export async function generateCoverLetter(
+  resumeContent: string,
+  jobDescription: string,
+  companyName: string,
+): Promise<CoverLetterResponse> {
   const prompt = `Generate a professional cover letter based on this resume and job description.
 
 Resume Content:
@@ -503,9 +718,21 @@ Format as a complete cover letter without any additional text.`;
       temperature: 0.7,
     });
 
-    return response.choices[0]?.message?.content?.trim() || "";
+    const coverLetter = response.choices[0]?.message?.content?.trim();
+    if (!coverLetter) {
+      throw new Error("Empty cover letter response");
+    }
+
+    return { coverLetter, usedFallback: false };
   } catch (error) {
     console.error("Error generating cover letter:", error);
+    if (isQuotaOrRateLimitError(error)) {
+      return {
+        coverLetter: buildFallbackCoverLetter(resumeContent, jobDescription, companyName),
+        usedFallback: true,
+      };
+    }
+
     throw new Error("Failed to generate cover letter");
   }
 }

@@ -234,11 +234,18 @@ async function atsAnalysisAction(
     .join("\n\n");
 
   try {
-    const analysis = await analyzeATSMatch({
+    const { analysis, usedFallback } = await analyzeATSMatch({
       resumeContent,
       jobDescription,
     });
-    return { status: "success", analysis, message: "ATS analysis completed." };
+    return {
+      status: "success",
+      analysis,
+      usedFallback,
+      message: usedFallback
+        ? "Quota hit—showing heuristic ATS insights. Verify keywords manually."
+        : "ATS analysis completed.",
+    };
   } catch (error) {
     console.error("Error running ATS analysis:", error);
     return { status: "error", message: "Failed to run ATS analysis" };
@@ -282,11 +289,14 @@ async function coverLetterAction(
     .join("\n\n");
 
   try {
-    const coverLetter = await generateCoverLetter(resumeContent, jobDescription, company);
+    const { coverLetter, usedFallback } = await generateCoverLetter(resumeContent, jobDescription, company);
     return {
       status: "success",
       coverLetter,
-      message: "Cover letter drafted.",
+      usedFallback,
+      message: usedFallback
+        ? "Quota hit—using local template. Personalize before sending."
+        : "Cover letter drafted.",
     };
   } catch (error) {
     console.error("Error generating cover letter:", error);
@@ -486,7 +496,7 @@ export async function analyzeSkillsAction(
   }
 
   try {
-    const analysis = await analyzeSkills({
+    const { analysis, usedFallback } = await analyzeSkills({
       experience: experienceLines,
       targetRole: targetRole || resume.targetRoles?.[0] || undefined,
       jobDescription: jobDescription || undefined,
@@ -495,7 +505,14 @@ export async function analyzeSkillsAction(
     await updateResumeSkillSnapshot(resume.id, analysis);
     await invalidateDashboardInsights(user.sub);
 
-    return { status: "success", analysis, message: "Skill analysis ready." };
+    return {
+      status: "success",
+      analysis,
+      usedFallback,
+      message: usedFallback
+        ? "Quota hit—showing offline skill suggestions. Review before applying."
+        : "Skill analysis ready.",
+    };
   } catch (error) {
     console.error("Error analyzing skills:", error);
     return { status: "error", message: "Failed to analyze skills" };

@@ -18,18 +18,21 @@ export type SkillActionState = {
   status: "idle" | "success" | "error";
   message?: string;
   analysis?: SkillAnalysisResponse;
+  usedFallback?: boolean;
 };
 
 export type ATSActionState = {
   status: "idle" | "success" | "error";
   message?: string;
   analysis?: ATSAnalysisResponse;
+  usedFallback?: boolean;
 };
 
 export type CoverLetterActionState = {
   status: "idle" | "success" | "error";
   message?: string;
   coverLetter?: string;
+  usedFallback?: boolean;
 };
 
 export type ExperienceFieldErrors = Partial<

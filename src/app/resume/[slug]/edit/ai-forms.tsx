@@ -53,6 +53,12 @@ interface ATSAnalysisFormProps {
 
 export function ATSAnalysisForm({ slug, action }: ATSAnalysisFormProps) {
   const [state, formAction] = useFormState(action, atsInitial);
+  const statusTone =
+    state.status === "error"
+      ? "text-red-600"
+      : state.usedFallback
+        ? "text-amber-600"
+        : "text-emerald-600";
 
   return (
     <div className="space-y-4">
@@ -71,13 +77,16 @@ export function ATSAnalysisForm({ slug, action }: ATSAnalysisFormProps) {
           Run ATS Analysis
         </AIButton>
       </form>
-      {state.status === "error" && <p className="text-xs text-red-600">{state.message}</p>}
+      {state.message && <p className={`text-xs ${statusTone}`}>{state.message}</p>}
       {state.status === "success" && state.analysis && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-3">
           <div className="flex items-baseline justify-between">
             <p className="text-sm font-semibold text-emerald-800">
               Match Score: {state.analysis.matchScore}%
             </p>
+            {state.usedFallback && (
+              <span className="text-xs font-medium text-amber-700">Heuristic mode</span>
+            )}
           </div>
           <div>
             <p className="text-xs font-semibold text-emerald-700 uppercase">Missing Keywords</p>
@@ -106,6 +115,12 @@ interface CoverLetterAIFormProps {
 
 export function CoverLetterAIForm({ slug, action }: CoverLetterAIFormProps) {
   const [state, formAction] = useFormState(action, coverInitial);
+  const statusTone =
+    state.status === "error"
+      ? "text-red-600"
+      : state.usedFallback
+        ? "text-amber-600"
+        : "text-violet-700";
 
   return (
     <div className="space-y-4">
@@ -125,11 +140,16 @@ export function CoverLetterAIForm({ slug, action }: CoverLetterAIFormProps) {
           Draft Cover Letter
         </AIButton>
       </form>
-      {state.status === "error" && <p className="text-xs text-red-600">{state.message}</p>}
+      {state.message && <p className={`text-xs ${statusTone}`}>{state.message}</p>}
       {state.status === "success" && state.coverLetter && (
         <div className="rounded-lg border border-violet-200 bg-violet-50 p-4 space-y-3">
           <p className="text-xs font-semibold uppercase text-violet-600">AI Draft</p>
           <pre className="whitespace-pre-wrap text-sm text-violet-900">{state.coverLetter}</pre>
+          {state.usedFallback && (
+            <p className="text-xs text-amber-700">
+              Generated from our local template—personalize before sending.
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -242,6 +262,12 @@ export function SkillAnalysisForm({ slug, action, onApply }: SkillAnalysisFormPr
   const [visible, setVisible] = useState(false);
   const [analysis, setAnalysis] = useState<SkillActionState["analysis"]>(undefined);
   const [isApplying, startTransition] = useTransition();
+  const statusTone =
+    state.status === "error"
+      ? "text-red-600"
+      : state.usedFallback
+        ? "text-amber-600"
+        : "text-emerald-600";
 
   useEffect(() => {
     if (state.status === "success" && state.analysis) {
@@ -314,8 +340,10 @@ export function SkillAnalysisForm({ slug, action, onApply }: SkillAnalysisFormPr
           Analyze My Skills
         </AIButton>
       </form>
-      {state.status === "error" && (
-        <p className="text-xs text-red-600">{state.message}</p>
+      {state.message && (
+        <p className={`text-xs ${statusTone}`}>
+          {state.message}
+        </p>
       )}
     </div>
   );
