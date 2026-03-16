@@ -8,6 +8,21 @@ async function addExperienceAction(formData: FormData) {
   const startDate = String(formData.get("startDate") ?? "").trim();
   const endDate = String(formData.get("endDate") ?? "").trim();
   const rawDescription = String(formData.get("rawDescription") ?? "").trim();
+  const generatedAchievementsRaw = String(formData.get("generatedAchievements") ?? "").trim();
+
+  let generatedAchievements: string[] = [];
+  if (generatedAchievementsRaw) {
+    try {
+      const parsedAchievements = JSON.parse(generatedAchievementsRaw);
+      if (Array.isArray(parsedAchievements)) {
+        generatedAchievements = parsedAchievements
+          .filter((entry) => typeof entry === "string" && entry.trim().length > 0)
+          .map((entry) => entry.trim());
+      }
+    } catch (parseError) {
+      console.warn("Failed to parse generated achievements", parseError);
+    }
+  }
 
   const parsed = ResumeExperienceSchema.safeParse({
     company,
@@ -38,7 +53,7 @@ async function addExperienceAction(formData: FormData) {
     startDate: new Date(parsed.data.startDate),
     endDate: parsed.data.endDate ? new Date(parsed.data.endDate) : null,
     description: parsed.data.rawDescription ?? null,
-    achievements: [],
+    achievements: generatedAchievements,
   });
 
   await invalidateDashboardInsights(user.sub);
@@ -418,7 +433,7 @@ export async function generateBulletsAction(
   }
 
   try {
-    const bulletPoints = await generateBulletPoints({
+    const { bulletPoints, usedFallback } = await generateBulletPoints({
       company: experience.company,
       role: experience.role,
       duration: experienceDurationLabel(experience),
@@ -430,7 +445,10 @@ export async function generateBulletsAction(
       status: "success",
       bulletPoints,
       experienceId,
-      message: "AI drafted new bullet points.",
+      usedFallback,
+      message: usedFallback
+        ? "Quota hit—showing locally generated bullets. Review before applying."
+        : "AI drafted new bullet points.",
     };
   } catch (error) {
     console.error("Error generating bullets:", error);
@@ -649,7 +667,6 @@ export default async function ResumeEditPage({
                         value={visibilityOption}
                         defaultChecked={(resume as any).visibility === visibilityOption}
                         className="sr-only"
-                        onChange={() => {}}
                       />
                       {visibilityOption.toLowerCase()}
                     </label>
@@ -740,50 +757,12 @@ export default async function ResumeEditPage({
             {/* Add Experience Form */}
             <div className="mt-6 pt-6 border-t">
               <h4 className="font-semibold mb-4">Add New Experience</h4>
-              <form className="space-y-4" action={addExperienceAction}>
-                <input type="hidden" name="slug" value={(resume as any).slug} />
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="company">Company</Label>
-                    <Input id="company" name="company" placeholder="Company name" />
-                  </div>
-                  <div>
-                    <Label htmlFor="role">Role</Label>
-                    <Input id="role" name="role" placeholder="Job title" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="startDate">Start Date</Label>
-                    <Input id="startDate" name="startDate" type="month" />
-                  </div>
-                  <div>
-                    <Label htmlFor="endDate">End Date</Label>
-                    <Input id="endDate" name="endDate" type="month" placeholder="Present" />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="rawDescription">Job Description (optional)</Label>
-                  <Textarea
-                    id="rawDescription"
-                    name="rawDescription"
-                    placeholder="Describe your responsibilities and achievements..."
-                    rows={3}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit">Add Experience</Button>
-                  <AIButton
-                    variant="outline"
-                    onClick={() => {
-                      // TODO: Generate bullets from form data
-                      console.log('Generate bullets from form');
-                    }}
-                  >
-                    AI Generate Bullets First
-                  </AIButton>
-                </div>
-              </form>
+              <NewExperienceForm
+                slug={(resume as any).slug}
+                action={addExperienceAction}
+                industryHint={(resume as any).targetIndustry ?? null}
+                defaultRole={(resume as any).targetRoles?.[0] ?? null}
+              />
             </div>
           </CardContent>
         </Card>

@@ -10,9 +10,7 @@ const RemoteOptionValues = ['REMOTE', 'HYBRID', 'ONSITE'] as const;
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { StatCard } from "@/components/ui/stat-card";
-import { Textarea } from "@/components/ui/textarea";
 import {
   createJobPosting,
   getJobManagementSnapshot,
@@ -22,6 +20,7 @@ import {
 } from "@/features/admin/service";
 
 import { AdminShell } from "../_components/admin-shell";
+import { CreateJobSheet } from "./_components/create-job-sheet";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -136,7 +135,15 @@ export default async function AdminJobsPage() {
           ))}
         </div>
 
-        <div className="grid gap-8 xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="space-y-6">
+          <div className="flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-white/95 p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Job actions</p>
+              <p className="text-base font-semibold text-slate-900">Create, feature, and manage roles</p>
+            </div>
+            <CreateJobSheet action={createJobAction} jobTypes={JobTypeValues} remoteOptions={RemoteOptionValues} />
+          </div>
+
           <Card className="border border-slate-200/70 bg-white/95">
             <CardHeader>
               <CardTitle className="text-base font-semibold text-slate-900">Live board</CardTitle>
@@ -265,70 +272,6 @@ export default async function AdminJobsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border border-slate-200/70 bg-white/95">
-            <CardHeader>
-              <CardTitle className="text-base font-semibold text-slate-900">Create job posting</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-4" action={createJobAction}>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Title</label>
-                  <Input name="title" placeholder="Product Manager" required />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Company</label>
-                  <Input name="company" placeholder="Acme Corp" required />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Location</label>
-                    <Input name="location" placeholder="San Francisco, CA" required />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Country</label>
-                    <Input name="country" placeholder="USA" required />
-                  </div>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Job type</label>
-                    <select
-                      name="jobType"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      defaultValue="FULL_TIME"
-                    >
-                      {JobTypeValues.map((option) => (
-                        <option key={option} value={option}>
-                          {option.toLowerCase().replace("_", " ")}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Remote option</label>
-                    <select
-                      name="remoteOption"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      defaultValue="ONSITE"
-                    >
-                      {RemoteOptionValues.map((option) => (
-                        <option key={option} value={option}>
-                          {option.toLowerCase()}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Description</label>
-                  <Textarea name="description" placeholder="Summary, requirements, perks..." rows={4} />
-                </div>
-                <Button type="submit" className="w-full">
-                  Post job
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
         </div>
 
         <Card className="border border-slate-200/70 bg-white/95">

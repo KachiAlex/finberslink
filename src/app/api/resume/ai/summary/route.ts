@@ -29,14 +29,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const summary = await optimizeResumeSummary({
+    const { summary, usedFallback } = await optimizeResumeSummary({
       currentSummary: parsed.data.currentSummary,
       experience: parsed.data.experienceHighlights,
       skills: parsed.data.skills,
       targetRole: parsed.data.targetRole,
     });
 
-    return NextResponse.json({ summary });
+    return NextResponse.json({ summary, usedFallback });
   } catch (error) {
     console.error("AI summary generation failed", error);
     return NextResponse.json({ error: "Failed to generate summary" }, { status: 500 });

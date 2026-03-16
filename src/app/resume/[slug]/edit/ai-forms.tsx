@@ -206,8 +206,18 @@ export function ExperienceBulletsAIForm({
           AI Generate Better Bullets
         </AIButton>
       </form>
-      {state.status === "error" && (
-        <p className="text-xs text-red-600">{state.message}</p>
+      {state.message && state.status !== "idle" && (
+        <p
+          className={`text-xs ${
+            state.status === "error"
+              ? "text-red-600"
+              : state.usedFallback
+                ? "text-amber-600"
+                : "text-emerald-600"
+          }`}
+        >
+          {state.message}
+        </p>
       )}
       {visible && suggestions.length > 0 && (
         <BulletSuggestions

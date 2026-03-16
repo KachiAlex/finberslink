@@ -34,10 +34,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bulletPoints = await generateBulletPoints(parsed.data);
+    const { bulletPoints, usedFallback } = await generateBulletPoints(parsed.data);
     
     return NextResponse.json({
       bulletPoints,
+      usedFallback,
     });
   } catch (error) {
     console.error("Bullet generation error:", error);

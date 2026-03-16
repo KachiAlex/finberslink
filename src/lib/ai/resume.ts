@@ -9,12 +9,41 @@ export interface ResumeSummaryRequest {
   targetRole?: string;
 }
 
+function buildFallbackBulletPoints(request: BulletPointRequest) {
+  const normalized = (request.rawDescription ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^[•-\d.\s]+/, "").trim())
+    .filter(Boolean);
+
+  if (normalized.length > 0) {
+    return normalized.slice(0, 4).map((line) => {
+      const sentence = line.charAt(0).toUpperCase() + line.slice(1);
+      return sentence.endsWith(".") ? sentence : `${sentence}.`;
+    });
+  }
+
+  const roleLabel = request.role || "the role";
+  const companyLabel = request.company || "the company";
+
+  return [
+    `Led key initiatives at ${companyLabel}, elevating performance across teams.`,
+    `Delivered measurable outcomes in the ${roleLabel} role despite resource constraints.`,
+    `Collaborated cross-functionally to keep ${companyLabel} projects on schedule and within scope.`,
+    `Documented wins to keep stakeholders aligned on ${roleLabel} priorities.`,
+  ];
+}
+
 export interface BulletPointRequest {
   company: string;
   role: string;
   duration: string;
   rawDescription?: string;
   targetRole?: string;
+}
+
+export interface BulletPointResponse {
+  bulletPoints: string[];
+  usedFallback: boolean;
 }
 
 export interface AchievementGenerationRequest {
@@ -84,6 +113,30 @@ function parseStructuredResponse<T>(rawContent: string, schema: z.ZodType<T>, co
   return result.data;
 }
 
+function isQuotaOrRateLimitError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const candidate = error as {
+    status?: number;
+    code?: string;
+    type?: string;
+    error?: { code?: string; type?: string };
+  };
+
+  if (candidate.status === 429) {
+    return true;
+  }
+
+  const code = candidate.code || candidate.type || candidate.error?.code || candidate.error?.type;
+  if (!code) {
+    return false;
+  }
+
+  return code === "insufficient_quota" || code === "rate_limit_exceeded" || code.includes("quota");
+}
+
 function buildFallbackSummary(request: ResumeSummaryRequest) {
   const roleLabel = request.targetRole?.trim() || "versatile professional";
   const experienceHighlights = request.experience.filter(Boolean).slice(0, 2);
@@ -104,7 +157,36 @@ function buildFallbackSummary(request: ResumeSummaryRequest) {
   return sentences.join(". ");
 }
 
-export async function optimizeResumeSummary(request: ResumeSummaryRequest) {
+function buildFallbackAchievements(request: AchievementGenerationRequest) {
+  const roleLabel = request.jobTitle?.trim() || "the role";
+  const normalizedHighlights = (request.contextHighlights ?? [])
+    .map((highlight) => highlight?.replace(/^[•-\d.\s]+/, "").trim())
+    .filter(Boolean);
+
+  if (normalizedHighlights.length > 0) {
+    return normalizedHighlights.slice(0, 4).map((highlight) => {
+      const sentence = highlight.charAt(0).toUpperCase() + highlight.slice(1);
+      const startsWithVerb = /^(Led|Built|Managed|Delivered|Created|Optimized|Spearheaded|Reduced|Improved|Developed)/i.test(
+        sentence,
+      );
+      return startsWithVerb ? sentence : `Delivered impact by ${sentence.replace(/^Delivered\simpact\sby\s/i, "")}`;
+    });
+  }
+
+  return [
+    `Spearheaded high-impact initiatives as ${roleLabel}, translating strategy into measurable outcomes.`,
+    "Optimized cross-functional workflows to accelerate delivery timelines by double digits.",
+    "Leveraged data-driven insights to prioritize roadmaps and exceed KPI targets.",
+    "Mentored teammates and codified best practices to elevate execution quality.",
+  ];
+}
+
+export interface ResumeSummaryResponse {
+  summary: string;
+  usedFallback: boolean;
+}
+
+export async function optimizeResumeSummary(request: ResumeSummaryRequest): Promise<ResumeSummaryResponse> {
   const { currentSummary, experience, skills, targetRole } = request;
 
   const prompt = `Please optimize this resume summary for a ${targetRole || 'professional'} role.
@@ -144,14 +226,19 @@ Return only the optimized summary without any additional text.`;
       temperature: 0.7,
     });
 
-    return response.choices[0]?.message?.content?.trim() || buildFallbackSummary(request);
+    const aiSummary = response.choices[0]?.message?.content?.trim();
+    if (!aiSummary) {
+      return { summary: buildFallbackSummary(request), usedFallback: true };
+    }
+
+    return { summary: aiSummary, usedFallback: false };
   } catch (error) {
     console.error("Error optimizing resume summary:", error);
-    return buildFallbackSummary(request);
+    return { summary: buildFallbackSummary(request), usedFallback: true };
   }
 }
 
-export async function generateBulletPoints(request: BulletPointRequest) {
+export async function generateBulletPoints(request: BulletPointRequest): Promise<BulletPointResponse> {
   const { company, role, duration, rawDescription, targetRole } = request;
 
   const prompt = `Generate 3-5 impactful bullet points for this work experience:
@@ -191,14 +278,34 @@ Format as a numbered list without any additional text.`;
     });
 
     const content = response.choices[0]?.message?.content?.trim() || "";
-    return content.split('\n').filter(line => line.trim()).map(line => line.replace(/^\d+\.\s*/, ''));
+    const bulletPoints = content
+      .split('\n')
+      .map(line => line.replace(/^\d+\.\s*/, '').trim())
+      .filter(Boolean);
+
+    if (bulletPoints.length === 0) {
+      throw new Error("No bullet points generated");
+    }
+
+    return { bulletPoints, usedFallback: false };
   } catch (error) {
     console.error("Error generating bullet points:", error);
+    if (isQuotaOrRateLimitError(error)) {
+      return { bulletPoints: buildFallbackBulletPoints(request), usedFallback: true };
+    }
+
     throw new Error("Failed to generate bullet points");
   }
 }
 
-export async function generateAchievementsFromContext(request: AchievementGenerationRequest) {
+export interface AchievementGenerationResponse {
+  achievements: string[];
+  usedFallback: boolean;
+}
+
+export async function generateAchievementsFromContext(
+  request: AchievementGenerationRequest,
+): Promise<AchievementGenerationResponse> {
   const { jobTitle, industry, contextHighlights = [] } = request;
 
   const prompt = `Generate 4 concise, achievement-style resume bullets tailored for a ${jobTitle}${industry ? ` in the ${industry} industry` : ""}.
@@ -242,9 +349,13 @@ Requirements:
       throw new Error("No achievements generated");
     }
 
-    return bullets;
+    return { achievements: bullets, usedFallback: false };
   } catch (error) {
     console.error("Error generating AI achievements:", error);
+    if (isQuotaOrRateLimitError(error)) {
+      return { achievements: buildFallbackAchievements(request), usedFallback: true };
+    }
+
     throw new Error("Failed to generate achievements");
   }
 }

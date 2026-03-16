@@ -33,10 +33,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const optimizedSummary = await optimizeResumeSummary(parsed.data);
+    const { summary: optimizedSummary, usedFallback } = await optimizeResumeSummary(parsed.data);
     
     return NextResponse.json({
       optimizedSummary,
+      usedFallback,
     });
   } catch (error) {
     console.error("Summary optimization error:", error);

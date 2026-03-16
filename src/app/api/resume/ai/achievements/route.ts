@@ -29,13 +29,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const achievements = await generateAchievementsFromContext({
+    const { achievements, usedFallback } = await generateAchievementsFromContext({
       jobTitle: parsed.data.jobTitle,
       industry: parsed.data.industry,
       contextHighlights: parsed.data.experienceHighlights ?? [],
     });
 
-    return NextResponse.json({ achievements });
+    return NextResponse.json({ achievements, usedFallback });
   } catch (error) {
     console.error("AI achievements generation failed", error);
     return NextResponse.json({ error: "Failed to generate achievements" }, { status: 500 });

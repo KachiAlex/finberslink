@@ -107,6 +107,11 @@ export function ResumeBuilderWizard() {
 
       const data = await response.json();
       handleFieldChange("summary", data.summary || "");
+      if (data.usedFallback) {
+        setAiStatus("success");
+        setAiMessage("Using fallback copy while AI quota recovers. Review and tweak if needed.");
+        return;
+      }
       setAiStatus("success");
       setAiMessage("Summary updated with AI suggestions.");
     } catch (err) {
@@ -148,6 +153,11 @@ export function ResumeBuilderWizard() {
       }
 
       handleFieldChange("notableAchievements", bullets.join("\n"));
+      if (data.usedFallback) {
+        setAchievementStatus("success");
+        setAchievementMessage("Quota hit—showing locally generated achievements. Polish them before continuing.");
+        return;
+      }
       setAchievementStatus("success");
       setAchievementMessage("Achievements drafted. Feel free to edit them before continuing.");
     } catch (err) {

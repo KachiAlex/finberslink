@@ -11,6 +11,7 @@ export type BulletActionState = {
   message?: string;
   bulletPoints?: string[];
   experienceId?: string;
+  usedFallback?: boolean;
 };
 
 export type SkillActionState = {
