@@ -7,11 +7,8 @@ type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 const CourseLevelValues = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const;
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { StatCard } from "@/components/ui/stat-card";
-import { Textarea } from "@/components/ui/textarea";
 import {
   createAdminCourse,
   getCourseManagementSnapshot,
@@ -20,6 +17,7 @@ import {
 } from "@/features/admin/service";
 
 import { AdminShell } from "../_components/admin-shell";
+import { CreateCourseSheet } from "./_components/create-course-sheet";
 
 type AdminCourse = Awaited<ReturnType<typeof listAdminCourses>>[number];
 type CourseSnapshot = Awaited<ReturnType<typeof getCourseManagementSnapshot>>;
@@ -115,7 +113,15 @@ export default async function AdminCoursesPage() {
           ))}
         </div>
 
-        <div className="grid gap-8 xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="space-y-6">
+          <div className="flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-white/95 p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Catalog actions</p>
+              <p className="text-base font-semibold text-slate-900">Launch or manage courses</p>
+            </div>
+            <CreateCourseSheet action={createCourseAction} levels={CourseLevelValues} />
+          </div>
+
           <Card className="border border-slate-200/70 bg-white/95">
             <CardHeader>
               <CardTitle className="text-base font-semibold text-slate-900">Live catalog</CardTitle>
@@ -160,7 +166,7 @@ export default async function AdminCoursesPage() {
                     {courses.length === 0 && (
                       <tr>
                         <td colSpan={5} className="py-8 text-center text-sm text-slate-500">
-                          No courses yet. Use the form to launch your first cohort.
+                          No courses yet. Use the “New course” action to launch your first cohort.
                         </td>
                       </tr>
                     )}
@@ -170,60 +176,6 @@ export default async function AdminCoursesPage() {
             </CardContent>
           </Card>
 
-          <Card className="border border-slate-200/70 bg-white/95">
-            <CardHeader>
-              <CardTitle className="text-base font-semibold text-slate-900">
-                Create course
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-4" action={createCourseAction}>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Slug</label>
-                    <Input name="slug" placeholder="product-strategy" required />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Level</label>
-                    <select
-                      name="level"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                      defaultValue="BEGINNER"
-                    >
-                      {CourseLevelValues.map((option) => (
-                        <option key={option} value={option}>
-                          {option.toLowerCase()}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Title</label>
-                  <Input name="title" placeholder="Product Strategy Lab" required />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Tagline</label>
-                  <Input name="tagline" placeholder="Design + execution" required />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Category</label>
-                  <Input name="category" placeholder="Product" required />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Cover image URL</label>
-                  <Input name="coverImage" placeholder="https://images.unsplash.com/..." required />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Description</label>
-                  <Textarea name="description" placeholder="Course summary" rows={4} required />
-                </div>
-                <Button type="submit" className="w-full">
-                  Publish course
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-2">
