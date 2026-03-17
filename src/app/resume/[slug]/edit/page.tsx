@@ -150,6 +150,7 @@ import {
   createResumeExperience,
   createResumeProject,
   getResumeBySlug,
+  regenerateResumeShareSlug,
   updateResume,
   updateResumeExperience,
   updateResumeSkillSnapshot,
@@ -329,6 +330,7 @@ async function updateResumeAction(formData: FormData) {
   const slug = String(formData.get("slug") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const summary = String(formData.get("summary") ?? "").trim();
+  const introVideoUrl = String(formData.get("introVideoUrl") ?? "").trim();
 
   if (!slug || !title) {
     return;
@@ -343,10 +345,27 @@ async function updateResumeAction(formData: FormData) {
   await updateResume(slug, {
     title,
     summary,
+    introVideoUrl: introVideoUrl || null,
   });
 
   await invalidateDashboardInsights(user.sub);
 
+  revalidatePath(`/resume/${slug}/edit`);
+}
+
+async function regenerateShareSlugAction(formData: FormData) {
+  "use server";
+
+  const slug = String(formData.get("slug") ?? "").trim();
+  if (!slug) return;
+
+  const user = await requireUser();
+  const resume = await getResumeBySlug(slug);
+  if (!resume || resume.userId !== user.sub) {
+    notFound();
+  }
+
+  await regenerateResumeShareSlug(slug);
   revalidatePath(`/resume/${slug}/edit`);
 }
 
@@ -609,7 +628,10 @@ export default async function ResumeEditPage({
     process.env.NEXT_PUBLIC_APP_URL ??
     process.env.NEXTAUTH_URL ??
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-  const shareUrl = `${baseUrl}/resume/${(resume as any).slug}`;
+  const sharePath = (resume as any).shareSlug
+    ? `/resume/share/${(resume as any).shareSlug}`
+    : `/resume/${(resume as any).slug}`;
+  const shareUrl = `${baseUrl}${sharePath}`;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
@@ -636,6 +658,34 @@ export default async function ResumeEditPage({
                   <Label htmlFor="summary">Summary</Label>
                   <Textarea id="summary" name="summary" defaultValue={(resume as any).summary ?? ""} rows={4} />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="introVideoUrl">Intro video link (optional)</Label>
+                  <Input
+                    id="introVideoUrl"
+                    name="introVideoUrl"
+                    placeholder="https://youtu.be/..."
+                    defaultValue={(resume as any).introVideoUrl ?? ""}
+                  />
+                  <p className="text-xs text-slate-500">
+                    Supports YouTube, Vimeo, Google Drive, and Cloudinary links.
+                  </p>
+                </div>
+                {(resume as any).introVideoEmbedUrl ? (
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wide text-slate-500">
+                      Intro video preview
+                    </Label>
+                    <div className="aspect-video overflow-hidden rounded-xl border border-slate-200">
+                      <iframe
+                        title="Intro video preview"
+                        src={(resume as any).introVideoEmbedUrl}
+                        className="h-full w-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                ) : null}
                 <Button type="submit">Save changes</Button>
               </form>
             </CardContent>
@@ -699,6 +749,15 @@ export default async function ResumeEditPage({
                   Shareable link
                 </p>
                 <ShareLinkCopy href={shareUrl} />
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span>Slug: {(resume as any).shareSlug ?? "pending"}</span>
+                  <form action={regenerateShareSlugAction} className="flex items-center gap-2">
+                    <input type="hidden" name="slug" value={(resume as any).slug} />
+                    <Button type="submit" variant="ghost" size="sm" className="px-2 text-xs">
+                      Refresh link
+                    </Button>
+                  </form>
+                </div>
                 {(resume as any).visibility !== "PUBLIC" && (
                   <p className="text-xs text-amber-600">
                     Set visibility to <strong>Public</strong> before sending the link.

@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 
-import { getResumeBySlug } from "@/features/resume/service";
+import { getResumeByShareSlug } from "@/features/resume/service";
 import { ResumePublicView } from "@/components/resume/resume-public-view";
 
-export default async function ResumePublicPage({ params }: { params: { slug: string } }) {
+export default async function ResumeSharePage({ params }: { params: { slug: string } }) {
   const { slug } = params;
-  const resume = await getResumeBySlug(slug);
+  const resume = await getResumeByShareSlug(slug);
   if (!resume || resume.visibility !== "PUBLIC") {
     notFound();
   }

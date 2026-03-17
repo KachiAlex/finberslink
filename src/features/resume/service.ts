@@ -1,7 +1,42 @@
-import type { Prisma, ResumeVisibility } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import type { ResumeVisibility } from "@prisma/client";
+import { customAlphabet } from "nanoid";
 
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
+import { isVideoUrlValid, toEmbedUrl } from "@/lib/video";
+
+const SHARE_SLUG_ALPHABET = "abcdefghijkmnopqrstuvwxyz0123456789";
+const SHARE_SLUG_LENGTH = 10;
+const buildShareSlug = customAlphabet(SHARE_SLUG_ALPHABET, SHARE_SLUG_LENGTH);
+
+async function ensureUniqueShareSlug(seed?: string) {
+  let candidate = seed?.trim().toLowerCase() || buildShareSlug();
+
+  while (await prisma.resume.findUnique({ where: { shareSlug: candidate } })) {
+    candidate = buildShareSlug();
+  }
+
+  return candidate;
+}
+
+function normalizeIntroVideo(url?: string | null) {
+  const trimmed = url?.trim();
+  if (!trimmed) {
+    return { introVideoUrl: null, introVideoEmbedUrl: null };
+  }
+
+  if (!isVideoUrlValid(trimmed)) {
+    throw new Error(
+      "Intro video link must be hosted on YouTube, Vimeo, Google Drive, or Cloudinary."
+    );
+  }
+
+  return {
+    introVideoUrl: trimmed,
+    introVideoEmbedUrl: toEmbedUrl(trimmed),
+  };
+}
 
 export interface CreateResumeInput {
   userId: string;
@@ -16,13 +51,18 @@ export interface CreateResumeInput {
   skills?: string[];
   notableAchievements?: string;
   visibility?: ResumeVisibility;
+  introVideoUrl?: string | null;
+  shareSlug?: string;
 }
 
-export async function updateResumeSkillSnapshot(resumeId: string, snapshot: Prisma.JsonValue) {
+export async function updateResumeSkillSnapshot(
+  resumeId: string,
+  snapshot: Prisma.InputJsonValue | null
+) {
   return prisma.resume.update({
     where: { id: resumeId },
     data: {
-      skillAnalysisSnapshot: snapshot,
+      skillAnalysisSnapshot: snapshot ?? Prisma.JsonNull,
       updatedAt: new Date(),
     },
     select: { id: true },
@@ -101,11 +141,19 @@ function buildResumeUpdateInput(data: UpdateResumeInput): Prisma.ResumeUpdateInp
     updateData.visibility = data.visibility;
   }
 
+  if (data.introVideoUrl !== undefined) {
+    const normalized = normalizeIntroVideo(data.introVideoUrl);
+    updateData.introVideoUrl = normalized.introVideoUrl;
+    updateData.introVideoEmbedUrl = normalized.introVideoEmbedUrl;
+  }
+
   return updateData;
 }
 
 export async function createResume(input: CreateResumeInput) {
   const slug = await ensureUniqueResumeSlug(input.title);
+  const shareSlug = await ensureUniqueShareSlug(input.shareSlug);
+  const introVideo = normalizeIntroVideo(input.introVideoUrl);
 
   return prisma.resume.create({
     data: {
@@ -122,6 +170,9 @@ export async function createResume(input: CreateResumeInput) {
       skills: input.skills ?? input.topSkills ?? [],
       visibility: input.visibility ?? undefined,
       slug,
+      shareSlug,
+      introVideoUrl: introVideo.introVideoUrl,
+      introVideoEmbedUrl: introVideo.introVideoEmbedUrl,
     },
     include: {
       experiences: {
@@ -139,9 +190,17 @@ export async function updateResume(slug: string, data: UpdateResumeInput) {
     return getResumeBySlug(slug);
   }
 
+  const updateData = buildResumeUpdateInput(data);
+
+  if (data.shareSlug !== undefined) {
+    updateData.shareSlug = data.shareSlug
+      ? await ensureUniqueShareSlug(data.shareSlug)
+      : null;
+  }
+
   return prisma.resume.update({
     where: { slug },
-    data: buildResumeUpdateInput(data),
+    data: updateData,
     include: {
       experiences: {
         orderBy: { order: "asc" },
@@ -215,6 +274,30 @@ export async function getResumeBySlug(slug: string) {
         orderBy: { order: "asc" },
       },
     },
+  });
+}
+
+export async function getResumeByShareSlug(shareSlug: string) {
+  return prisma.resume.findUnique({
+    where: { shareSlug },
+    include: {
+      experiences: {
+        orderBy: { order: "asc" },
+      },
+      projects: {
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+}
+
+export async function regenerateResumeShareSlug(slug: string) {
+  const nextShareSlug = await ensureUniqueShareSlug();
+
+  return prisma.resume.update({
+    where: { slug },
+    data: { shareSlug: nextShareSlug },
+    select: { shareSlug: true },
   });
 }
 

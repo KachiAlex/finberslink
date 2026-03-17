@@ -1,6 +1,8 @@
 import { ResumeVisibility } from "@prisma/client";
 import { z } from "zod";
 
+import { isVideoUrlValid } from "@/lib/video";
+
 const monthInput = z
   .string()
   .regex(/^[0-9]{4}-(0[1-9]|1[0-2])$/, "Use the YYYY-MM format");
@@ -17,6 +19,13 @@ export const ResumeSchema = z.object({
   skills: z.array(z.string()).optional(),
   notableAchievements: z.string().optional(),
   visibility: z.nativeEnum(ResumeVisibility).optional(),
+  introVideoUrl: z
+    .string()
+    .trim()
+    .refine((value) => isVideoUrlValid(value), {
+      message: "Intro video must be hosted on YouTube, Vimeo, Google Drive, or Cloudinary.",
+    })
+    .optional(),
 });
 
 export const ResumeExperienceSchema = z.object({

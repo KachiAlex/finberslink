@@ -41,6 +41,7 @@ const initialForm = {
   personaName: "",
   location: "",
   targetIndustry: "",
+  introVideoUrl: "",
   targetRolesInput: "",
   yearsExperience: "",
   topSkillsInput: "",
@@ -187,6 +188,7 @@ export function ResumeBuilderWizard() {
       topSkills: topSkills.length ? topSkills : undefined,
       skills: topSkills.length ? topSkills : undefined,
       notableAchievements: form.notableAchievements.trim() || undefined,
+      introVideoUrl: form.introVideoUrl.trim() || undefined,
     };
 
     try {
@@ -302,6 +304,18 @@ export function ResumeBuilderWizard() {
                   placeholder="e.g., Fintech, Edtech"
                 />
               </div>
+            </div>
+            <div>
+              <Label htmlFor="intro-video">Intro video link (optional)</Label>
+              <Input
+                id="intro-video"
+                value={form.introVideoUrl}
+                onChange={(event) => handleFieldChange("introVideoUrl", event.target.value)}
+                placeholder="https://youtu.be/..."
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Supports YouTube, Vimeo, Google Drive, and Cloudinary links.
+              </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>

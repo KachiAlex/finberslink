@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -206,6 +205,7 @@ model Resume {
   summary             String?
   skills              String[]           @default([])
   slug                String             @unique
+  shareSlug           String?            @unique
   visibility          ResumeVisibility   @default(PRIVATE)
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
@@ -217,6 +217,8 @@ model Resume {
   topSkills           String[]           @default([])
   yearsExperience     Int?
   skillAnalysisSnapshot Json?
+  introVideoUrl       String?
+  introVideoEmbedUrl  String?
   jobApplications     JobApplication[]
   user                User               @relation(fields: [userId], references: [id])
   experiences         ResumeExperience[]
@@ -535,8 +537,13 @@ model ChatSpace {
   courseId    String?
   slug        String           @unique
   title       String
+  description String?
+  icon        String?
+  type        ChatSpaceType    @default(COURSE_FORUM)
   visibility  ChatVisibility   @default(COURSE_ONLY)
   settings    Json             @default("{}")
+  defaultThreadType ChatThreadType @default(CHANNEL)
+  archivedAt  DateTime?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   memberships ChatMembership[]
@@ -568,6 +575,9 @@ model ChatThread {
   type             ChatThreadType     @default(CHANNEL)
   title            String?
   lessonId         String?
+  tags             String[]           @default([])
+  pinned           Boolean            @default(false)
+  resolvedAt       DateTime?
   lastMessageAt    DateTime?
   archivedAt       DateTime?
   createdAt        DateTime           @default(now())
@@ -786,6 +796,12 @@ enum ChatVisibility {
   TENANT_WIDE
 }
 
+enum ChatSpaceType {
+  COURSE_FORUM
+  COMMUNITY_LOUNGE
+  DIRECT
+}
+
 enum ChatRole {
   STUDENT
   TUTOR
@@ -798,6 +814,8 @@ enum ChatThreadType {
   LESSON
   ANNOUNCEMENT
   DM
+  FORUM
+  STREAM
 }
 
 enum ChatNotificationType {
