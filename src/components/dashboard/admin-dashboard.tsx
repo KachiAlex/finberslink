@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Users, Briefcase, GraduationCap, BarChart3 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Users, Briefcase, GraduationCap, BarChart3, Shield } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
+import { DashboardHero } from "@/components/dashboard/dashboard-hero";
+import { DashboardSection } from "@/components/dashboard/dashboard-section";
 
 interface AdminInsights {
   platformMetrics: {
@@ -37,95 +38,67 @@ export function AdminDashboard() {
 
   return (
     <>
-      <header className="rounded-4xl relative overflow-hidden rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-lg shadow-slate-200/70">
-        <div className="absolute -right-16 top-6 h-48 w-48 rounded-full bg-gradient-to-br from-orange-500/10 to-red-400/10 blur-3xl" />
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.45em] text-slate-500">Finbers Link</p>
-            <h1 className="mt-3 text-4xl font-semibold text-slate-900 sm:text-5xl">
-              Admin Console
-            </h1>
-            <p className="mt-3 max-w-2xl text-base text-slate-600">
-              Platform overview, user management, and system metrics.
-            </p>
+      <DashboardHero
+        eyebrow="Admin control"
+        title="Keep Finbers running smoothly"
+        description="Monitor platform health, unblock tutors, and move fast on learner needs."
+        accent="orange"
+        actions={[
+          { label: "Manage users", href: "/admin/users", variant: "secondary" },
+          { label: "Open system panel", href: "/admin/system" },
+        ]}
+        metaSlot={
+          <div className="flex items-center gap-2 text-slate-700">
+            <Shield className="h-4 w-4 text-amber-600" />
+            <span>Super admin</span>
           </div>
-          <div className="flex flex-col gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/admin/users">Manage Users</Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/admin/analytics">View Analytics</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+        }
+      />
 
       {!loading && insights && (
-        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="Total Users"
-            value={insights.platformMetrics.totalUsers}
-            icon={Users}
-            trend={{ value: 24, isPositive: true }}
-            variant="minimal"
-          />
-          <StatCard
-            title="Active Users (7d)"
-            value={insights.platformMetrics.activeUsers}
-            icon={Users}
-            variant="minimal"
-          />
-          <StatCard
-            title="Published Courses"
-            value={insights.platformMetrics.totalCourses}
-            icon={GraduationCap}
-            variant="minimal"
-          />
-          <StatCard
-            title="Active Jobs"
-            value={insights.platformMetrics.activeJobs}
-            icon={Briefcase}
-            variant="minimal"
-          />
-        </section>
+        <DashboardSection
+          eyebrow="Platform signals"
+          title="Network overview"
+          description="Key usage and supply indicators"
+        >
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatCard title="Total Users" value={insights.platformMetrics.totalUsers} icon={Users} trend={{ value: 24, isPositive: true }} variant="minimal" />
+            <StatCard title="Active Users (7d)" value={insights.platformMetrics.activeUsers} icon={Users} variant="minimal" />
+            <StatCard title="Published Courses" value={insights.platformMetrics.totalCourses} icon={GraduationCap} variant="minimal" />
+            <StatCard title="Active Jobs" value={insights.platformMetrics.activeJobs} icon={Briefcase} variant="minimal" />
+          </div>
+        </DashboardSection>
       )}
 
       <section className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
-          <h3 className="text-lg font-semibold mb-4">System Management</h3>
+        <DashboardSection
+          eyebrow="Control center"
+          title="System management"
+          description="Jump to operational queues"
+          actions={[{ label: "Open analytics", href: "/admin/analytics", variant: "ghost" }]}
+        >
           <div className="space-y-2">
-            <Link
-              href="/admin/users"
-              className="block p-3 rounded-md bg-slate-50 hover:bg-slate-100 text-sm font-medium text-slate-700 transition-colors"
-            >
+            <Link href="/admin/users" className="block rounded-md bg-slate-50 p-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100">
               Manage Users
             </Link>
-            <Link
-              href="/admin/courses"
-              className="block p-3 rounded-md bg-slate-50 hover:bg-slate-100 text-sm font-medium text-slate-700 transition-colors"
-            >
+            <Link href="/admin/courses" className="block rounded-md bg-slate-50 p-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100">
               Manage Courses
             </Link>
-            <Link
-              href="/admin/jobs"
-              className="block p-3 rounded-md bg-slate-50 hover:bg-slate-100 text-sm font-medium text-slate-700 transition-colors"
-            >
+            <Link href="/admin/jobs" className="block rounded-md bg-slate-50 p-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100">
               Manage Jobs
             </Link>
-            <Link
-              href="/admin/settings"
-              className="block p-3 rounded-md bg-slate-50 hover:bg-slate-100 text-sm font-medium text-slate-700 transition-colors"
-            >
+            <Link href="/admin/settings" className="block rounded-md bg-slate-50 p-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100">
               System Settings
             </Link>
           </div>
-        </div>
+        </DashboardSection>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Recent Metrics
-          </h3>
+        <DashboardSection
+          eyebrow="Signals"
+          title="Recent metrics"
+          description="Realtime health checks"
+          actions={[{ label: "Open system panel", href: "/admin/system", variant: "ghost" }]}
+        >
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-600">Signups (last 7 days)</span>
@@ -144,7 +117,7 @@ export function AdminDashboard() {
               <span className="font-semibold">99.9%</span>
             </div>
           </div>
-        </div>
+        </DashboardSection>
       </section>
     </>
   );
