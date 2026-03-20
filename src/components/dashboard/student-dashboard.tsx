@@ -5,6 +5,7 @@ import { DashboardSectionsClient } from "@/app/dashboard/sections-client";
 import { Badge } from "@/components/ui/badge";
 import { DashboardHero } from "@/components/dashboard/dashboard-hero";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { buildDashboardCoursesUrl, buildFocusTrackUrl } from "@/lib/dashboard-courses-url";
 
 interface StudentDashboardProps {
   userId: string;
@@ -27,7 +28,7 @@ export function StudentDashboard(_props: StudentDashboardProps) {
           {
             label: "Courses",
             description: "Browse catalog, assigned tracks & enroll",
-            href: "/dashboard/courses",
+            href: buildDashboardCoursesUrl(),
             icon: GraduationCap,
           },
           {
@@ -74,7 +75,8 @@ export function StudentDashboard(_props: StudentDashboardProps) {
           description="Jump back into your active courses or follow up on applications without hunting through menus."
           accent="blue"
           actions={[
-            { label: "Continue learning", href: "/courses", icon: ArrowRight },
+            { label: "Continue learning", href: buildDashboardCoursesUrl({ sort: "recent" }), icon: ArrowRight },
+            { label: "Explore beginner tracks", href: buildFocusTrackUrl("beginner"), icon: GraduationCap, variant: "secondary" },
             { label: "Review applications", href: "/applications", icon: Briefcase, variant: "secondary" },
           ]}
           metaSlot={
