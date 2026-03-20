@@ -1,9 +1,16 @@
 # Dashboard UI Refinement Plan
 
 ## Terminology & Copy Consistency
-- [ ] Inventory confusing labels per role (courses/cohorts, forums/chats, etc.)
-- [ ] Draft role-based copy guide (button verbs, sentence case, tone)
-- [ ] Apply updated copy to dashboard CTAs, badges, and helper text
+- [x] Inventory confusing labels per role (courses/cohorts, forums/chats, etc.)
+- [x] Draft role-based copy guide (button verbs, sentence case, tone)
+- [x] Apply updated copy to dashboard CTAs, badges, and helper text
+
+### Copy Guide Snapshot
+- **Student**: speak in clear next-step verbs ("Continue learning", "Review applications"), avoid jargon like "mission control".
+- **Tutor**: highlight coaching impact and admin obligations ("Manage courses", "Check analytics") rather than poetic language.
+- **Employer**: emphasize pipeline clarity ("Post a role", "Review candidates") and avoid duplicate job-post buttons.
+- **Admin**: use operations language ("Open control panel", "Review usage") and keep actions singular per card.
+- Buttons follow `{verb} {object}` sentence case, helper text stays under 110 characters, and only one primary action per surface.
 
 ## Layout & Hierarchy System
 - [ ] Define shared dashboard spacing/grid tokens (card padding, gap scale, breakpoints)
@@ -11,8 +18,8 @@
 - [ ] Refactor each dashboard (student, tutor, employer, admin) to the shared components
 
 ## Action Consolidation
-- [ ] Map redundant buttons/links and decide a single primary action per card
-- [ ] Convert secondary links inside cards to subtle text links or menu items
+- [x] Map redundant buttons/links and decide a single primary action per card
+- [x] Convert secondary links inside cards to subtle text links or menu items
 - [ ] Add quick filters/tabs where multiple buttons previously duplicated destinations
 - [x] Pilot button consolidation pattern on Admin jobs + forums cards
 

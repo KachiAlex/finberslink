@@ -46,13 +46,13 @@ export function TutorDashboard({ userId }: TutorDashboardProps) {
   return (
     <>
       <DashboardHero
-        eyebrow="Tutor tools"
-        title="Guide your cohorts with confidence"
-        description="Publish lessons, review student momentum, and keep discussions vibrant."
+        eyebrow="Tutor workspace"
+        title="Run your courses and coaching in one view"
+        description="Jump back into drafts, check progress, and nudge your cohorts without hopping between tabs."
         accent="purple"
         actions={[
-          { label: "Create course", href: "/tutor/courses/new" },
-          { label: "View analytics", href: "/tutor/analytics", variant: "secondary" },
+          { label: "Manage courses", href: "/tutor/courses" },
+          { label: "Review analytics", href: "/tutor/analytics", variant: "secondary" },
         ]}
       />
 

@@ -41,13 +41,13 @@ export function EmployerDashboard({ userId }: EmployerDashboardProps) {
   return (
     <>
       <DashboardHero
-        eyebrow="Employer hub"
-        title="Hire confidently with Finbers talent"
-        description="Publish roles, review pipelines, and keep offers moving in one workspace."
+        eyebrow="Employer workspace"
+        title="Keep your talent pipeline moving"
+        description="See open roles, review candidates, and send offers without bouncing between tools."
         accent="green"
         actions={[
-          { label: "Post a job", href: "/jobs/post" },
-          { label: "View applications", href: "/employer/applications", variant: "secondary" },
+          { label: "Post a role", href: "/jobs/post" },
+          { label: "Review candidates", href: "/employer/applications", variant: "secondary" },
         ]}
       />
 

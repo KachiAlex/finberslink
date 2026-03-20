@@ -39,13 +39,13 @@ export function AdminDashboard() {
   return (
     <>
       <DashboardHero
-        eyebrow="Admin control"
-        title="Keep Finbers running smoothly"
-        description="Monitor platform health, unblock tutors, and move fast on learner needs."
+        eyebrow="Admin workspace"
+        title="Keep the network healthy"
+        description="Spot platform issues, unblock tutors, and review usage signals from one place."
         accent="orange"
         actions={[
+          { label: "Review usage", href: "/admin/analytics" },
           { label: "Manage users", href: "/admin/users", variant: "secondary" },
-          { label: "Open system panel", href: "/admin/system" },
         ]}
         metaSlot={
           <div className="flex items-center gap-2 text-slate-700">
