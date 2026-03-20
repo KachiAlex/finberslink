@@ -97,6 +97,8 @@ export async function getLearnerCourseDetail(
         orderBy: { order: "asc" },
         select: {
           id: true,
+          slug: true,
+          order: true,
           title: true,
           durationMinutes: true,
           format: true,
@@ -170,6 +172,149 @@ export async function getLearnerLesson(
   lessonSlug: string,
   _userId = DEFAULT_LEARNER_ID,
 ): Promise<{ course: CourseDetail; lesson: Lesson } | null> {
-  // Placeholder - will be implemented after migration
-  return null;
+  const enrollment = await prisma.enrollment.findFirst({
+    where: {
+      userId: _userId,
+      course: {
+        OR: [{ id: courseSlug }, { slug: courseSlug }],
+        approvalStatus: "APPROVED",
+      },
+    },
+    include: {
+      course: {
+        include: {
+          instructor: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+              profile: { select: { headline: true } },
+            },
+          },
+          lessons: {
+            orderBy: { order: "asc" },
+            select: {
+              id: true,
+              slug: true,
+              order: true,
+              title: true,
+              durationMinutes: true,
+              format: true,
+              summary: true,
+              content: true,
+              videoUrl: true,
+              resources: {
+                select: {
+                  id: true,
+                  title: true,
+                  type: true,
+                  url: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      lessonProgress: {
+        select: {
+          lessonId: true,
+          status: true,
+        },
+      },
+    },
+  });
+
+  if (!enrollment) {
+    return null;
+  }
+
+  const courseRecord = enrollment.course;
+  const rawLesson = courseRecord.lessons.find((lesson) => lesson.id === lessonSlug || lesson.slug === lessonSlug);
+
+  if (!rawLesson) {
+    return null;
+  }
+
+  const progressMap = new Map(enrollment.lessonProgress.map((progress) => [progress.lessonId, progress.status]));
+
+  let previousLessonsUnlocked = true;
+  let lessonsCompleted = 0;
+
+  const mappedLessons: Lesson[] = courseRecord.lessons.map((lesson) => {
+    const progressStatus = progressMap.get(lesson.id);
+    let status: Lesson["status"] = "locked";
+
+    if (progressStatus === "COMPLETED") {
+      status = "completed";
+      lessonsCompleted += 1;
+      previousLessonsUnlocked = true;
+    } else if (progressStatus === "IN_PROGRESS") {
+      status = "available";
+      previousLessonsUnlocked = false;
+    } else if (progressStatus === "NOT_STARTED") {
+      status = previousLessonsUnlocked ? "available" : "locked";
+      previousLessonsUnlocked = false;
+    } else {
+      status = previousLessonsUnlocked ? "available" : "locked";
+      previousLessonsUnlocked = status === "available";
+    }
+
+    return {
+      id: lesson.id,
+      title: lesson.title,
+      durationMinutes: lesson.durationMinutes,
+      format: lesson.format.toLowerCase() as Lesson["format"],
+      status,
+      summary: lesson.summary,
+      resources: lesson.resources.map((resource) => ({
+        id: resource.id,
+        title: resource.title,
+        type: resource.type.toLowerCase() as Lesson["resources"][number]["type"],
+        url: resource.url,
+      })),
+      content: lesson.content ?? undefined,
+      videoUrl: lesson.videoUrl ?? undefined,
+    };
+  });
+
+  const lessonsCount = mappedLessons.length;
+  const progressPercentage = lessonsCount === 0 ? 0 : Math.round((lessonsCompleted / lessonsCount) * 100);
+
+  const courseDetail: CourseDetail = {
+    id: courseRecord.id,
+    title: courseRecord.title,
+    tagline: courseRecord.tagline,
+    level: prismaLevelToSummary(courseRecord.level as PrismaCourseLevel),
+    category: courseRecord.category,
+    coverImage: courseRecord.coverImage,
+    progressPercentage,
+    lessonsCompleted,
+    lessonsCount,
+    instructor: {
+      id: courseRecord.instructor?.id ?? "unknown",
+      name: courseRecord.instructor
+        ? `${courseRecord.instructor.firstName} ${courseRecord.instructor.lastName}`.trim()
+        : "Finbers Instructor",
+      title: courseRecord.instructor?.profile?.headline ?? "Lead instructor",
+      avatarUrl: courseRecord.instructor?.avatarUrl ?? FALLBACK_AVATAR,
+    },
+    description: courseRecord.description,
+    outcomes: courseRecord.outcomes,
+    skills: courseRecord.skills,
+    certificateAvailable: courseRecord.certificateAvailable,
+    lessons: mappedLessons,
+  };
+
+  const mappedLesson = mappedLessons.find((lesson) => lesson.id === rawLesson.id);
+
+  if (mappedLesson && mappedLesson.status === "locked") {
+    mappedLesson.status = "available";
+  }
+
+  if (!mappedLesson) {
+    return null;
+  }
+
+  return { course: courseDetail, lesson: mappedLesson };
 }
