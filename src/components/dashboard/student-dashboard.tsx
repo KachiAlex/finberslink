@@ -20,8 +20,8 @@ export function StudentDashboard(_props: StudentDashboardProps) {
         meta="Focus mode"
         items={[
           {
-            label: "Mission control",
-            description: "Insights & guidance",
+            label: "Overview",
+            description: "Pulse + quick actions",
             href: "/dashboard",
             icon: LayoutDashboard,
           },

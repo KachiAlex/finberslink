@@ -6,11 +6,8 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { ProgressRing } from "@/components/ui/progress-ring";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SaveJobButton } from "@/app/jobs/_components/save-job-button";
 import { GlassCardError } from "@/components/ui/glass-card-error";
-import { DashboardSection } from "@/components/dashboard/dashboard-section";
 
 interface SectionData {
   enrollments: EnrollmentSection[];
@@ -131,413 +128,311 @@ export function DashboardSectionsClient() {
   const errors = sectionResponse?.errors;
   const savedIds = new Set(data?.savedIds ?? []);
 
-  const statusBadge = (status: string) => {
-    const value = status.toLowerCase();
-    if (value.includes("interview")) return "bg-indigo-50 text-indigo-700 border-indigo-100";
-    if (value.includes("offer")) return "bg-emerald-50 text-emerald-700 border-emerald-100";
-    if (value.includes("rejected")) return "bg-rose-50 text-rose-700 border-rose-100";
-    return "bg-amber-50 text-amber-700 border-amber-100";
+  const quickSummary = () => {
+    if (loading) {
+      return "We're collecting your latest stats";
+    }
+
+    if (!data) {
+      return "Stay tuned—your learning signals will appear here.";
+    }
+
+    return `${data.enrollments.length || "No"} active course${data.enrollments.length === 1 ? "" : "s"}, ${
+      data.resumes.length || "no"
+    } resume${data.resumes.length === 1 ? "" : "s"}, ${
+      data.applications.jobs.length + data.applications.volunteer.length || "no"
+    } application${
+      data.applications.jobs.length + data.applications.volunteer.length === 1 ? "" : "s"
+    } in motion.`;
   };
 
-  const renderSkeletonEntries = (count: number) => (
-    <div className="space-y-3">
-      {Array.from({ length: count }).map((_, idx) => (
-        <div
-          key={idx}
-          className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4"
-        >
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-3 w-24" />
-          </div>
-          <Skeleton className="h-8 w-20 rounded-full" />
+  const activeCourses = data?.enrollments?.length ?? 0;
+  const resumesCount = data?.resumes?.length ?? 0;
+  const applicationsCount =
+    (data?.applications?.jobs.length ?? 0) + (data?.applications?.volunteer.length ?? 0);
+  const recommendedCount = data?.recommended?.length ?? 0;
+
+  const topCourse = data?.enrollments?.[0];
+  const topApplication = data?.applications?.jobs?.[0] ?? data?.applications?.volunteer?.[0] ?? null;
+  const featuredFocus = data?.insights?.focus?.[0];
+  const skillInsight = data?.insights?.skills;
+  const featuredJob = data?.recommended?.[0];
+
+  const metrics = [
+    {
+      label: "Active courses",
+      value: loading ? "—" : activeCourses,
+      helper: activeCourses ? "Keep your streak alive" : "Start a track to unlock guidance",
+      action: "/dashboard/courses",
+    },
+    {
+      label: "Resumes",
+      value: loading ? "—" : resumesCount,
+      helper: resumesCount ? "Refresh insights anytime" : "Generate an ATS-ready resume",
+      action: "/dashboard/resume",
+    },
+    {
+      label: "Applications",
+      value: loading ? "—" : applicationsCount,
+      helper: applicationsCount ? "Track responses in dashboard" : "Submit at least one this week",
+      action: "/applications",
+    },
+    {
+      label: "Recommended roles",
+      value: loading ? "—" : recommendedCount,
+      helper: recommendedCount ? "Tailored from your activity" : "Update your profile for matches",
+      action: "/jobs",
+    },
+  ];
+
+  const OverviewSkeleton = () => (
+    <div className="space-y-6">
+      <GlassCard variant="gradient" className="p-6">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Skeleton className="h-9 w-32 rounded-full" />
+          <Skeleton className="h-9 w-28 rounded-full" />
         </div>
-      ))}
+      </GlassCard>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <GlassCard key={idx} className="p-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="mt-3 h-7 w-16" />
+            <Skeleton className="mt-2 h-3 w-32" />
+          </GlassCard>
+        ))}
+      </div>
+      <div className="grid gap-6 md:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, idx) => (
+          <GlassCard key={idx} className="p-5">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="mt-2 h-6 w-40" />
+            <Skeleton className="mt-2 h-3 w-48" />
+          </GlassCard>
+        ))}
+      </div>
     </div>
   );
 
-  const SectionError = ({ message }: { message?: string | null }) =>
-    message ? (
-      <GlassCardError className="mb-4" message={message} />
-    ) : null;
-
-  const accentStyles: Record<FocusCard["accent"], string> = {
-    blue: "border-blue-100 bg-blue-50",
-    amber: "border-amber-100 bg-amber-50",
-    emerald: "border-emerald-100 bg-emerald-50",
-    violet: "border-violet-100 bg-violet-50",
-  };
-
-  const renderFocusCards = () => {
-    if (errors?.insights) {
-      return <SectionError message={errors.insights} />;
+  const renderLatestCourse = () => {
+    if (errors?.enrollments) {
+      return <GlassCardError message={errors.enrollments} />;
     }
 
-    if (loading) {
+    if (!topCourse) {
       return (
-        <div className="grid gap-4 md:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, idx) => (
-            <GlassCard key={idx} className="p-0">
-              <div className="space-y-3 p-4">
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-3 w-3/4" />
-                <Skeleton className="h-9 w-28 rounded-full" />
-              </div>
-            </GlassCard>
-          ))}
+        <div className="space-y-3 text-sm text-slate-600">
+          <p>No active courses right now.</p>
+          <Button size="sm" asChild>
+            <Link href="/dashboard/courses">Browse catalog</Link>
+          </Button>
         </div>
-      );
-    }
-
-    if (!data?.insights.focus.length) {
-      return (
-        <GlassCard className="border border-slate-200 bg-white/70 p-5 text-sm text-slate-600">
-          Momentum looks good. Keep following your personalized recommendations as they appear here.
-        </GlassCard>
       );
     }
 
     return (
-      <div className="grid gap-4 md:grid-cols-2">
-        {data.insights.focus.map((card) => (
-          <GlassCard
-            key={card.id}
-            className={`border-2 p-5 transition hover:-translate-y-0.5 ${accentStyles[card.accent]}`}
-          >
-            <div>
-              <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Learning arc</p>
-              <h2 className="mt-2 text-2xl font-semibold text-slate-900">My courses</h2>
-              <p className="text-slate-600">Courses currently shaping your skill trajectory</p>
-            </div>
-            <Button size="sm" asChild className="mt-4 rounded-full">
-              <Link href={card.actionHref}>{card.actionLabel}</Link>
-            </Button>
-          </GlassCard>
-        ))}
+      <div className="space-y-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Latest course</p>
+          <h3 className="text-lg font-semibold text-slate-900">{topCourse.course.title}</h3>
+          <p className="text-sm text-slate-500">{topCourse.course.tagline ?? "Keep shipping lessons"}</p>
+        </div>
+        <Button asChild size="sm" className="rounded-full">
+          <Link href={`/courses/${topCourse.course.slug ?? topCourse.course.id}`}>Continue course</Link>
+        </Button>
       </div>
     );
   };
 
-  const renderSkillInsights = () => {
-    if (errors?.insights) {
-      return <SectionError message={errors.insights} />;
+  const renderPipelineHighlight = () => {
+    if (errors?.applications) {
+      return <GlassCardError message={errors.applications} />;
     }
 
-    if (loading) {
+    if (!topApplication) {
       return (
-        <div className="space-y-3">
-          <Skeleton className="h-4 w-1/3" />
-          <Skeleton className="h-3 w-2/3" />
-          <div className="flex flex-wrap gap-2">
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <Skeleton key={idx} className="h-6 w-24 rounded-full" />
-            ))}
-          </div>
+        <div className="space-y-3 text-sm text-slate-600">
+          <p>No applications in play.</p>
+          <Button size="sm" asChild variant="secondary">
+            <Link href="/jobs">Browse roles</Link>
+          </Button>
         </div>
       );
     }
 
-    if (!data?.insights.skills) {
-      return (
-        <p className="text-sm text-slate-600">
-          Build at least one resume to unlock AI-powered skill insights for your target roles.
-        </p>
-      );
-    }
-
-    const { personaName, targetRoles, targetIndustry, highlightSkills, gapSkills, recommendation } = data.insights.skills;
+    const opportunityCompany = "company" in topApplication.opportunity
+      ? topApplication.opportunity.company
+      : topApplication.opportunity.organization;
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Persona signal</p>
-          <h3 className="text-xl font-semibold text-slate-900">
-            {personaName || targetRoles[0] || "Your skill graph"}
-          </h3>
-          {(targetIndustry || targetRoles.length > 0) && (
-            <p className="text-sm text-slate-600">
-              Target: {targetRoles.join(" • ") || "Open"}
-              {targetIndustry ? ` · ${targetIndustry}` : ""}
-            </p>
-          )}
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Pipeline</p>
+          <h3 className="text-lg font-semibold text-slate-900">{topApplication.opportunity.title}</h3>
+          <p className="text-sm text-slate-500">{opportunityCompany}</p>
+          <p className="text-xs text-slate-400">
+            Last touch {topApplication.updatedAt
+              ? new Date(topApplication.updatedAt).toLocaleDateString()
+              : topApplication.submittedAt
+                ? new Date(topApplication.submittedAt).toLocaleDateString()
+                : "recently"}
+          </p>
         </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Signature skills</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {highlightSkills.map((skill) => (
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="ghost" asChild className="text-slate-600">
+            <Link href={`/applications/${topApplication.id}`}>View</Link>
+          </Button>
+          <Button size="sm" asChild>
+            <Link href={`/jobs/${topApplication.opportunity.id ?? topApplication.opportunity.slug ?? ""}`}>
+              Review role
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFocusHighlight = () => {
+    if (errors?.insights) {
+      return <GlassCardError message={errors.insights} />;
+    }
+
+    if (featuredFocus) {
+      return (
+        <div className="space-y-3">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Recommendation</p>
+          <h3 className="text-lg font-semibold text-slate-900">{featuredFocus.title}</h3>
+          <p className="text-sm text-slate-500">{featuredFocus.description}</p>
+          <Button size="sm" asChild>
+            <Link href={featuredFocus.actionHref}>{featuredFocus.actionLabel}</Link>
+          </Button>
+        </div>
+      );
+    }
+
+    if (skillInsight) {
+      return (
+        <div className="space-y-3">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Skills focus</p>
+          <h3 className="text-lg font-semibold text-slate-900">
+            {skillInsight.personaName || skillInsight.targetRoles[0] || "Your skill graph"}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {skillInsight.highlightSkills.slice(0, 3).map((skill) => (
               <Badge key={skill} variant="secondary" className="rounded-full bg-slate-900/5 text-slate-700">
                 {skill}
               </Badge>
             ))}
           </div>
+          <p className="text-sm text-slate-500">{skillInsight.recommendation}</p>
         </div>
-        {!!gapSkills.length && (
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Gaps to reinforce</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {gapSkills.map((skill) => (
-                <Badge key={skill} className="rounded-full bg-amber-100 text-amber-800">
-                  {skill}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-        <p className="text-sm text-slate-600">{recommendation}</p>
+      );
+    }
+
+    return (
+      <div className="space-y-3 text-sm text-slate-600">
+        <p>Build a resume to unlock AI insights tailored to your target roles.</p>
+        <Button size="sm" asChild>
+          <Link href="/resume/builder">Create resume</Link>
+        </Button>
       </div>
     );
   };
 
+  const renderJobHighlight = () => {
+    if (errors?.recommended) {
+      return <GlassCardError message={errors.recommended} />;
+    }
+
+    if (!featuredJob) {
+      return (
+        <div className="space-y-3 text-sm text-slate-600">
+          <p>No tailored roles yet. Update your profile or enroll in a course to unlock matches.</p>
+          <Button size="sm" variant="secondary" asChild>
+            <Link href="/jobs">Browse roles</Link>
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Recommended role</p>
+          <h3 className="text-lg font-semibold text-slate-900">{featuredJob.title}</h3>
+          <p className="text-sm text-slate-500">
+            {featuredJob.company} · {featuredJob.location ?? featuredJob.remoteOption ?? "Remote friendly"}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="ghost" asChild className="text-slate-600">
+            <Link href={`/jobs/${featuredJob.slug}`}>View</Link>
+          </Button>
+          <Button size="sm" asChild>
+            <Link href={`/jobs/${featuredJob.slug}`}>Apply</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  if (loading && !data) {
+    return (
+      <section>
+        <OverviewSkeleton />
+      </section>
+    );
+  }
+
   return (
-    <section className="space-y-8">
+    <section className="space-y-6">
       <GlassCard variant="gradient" className="p-6">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="lg:w-2/3">
-            <p className="text-xs uppercase tracking-[0.45em] text-slate-400">Guidance</p>
-            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Personalized mission control</h2>
-            <p className="text-slate-600">
-              These cards prioritize the highest-leverage moves based on your enrollments, resumes, and pipeline.
-            </p>
-            <div className="mt-6">{renderFocusCards()}</div>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.45em] text-slate-400">Overview</p>
+            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Here’s where you stand</h2>
+            <p className="text-sm text-slate-600">{quickSummary()}</p>
           </div>
-          <GlassCard variant="bordered" className="lg:w-1/3">
-            <div className="space-y-3">
-              <p className="text-xs uppercase tracking-[0.45em] text-slate-400">Skill intelligence</p>
-              {renderSkillInsights()}
-            </div>
-          </GlassCard>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild className="rounded-full">
+              <Link href="/dashboard/courses">Continue learning</Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-full">
+              <Link href="/applications">Review applications</Link>
+            </Button>
+          </div>
         </div>
       </GlassCard>
 
-      <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-        <DashboardSection
-          eyebrow="Learning arc"
-          title="My courses"
-          description="Cohorts currently shaping your skill trajectory"
-          actions={[{ label: "Explore tracks", href: "/courses", variant: "secondary" }]}
-        >
-          <div className="space-y-4">
-            <SectionError message={errors?.enrollments} />
-            {!loading && (
-              <p className="text-xs text-slate-500">Progress refreshes hourly based on completed lessons.</p>
-            )}
-            {loading && renderSkeletonEntries(3)}
-            {!loading && data?.enrollments && data.enrollments.length === 0 && (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3">
-                <p className="text-sm text-slate-600">
-                  No active courses. Jump into a new discipline to unlock premium tracks.
-                </p>
-                <Button size="sm" asChild>
-                  <Link href="/courses">Browse courses</Link>
-                </Button>
-              </div>
-            )}
-            {!loading && data?.enrollments && data.enrollments.length > 0 && (
-              <div className="space-y-4">
-                {data.enrollments.map((enrollment) => (
-                  <div
-                    key={enrollment.id}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4"
-                  >
-                    <div>
-                      <p className="text-base font-semibold text-slate-900">{enrollment.course.title}</p>
-                      <p className="text-xs uppercase tracking-wide text-slate-400">
-                        {enrollment.course.level?.toLowerCase() ?? "self-paced"}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500 line-clamp-1">
-                        {enrollment.course.tagline ?? "Continue your momentum"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-3">
-                        <ProgressRing value={enrollment.progressPercentage ?? 0} />
-                        <span className="text-sm font-medium text-slate-600">
-                          {enrollment.progressPercentage ?? 0}% mastery
-                        </span>
-                      </div>
-                      <Button size="sm" asChild className="rounded-full">
-                        <Link href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}>
-                          Continue
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </DashboardSection>
-
-        <div className="space-y-8">
-          <DashboardSection
-            eyebrow="Resume studio"
-            title="AI-grade resumes"
-            description="Hand off a polished narrative every time"
-            actions={[{ label: "Launch studio", href: "/resume/builder" }]}
-          >
-            <div className="space-y-3">
-              <SectionError message={errors?.resumes} />
-              {!loading && (
-                <p className="text-xs text-slate-500">Resumes stay synced with AI feedback—re-run insights anytime.</p>
-              )}
-              {loading && renderSkeletonEntries(2)}
-              {!loading && data?.resumes && data.resumes.length === 0 && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 space-y-3">
-                  <p>No resumes yet. Build your signature profile with ATS-tuned prompts.</p>
-                  <Button size="sm" asChild>
-                    <Link href="/resume/builder">Create resume</Link>
-                  </Button>
-                </div>
-              )}
-              {!loading && data?.resumes && data.resumes.length > 0 && (
-                <div className="space-y-3">
-                  {data.resumes.map((resume) => (
-                    <div
-                      key={resume.id}
-                      className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{resume.title}</p>
-                        <p className="text-xs text-slate-500 capitalize">
-                          Visibility: {resume.visibility.toLowerCase()}
-                        </p>
-                      </div>
-                      <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:bg-slate-100">
-                        <Link href={`/resume/${resume.slug}`}>Preview</Link>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </DashboardSection>
-
-          <DashboardSection
-            eyebrow="Recommended"
-            title="Roles curated for you"
-            description="Based on your enrollments and recent activity"
-            actions={[{ label: "See all", href: "/jobs", variant: "ghost" }]}
-          >
-            <div className="space-y-3">
-              <SectionError message={errors?.recommended} />
-              {!loading && (
-                <p className="text-xs text-slate-500">Recommendations adapt when you enroll in courses or update your resume.</p>
-              )}
-              {loading && renderSkeletonEntries(3)}
-              {!loading && data?.recommended && data.recommended.length === 0 && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 space-y-3">
-                  <p>No recommendations yet. Start a course or update your profile to get tailored roles.</p>
-                  <Button size="sm" asChild>
-                    <Link href="/jobs">Browse roles</Link>
-                  </Button>
-                </div>
-              )}
-              {!loading && data?.recommended && data.recommended.length > 0 && (
-                <div className="space-y-3">
-                  {data.recommended.map((job) => (
-                    <div
-                      key={job.id}
-                      className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4"
-                    >
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-slate-900">{job.title}</p>
-                        <p className="text-xs text-slate-500">
-                          {job.company} · {job.location ?? job.remoteOption ?? "Remote-friendly"}
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {job.remoteOption && (
-                            <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
-                              {job.remoteOption}
-                            </Badge>
-                          )}
-                          {job.location && (
-                            <Badge variant="secondary" className="bg-slate-100 text-slate-700">
-                              {job.location}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="ghost" asChild className="text-slate-600 hover:bg-slate-100">
-                          <Link href={`/jobs/${job.slug}`}>View</Link>
-                        </Button>
-                        <SaveJobButton jobId={job.id} initialSaved={savedIds.has(job.id)} />
-                        <Button size="sm" asChild>
-                          <Link href={`/jobs/${job.slug}`}>Apply</Link>
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </DashboardSection>
-
-          <DashboardSection
-            eyebrow="Pipeline"
-            title="Applications"
-            description="Opportunities currently in play"
-            actions={[{ label: "See all", href: "/applications", variant: "ghost" }]}
-          >
-            <div className="space-y-4">
-              <SectionError message={errors?.applications} />
-              {!loading && (
-                <p className="text-xs text-slate-500">We spotlight your three most recent submissions; open Applications for filters.</p>
-              )}
-              {loading && renderSkeletonEntries(2)}
-              {!loading &&
-                data?.applications &&
-                data.applications.jobs.length + data.applications.volunteer.length === 0 && (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 space-y-3">
-                    <p>No applications yet. Ready talent is one click away — browse curated roles.</p>
-                    <Button size="sm" asChild>
-                      <Link href="/jobs">Find roles</Link>
-                    </Button>
-                  </div>
-                )}
-              {!loading && data?.applications && (
-                <div className="space-y-4">
-                  {[...data.applications.jobs.slice(0, 2), ...data.applications.volunteer.slice(0, 1)].map((app) => (
-                    <div key={app.id} className="rounded-2xl border border-slate-200 bg-white p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{app.opportunity.title}</p>
-                          <p className="text-xs text-slate-500">
-                            {"company" in app.opportunity ? app.opportunity.company : app.opportunity.organization}
-                          </p>
-                          <p className="text-[11px] text-slate-400">
-                            Last updated: {app.updatedAt
-                              ? new Date(app.updatedAt).toLocaleDateString()
-                              : app.submittedAt
-                                ? new Date(app.submittedAt).toLocaleDateString()
-                                : "—"}
-                          </p>
-                        </div>
-                        <Badge
-                          variant="outline"
-                          className={`border text-xs font-medium uppercase tracking-wide ${statusBadge(app.status)}`}
-                        >
-                          {app.status.toLowerCase().replace("_", " ")}
-                        </Badge>
-                      </div>
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <Button size="sm" variant="ghost" asChild className="text-slate-600 hover:bg-slate-100">
-                          <Link href={`/applications/${app.id}`}>View</Link>
-                        </Button>
-                        <Button size="sm" asChild>
-                          <Link href={`/jobs/${app.opportunity.id ?? app.opportunity.slug ?? ""}`}>
-                            Revisit role
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </DashboardSection>
-        </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((metric) => (
+          <GlassCard key={metric.label} className="p-4">
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">{metric.label}</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900">{metric.value}</p>
+            <p className="text-sm text-slate-500">{metric.helper}</p>
+            <Button asChild variant="ghost" size="sm" className="mt-3 px-0 text-slate-600">
+              <Link href={metric.action}>Open</Link>
+            </Button>
+          </GlassCard>
+        ))}
       </div>
-  </section>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <GlassCard className="p-5">
+          {loading && !topCourse ? <Skeleton className="h-16 w-full" /> : renderLatestCourse()}
+        </GlassCard>
+        <GlassCard className="p-5">
+          {loading && !topApplication ? <Skeleton className="h-16 w-full" /> : renderPipelineHighlight()}
+        </GlassCard>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <GlassCard className="p-5">{renderFocusHighlight()}</GlassCard>
+        <GlassCard className="p-5">{renderJobHighlight()}</GlassCard>
+      </div>
+    </section>
   );
 }
