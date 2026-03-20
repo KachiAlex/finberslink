@@ -1,4 +1,4 @@
-import type { CourseLevel as PrismaCourseLevel } from "@prisma/client";
+import type { CourseLevel as PrismaCourseLevel, Prisma } from "@prisma/client";
 
 import type { CourseDetail, CourseSummary, Lesson } from "@/types/lms";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +6,10 @@ import { prisma } from "@/lib/prisma";
 const DEFAULT_LEARNER_ID = process.env.NEXT_PUBLIC_DEMO_STUDENT_ID ?? "user_student";
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?auto=format&fit=crop&w=400&q=80";
+
+type LearnerLevelFilter = "beginner" | "intermediate" | "advanced";
+
+const COURSES_PAGE_SIZE = 6;
 
 const prismaLevelToSummary = (level: PrismaCourseLevel): CourseSummary["level"] => {
   switch (level) {
@@ -18,6 +22,137 @@ const prismaLevelToSummary = (level: PrismaCourseLevel): CourseSummary["level"] 
   }
 };
 
+const summaryLevelToPrisma = (level: LearnerLevelFilter): PrismaCourseLevel => {
+  switch (level) {
+    case "intermediate":
+      return "INTERMEDIATE";
+    case "advanced":
+      return "ADVANCED";
+    default:
+      return "BEGINNER";
+  }
+};
+
+const instructorSelect = {
+  select: {
+    id: true,
+    firstName: true,
+    lastName: true,
+    avatarUrl: true,
+    profile: {
+      select: {
+        headline: true,
+      },
+    },
+  },
+} satisfies Prisma.UserArgs;
+
+const courseSummaryInclude = {
+  instructor: instructorSelect,
+  _count: {
+    select: {
+      lessons: true,
+      enrollments: true,
+    },
+  },
+} satisfies Prisma.CourseInclude;
+
+type CourseSummaryRecord = Prisma.CourseGetPayload<{ include: typeof courseSummaryInclude }>;
+
+const mapCourseToSummary = (course: CourseSummaryRecord): CourseSummary => ({
+  id: course.id,
+  title: course.title,
+  tagline: course.tagline,
+  level: prismaLevelToSummary(course.level as PrismaCourseLevel),
+  category: course.category,
+  coverImage: course.coverImage,
+  progressPercentage: 0,
+  lessonsCompleted: 0,
+  lessonsCount: course._count?.lessons ?? 0,
+  instructor: {
+    id: course.instructor?.id ?? "unknown",
+    name: course.instructor
+      ? `${course.instructor.firstName} ${course.instructor.lastName}`.trim()
+      : "Finbers Instructor",
+    title: course.instructor?.profile?.headline ?? "Lead instructor",
+    avatarUrl: course.instructor?.avatarUrl ?? FALLBACK_AVATAR,
+  },
+});
+
+interface DashboardCatalogOptions {
+  search?: string;
+  category?: string;
+  level?: LearnerLevelFilter;
+  sort?: "recent" | "popular";
+  page?: number;
+  pageSize?: number;
+}
+
+export async function listDashboardCatalogCourses(options: DashboardCatalogOptions = {}) {
+  const {
+    search,
+    category,
+    level,
+    sort = "recent",
+    page = 1,
+    pageSize = COURSES_PAGE_SIZE,
+  } = options;
+
+  const take = Math.min(Math.max(pageSize, 1), 24);
+  const requestedPage = Math.max(page, 1);
+
+  const where: Prisma.CourseWhereInput = {
+    approvalStatus: "APPROVED",
+    instructor: {
+      role: { in: ["TUTOR", "ADMIN", "SUPER_ADMIN"] },
+    },
+  };
+
+  if (search?.trim()) {
+    where.OR = [
+      { title: { contains: search.trim(), mode: "insensitive" } },
+      { tagline: { contains: search.trim(), mode: "insensitive" } },
+      { description: { contains: search.trim(), mode: "insensitive" } },
+    ];
+  }
+
+  if (category) {
+    where.category = { equals: category, mode: "insensitive" };
+  }
+
+  if (level) {
+    where.level = summaryLevelToPrisma(level);
+  }
+
+  const orderBy: Prisma.CourseOrderByWithRelationInput =
+    sort === "popular"
+      ? { enrollments: { _count: "desc" } }
+      : { createdAt: "desc" };
+
+  const total = await prisma.course.count({ where });
+  const totalPages = Math.max(Math.ceil(total / take), 1);
+  const currentPage = Math.min(requestedPage, totalPages);
+  const skip = (currentPage - 1) * take;
+
+  const courses = await prisma.course.findMany({
+    where,
+    skip,
+    take,
+    orderBy,
+    include: courseSummaryInclude,
+  });
+
+  return {
+    courses: courses.map(mapCourseToSummary),
+    pagination: {
+      page: currentPage,
+      pageSize: take,
+      total,
+      totalPages,
+    },
+  };
+}
+
 export async function listLearnerCourses(_userId = DEFAULT_LEARNER_ID): Promise<CourseSummary[]> {
   const courses = await prisma.course.findMany({
     where: {
@@ -27,47 +162,10 @@ export async function listLearnerCourses(_userId = DEFAULT_LEARNER_ID): Promise<
       },
     },
     orderBy: { createdAt: "desc" },
-    include: {
-      instructor: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          avatarUrl: true,
-          profile: {
-            select: {
-              headline: true,
-            },
-          },
-        },
-      },
-      _count: {
-        select: {
-          lessons: true,
-        },
-      },
-    },
+    include: courseSummaryInclude,
   });
 
-  return courses.map<CourseSummary>((course) => ({
-    id: course.id,
-    title: course.title,
-    tagline: course.tagline,
-    level: prismaLevelToSummary(course.level as PrismaCourseLevel),
-    category: course.category,
-    coverImage: course.coverImage,
-    progressPercentage: 0,
-    lessonsCompleted: 0,
-    lessonsCount: course._count.lessons,
-    instructor: {
-      id: course.instructor?.id ?? "unknown",
-      name: course.instructor
-        ? `${course.instructor.firstName} ${course.instructor.lastName}`.trim()
-        : "Finbers Instructor",
-      title: course.instructor?.profile?.headline ?? "Lead instructor",
-      avatarUrl: course.instructor?.avatarUrl ?? FALLBACK_AVATAR,
-    },
-  }));
+  return courses.map(mapCourseToSummary);
 }
 
 export async function getLearnerCourseDetail(

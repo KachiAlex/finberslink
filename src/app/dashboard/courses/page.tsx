@@ -4,22 +4,46 @@ import { Compass, GraduationCap } from "lucide-react";
 import { requireSession } from "@/lib/auth/session";
 import { DashboardHero } from "@/components/dashboard/dashboard-hero";
 import { getStudentEnrollments } from "@/features/dashboard/service";
-import { listLearnerCourses } from "@/features/lms/data/course-service";
+import { listDashboardCatalogCourses } from "@/features/lms/data/course-service";
 import { DashboardCoursesClient } from "./dashboard-courses-client";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function DashboardCoursesPage() {
+type LevelQuery = "beginner" | "intermediate" | "advanced";
+type SortQuery = "recent" | "popular";
+
+interface DashboardCoursesPageProps {
+  searchParams?: Record<string, string | string[]>;
+}
+
+export default async function DashboardCoursesPage({ searchParams }: DashboardCoursesPageProps) {
   const session = await requireSession({ failureMode: "error" });
 
   if (session.role !== "STUDENT") {
     redirect("/dashboard");
   }
 
+  const rawSearch = typeof searchParams?.search === "string" ? searchParams.search : "";
+  const levelParam = typeof searchParams?.level === "string" ? searchParams.level.toLowerCase() : "all";
+  const level: LevelQuery | "all" = ["beginner", "intermediate", "advanced"].includes(levelParam)
+    ? (levelParam as LevelQuery)
+    : "all";
+  const categoryParam = typeof searchParams?.category === "string" ? searchParams.category : "all";
+  const sortParam = typeof searchParams?.sort === "string" ? searchParams.sort : "recent";
+  const sort: SortQuery = ["recent", "popular"].includes(sortParam) ? (sortParam as SortQuery) : "recent";
+  const pageParam = Number(searchParams?.page);
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+
   const [enrollments, catalog] = await Promise.all([
     getStudentEnrollments(session.sub),
-    listLearnerCourses(session.sub),
+    listDashboardCatalogCourses({
+      search: rawSearch?.trim() ? rawSearch.trim() : undefined,
+      level: level === "all" ? undefined : level,
+      category: categoryParam === "all" ? undefined : categoryParam,
+      sort,
+      page,
+    }),
   ]);
 
   const assigned = enrollments.map((enrollment) => ({
@@ -48,7 +72,18 @@ export default async function DashboardCoursesPage() {
         ]}
       />
 
-      <DashboardCoursesClient assigned={assigned} catalog={catalog} />
+      <DashboardCoursesClient
+        assigned={assigned}
+        initialCatalog={catalog.courses}
+        initialPagination={catalog.pagination}
+        initialFilters={{
+          search: rawSearch ?? "",
+          level,
+          category: categoryParam,
+          sort,
+          page: catalog.pagination.page,
+        }}
+      />
     </div>
   );
 }
