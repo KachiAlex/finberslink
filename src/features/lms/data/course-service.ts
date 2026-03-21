@@ -57,6 +57,44 @@ const courseSummaryInclude = {
   },
 } satisfies Prisma.CourseInclude;
 
+const courseDetailInclude = {
+  instructor: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      avatarUrl: true,
+      profile: {
+        select: {
+          headline: true,
+        },
+      },
+    },
+  },
+  lessons: {
+    orderBy: { order: "asc" },
+    select: {
+      id: true,
+      slug: true,
+      order: true,
+      title: true,
+      durationMinutes: true,
+      format: true,
+      summary: true,
+      content: true,
+      videoUrl: true,
+      resources: {
+        select: {
+          id: true,
+          title: true,
+          type: true,
+          url: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.CourseInclude;
+
 type CourseSummaryRecord = Prisma.CourseGetPayload<{ include: typeof courseSummaryInclude }>;
 
 const mapCourseToSummary = (course: CourseSummaryRecord): CourseSummary => ({
@@ -170,51 +208,33 @@ export async function listLearnerCourses(_userId = DEFAULT_LEARNER_ID): Promise<
 
 export async function getLearnerCourseDetail(
   slug: string,
-  _userId = DEFAULT_LEARNER_ID,
+  userId = DEFAULT_LEARNER_ID,
 ): Promise<CourseDetail | null> {
-  const course = await prisma.course.findFirst({
+  let course = await prisma.course.findFirst({
     where: {
       OR: [{ id: slug }, { slug }],
       approvalStatus: "APPROVED",
     },
-    include: {
-      instructor: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          avatarUrl: true,
-          profile: {
-            select: {
-              headline: true,
-            },
-          },
-        },
-      },
-      lessons: {
-        orderBy: { order: "asc" },
-        select: {
-          id: true,
-          slug: true,
-          order: true,
-          title: true,
-          durationMinutes: true,
-          format: true,
-          summary: true,
-          content: true,
-          videoUrl: true,
-          resources: {
-            select: {
-              id: true,
-              title: true,
-              type: true,
-              url: true,
-            },
-          },
-        },
-      },
-    },
+    include: courseDetailInclude,
   });
+
+  if (!course && userId !== DEFAULT_LEARNER_ID) {
+    const enrollment = await prisma.enrollment.findFirst({
+      where: {
+        userId,
+        course: {
+          OR: [{ id: slug }, { slug }],
+        },
+      },
+      include: {
+        course: {
+          include: courseDetailInclude,
+        },
+      },
+    });
+
+    course = enrollment?.course ?? null;
+  }
 
   if (!course) {
     return null;
@@ -275,7 +295,6 @@ export async function getLearnerLesson(
       userId: _userId,
       course: {
         OR: [{ id: courseSlug }, { slug: courseSlug }],
-        approvalStatus: "APPROVED",
       },
     },
     include: {

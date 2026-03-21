@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CourseHero } from "@/features/lms/components/course-hero";
 import { LessonList } from "@/features/lms/components/lesson-list";
 import { getLearnerCourseDetail } from "@/features/lms/data/course-service";
+import { requireSession } from "@/lib/auth/session";
 
 export default async function CourseDetailPage({
   params,
@@ -13,7 +14,8 @@ export default async function CourseDetailPage({
   params: Promise<{ courseId: string }>;
 }) {
   const { courseId } = await params;
-  const course = await getLearnerCourseDetail(courseId);
+  const session = await requireSession({ allowedRoles: ["STUDENT"], failureMode: "redirect" });
+  const course = await getLearnerCourseDetail(courseId, session.sub);
 
   if (!course) {
     notFound();
