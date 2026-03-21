@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLearnerLesson } from "@/features/lms/data/course-service";
+import { requireSession } from "@/lib/auth/session";
 
 const forumPreview = [
   {
@@ -30,7 +31,8 @@ export default async function LessonPage({
   params: Promise<{ courseId: string; lessonId: string }>;
 }) {
   const { courseId, lessonId } = await params;
-  const result = await getLearnerLesson(courseId, lessonId);
+  const session = await requireSession({ allowedRoles: ["STUDENT"], failureMode: "redirect" });
+  const result = await getLearnerLesson(courseId, lessonId, session.sub);
   if (!result) {
     notFound();
   }
