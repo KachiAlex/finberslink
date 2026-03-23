@@ -47,6 +47,12 @@ model User {
   volunteerOpportunitiesPosted VolunteerOpportunity[] @relation("VolunteerPostedBy")
   interviewSessions            InterviewSession[]
   passwordResetTokens          PasswordResetToken[]
+  courseAssignmentsReceived    CourseAssignment[]     @relation("StudentCourseAssignments")
+  courseAssignmentsCreated     CourseAssignment[]     @relation("AdminCourseAssignments")
+  courseCertificates           CourseCertificate[]    @relation("CertificateStudent")
+  coursesSubmitted             Course[]               @relation("CourseSubmittedBy")
+  coursesReviewed              Course[]               @relation("CourseReviewedBy")
+  issuedCertificates           CourseCertificate[]    @relation("CertificatesIssuedBy")
 }
 
 model Profile {
@@ -71,7 +77,14 @@ model Course {
   level                CourseLevel
   category             String
   coverImage           String
-  approvalStatus       CourseApprovalStatus @default(PENDING)
+  approvalStatus       CourseApprovalStatus @default(DRAFT)
+  submittedAt          DateTime?
+  submittedById        String?
+  reviewedAt           DateTime?
+  reviewedById         String?
+  publishedAt          DateTime?
+  tutorEditingLocked   Boolean       @default(false)
+  draftStructure       Json?
   certificateAvailable Boolean       @default(false)
   instructorId         String
   createdAt            DateTime      @default(now())
@@ -80,10 +93,14 @@ model Course {
   skills               String[]      @default([])
   chatSpaces           ChatSpace[]
   instructor           User          @relation("CourseInstructor", fields: [instructorId], references: [id])
+  submittedBy          User?         @relation("CourseSubmittedBy", fields: [submittedById], references: [id])
+  reviewedBy           User?         @relation("CourseReviewedBy", fields: [reviewedById], references: [id])
   enrollments          Enrollment[]
   exams                Exam[]
   forumThreads         ForumThread[]
   lessons              Lesson[]
+  assignments          CourseAssignment[]
+  certificates         CourseCertificate[]
 }
 
 model Lesson {
@@ -148,13 +165,56 @@ model Enrollment {
   status             EnrollmentStatus @default(ACTIVE)
   progressPercentage Int              @default(0)
   lastAccessedAt     DateTime?
+  assignmentId       String?          @unique
+  acceptedAt         DateTime?
+  completedAt        DateTime?
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
   course             Course           @relation(fields: [courseId], references: [id])
   user               User             @relation(fields: [userId], references: [id])
   lessonProgress     LessonProgress[]
+  assignment         CourseAssignment? @relation("EnrollmentAssignment", fields: [assignmentId], references: [id])
+  certificate        CourseCertificate?
 
   @@unique([userId, courseId])
+}
+
+model CourseAssignment {
+  id            String                   @id @default(cuid())
+  courseId      String
+  studentId     String
+  assignedById  String
+  status        CourseAssignmentStatus   @default(PENDING)
+  assignedAt    DateTime                 @default(now())
+  acceptedAt    DateTime?
+  declinedAt    DateTime?
+  revokedAt     DateTime?
+  notes         String?
+  course        Course                   @relation(fields: [courseId], references: [id])
+  student       User                     @relation("StudentCourseAssignments", fields: [studentId], references: [id])
+  assignedBy    User                     @relation("AdminCourseAssignments", fields: [assignedById], references: [id])
+  enrollment    Enrollment?              @relation("EnrollmentAssignment")
+
+  @@index([courseId])
+  @@index([studentId])
+}
+
+model CourseCertificate {
+  id           String             @id @default(cuid())
+  enrollmentId String             @unique
+  courseId     String
+  studentId    String
+  issuedById   String?
+  status       CertificateStatus  @default(DRAFT)
+  issuedAt     DateTime?
+  shareCode    String?            @unique
+  metadata     Json?              @default("{}")
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  enrollment   Enrollment         @relation(fields: [enrollmentId], references: [id])
+  course       Course             @relation(fields: [courseId], references: [id])
+  student      User               @relation("CertificateStudent", fields: [studentId], references: [id])
+  issuedBy     User?              @relation("CertificatesIssuedBy", fields: [issuedById], references: [id])
 }
 
 model LessonProgress {
@@ -217,6 +277,7 @@ model Resume {
   targetRoles         String[]           @default([])
   topSkills           String[]           @default([])
   yearsExperience     Int?
+  viewCount           Int                @default(0)
   skillAnalysisSnapshot Json?
   introVideoUrl       String?
   introVideoEmbedUrl  String?
@@ -688,9 +749,24 @@ enum ResourceType {
 }
 
 enum EnrollmentStatus {
+  PENDING_ACCEPTANCE
   ACTIVE
   COMPLETED
   WITHDRAWN
+}
+
+enum CourseAssignmentStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+}
+
+enum CertificateStatus {
+  DRAFT
+  APPROVED
+  ISSUED
+  REVOKED
 }
 
 enum LessonProgressStatus {
@@ -787,6 +863,7 @@ enum InviteStatus {
 }
 
 enum CourseApprovalStatus {
+  DRAFT
   PENDING
   APPROVED
   CHANGES

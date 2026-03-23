@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GlassCardError } from "@/components/ui/glass-card-error";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface SectionData {
+  summary: DashboardSummary | null;
   enrollments: EnrollmentSection[];
   resumes: ResumeSection[];
   applications: { jobs: ApplicationSection[]; volunteer: ApplicationSection[] };
@@ -19,6 +21,7 @@ interface SectionData {
 }
 
 interface SectionErrors {
+  summary?: string | null;
   enrollments?: string | null;
   resumes?: string | null;
   applications?: string | null;
@@ -91,6 +94,16 @@ type DashboardInsights = {
   skills: SkillInsights | null;
 };
 
+type DashboardSummary = {
+  enrollmentsCount: number;
+  completedEnrollmentsCount: number;
+  resumesCount: number;
+  applicationsCount: number;
+  jobApplicationsCount: number;
+  volunteerApplicationsCount: number;
+  resumeViewsCount: number;
+};
+
 type SectionResponse = {
   data: SectionData;
   errors: SectionErrors;
@@ -126,7 +139,8 @@ export function DashboardSectionsClient() {
 
   const data = sectionResponse?.data;
   const errors = sectionResponse?.errors;
-  const savedIds = new Set(data?.savedIds ?? []);
+  const summary = data?.summary;
+  const summaryError = errors?.summary;
 
   const quickSummary = () => {
     if (loading) {
@@ -150,7 +164,6 @@ export function DashboardSectionsClient() {
   const resumesCount = data?.resumes?.length ?? 0;
   const applicationsCount =
     (data?.applications?.jobs.length ?? 0) + (data?.applications?.volunteer.length ?? 0);
-  const recommendedCount = data?.recommended?.length ?? 0;
 
   const topCourse = data?.enrollments?.[0];
   const topApplication = data?.applications?.jobs?.[0] ?? data?.applications?.volunteer?.[0] ?? null;
@@ -160,28 +173,67 @@ export function DashboardSectionsClient() {
 
   const metrics = [
     {
-      label: "Active courses",
-      value: loading ? "—" : activeCourses,
+      label: "Courses enrolled",
+      value: loading ? "—" : summary?.enrollmentsCount ?? activeCourses,
       helper: activeCourses ? "Keep your streak alive" : "Start a track to unlock guidance",
       action: "/dashboard/courses",
     },
     {
-      label: "Resumes",
-      value: loading ? "—" : resumesCount,
+      label: "Courses completed",
+      value: loading ? "—" : summary?.completedEnrollmentsCount ?? 0,
+      helper:
+        (summary?.completedEnrollmentsCount ?? 0) > 0
+          ? "Celebrate milestones"
+          : "Finish a course to unlock certificates",
+      action: "/dashboard/courses",
+    },
+    {
+      label: "Resumes created",
+      value: loading ? "—" : summary?.resumesCount ?? resumesCount,
       helper: resumesCount ? "Refresh insights anytime" : "Generate an ATS-ready resume",
       action: "/dashboard/resume",
     },
     {
-      label: "Applications",
-      value: loading ? "—" : applicationsCount,
+      label: "Resume views",
+      value: loading ? "—" : summary?.resumeViewsCount ?? 0,
+      helper:
+        (summary?.resumeViewsCount ?? 0) > 0
+          ? "People are checking you out"
+          : "Share your profile link to gain traction",
+      action: "/resume/share",
+    },
+    {
+      label: "Jobs applied",
+      value: loading ? "—" : summary?.jobApplicationsCount ?? 0,
       helper: applicationsCount ? "Track responses in dashboard" : "Submit at least one this week",
       action: "/applications",
     },
     {
-      label: "Recommended roles",
-      value: loading ? "—" : recommendedCount,
-      helper: recommendedCount ? "Tailored from your activity" : "Update your profile for matches",
-      action: "/jobs",
+      label: "Volunteer apps",
+      value: loading ? "—" : summary?.volunteerApplicationsCount ?? 0,
+      helper:
+        (summary?.volunteerApplicationsCount ?? 0) > 0
+          ? "Stay close to your mission goals"
+          : "Volunteer work boosts resumes",
+      action: "/applications",
+    },
+  ];
+
+  const highlightStats = [
+    {
+      title: "Career momentum",
+      value: loading ? "—" : `${summary?.applicationsCount ?? applicationsCount}`,
+      helper: "Total applications this account has shipped",
+    },
+    {
+      title: "Completed tracks",
+      value: loading ? "—" : `${summary?.completedEnrollmentsCount ?? 0}`,
+      helper: "Courses fully mastered",
+    },
+    {
+      title: "Profile reach",
+      value: loading ? "—" : `${summary?.resumeViewsCount ?? 0}`,
+      helper: "Public resume impressions",
     },
   ];
 
@@ -379,6 +431,178 @@ export function DashboardSectionsClient() {
     );
   };
 
+  const renderCoursesTab = () => {
+    if (!data) {
+      return (
+        <GlassCard className="p-6">
+          <Skeleton className="h-32 w-full" />
+        </GlassCard>
+      );
+    }
+
+    const enrollments = data.enrollments ?? [];
+    return (
+      <GlassCard className="space-y-6 p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Courses</p>
+            <h3 className="text-2xl font-semibold text-slate-900">Learning runway</h3>
+            <p className="text-sm text-slate-500">Structured roadmap of your enrollments.</p>
+          </div>
+          <Button asChild>
+            <Link href="/dashboard/courses">Open catalog</Link>
+          </Button>
+        </div>
+        {enrollments.length ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {enrollments.map((enrollment) => (
+              <div key={enrollment.id} className="rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">{enrollment.course.title}</p>
+                <p className="text-xs text-slate-500">{enrollment.course.level ?? "Self-paced"}</p>
+                <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                  <span>Progress</span>
+                  <span>{enrollment.progressPercentage ?? 0}%</span>
+                </div>
+                <div className="mt-2 h-2 rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"
+                    style={{ width: `${enrollment.progressPercentage ?? 0}%` }}
+                  />
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <Badge variant="secondary" className="rounded-full bg-blue-50 text-blue-700">
+                    {enrollment.course.level ?? "Self-paced"}
+                  </Badge>
+                  <Button asChild variant="ghost" size="sm" className="px-0 text-slate-600">
+                    <Link href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}>Resume</Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
+            <p>No courses yet. Enroll to unlock focus recommendations.</p>
+            <Button asChild size="sm" className="mt-3">
+              <Link href="/dashboard/courses">Browse catalog</Link>
+            </Button>
+          </div>
+        )}
+      </GlassCard>
+    );
+  };
+
+  const renderResumesTab = () => {
+    if (!data) {
+      return (
+        <GlassCard className="p-6">
+          <Skeleton className="h-32 w-full" />
+        </GlassCard>
+      );
+    }
+
+    const resumes = data.resumes ?? [];
+    return (
+      <GlassCard className="space-y-6 p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Resumes</p>
+            <h3 className="text-2xl font-semibold text-slate-900">Storyteller toolkit</h3>
+            <p className="text-sm text-slate-500">Manage versions, AI feedback, and visibility.</p>
+          </div>
+          <Button asChild>
+            <Link href="/dashboard/resume">Manage resumes</Link>
+          </Button>
+        </div>
+        {resumes.length ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {resumes.map((resume) => (
+              <div key={resume.id} className="rounded-2xl border border-slate-100 bg-white/80 p-4">
+                <p className="text-sm font-semibold text-slate-900">{resume.title}</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{resume.visibility}</p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                  <span>Slug</span>
+                  <Badge variant="outline" className="rounded-full border-slate-200">
+                    {resume.slug}
+                  </Badge>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <Button asChild size="sm" variant="secondary" className="rounded-full">
+                    <Link href={`/resume/${resume.slug}/edit`}>Edit</Link>
+                  </Button>
+                  <Button asChild size="sm" variant="ghost" className="rounded-full">
+                    <Link href={`/resume/share/${resume.slug}`}>Share</Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
+            <p>You haven’t created a resume yet. Build one to unlock AI insights and tracking.</p>
+            <Button asChild size="sm" className="mt-3">
+              <Link href="/resume/builder">Launch builder</Link>
+            </Button>
+          </div>
+        )}
+      </GlassCard>
+    );
+  };
+
+  const renderJobsTab = () => {
+    if (!data) {
+      return (
+        <GlassCard className="p-6">
+          <Skeleton className="h-32 w-full" />
+        </GlassCard>
+      );
+    }
+
+    const recommendedJobs = data.recommended ?? [];
+    return (
+      <GlassCard className="space-y-6 p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Jobs</p>
+            <h3 className="text-2xl font-semibold text-slate-900">Opportunities radar</h3>
+            <p className="text-sm text-slate-500">Hand-picked roles plus your latest pipeline.</p>
+          </div>
+          <Button asChild>
+            <Link href="/jobs">View all roles</Link>
+          </Button>
+        </div>
+        {recommendedJobs.length ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {recommendedJobs.map((job) => (
+              <div key={job.id} className="rounded-2xl border border-slate-100 bg-white/80 p-4">
+                <p className="text-sm font-semibold text-slate-900">{job.title}</p>
+                <p className="text-xs text-slate-500">{job.company}</p>
+                <p className="text-xs text-slate-400">
+                  {job.location ?? job.remoteOption ?? "Remote friendly"}
+                </p>
+                <div className="mt-4 flex gap-2">
+                  <Button asChild size="sm" variant="ghost" className="rounded-full text-slate-600">
+                    <Link href={`/jobs/${job.slug}`}>View</Link>
+                  </Button>
+                  <Button asChild size="sm" className="rounded-full">
+                    <Link href={`/jobs/${job.slug}`}>Apply</Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
+            <p>No recommendations yet. Update your profile or enroll in a course to unlock tailored roles.</p>
+            <Button asChild size="sm" className="mt-3" variant="secondary">
+              <Link href="/jobs">Browse roles</Link>
+            </Button>
+          </div>
+        )}
+      </GlassCard>
+    );
+  };
+
   if (loading && !data) {
     return (
       <section>
@@ -387,52 +611,229 @@ export function DashboardSectionsClient() {
     );
   }
 
-  return (
-    <section className="space-y-6">
-      <GlassCard variant="gradient" className="p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+  const renderCoursesTab = () => {
+    if (!data) {
+      return (
+        <GlassCard className="p-6">
+          <Skeleton className="h-24 w-full" />
+        </GlassCard>
+      );
+    }
+
+    const enrollments = data.enrollments ?? [];
+    if (!enrollments.length) {
+      return (
+        <GlassCard className="space-y-4 p-6">
           <div>
-            <p className="text-xs uppercase tracking-[0.45em] text-slate-400">Overview</p>
-            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Here’s where you stand</h2>
-            <p className="text-sm text-slate-600">{quickSummary()}</p>
+            <p className="text-sm font-semibold text-slate-900">No enrollments yet</p>
+            <p className="text-sm text-slate-500">Browse the catalog to kick off your first learning sprint.</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild className="rounded-full">
-              <Link href="/dashboard/courses">Continue learning</Link>
-            </Button>
-            <Button asChild variant="outline" className="rounded-full">
-              <Link href="/applications">Review applications</Link>
-            </Button>
+          <Button asChild>
+            <Link href="/dashboard/courses">Browse catalog</Link>
+          </Button>
+        </GlassCard>
+      );
+    }
+
+    return (
+      <div className="grid gap-4 lg:grid-cols-2">
+        {enrollments.map((enrollment: EnrollmentSection) => (
+          <GlassCard key={enrollment.id} className="space-y-3 border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">{enrollment.course.title}</p>
+              <p className="text-xs text-slate-500">{enrollment.course.level ?? "Self-paced"}</p>
+            </div>
+            <div className="h-2 rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
+                style={{ width: `${enrollment.progressPercentage ?? 0}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span>{enrollment.progressPercentage ?? 0}% complete</span>
+              <Button asChild variant="ghost" size="sm" className="px-0 text-slate-600">
+                <Link href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}>Resume</Link>
+              </Button>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+    );
+  };
+
+  const renderResumesTab = () => {
+    if (!data) {
+      return (
+        <GlassCard className="p-6">
+          <Skeleton className="h-24 w-full" />
+        </GlassCard>
+      );
+    }
+
+    const resumes = data.resumes ?? [];
+    if (!resumes.length) {
+      return (
+        <GlassCard className="space-y-4 p-6">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">No resumes yet</p>
+            <p className="text-sm text-slate-500">Create a resume to unlock AI skill insights, sharing stats, and ATS tooling.</p>
+          </div>
+          <Button asChild>
+            <Link href="/resume/builder">Launch builder</Link>
+          </Button>
+        </GlassCard>
+      );
+    }
+
+    return (
+      <div className="grid gap-4 lg:grid-cols-2">
+        {resumes.map((resume: ResumeSection) => (
+          <GlassCard key={resume.id} className="space-y-3 border-slate-100 bg-white/90 p-4">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">{resume.title}</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{resume.visibility}</p>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <span>Slug</span>
+              <Badge variant="outline" className="rounded-full border-slate-200">
+                {resume.slug}
+              </Badge>
+            </div>
+            <div className="flex gap-2">
+              <Button asChild size="sm" className="rounded-full">
+                <Link href={`/resume/${resume.slug}/edit`}>Edit</Link>
+              </Button>
+              <Button asChild size="sm" variant="secondary" className="rounded-full">
+                <Link href={`/resume/share/${resume.slug}`}>Share</Link>
+              </Button>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+    );
+  };
+
+  const renderJobsTab = () => {
+    if (!data) {
+      return (
+        <GlassCard className="p-6">
+          <Skeleton className="h-24 w-full" />
+        </GlassCard>
+      );
+    }
+
+    const recommendedJobs = data.recommended ?? [];
+    if (!recommendedJobs.length) {
+      return (
+        <GlassCard className="space-y-4 p-6">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">No recommendations yet</p>
+            <p className="text-sm text-slate-500">Enroll in tracks or update your profile to unlock tailored matches.</p>
+          </div>
+          <Button asChild variant="secondary">
+            <Link href="/jobs">Browse roles</Link>
+          </Button>
+        </GlassCard>
+      );
+    }
+
+    return (
+      <div className="grid gap-4 lg:grid-cols-2">
+        {recommendedJobs.map((job: RecommendedJob) => (
+          <GlassCard key={job.id} className="space-y-3 border-slate-100 bg-white/90 p-4">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">{job.title}</p>
+              <p className="text-xs text-slate-500">{job.company}</p>
+            </div>
+            <p className="text-xs text-slate-400">{job.location ?? job.remoteOption ?? "Remote friendly"}</p>
+            <div className="flex gap-2">
+              <Button asChild size="sm" variant="ghost" className="rounded-full text-slate-600">
+                <Link href={`/jobs/${job.slug}`}>View</Link>
+              </Button>
+              <Button asChild size="sm" className="rounded-full">
+                <Link href={`/jobs/${job.slug}`}>Apply</Link>
+              </Button>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <section className="space-y-8">
+      <GlassCard variant="gradient" className="overflow-hidden border border-slate-200/70">
+        <div className="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-4">
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Career pulse</p>
+            <h2 className="text-3xl font-semibold text-slate-900">Progress that recruiters notice</h2>
+            <p className="text-sm text-slate-600">{quickSummary()}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild className="rounded-full">
+                <Link href="/dashboard/courses">Continue learning</Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-full">
+                <Link href="/applications">Track applications</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-3 rounded-3xl border border-slate-100/60 bg-white/70 p-5">
+            {summaryError ? (
+              <GlassCardError message={summaryError} />
+            ) : (
+              highlightStats.map((stat) => (
+                <div key={stat.title} className="rounded-2xl border border-slate-100 bg-white/90 p-4">
+                  <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{stat.title}</p>
+                  <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
+                  <p className="text-xs text-slate-500">{stat.helper}</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </GlassCard>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {metrics.map((metric) => (
-          <GlassCard key={metric.label} className="p-4">
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">{metric.label}</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">{metric.value}</p>
+          <GlassCard key={metric.label} className="space-y-2 border-slate-100 bg-white/90 p-4">
+            <p className="text-[11px] uppercase tracking-[0.35em] text-slate-400">{metric.label}</p>
+            <p className="text-3xl font-semibold text-slate-900">{metric.value}</p>
             <p className="text-sm text-slate-500">{metric.helper}</p>
-            <Button asChild variant="ghost" size="sm" className="mt-3 px-0 text-slate-600">
+            <Button asChild variant="link" size="sm" className="px-0 text-slate-600">
               <Link href={metric.action}>Open</Link>
             </Button>
           </GlassCard>
         ))}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <GlassCard className="p-5">
-          {loading && !topCourse ? <Skeleton className="h-16 w-full" /> : renderLatestCourse()}
-        </GlassCard>
-        <GlassCard className="p-5">
-          {loading && !topApplication ? <Skeleton className="h-16 w-full" /> : renderPipelineHighlight()}
-        </GlassCard>
-      </div>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-slate-50 p-1 text-sm">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="courses">Courses</TabsTrigger>
+          <TabsTrigger value="resumes">Resumes</TabsTrigger>
+          <TabsTrigger value="jobs">Jobs</TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <GlassCard className="p-5">{renderFocusHighlight()}</GlassCard>
-        <GlassCard className="p-5">{renderJobHighlight()}</GlassCard>
-      </div>
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <GlassCard className="p-5">
+              {loading && !topCourse ? <Skeleton className="h-16 w-full" /> : renderLatestCourse()}
+            </GlassCard>
+            <GlassCard className="p-5">
+              {loading && !topApplication ? <Skeleton className="h-16 w-full" /> : renderPipelineHighlight()}
+            </GlassCard>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <GlassCard className="p-5">{renderFocusHighlight()}</GlassCard>
+            <GlassCard className="p-5">{renderJobHighlight()}</GlassCard>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="courses">{renderCoursesTab()}</TabsContent>
+        <TabsContent value="resumes">{renderResumesTab()}</TabsContent>
+        <TabsContent value="jobs">{renderJobsTab()}</TabsContent>
+      </Tabs>
     </section>
   );
 }
