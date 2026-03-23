@@ -51,21 +51,7 @@ export default async function DashboardCoursesPage({ searchParams }: DashboardCo
     status: enrollment.status,
     progress: enrollment.progressPercentage ?? 0,
     acceptedAt: enrollment.acceptedAt?.toISOString() ?? null,
-    assignment: enrollment.assignment
-      ? {
-          id: enrollment.assignment.id,
-          status: enrollment.assignment.status,
-          assignedAt: enrollment.assignment.assignedAt?.toISOString() ?? null,
-          notes: enrollment.assignment.notes ?? null,
-          assignedBy: enrollment.assignment.assignedBy
-            ? {
-                id: enrollment.assignment.assignedBy.id,
-                firstName: enrollment.assignment.assignedBy.firstName ?? null,
-                lastName: enrollment.assignment.assignedBy.lastName ?? null,
-              }
-            : null,
-        }
-      : null,
+    assignment: null,
     course: {
       id: enrollment.course.id,
       title: enrollment.course.title,
