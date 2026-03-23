@@ -33,21 +33,6 @@ export async function getStudentEnrollments(userId: string, limit?: number) {
     where: { userId },
     include: {
       course: true,
-      assignment: {
-        select: {
-          id: true,
-          status: true,
-          assignedAt: true,
-          notes: true,
-          assignedBy: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
-      },
     },
     orderBy: { createdAt: 'desc' },
     take: limit,
