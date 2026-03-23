@@ -95,6 +95,29 @@ export function StudentDashboard(_props: StudentDashboardProps) {
       />
 
       <div className="space-y-8">
+        {/* Promotional Banner */}
+        <Card className="border-0 bg-gradient-to-r from-slate-900 to-slate-800 text-white overflow-hidden">
+          <CardContent className="p-0">
+            <div className="grid gap-6 p-6 md:grid-cols-2 md:items-center">
+              <div>
+                <h3 className="mb-2 text-lg font-bold">WE OFFER SELF PACED AGILE VIRTUAL CERTIFICATIONS COURSES</h3>
+                <ul className="space-y-1 text-sm text-gray-200">
+                  <li>✓ Agile certification prep</li>
+                  <li>✓ Industry recognized credentials</li>
+                  <li>✓ Expert-led sessions</li>
+                </ul>
+              </div>
+              <div className="flex flex-col items-start gap-3 md:items-end">
+                <div>
+                  <p className="text-xs text-gray-400">Contact</p>
+                  <p className="text-xl font-bold">+234 803 655 5555</p>
+                  <p className="text-xs text-gray-400">CYBSECURITY@FINBERSGROUP.COM</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Greeting Section */}
         <div>
           <div className="mb-8 flex items-center gap-4">
@@ -129,29 +152,6 @@ export function StudentDashboard(_props: StudentDashboardProps) {
             accent="bg-blue-50 text-blue-600"
           />
         </div>
-
-        {/* Promotional Banner */}
-        <Card className="border-0 bg-gradient-to-r from-slate-900 to-slate-800 text-white overflow-hidden">
-          <CardContent className="p-0">
-            <div className="grid gap-6 p-6 md:grid-cols-2 md:items-center">
-              <div>
-                <h3 className="mb-2 text-lg font-bold">WE OFFER SELF PACED AGILE VIRTUAL CERTIFICATIONS COURSES</h3>
-                <ul className="space-y-1 text-sm text-gray-200">
-                  <li>✓ Agile certification prep</li>
-                  <li>✓ Industry recognized credentials</li>
-                  <li>✓ Expert-led sessions</li>
-                </ul>
-              </div>
-              <div className="flex flex-col items-start gap-3 md:items-end">
-                <div>
-                  <p className="text-xs text-gray-400">Contact</p>
-                  <p className="text-xl font-bold">+234 803 655 5555</p>
-                  <p className="text-xs text-gray-400">CYBSECURITY@FINBERSGROUP.COM</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* My Courses Section */}
         <div>
