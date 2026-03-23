@@ -10,6 +10,7 @@ export const siteConfig = {
     { title: "Volunteer", href: "/volunteer" },
     { title: "News", href: "/news" },
     { title: "Forum", href: "/forum" },
+    { title: "Chat", href: "/chat" },
     { title: "Profile", href: "/profile" },
   ],
   dashboardNav: [
@@ -17,6 +18,7 @@ export const siteConfig = {
     { title: "Courses", href: "/dashboard/courses" },
     { title: "Resume", href: "/resumes" },
     { title: "Applications", href: "/dashboard/applications" },
+    { title: "Chat", href: "/chat" },
     { title: "Notifications", href: "/dashboard/notifications" },
   ],
 };
