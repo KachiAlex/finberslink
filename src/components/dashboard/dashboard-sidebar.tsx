@@ -32,7 +32,7 @@ export function DashboardSidebar({
   return (
     <aside
       className={cn(
-        "space-y-4 rounded-[32px] border border-slate-200/80 bg-white/90 p-6 shadow-sm backdrop-blur",
+        "space-y-4 rounded-[32px] border border-blue-200/60 bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm backdrop-blur",
         className,
       )}
     >
