@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import type { Role } from "@prisma/client";
 
 export interface DashboardInsight {
   title: string;
@@ -73,6 +72,8 @@ export async function getTutorDashboardInsights(userId: string) {
         id: true,
         title: true,
         coverImage: true,
+        approvalStatus: true,
+        tutorEditingLocked: true,
         enrollments: { select: { progressPercentage: true } },
       },
     });
@@ -100,6 +101,8 @@ export async function getTutorDashboardInsights(userId: string) {
         id: c.id,
         title: c.title,
         image: c.coverImage,
+        approvalStatus: c.approvalStatus,
+        tutorEditingLocked: c.tutorEditingLocked,
       })),
     };
   } catch (error) {
@@ -213,9 +216,23 @@ export async function getTrendingCourses(limit: number = 5) {
 /**
  * Get user activity feed
  */
+type UserActivity =
+  | {
+      type: "ENROLLMENT";
+      timestamp: Date;
+      description: string;
+      courseId: string;
+    }
+  | {
+      type: "JOB_APPLICATION";
+      timestamp: Date;
+      description: string;
+      jobId: string;
+    };
+
 export async function getUserActivityFeed(userId: string, limit: number = 10) {
   try {
-    const activities: any[] = [];
+    const activities: UserActivity[] = [];
 
     // Course enrollments
     const enrollments = await prisma.enrollment.findMany({
@@ -226,7 +243,7 @@ export async function getUserActivityFeed(userId: string, limit: number = 10) {
     });
 
     activities.push(
-      ...enrollments.map((e) => ({
+      ...enrollments.map<UserActivity>((e) => ({
         type: "ENROLLMENT",
         timestamp: e.createdAt,
         description: `Enrolled in ${e.course.title}`,
@@ -245,7 +262,7 @@ export async function getUserActivityFeed(userId: string, limit: number = 10) {
     });
 
     activities.push(
-      ...applications.map((a) => ({
+      ...applications.map<UserActivity>((a) => ({
         type: "JOB_APPLICATION",
         timestamp: a.submittedAt,
         description: `Applied for ${a.opportunity.title}`,

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Download, Edit2, Trash2, Eye } from "lucide-react";
+import { Plus, Download, Edit2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSessionFromCookies } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
@@ -126,7 +126,7 @@ export default async function ResumesPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <Link href="/resumes/builder?mode=optimize" className="p-4 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all">
             <h3 className="font-medium text-slate-900">Optimize for ATS</h3>
-            <p className="text-sm text-slate-600 mt-1">Improve your resume's compatibility with Applicant Tracking Systems</p>
+            <p className="text-sm text-slate-600 mt-1">Improve your resume&apos;s compatibility with Applicant Tracking Systems</p>
           </Link>
           <Link href="/resumes/builder?mode=skills" className="p-4 rounded-lg border border-slate-200 hover:border-green-300 hover:bg-green-50 transition-all">
             <h3 className="font-medium text-slate-900">Extract Skills</h3>

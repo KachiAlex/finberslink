@@ -16,33 +16,25 @@ export default async function ApplicationsPage() {
   const applications = await prisma.jobApplication.findMany({
     where: { userId: session.sub },
     include: {
-      jobOpportunity: {
-        include: {
-          company: true,
-        },
-      },
+      opportunity: true,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { submittedAt: "desc" },
   });
 
   const statusColors = {
-    APPLIED: "bg-blue-100 text-blue-800",
-    SHORTLISTED: "bg-purple-100 text-purple-800",
+    SUBMITTED: "bg-blue-100 text-blue-800",
+    IN_REVIEW: "bg-purple-100 text-purple-800",
     INTERVIEW: "bg-yellow-100 text-yellow-800",
     OFFERED: "bg-green-100 text-green-800",
     REJECTED: "bg-red-100 text-red-800",
-    ACCEPTED: "bg-emerald-100 text-emerald-800",
-    WITHDRAWN: "bg-slate-100 text-slate-800",
   };
 
   const statusLabels: Record<string, string> = {
-    APPLIED: "Applied",
-    SHORTLISTED: "Shortlisted",
+    SUBMITTED: "Applied",
+    IN_REVIEW: "Under Review",
     INTERVIEW: "Interview",
     OFFERED: "Offer Received",
     REJECTED: "Not Selected",
-    ACCEPTED: "Accepted",
-    WITHDRAWN: "Withdrawn",
   };
 
   return (
@@ -77,8 +69,8 @@ export default async function ApplicationsPage() {
         ) : (
           <div className="space-y-4">
             {applications.map((application) => {
-              const job = application.jobOpportunity;
-              const statusColor = statusColors[application.status as keyof typeof statusColors] || statusColors.APPLIED;
+              const job = application.opportunity;
+              const statusColor = statusColors[application.status as keyof typeof statusColors] || statusColors.SUBMITTED;
               const statusLabel = statusLabels[application.status] || "Applied";
               
               return (
@@ -95,7 +87,7 @@ export default async function ApplicationsPage() {
                           </h3>
                           <p className="text-slate-600 mt-1 flex items-center gap-2">
                             <Building2 className="h-4 w-4" />
-                            {job.company.name}
+                            {job.company}
                           </p>
                         </div>
                         <Badge className={statusColor}>
@@ -119,15 +111,13 @@ export default async function ApplicationsPage() {
                           <p className="text-slate-500">Applied</p>
                           <p className="font-medium text-slate-900 flex items-center gap-1 mt-1">
                             <Calendar className="h-4 w-4" />
-                            {new Date(application.createdAt).toLocaleDateString()}
+                            {new Date(application.submittedAt).toLocaleDateString()}
                           </p>
                         </div>
                         <div>
                           <p className="text-slate-500">Salary Range</p>
                           <p className="font-medium text-slate-900 mt-1">
-                            {job.salaryMin && job.salaryMax
-                              ? `$${(job.salaryMin / 1000).toFixed(0)}k - $${(job.salaryMax / 1000).toFixed(0)}k`
-                              : "Competitive"}
+                            {job.salaryRange || "Competitive"}
                           </p>
                         </div>
                       </div>
@@ -146,14 +136,15 @@ export default async function ApplicationsPage() {
                       </Button>
                       <Button asChild variant="outline" className="w-full justify-start">
                         <Link
-                          href={job.company.website || `/${job.company.slug}`}
-                          target="_blank"
+                          href="#"
+                          onClick={(e) => e.preventDefault()}
+                          title="Company profile coming soon"
                         >
                           <Building2 className="h-4 w-4 mr-2" />
                           Company
                         </Link>
                       </Button>
-                      {application.status !== "WITHDRAWN" && (
+                      {application.status === "SUBMITTED" && (
                         <Button
                           variant="outline"
                           className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"

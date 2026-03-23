@@ -1,11 +1,10 @@
 "use client";
 
 import type { ChangeEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CourseLevel, LessonFormat, ResourceType } from "@prisma/client";
+import { CourseApprovalStatus, CourseLevel, LessonFormat, ResourceType } from "@prisma/client";
 import { ArrowLeft, CheckCircle2, Circle, Layers3, Plus, Trash } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -93,6 +92,49 @@ const INITIAL_BASICS = {
   description: "",
   category: "",
   level: "BEGINNER" as CourseLevel,
+  coverImage: "",
+};
+
+type CourseDraftPersistence = {
+  basics: typeof INITIAL_BASICS;
+  outcomesInput: string;
+  skillsInput: string;
+  sections: SectionState[];
+  resourceDrafts: Record<string, ResourceDraft>;
+  finalExamEnabled: boolean;
+  finalExam: ExamConfig;
+  coverPreview: string;
+  coverName: string | null;
+  currentStep: number;
+};
+
+type TutorCourseSummary = {
+  id: string;
+  approvalStatus: CourseApprovalStatus;
+  tutorEditingLocked: boolean;
+  draftStructure?: CourseDraftPersistence | null;
+  title?: string | null;
+  tagline?: string | null;
+  description?: string | null;
+  category?: string | null;
+  level?: CourseLevel | null;
+  coverImage?: string | null;
+};
+
+type ExtendedCourseApprovalStatus = CourseApprovalStatus | "DRAFT";
+
+const STATUS_LABELS: Record<ExtendedCourseApprovalStatus, string> = {
+  DRAFT: "Draft",
+  PENDING: "Pending review",
+  APPROVED: "Approved",
+  CHANGES: "Needs updates",
+};
+
+const STATUS_STYLES: Record<ExtendedCourseApprovalStatus, string> = {
+  DRAFT: "bg-amber-50 text-amber-700",
+  PENDING: "bg-blue-50 text-blue-700",
+  APPROVED: "bg-emerald-50 text-emerald-700",
+  CHANGES: "bg-rose-50 text-rose-700",
 };
 
 const defaultExamConfig = (label: string): ExamConfig => ({
@@ -139,7 +181,6 @@ const createSection = (index: number): SectionState => ({
 });
 
 export default function TutorCourseCreatePage() {
-  const router = useRouter();
   const [basics, setBasics] = useState(INITIAL_BASICS);
   const [outcomesInput, setOutcomesInput] = useState("");
   const [skillsInput, setSkillsInput] = useState("");
@@ -147,6 +188,7 @@ export default function TutorCourseCreatePage() {
   const [finalExamEnabled, setFinalExamEnabled] = useState(false);
   const [finalExam, setFinalExam] = useState<ExamConfig>(defaultExamConfig("Final exam"));
   const [submitting, setSubmitting] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState("");
@@ -155,6 +197,37 @@ export default function TutorCourseCreatePage() {
   const [resourceDrafts, setResourceDrafts] = useState<Record<string, ResourceDraft>>({});
   const [uploadingResourceFor, setUploadingResourceFor] = useState<string | null>(null);
   const [uploadingVideoFor, setUploadingVideoFor] = useState<string | null>(null);
+  const [courseMeta, setCourseMeta] = useState<TutorCourseSummary | null>(null);
+  const [courseId, setCourseId] = useState<string | null>(null);
+  const [loadingDraft, setLoadingDraft] = useState(true);
+
+  const hydrateFromDraft = useCallback((draft: CourseDraftPersistence) => {
+    setBasics({ ...INITIAL_BASICS, ...draft.basics });
+    setOutcomesInput(draft.outcomesInput ?? "");
+    setSkillsInput(draft.skillsInput ?? "");
+    setSections(draft.sections?.length ? draft.sections : [createSection(1)]);
+    setResourceDrafts(draft.resourceDrafts ?? {});
+    setFinalExamEnabled(Boolean(draft.finalExamEnabled));
+    setFinalExam(draft.finalExam ?? defaultExamConfig("Final exam"));
+    setCoverPreview(draft.coverPreview ?? "");
+    setCoverName(draft.coverName ?? null);
+    setCurrentStep(typeof draft.currentStep === "number" ? draft.currentStep : 0);
+  }, []);
+
+  const hydrateFromSummary = useCallback((summary: TutorCourseSummary) => {
+    setBasics((prev) => ({
+      ...prev,
+      title: summary.title ?? prev.title,
+      tagline: summary.tagline ?? prev.tagline,
+      description: summary.description ?? prev.description,
+      category: summary.category ?? prev.category,
+      level: summary.level ?? prev.level,
+      coverImage: summary.coverImage ?? prev.coverImage ?? "",
+    }));
+    if (summary.coverImage) {
+      setCoverPreview(summary.coverImage);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -162,19 +235,53 @@ export default function TutorCourseCreatePage() {
     if (!stored) return;
     try {
       const parsed = JSON.parse(stored);
-      if (parsed.basics) setBasics({ ...INITIAL_BASICS, ...parsed.basics });
-      if (parsed.outcomesInput) setOutcomesInput(parsed.outcomesInput);
-      if (parsed.skillsInput) setSkillsInput(parsed.skillsInput);
-      if (parsed.coverPreview) setCoverPreview(parsed.coverPreview);
-      if (parsed.coverName) setCoverName(parsed.coverName);
-      if (parsed.sections && parsed.sections.length) setSections(parsed.sections);
-      if (parsed.finalExam) setFinalExam(parsed.finalExam);
-      if (typeof parsed.finalExamEnabled === "boolean") setFinalExamEnabled(parsed.finalExamEnabled);
-      if (typeof parsed.currentStep === "number") setCurrentStep(parsed.currentStep);
+      hydrateFromDraft({
+        basics: parsed.basics ?? INITIAL_BASICS,
+        outcomesInput: parsed.outcomesInput ?? "",
+        skillsInput: parsed.skillsInput ?? "",
+        sections: parsed.sections?.length ? parsed.sections : [createSection(1)],
+        resourceDrafts: parsed.resourceDrafts ?? {},
+        finalExamEnabled: Boolean(parsed.finalExamEnabled),
+        finalExam: parsed.finalExam ?? defaultExamConfig("Final exam"),
+        coverPreview: parsed.coverPreview ?? "",
+        coverName: parsed.coverName ?? null,
+        currentStep: typeof parsed.currentStep === "number" ? parsed.currentStep : 0,
+      });
     } catch (err) {
       console.warn("Failed to load tutor course draft", err);
     }
-  }, []);
+  }, [hydrateFromDraft]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchDraft() {
+      try {
+        const res = await fetch("/api/tutor/courses/draft", { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error("Failed to fetch draft");
+        }
+        const data = (await res.json()) as { course?: TutorCourseSummary | null };
+        if (!mounted) return;
+        if (data.course) {
+          setCourseMeta(data.course);
+          setCourseId(data.course.id);
+          if (data.course.draftStructure) {
+            hydrateFromDraft(data.course.draftStructure as CourseDraftPersistence);
+          } else {
+            hydrateFromSummary(data.course);
+          }
+        }
+      } catch (err) {
+        console.warn("Tutor draft fetch failed", err);
+      } finally {
+        if (mounted) setLoadingDraft(false);
+      }
+    }
+    fetchDraft();
+    return () => {
+      mounted = false;
+    };
+  }, [hydrateFromDraft, hydrateFromSummary]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -183,6 +290,7 @@ export default function TutorCourseCreatePage() {
       outcomesInput,
       skillsInput,
       sections,
+      resourceDrafts,
       finalExamEnabled,
       finalExam,
       coverPreview,
@@ -190,7 +298,7 @@ export default function TutorCourseCreatePage() {
       currentStep,
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }, [basics, outcomesInput, skillsInput, sections, finalExamEnabled, finalExam, coverPreview, coverName, currentStep]);
+  }, [basics, outcomesInput, skillsInput, sections, resourceDrafts, finalExamEnabled, finalExam, coverPreview, coverName, currentStep]);
 
   const outcomes = useMemo(
     () =>
@@ -231,12 +339,176 @@ export default function TutorCourseCreatePage() {
   const progressValue = Math.round((stepValidity.filter(Boolean).length / WIZARD_STEPS.length) * 100);
 
   const canSubmit = reviewReady;
+  const editingLocked = courseMeta?.tutorEditingLocked ?? false;
+  const approvalStatus = (courseMeta?.approvalStatus ?? "DRAFT") as ExtendedCourseApprovalStatus;
+  const statusBadgeClass = STATUS_STYLES[approvalStatus];
+  const isPendingReview = approvalStatus === "PENDING";
+  const changesRequested = approvalStatus === "CHANGES";
 
-  const navigateStep = (index: number) => {
-    if (index < 0 || index >= WIZARD_STEPS.length) return;
-    if (index > currentStep && !stepValidity[currentStep]) return;
-    setCurrentStep(index);
-  };
+  const buildDraftSnapshot = useCallback((): CourseDraftPersistence => ({
+    basics,
+    outcomesInput,
+    skillsInput,
+    sections,
+    resourceDrafts,
+    finalExamEnabled,
+    finalExam,
+    coverPreview,
+    coverName,
+    currentStep,
+  }), [
+    basics,
+    outcomesInput,
+    skillsInput,
+    sections,
+    resourceDrafts,
+    finalExamEnabled,
+    finalExam,
+    coverPreview,
+    coverName,
+    currentStep,
+  ]);
+
+  const upsertDraft = useCallback(
+    async (opts: { submit?: boolean } = {}): Promise<TutorCourseSummary | null> => {
+      if (savingDraft || submitting) return null;
+      setSavingDraft(true);
+      setError(null);
+
+      try {
+        const payload = {
+          courseId: courseId ?? undefined,
+          coverImage: basics.coverImage || coverPreview || "https://placehold.co/1200x600",
+          title: basics.title.trim(),
+          slug: derivedSlug,
+          tagline: basics.tagline.trim(),
+          description: basics.description.trim(),
+          category: basics.category.trim(),
+          level: basics.level,
+          outcomes,
+          skills,
+          sections: sections.map((section, index) => ({
+            title: section.title.trim(),
+            order: index + 1,
+            modules: section.modules.map((module) => {
+              const normalizedVideoUrl = module.format === "VIDEO" ? normalizeVideoUrlForSave(module.videoUrl) : undefined;
+              return {
+                title: module.title,
+                format: module.format,
+                durationMinutes: module.durationMinutes,
+                summary: module.summary ?? "",
+                videoUrl: normalizedVideoUrl,
+                resources:
+                  module.resources?.map((resource) => ({
+                    title: resource.title,
+                    type: resource.type,
+                    url: resource.url,
+                  })) ?? [],
+              };
+            }),
+            exam:
+              section.examEnabled && section.exam.modules.length
+                ? {
+                    title: section.exam.title,
+                    description: section.exam.description,
+                    passingScore: section.exam.passingScore,
+                    timeLimit: section.exam.timeLimit,
+                    modules: section.exam.modules,
+                  }
+                : undefined,
+          })),
+          finalExam:
+            finalExamEnabled && finalExam.modules.length
+              ? {
+                  title: finalExam.title,
+                  description: finalExam.description,
+                  passingScore: finalExam.passingScore,
+                  timeLimit: finalExam.timeLimit,
+                  modules: finalExam.modules,
+                }
+              : undefined,
+          draftStructure: buildDraftSnapshot(),
+        };
+
+        const res = await fetch("/api/tutor/courses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || "Failed to save draft");
+        }
+
+        const data = (await res.json()) as { course: TutorCourseSummary };
+        setCourseMeta(data.course);
+        setCourseId(data.course.id);
+        if (!opts.submit) {
+          setSuccess("Draft saved");
+          setTimeout(() => setSuccess(null), 2000);
+        }
+        return data.course;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to save draft";
+        setError(message);
+        return null;
+      } finally {
+        setSavingDraft(false);
+      }
+    },
+    [
+      savingDraft,
+      submitting,
+      courseId,
+      basics,
+      coverPreview,
+      derivedSlug,
+      outcomes,
+      skills,
+      sections,
+      finalExamEnabled,
+      finalExam,
+      buildDraftSnapshot,
+    ],
+  );
+
+  const handleSubmitDraft = useCallback(async () => {
+    if (!canSubmit || submitting || !courseId || editingLocked) {
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const course = await upsertDraft({ submit: true });
+      const idToSubmit = course?.id ?? courseId;
+
+      if (!idToSubmit) {
+        throw new Error("Unable to determine course to submit");
+      }
+
+      const res = await fetch(`/api/tutor/courses/${idToSubmit}/submit`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to submit course");
+      }
+
+      const data = (await res.json()) as { course: TutorCourseSummary };
+      setCourseMeta(data.course);
+      setCourseId(data.course.id);
+      setSuccess("Course submitted for review");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to submit course";
+      setError(message);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [canSubmit, submitting, courseId, editingLocked, upsertDraft]);
 
   const nextStep = () => {
     if (currentStep === WIZARD_STEPS.length - 1) return;
@@ -459,89 +731,6 @@ export default function TutorCourseCreatePage() {
       reader.readAsDataURL(file);
     } finally {
       setUploadingCover(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!canSubmit || submitting) return;
-    setSubmitting(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const payload = {
-        coverImage: coverPreview || "https://placehold.co/1200x600",
-        title: basics.title.trim(),
-        slug: derivedSlug,
-        tagline: basics.tagline.trim(),
-        description: basics.description.trim(),
-        category: basics.category.trim(),
-        level: basics.level,
-        outcomes,
-        skills,
-        sections: sections.map((section, index) => ({
-          title: section.title.trim(),
-          order: index + 1,
-          modules: section.modules.map((module) => {
-            const normalizedVideoUrl =
-              module.format === "VIDEO" ? normalizeVideoUrlForSave(module.videoUrl) : undefined;
-
-            return {
-              title: module.title,
-              format: module.format,
-              durationMinutes: module.durationMinutes,
-              summary: module.summary ?? "",
-              videoUrl: normalizedVideoUrl,
-              resources:
-                module.resources?.map((resource) => ({
-                  title: resource.title,
-                  type: resource.type,
-                  url: resource.url,
-                })) ?? [],
-            };
-          }),
-          exam:
-            section.examEnabled && section.exam.modules.length
-              ? {
-                  title: section.exam.title,
-                  description: section.exam.description,
-                  passingScore: section.exam.passingScore,
-                  timeLimit: section.exam.timeLimit,
-                  modules: section.exam.modules,
-                }
-              : undefined,
-        })),
-        finalExam:
-          finalExamEnabled && finalExam.modules.length
-            ? {
-                title: finalExam.title,
-                description: finalExam.description,
-                passingScore: finalExam.passingScore,
-                timeLimit: finalExam.timeLimit,
-                modules: finalExam.modules,
-              }
-            : undefined,
-      };
-
-      const res = await fetch("/api/tutor/courses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to create course");
-      }
-
-      window.localStorage.removeItem(STORAGE_KEY);
-      setSuccess("Course created as draft. Awaiting admin review.");
-      setTimeout(() => router.push("/tutor"), 1200);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create course";
-      setError(message);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -1077,13 +1266,26 @@ export default function TutorCourseCreatePage() {
           <Button variant="outline" asChild>
             <Link href="/tutor">Cancel</Link>
           </Button>
-          <Button onClick={handleSubmit} disabled={!canSubmit || submitting}>
-            {submitting ? "Submitting..." : "Submit course for review"}
+          <Button onClick={() => upsertDraft()} disabled={savingDraft || editingLocked} variant="secondary">
+            {savingDraft ? "Saving..." : editingLocked ? "Editing locked" : "Save draft"}
+          </Button>
+          <Button onClick={handleSubmitDraft} disabled={!canSubmit || submitting || !courseId || editingLocked}>
+            {submitting ? "Submitting..." : editingLocked ? "Locked" : "Submit for review"}
           </Button>
         </div>
       </CardContent>
     </Card>
   );
+
+  if (loadingDraft) {
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-12">
+          <p className="text-center text-slate-600">Loading your latest draft...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
@@ -1099,14 +1301,25 @@ export default function TutorCourseCreatePage() {
             <h1 className="mt-2 text-3xl font-semibold text-slate-900">Create course</h1>
             <p className="text-slate-600">Set up sections, modules, and optional exams in one flow.</p>
           </div>
-          <Badge variant="outline" className="bg-amber-50 text-amber-700">
-            Draft
+          <Badge variant="outline" className={statusBadgeClass}>
+            {STATUS_LABELS[approvalStatus]}
           </Badge>
         </div>
 
         {error ? <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
         {success ? (
           <div className="rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div>
+        ) : null}
+        {editingLocked ? (
+          <div className="rounded border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+            {isPendingReview
+              ? "This course is pending admin review. Edits are locked until a decision is made."
+              : "Editing has been locked by the admin team. Contact support if you need to reopen."}
+          </div>
+        ) : changesRequested ? (
+          <div className="rounded border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Admin requested updates. Address their feedback and resubmit to continue review.
+          </div>
         ) : null}
 
         <Card className="border border-blue-100 bg-white/95">
@@ -1157,9 +1370,21 @@ export default function TutorCourseCreatePage() {
           })}
         </div>
 
-        {currentStep === 0 && renderBasics()}
-        {currentStep === 1 && renderSections()}
-        {currentStep === 2 && renderAssessments()}
+        {currentStep === 0 && (
+          <fieldset disabled={editingLocked} className={`m-0 border-0 p-0 ${editingLocked ? "opacity-75" : ""}`}>
+            {renderBasics()}
+          </fieldset>
+        )}
+        {currentStep === 1 && (
+          <fieldset disabled={editingLocked} className={`m-0 border-0 p-0 ${editingLocked ? "opacity-75" : ""}`}>
+            {renderSections()}
+          </fieldset>
+        )}
+        {currentStep === 2 && (
+          <fieldset disabled={editingLocked} className={`m-0 border-0 p-0 ${editingLocked ? "opacity-75" : ""}`}>
+            {renderAssessments()}
+          </fieldset>
+        )}
         {currentStep === 3 && renderReview()}
 
         <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white/95 px-4 py-4">
@@ -1181,9 +1406,14 @@ export default function TutorCourseCreatePage() {
                 Next
               </Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={!canSubmit || submitting}>
-                {submitting ? "Submitting..." : "Submit course for review"}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => upsertDraft()} disabled={savingDraft || editingLocked}>
+                  {savingDraft ? "Saving..." : editingLocked ? "Locked" : "Save draft"}
+                </Button>
+                <Button onClick={handleSubmitDraft} disabled={!canSubmit || submitting || !courseId || editingLocked}>
+                  {submitting ? "Submitting..." : editingLocked ? "Locked" : "Submit course"}
+                </Button>
+              </div>
             )}
           </div>
         </div>

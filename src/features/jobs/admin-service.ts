@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { JobType, RemoteOption } from "@prisma/client";
+import type { JobType, Prisma, RemoteOption } from "@prisma/client";
 
 export interface JobUpdateInput {
   title?: string;
@@ -72,7 +72,7 @@ export async function getAllJobs(options: {
   const skip = options.skip || 0;
   const take = options.take || 20;
 
-  const where: any = {};
+  const where: Prisma.JobOpportunityWhereInput = {};
 
   if (options.active !== undefined) {
     where.isActive = options.active;
@@ -90,7 +90,7 @@ export async function getAllJobs(options: {
     ];
   }
 
-  const orderBy: any = {};
+  const orderBy: Prisma.JobOpportunityOrderByWithRelationInput = {};
   switch (options.sortBy) {
     case "featured":
       orderBy.featured = "desc";
@@ -195,7 +195,7 @@ export async function updateJob(jobId: string, data: JobUpdateInput) {
     throw new Error("jobId is required");
   }
 
-  const update: any = {};
+  const update: Prisma.JobOpportunityUpdateInput = {};
 
   if (data.title !== undefined) update.title = data.title;
   if (data.company !== undefined) update.company = data.company;

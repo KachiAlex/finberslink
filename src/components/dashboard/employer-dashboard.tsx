@@ -18,7 +18,7 @@ interface EmployerInsights {
   conversionRate: number;
 }
 
-export function EmployerDashboard({ userId }: EmployerDashboardProps) {
+export function EmployerDashboard({ userId: _userId }: EmployerDashboardProps) {
   const [insights, setInsights] = useState<EmployerInsights | null>(null);
   const [loading, setLoading] = useState(true);
 

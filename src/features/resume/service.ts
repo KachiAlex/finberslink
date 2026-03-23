@@ -291,6 +291,18 @@ export async function getResumeByShareSlug(shareSlug: string) {
   });
 }
 
+export async function incrementResumeViewCount(resumeId: string) {
+  try {
+    await prisma.resume.update({
+      where: { id: resumeId },
+      data: { viewCount: { increment: 1 } },
+      select: { id: true },
+    });
+  } catch (error) {
+    console.error("Failed to increment resume view count", error);
+  }
+}
+
 export async function regenerateResumeShareSlug(slug: string) {
   const nextShareSlug = await ensureUniqueShareSlug();
 

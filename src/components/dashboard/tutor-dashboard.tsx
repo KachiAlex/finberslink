@@ -23,7 +23,7 @@ interface TutorInsights {
   }>;
 }
 
-export function TutorDashboard({ userId }: TutorDashboardProps) {
+export function TutorDashboard({ userId: _userId }: TutorDashboardProps) {
   const [insights, setInsights] = useState<TutorInsights | null>(null);
   const [loading, setLoading] = useState(true);
 

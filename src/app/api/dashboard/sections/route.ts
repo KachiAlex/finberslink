@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth/jwt";
 import {
   getDashboardInsights,
+  getDashboardSummary,
   getStudentApplications,
   getStudentEnrollments,
   getStudentResumes,
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
     const user = verifyToken(accessToken);
 
     const [
+      summaryResult,
       enrollmentsResult,
       resumesResult,
       applicationsResult,
@@ -42,6 +44,7 @@ export async function GET(request: NextRequest) {
       savedIdsResult,
       insightsResult,
     ] = await Promise.all([
+      measure("summary", () => getDashboardSummary(user.sub)),
       measure("enrollments", () => getStudentEnrollments(user.sub, 4)),
       measure("resumes", () => getStudentResumes(user.sub, 3)),
       measure("applications", () =>
@@ -54,6 +57,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: {
+        summary: summaryResult.data ?? null,
         enrollments: enrollmentsResult.data ?? [],
         resumes: resumesResult.data ?? [],
         applications: applicationsResult.data ?? { jobs: [], volunteer: [] },
@@ -62,6 +66,7 @@ export async function GET(request: NextRequest) {
         insights: insightsResult.data ?? { focus: [], skills: null },
       },
       errors: {
+        summary: summaryResult.error,
         enrollments: enrollmentsResult.error,
         resumes: resumesResult.error,
         applications: applicationsResult.error,

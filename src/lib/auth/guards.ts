@@ -11,11 +11,11 @@ import { prisma } from "@/lib/prisma";
  * Auth error for use in guards
  */
 export class AuthError extends Error {
-  constructor(
-    public status: number,
-    message: string
-  ) {
+  public status: number;
+
+  constructor(status: number, message: string) {
     super(message);
+    this.status = status;
   }
 }
 
@@ -23,8 +23,8 @@ export class AuthError extends Error {
  * Extract and verify JWT token from request cookies
  * Throws AuthError if token is invalid or missing
  */
-export function extractSessionFromRequest(request: NextRequest): SessionPayload {
-  const token = request.cookies.get("access_token")?.value;
+export function extractSessionFromRequest(_request: NextRequest): SessionPayload {
+  const token = _request.cookies.get("access_token")?.value;
 
   if (!token) {
     throw new AuthError(401, "No access token provided");
@@ -41,9 +41,9 @@ export function extractSessionFromRequest(request: NextRequest): SessionPayload 
  * Require authentication for an API route
  * Returns session payload if authenticated
  */
-export function requireAuth(request: NextRequest): SessionPayload {
+export function requireAuth(_request: NextRequest): SessionPayload {
   try {
-    return extractSessionFromRequest(request);
+    return extractSessionFromRequest(_request);
   } catch (error) {
     if (error instanceof AuthError) {
       throw error;
@@ -170,12 +170,12 @@ export function createAuthErrorResponse(error: unknown): NextResponse {
  *   });
  */
 export function withAuth(
-  handler: (request: NextRequest, session: SessionPayload) => Promise<NextResponse>
+  handler: (_request: NextRequest, _session: SessionPayload) => Promise<NextResponse>
 ) {
-  return async (request: NextRequest) => {
+  return async (_request: NextRequest) => {
     try {
-      const session = extractSessionFromRequest(request);
-      return await handler(request, session);
+      const session = extractSessionFromRequest(_request);
+      return await handler(_request, session);
     } catch (error) {
       return createAuthErrorResponse(error);
     }
@@ -190,9 +190,9 @@ export function withAuth(
  *   });
  */
 export function withRole(
-  ...roles: [...Role[], (request: NextRequest, session: SessionPayload) => Promise<NextResponse>]
+  ...roles: [...Role[], (_request: NextRequest, _session: SessionPayload) => Promise<NextResponse>]
 ) {
-  const handler = roles.pop() as (request: NextRequest, session: SessionPayload) => Promise<NextResponse>;
+  const handler = roles.pop() as (_request: NextRequest, _session: SessionPayload) => Promise<NextResponse>;
   const allowedRoles = roles as Role[];
 
   return async (request: NextRequest) => {
@@ -215,7 +215,7 @@ export function withRole(
  */
 export function withPermission(
   permission: Permission,
-  handler: (request: NextRequest, session: SessionPayload) => Promise<NextResponse>
+  handler: (_request: NextRequest, _session: SessionPayload) => Promise<NextResponse>
 ) {
   return async (request: NextRequest) => {
     try {

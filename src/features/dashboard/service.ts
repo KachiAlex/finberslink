@@ -31,7 +31,24 @@ const DASHBOARD_INSIGHTS_TTL_MINUTES = 60;
 export async function getStudentEnrollments(userId: string, limit?: number) {
   return prisma.enrollment.findMany({
     where: { userId },
-    include: { course: true },
+    include: {
+      course: true,
+      assignment: {
+        select: {
+          id: true,
+          status: true,
+          assignedAt: true,
+          notes: true,
+          assignedBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+    },
     orderBy: { createdAt: 'desc' },
     take: limit,
   });
@@ -77,17 +94,36 @@ async function safeCount<T>(label: string, action: () => Promise<T>): Promise<T 
 }
 
 export async function getDashboardSummary(userId: string) {
-  const [enrollmentsCount, resumesCount, jobApplicationsCount, volunteerApplicationsCount] = await Promise.all([
+  const [
+    enrollmentsCount,
+    completedEnrollmentsCount,
+    resumesCount,
+    jobApplicationsCount,
+    volunteerApplicationsCount,
+    resumeViewsCount,
+  ] = await Promise.all([
     safeCount("enrollments", () => prisma.enrollment.count({ where: { userId } })),
+    safeCount("completed enrollments", () => prisma.enrollment.count({ where: { userId, status: "COMPLETED" } })),
     safeCount("resumes", () => prisma.resume.count({ where: { userId } })),
     safeCount("job applications", () => prisma.jobApplication.count({ where: { userId } })),
     safeCount("volunteer applications", () => prisma.volunteerApplication.count({ where: { userId } })),
+    safeCount("resume views", async () => {
+      const aggregate = await prisma.resume.aggregate({
+        where: { userId },
+        _sum: { viewCount: true },
+      });
+      return aggregate._sum.viewCount ?? 0;
+    }),
   ]);
 
   return {
     enrollmentsCount,
+    completedEnrollmentsCount,
     resumesCount,
     applicationsCount: jobApplicationsCount + volunteerApplicationsCount,
+    jobApplicationsCount,
+    volunteerApplicationsCount,
+    resumeViewsCount,
   };
 }
 

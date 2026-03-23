@@ -8,14 +8,43 @@ import {
   JobType,
   RemoteOption,
 } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+const STUDENT_EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@finberslink.com";
+const STUDENT_PASSWORD = process.env.E2E_STUDENT_PASSWORD ?? "student123!";
+const STUDENT_ID = process.env.E2E_STUDENT_ID ?? "user_student_demo";
+const COURSE_SLUG = process.env.E2E_COURSE_SLUG ?? "product-strategy-lab";
+
+async function upsertStudent() {
+  const passwordHash = await bcrypt.hash(STUDENT_PASSWORD, 12);
+
+  const student = await prisma.user.upsert({
+    where: { email: STUDENT_EMAIL },
+    update: {
+      firstName: "Demo",
+      lastName: "Student",
+      passwordHash,
+      role: "STUDENT",
+      status: "ACTIVE",
+    },
+    create: {
+      id: STUDENT_ID,
+      email: STUDENT_EMAIL,
+      firstName: "Demo",
+      lastName: "Student",
+      passwordHash,
+      role: "STUDENT",
+      status: "ACTIVE",
+    },
+  });
+
+  return student;
+}
+
 async function main() {
-  const student = await prisma.user.findUnique({ where: { email: "student@finberslink.com" } });
-  if (!student) {
-    throw new Error("Student user student@finberslink.com not found");
-  }
+  const student = await upsertStudent();
 
   const instructor =
     (await prisma.user.findFirst({ where: { role: "TUTOR" }, select: { id: true } })) ??
@@ -23,7 +52,7 @@ async function main() {
     { id: student.id };
 
   const course = await prisma.course.upsert({
-    where: { slug: "product-strategy-lab" },
+    where: { slug: COURSE_SLUG },
     update: {
       title: "Product Strategy Lab",
       tagline: "Design bold services that launch careers",
@@ -47,7 +76,7 @@ async function main() {
       instructorId: instructor.id,
     },
     create: {
-      slug: "product-strategy-lab",
+      slug: COURSE_SLUG,
       title: "Product Strategy Lab",
       tagline: "Design bold services that launch careers",
       description:
@@ -137,7 +166,7 @@ async function main() {
     ],
   });
 
-  const enrollment = await prisma.enrollment.upsert({
+  await prisma.enrollment.upsert({
     where: { id: "enrollment_student_strategy_lab" },
     update: {
       progressPercentage: 32,
@@ -196,7 +225,7 @@ async function main() {
     },
   });
 
-  console.log("Seeded student resume, experiences, enrollment, and job pipeline.");
+  console.log(`Seeded student fixture. Login with ${STUDENT_EMAIL} / ${STUDENT_PASSWORD}`);
 }
 
 main()

@@ -13,9 +13,25 @@ import { cn } from "@/lib/utils";
 import { CourseCard } from "@/features/lms/components/course-card";
 import type { CourseSummary } from "@/types/lms";
 
+type EnrollmentStatus = "PENDING_ACCEPTANCE" | "ACTIVE" | "COMPLETED" | "WITHDRAWN";
+type CourseAssignmentStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED";
+
 interface AssignedCourseCard {
   id: string;
+  status: EnrollmentStatus;
   progress: number;
+  acceptedAt?: string | null;
+  assignment?: {
+    id: string;
+    status: CourseAssignmentStatus;
+    assignedAt?: string | null;
+    notes?: string | null;
+    assignedBy?: {
+      id: string;
+      firstName?: string | null;
+      lastName?: string | null;
+    } | null;
+  } | null;
   course: {
     id: string;
     title: string;
@@ -80,11 +96,13 @@ export function DashboardCoursesClient({
     sort: initialFilters?.sort ?? "recent",
     page: initialFilters?.page ?? 1,
   }));
+  const [assignedCards, setAssignedCards] = useState<AssignedCourseCard[]>(assigned);
   const [catalog, setCatalog] = useState<CourseSummary[]>(initialCatalog);
   const [pagination, setPagination] = useState<PaginationState>(initialPagination);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [assignmentActionId, setAssignmentActionId] = useState<string | null>(null);
   const loading = catalogLoading || isPending;
 
   useEffect(() => {
@@ -95,9 +113,10 @@ export function DashboardCoursesClient({
       sort: initialFilters?.sort ?? "recent",
       page: initialFilters?.page ?? 1,
     });
+    setAssignedCards(assigned);
     setCatalog(initialCatalog);
     setPagination(initialPagination);
-  }, [initialCatalog, initialPagination, initialFilters]);
+  }, [assigned, initialCatalog, initialPagination, initialFilters]);
 
   const updateUrl = useCallback(
     (nextFilters: FiltersState) => {
@@ -197,12 +216,12 @@ export function DashboardCoursesClient({
 
   const categories = useMemo(() => {
     const values = new Set<string>();
-    [...assigned, ...catalog].forEach((card) => {
+    [...assignedCards, ...catalog].forEach((card) => {
       const cat = "course" in card ? card.course.category : card.category;
       if (cat) values.add(cat);
     });
     return ["all", ...Array.from(values)];
-  }, [assigned, catalog]);
+  }, [assignedCards, catalog]);
 
   const normalizedSearch = filters.search.trim().toLowerCase();
 
@@ -213,7 +232,7 @@ export function DashboardCoursesClient({
   };
 
   const assignedFiltered = useMemo(() => {
-    return assigned.filter(({ course }) => {
+    return assignedCards.filter(({ course }) => {
       const levelMatch = filters.level === "all" || (course.level?.toLowerCase() ?? "") === filters.level;
       const categoryMatch =
         filters.category === "all" || (course.category ?? "").toLowerCase() === filters.category.toLowerCase();
@@ -221,7 +240,7 @@ export function DashboardCoursesClient({
         matchesSearch(course.title) || matchesSearch(course.tagline) || matchesSearch(course.category);
       return levelMatch && categoryMatch && searchMatch;
     });
-  }, [assigned, filters.category, filters.level, normalizedSearch]);
+  }, [assignedCards, filters.category, filters.level, normalizedSearch]);
 
   const clearFilters = () => {
     applyFilters({ search: "", level: "all", category: "all", sort: "recent" }, { resetPage: true });
@@ -234,6 +253,96 @@ export function DashboardCoursesClient({
 
   const showingRangeStart = catalog.length === 0 ? 0 : (filters.page - 1) * pagination.pageSize + 1;
   const showingRangeEnd = catalog.length === 0 ? 0 : showingRangeStart + catalog.length - 1;
+
+  const assignmentAction = async (enrollmentId: string, action: "accept" | "decline") => {
+    try {
+      setAssignmentActionId(enrollmentId);
+      const response = await fetch(`/api/dashboard/enrollments/${enrollmentId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error ?? "Unable to update assignment");
+      }
+
+      setAssignedCards((prev) =>
+        prev.map((card) => {
+          if (card.id !== enrollmentId) {
+            return card;
+          }
+
+          if (action === "accept") {
+            return {
+              ...card,
+              status: "ACTIVE",
+              acceptedAt: new Date().toISOString(),
+              assignment: card.assignment
+                ? {
+                    ...card.assignment,
+                    status: "ACCEPTED",
+                    assignedAt: card.assignment.assignedAt ?? new Date().toISOString(),
+                  }
+                : card.assignment,
+            };
+          }
+
+          return {
+            ...card,
+            status: "WITHDRAWN",
+            assignment: card.assignment
+              ? {
+                  ...card.assignment,
+                  status: "DECLINED",
+                }
+              : card.assignment,
+          };
+        }),
+      );
+    } catch (error) {
+      console.error("Enrollment assignment action failed", error);
+      // Surface toast once global notifications land; for now rely on console + fallback alert.
+      alert(error instanceof Error ? error.message : "Unable to update assignment right now.");
+    } finally {
+      setAssignmentActionId(null);
+    }
+  };
+
+  const renderAssignmentStatus = (card: AssignedCourseCard) => {
+    const status = card.status;
+    const assignmentStatus = card.assignment?.status;
+    const assignedByName = card.assignment?.assignedBy
+      ? `${card.assignment.assignedBy.firstName ?? ""} ${card.assignment.assignedBy.lastName ?? ""}`.trim()
+      : null;
+
+    const chipConfig: Record<EnrollmentStatus, { label: string; className: string }> = {
+      PENDING_ACCEPTANCE: { label: "Awaiting acceptance", className: "bg-amber-50 text-amber-700" },
+      ACTIVE: { label: "Active", className: "bg-emerald-50 text-emerald-700" },
+      COMPLETED: { label: "Completed", className: "bg-blue-50 text-blue-700" },
+      WITHDRAWN: { label: "Withdrawn", className: "bg-slate-100 text-slate-500" },
+    };
+
+    const chip = chipConfig[status];
+
+    return (
+      <div className="space-y-1">
+        <div className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold" role="status">
+          <span className={chip.className}>{chip.label}</span>
+        </div>
+        {status === "PENDING_ACCEPTANCE" ? (
+          <p className="text-xs text-slate-500">
+            Assigned {card.assignment?.assignedAt ? new Date(card.assignment.assignedAt).toLocaleDateString() : "recently"}
+            {assignedByName ? ` · ${assignedByName}` : ""}
+          </p>
+        ) : assignmentStatus ? (
+          <p className="text-xs text-slate-500">Assignment status: {assignmentStatus.toLowerCase()}</p>
+        ) : null
+        }
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -330,27 +439,61 @@ export function DashboardCoursesClient({
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {assignedFiltered.map((enrollment) => (
-              <div
-                key={enrollment.id}
-                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5"
-              >
-                <div className="space-y-1">
-                  <p className="text-base font-semibold text-slate-900">{enrollment.course.title}</p>
-                  <p className="text-xs uppercase tracking-wide text-slate-400">
-                    {enrollment.course.level?.toLowerCase() ?? "self-paced"}
-                  </p>
-                  <p className="text-xs text-slate-500 line-clamp-1">{enrollment.course.tagline ?? "Keep your streak."}</p>
+              <div key={enrollment.id} className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-base font-semibold text-slate-900">{enrollment.course.title}</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-400">
+                      {enrollment.course.level?.toLowerCase() ?? "self-paced"}
+                    </p>
+                    <p className="text-xs text-slate-500 line-clamp-1">
+                      {enrollment.course.tagline ?? "Keep your streak."}
+                    </p>
+                  </div>
+                  {renderAssignmentStatus(enrollment)}
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-3">
                     <ProgressRing value={enrollment.progress} />
                     <span className="text-sm font-medium text-slate-600">{enrollment.progress}% mastery</span>
                   </div>
-                  <Button size="sm" asChild className="rounded-full">
-                    <Link href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}>
-                      Continue
-                    </Link>
-                  </Button>
+                  {enrollment.status === "PENDING_ACCEPTANCE" ? (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        className="rounded-full"
+                        disabled={assignmentActionId === enrollment.id}
+                        onClick={() => assignmentAction(enrollment.id, "accept")}
+                      >
+                        {assignmentActionId === enrollment.id ? "Accepting..." : "Accept & start"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="rounded-full text-slate-500 hover:text-slate-900"
+                        disabled={assignmentActionId === enrollment.id}
+                        onClick={() => assignmentAction(enrollment.id, "decline")}
+                      >
+                        {assignmentActionId === enrollment.id ? "Updating..." : "Decline"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      asChild
+                      className="rounded-full"
+                      disabled={enrollment.status !== "ACTIVE"}
+                      variant={enrollment.status === "ACTIVE" ? "default" : "outline"}
+                    >
+                      <Link
+                        aria-disabled={enrollment.status !== "ACTIVE"}
+                        tabIndex={enrollment.status !== "ACTIVE" ? -1 : 0}
+                        href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}
+                      >
+                        {enrollment.status === "COMPLETED" ? "Review" : "Continue"}
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}

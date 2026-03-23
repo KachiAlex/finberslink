@@ -1,4 +1,4 @@
-import { CourseLevel, ExamStatus, ExamType, LessonFormat, Prisma, ResourceType } from "@prisma/client";
+import { CourseApprovalStatus, CourseLevel, ExamStatus, ExamType, LessonFormat, Prisma, ResourceType } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
@@ -173,7 +173,7 @@ type TutorCourseResourceInput = {
   url: string;
 };
 
-type TutorCourseModuleInput = {
+export type TutorCourseModuleInput = {
   title: string;
   format: LessonFormat;
   durationMinutes: number;
@@ -191,65 +191,128 @@ type TutorExamConfigInput = {
   modules: Prisma.InputJsonValue;
 };
 
-type TutorCourseSectionInput = {
+export type TutorCourseSectionInput = {
   title: string;
   order: number;
   modules: TutorCourseModuleInput[];
   exam?: TutorExamConfigInput;
 };
 
-export type TutorCourseCreationInput = {
+export type TutorCourseDraftInput = {
   tutorId: string;
-  coverImage: string;
-  title: string;
-  slug: string;
-  tagline: string;
-  description: string;
-  category: string;
-  level: CourseLevel;
+  coverImage?: string;
+  title?: string;
+  slug?: string;
+  tagline?: string;
+  description?: string;
+  category?: string;
+  level?: CourseLevel;
   outcomes?: string[];
   skills?: string[];
-  sections: TutorCourseSectionInput[];
+  sections?: TutorCourseSectionInput[];
   finalExam?: TutorExamConfigInput;
+  draftStructure?: Prisma.InputJsonValue;
 };
 
-export async function createTutorCourseWithAssessments(input: TutorCourseCreationInput) {
-  const normalizedSlug = slugify(input.slug || input.title);
-  if (!normalizedSlug) {
-    throw new Error("Invalid slug");
+const normalizeSlug = (candidate?: string, fallback?: string) => {
+  const normalized = slugify(candidate || fallback || "");
+  return normalized || undefined;
+};
+
+export async function upsertTutorCourseDraft(courseId: string | null, input: TutorCourseDraftInput) {
+  const slug = normalizeSlug(input.slug, input.title);
+  if (!courseId && !slug) {
+    throw new Error("Slug or title required to create draft");
   }
 
-  const existing = await prisma.course.findUnique({ where: { slug: normalizedSlug } });
-  if (existing) {
-    throw new Error("Course slug already in use");
+  if (!courseId && slug) {
+    const existing = await prisma.course.findUnique({ where: { slug } });
+    if (existing) {
+      throw new Error("Course slug already in use");
+    }
   }
 
-  if (!input.sections.length) {
-    throw new Error("At least one section is required");
+  const baseData: Partial<Prisma.CourseUncheckedCreateInput> = {
+    title: input.title,
+    slug,
+    tagline: input.tagline,
+    description: input.description,
+    category: input.category,
+    level: input.level,
+    coverImage: input.coverImage,
+    outcomes: input.outcomes,
+    skills: input.skills,
+    instructorId: input.tutorId,
+    approvalStatus: CourseApprovalStatus.DRAFT,
+    tutorEditingLocked: false,
+  };
+
+  if (input.draftStructure !== undefined) {
+    baseData.draftStructure = input.draftStructure;
   }
 
-  return prisma.$transaction(async (tx) => {
-    const course = await tx.course.create({
+  if (!courseId) {
+    const course = await prisma.course.create({
       data: {
-        slug: normalizedSlug,
-        title: input.title,
-        tagline: input.tagline,
-        description: input.description,
-        category: input.category,
-        level: input.level,
-        coverImage: input.coverImage,
-        instructorId: input.tutorId,
+        ...baseData,
+        slug: slug!,
+        title: input.title!,
+        tagline: input.tagline!,
+        description: input.description!,
+        category: input.category!,
+        level: input.level!,
+        coverImage: input.coverImage!,
         outcomes: input.outcomes ?? [],
         skills: input.skills ?? [],
       },
     });
 
+    await replaceCourseStructure(course.id, input.sections ?? [], input.finalExam, input.tutorId);
+    return course;
+  }
+
+  const course = await prisma.course.findFirst({ where: { id: courseId, instructorId: input.tutorId } });
+  if (!course) {
+    throw new Error("Course not found");
+  }
+
+  await prisma.course.update({
+    where: { id: course.id },
+    data: {
+      ...baseData,
+      outcomes: input.outcomes ?? course.outcomes,
+      skills: input.skills ?? course.skills,
+      draftStructure: input.draftStructure ?? course.draftStructure,
+    },
+  });
+
+  if (input.sections) {
+    await replaceCourseStructure(course.id, input.sections, input.finalExam, input.tutorId, true);
+  }
+
+  return prisma.course.findUnique({ where: { id: course.id } });
+}
+
+async function replaceCourseStructure(
+  courseId: string,
+  sections: TutorCourseSectionInput[],
+  finalExam: TutorExamConfigInput | undefined,
+  tutorId: string,
+  clearExisting = false,
+) {
+  await prisma.$transaction(async (tx) => {
+    if (clearExisting) {
+      await tx.lessonResource.deleteMany({ where: { lesson: { courseId } } });
+      await tx.lesson.deleteMany({ where: { courseId } });
+      await tx.exam.deleteMany({ where: { courseId } });
+    }
+
     let lessonOrder = 1;
-    for (const section of input.sections) {
-      for (const lessonModule of section.modules) {
+    for (const section of sections ?? []) {
+      for (const lessonModule of section.modules ?? []) {
         const lesson = await tx.lesson.create({
           data: {
-            courseId: course.id,
+            courseId,
             title: lessonModule.title,
             slug: slugify(`${section.title}-${lessonModule.title}-${lessonOrder}`),
             order: lessonOrder++,
@@ -276,8 +339,8 @@ export async function createTutorCourseWithAssessments(input: TutorCourseCreatio
       if (section.exam) {
         await tx.exam.create({
           data: {
-            courseId: course.id,
-            createdById: input.tutorId,
+            courseId,
+            createdById: tutorId,
             type: ExamType.SECTION,
             status: ExamStatus.DRAFT,
             title: section.exam.title,
@@ -291,22 +354,82 @@ export async function createTutorCourseWithAssessments(input: TutorCourseCreatio
       }
     }
 
-    if (input.finalExam) {
+    if (finalExam) {
       await tx.exam.create({
         data: {
-          courseId: course.id,
-          createdById: input.tutorId,
+          courseId,
+          createdById: tutorId,
           type: ExamType.FINAL,
           status: ExamStatus.DRAFT,
-          title: input.finalExam.title,
-          description: input.finalExam.description ?? null,
-          passingScore: input.finalExam.passingScore ?? null,
-          timeLimit: input.finalExam.timeLimit ?? null,
-          modules: input.finalExam.modules,
+          title: finalExam.title,
+          description: finalExam.description ?? null,
+          passingScore: finalExam.passingScore ?? null,
+          timeLimit: finalExam.timeLimit ?? null,
+          modules: finalExam.modules,
         },
       });
     }
-
-    return course;
   });
+}
+
+export async function submitTutorCourse(courseId: string, tutorId: string) {
+  const course = await prisma.course.findFirst({ where: { id: courseId, instructorId: tutorId } });
+  if (!course) {
+    throw new Error("Course not found");
+  }
+
+  if (course.approvalStatus !== CourseApprovalStatus.DRAFT && course.approvalStatus !== CourseApprovalStatus.CHANGES) {
+    throw new Error("Only drafts can be submitted");
+  }
+
+  if (!course.slug || !course.title || !course.tagline || !course.description || !course.category || !course.level || !course.coverImage) {
+    throw new Error("Complete course basics before submission");
+  }
+
+  const lessonCount = await prisma.lesson.count({ where: { courseId: course.id } });
+  if (lessonCount === 0) {
+    throw new Error("Add at least one lesson before submission");
+  }
+
+  return prisma.course.update({
+    where: { id: course.id },
+    data: {
+      approvalStatus: CourseApprovalStatus.PENDING,
+      submittedAt: new Date(),
+      submittedById: tutorId,
+      tutorEditingLocked: true,
+    },
+  });
+}
+
+export async function getTutorCourseDraft(tutorId: string, courseId?: string | null) {
+  const course = await prisma.course.findFirst({
+    where: courseId
+      ? { id: courseId, instructorId: tutorId }
+      : {
+          instructorId: tutorId,
+          approvalStatus: { in: [CourseApprovalStatus.DRAFT, CourseApprovalStatus.CHANGES, CourseApprovalStatus.PENDING] },
+        },
+    orderBy: courseId ? undefined : { updatedAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      tagline: true,
+      description: true,
+      category: true,
+      level: true,
+      coverImage: true,
+      outcomes: true,
+      skills: true,
+      approvalStatus: true,
+      tutorEditingLocked: true,
+      draftStructure: true,
+    },
+  });
+
+  if (!course) {
+    return null;
+  }
+
+  return course;
 }

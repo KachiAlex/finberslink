@@ -43,7 +43,6 @@ export default function ResumeBuilderPage() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"summary" | "experience" | "bullets" | "skills" | "optimize">("summary");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const handleSummaryGenerate = async () => {
@@ -378,11 +377,11 @@ export default function ResumeBuilderPage() {
                     <Input
                       placeholder="Job Title"
                       value={exp.title}
-                      onChange={(e) =>
+                      onChange={(event) =>
                         setData((prev) => ({
                           ...prev,
-                          experience: prev.experience.map((e, i) =>
-                            i === idx ? { ...e, title: e.target.value } : e
+                          experience: prev.experience.map((entry, i) =>
+                            i === idx ? { ...entry, title: event.target.value } : entry
                           ),
                         }))
                       }
@@ -390,11 +389,11 @@ export default function ResumeBuilderPage() {
                     <Input
                       placeholder="Company"
                       value={exp.company}
-                      onChange={(e) =>
+                      onChange={(event) =>
                         setData((prev) => ({
                           ...prev,
-                          experience: prev.experience.map((e, i) =>
-                            i === idx ? { ...e, company: e.target.value } : e
+                          experience: prev.experience.map((entry, i) =>
+                            i === idx ? { ...entry, company: event.target.value } : entry
                           ),
                         }))
                       }
@@ -403,11 +402,11 @@ export default function ResumeBuilderPage() {
                   <Textarea
                     placeholder="Job description..."
                     value={exp.description}
-                    onChange={(e) =>
+                    onChange={(event) =>
                       setData((prev) => ({
                         ...prev,
-                        experience: prev.experience.map((e, i) =>
-                          i === idx ? { ...e, description: e.target.value } : e
+                        experience: prev.experience.map((entry, i) =>
+                          i === idx ? { ...entry, description: event.target.value } : entry
                         ),
                       }))
                     }
