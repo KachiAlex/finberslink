@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Compass, GraduationCap } from "lucide-react";
+import { Compass, GraduationCap, Sparkles, TrendingUp } from "lucide-react";
 
 import { requireSession } from "@/lib/auth/session";
 import { DashboardHero } from "@/components/dashboard/dashboard-hero";
@@ -16,6 +16,13 @@ type SortQuery = "recent" | "popular";
 interface DashboardCoursesPageProps {
   searchParams?: Record<string, string | string[]>;
 }
+
+// Gradient Text Component
+const GradientText = ({ children }: { children: React.ReactNode }) => (
+  <span className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent">
+    {children}
+  </span>
+);
 
 export default async function DashboardCoursesPage({ searchParams }: DashboardCoursesPageProps) {
   const session = await requireSession({ failureMode: "error" });
@@ -67,7 +74,7 @@ export default async function DashboardCoursesPage({ searchParams }: DashboardCo
       <div className="space-y-10">
         <DashboardHero
           eyebrow="Courses hub"
-          title="Own every cohort from one place"
+          title={<>Own every cohort from <GradientText>one place</GradientText></>}
           description="Jump back into assigned programs or explore new catalog tracks without leaving the dashboard."
           accent="blue"
           actions={[

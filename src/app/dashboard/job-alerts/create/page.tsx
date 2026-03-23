@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+// Gradient Text Component
+const GradientText = ({ children }: { children: React.ReactNode }) => (
+  <span className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent">
+    {children}
+  </span>
+);
 
 async function createJobAlertAction(formData: FormData) {
   "use server";
@@ -32,56 +39,63 @@ async function createJobAlertAction(formData: FormData) {
 
 export default function CreateJobAlertPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" asChild>
-          <Link href="/dashboard/job-alerts" className="flex items-center gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Alerts
+        <Button variant="ghost" asChild className="hover:bg-slate-100 rounded-full w-10 h-10 p-0">
+          <Link href="/dashboard/job-alerts" className="flex items-center justify-center">
+            <ArrowLeft className="w-5 h-5" />
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create Job Alert</h1>
-          <p className="text-gray-600 mt-1">
+          <div className="inline-flex items-center gap-2 mb-3 px-4 py-2 rounded-full bg-white/50 backdrop-blur border border-cyan-200/50">
+            <Sparkles className="h-4 w-4 text-cyan-600 animate-pulse" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-cyan-700">Smart Job Matching</span>
+          </div>
+          <h1 className="text-4xl font-bold mb-2">
+            Create <GradientText>Job Alert</GradientText>
+          </h1>
+          <p className="text-slate-600 text-lg">
             Set up a new alert to get notified about matching job opportunities
           </p>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Alert Details</CardTitle>
+      <Card className="border border-slate-200 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all">
+        <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200">
+          <CardTitle className="text-2xl">Alert Details</CardTitle>
           <CardDescription>
-            Configure your job alert preferences
+            Configure your job alert preferences to match your ideal role
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form action={createJobAlertAction} className="space-y-6">
+        <CardContent className="pt-8">
+          <form action={createJobAlertAction} className="space-y-8">
             {/* Keywords */}
-            <div>
-              <Label htmlFor="keywords">Keywords *</Label>
+            <div className="space-y-3">
+              <Label htmlFor="keywords" className="text-base font-semibold text-slate-900">Keywords *</Label>
               <Textarea
                 id="keywords"
                 name="keywords"
                 placeholder="Enter keywords separated by commas (e.g., React, JavaScript, Frontend)"
-                rows={3}
+                rows={4}
                 required
+                className="rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-cyan-500/20 transition-all resize-none"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Enter job titles, skills, or keywords you're interested in
+              <p className="text-sm text-slate-500 italic">
+                💡 Enter job titles, skills, or keywords you're interested in. Our AI will match these across job postings.
               </p>
             </div>
 
             {/* Location */}
-            <div>
-              <Label htmlFor="location">Location (Optional)</Label>
+            <div className="space-y-3">
+              <Label htmlFor="location" className="text-base font-semibold text-slate-900">Location (Optional)</Label>
               <Input
                 id="location"
                 name="location"
                 placeholder="e.g., New York, Remote, San Francisco"
+                className="rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-cyan-500/20 transition-all"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Leave blank to get alerts from all locations
+              <p className="text-sm text-slate-500 italic">
+                🌍 Leave blank to get alerts from all locations worldwide
               </p>
             </div>
 

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { GraduationCap, LayoutDashboard, MessageSquare, Sparkles, Briefcase, ClipboardList } from "lucide-react";
+import { GraduationCap, LayoutDashboard, MessageSquare, Sparkles, Briefcase, ClipboardList, MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
@@ -86,6 +86,12 @@ export default async function DashboardLayout({
                 description: "Track submissions",
                 href: "/dashboard/applications",
                 icon: ClipboardList,
+              },
+              {
+                label: "Chat",
+                description: "Connect with others",
+                href: "/chat",
+                icon: MessageCircle,
               },
               {
                 label: "Messages",
