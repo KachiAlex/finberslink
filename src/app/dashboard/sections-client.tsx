@@ -119,8 +119,23 @@ type Metric = {
 type HighlightStat = {
   title: string;
   value: string | number;
-  description: string;
+  helper: string;
 };
+
+const LOADING_METRICS: Metric[] = [
+  { label: "Courses enrolled", value: "—", helper: "Loading", action: "/dashboard/courses" },
+  { label: "Courses completed", value: "—", helper: "Loading", action: "/dashboard/courses" },
+  { label: "Resumes created", value: "—", helper: "Loading", action: "/dashboard/resume" },
+  { label: "Resume views", value: "—", helper: "Loading", action: "/resume/share" },
+  { label: "Jobs applied", value: "—", helper: "Loading", action: "/applications" },
+  { label: "Volunteer apps", value: "—", helper: "Loading", action: "/applications" },
+];
+
+const LOADING_HIGHLIGHTS: HighlightStat[] = [
+  { title: "Career momentum", value: "—", helper: "Loading" },
+  { title: "Completed tracks", value: "—", helper: "Loading" },
+  { title: "Profile reach", value: "—", helper: "Loading" },
+];
 
 export function DashboardSectionsClient() {
   const [sectionResponse, setSectionResponse] = useState<SectionResponse | null>(null);
@@ -165,6 +180,7 @@ export function DashboardSectionsClient() {
     if (loading) {
       return "We're collecting your latest stats";
     }
+
     if (!data) {
       return "Stay tuned—your learning signals will appear here.";
     }
@@ -178,359 +194,94 @@ export function DashboardSectionsClient() {
   }, [data, loading]);
 
   const metrics = useMemo<Metric[]>(
-    () => [
-      {
-        label: "Courses enrolled",
-        value: loading ? "—" : summary?.enrollmentsCount ?? activeCourses,
-        helper: activeCourses ? "Keep your streak alive" : "Start a track to unlock guidance",
-        action: "/dashboard/courses",
-      },
-      {
-        label: "Courses completed",
-        value: loading ? "—" : summary?.completedEnrollmentsCount ?? 0,
-        helper:
-          (summary?.completedEnrollmentsCount ?? 0) > 0
-            ? "Celebrate milestones"
-            : "Finish a course to unlock certificates",
-        action: "/dashboard/courses",
-      },
-      {
-        label: "Resumes created",
-        value: loading ? "—" : summary?.resumesCount ?? resumesCount,
-        helper: resumesCount ? "Refresh insights anytime" : "Generate an ATS-ready resume",
-        action: "/dashboard/resume",
-      },
-      {
-        label: "Resume views",
-        value: loading ? "—" : summary?.resumeViewsCount ?? 0,
-        helper:
-          (summary?.resumeViewsCount ?? 0) > 0
-            ? "People are checking you out"
-            : "Share your profile link to gain traction",
-        action: "/resume/share",
-      },
-      {
-        label: "Jobs applied",
-        value: loading ? "—" : summary?.jobApplicationsCount ?? 0,
-        helper: applicationsCount ? "Track responses in dashboard" : "Submit at least one this week",
-        action: "/applications",
-      },
-      {
-        label: "Volunteer apps",
-        value: loading ? "—" : summary?.volunteerApplicationsCount ?? 0,
-        helper:
-          (summary?.volunteerApplicationsCount ?? 0) > 0
-            ? "Stay close to your mission goals"
-            : "Volunteer work boosts resumes",
-        action: "/applications",
-      },
-    ], [activeCourses, applicationsCount, loading, resumesCount, summary]
+    () => {
+      if (!summary) {
+        return LOADING_METRICS;
+      }
+
+      return [
+        {
+          label: "Courses enrolled",
+          value: loading ? "—" : summary.enrollmentsCount ?? activeCourses,
+          helper: activeCourses ? "Keep your streak alive" : "Start a track to unlock guidance",
+          action: "/dashboard/courses",
+        },
+        {
+          label: "Courses completed",
+          value: loading ? "—" : summary.completedEnrollmentsCount ?? 0,
+          helper:
+            (summary.completedEnrollmentsCount ?? 0) > 0
+              ? "Celebrate milestones"
+              : "Finish a course to unlock certificates",
+          action: "/dashboard/courses",
+        },
+        {
+          label: "Resumes created",
+          value: loading ? "—" : summary.resumesCount ?? resumesCount,
+          helper: resumesCount ? "Refresh insights anytime" : "Generate an ATS-ready resume",
+          action: "/dashboard/resume",
+        },
+        {
+          label: "Resume views",
+          value: loading ? "—" : summary.resumeViewsCount ?? 0,
+          helper:
+            (summary.resumeViewsCount ?? 0) > 0
+              ? "People are checking you out"
+              : "Share your profile link to gain traction",
+          action: "/resume/share",
+        },
+        {
+          label: "Jobs applied",
+          value: loading ? "—" : summary.jobApplicationsCount ?? 0,
+          helper: applicationsCount ? "Track responses in dashboard" : "Submit at least one this week",
+          action: "/applications",
+        },
+        {
+          label: "Volunteer apps",
+          value: loading ? "—" : summary.volunteerApplicationsCount ?? 0,
+          helper:
+            (summary.volunteerApplicationsCount ?? 0) > 0
+              ? "Stay close to your mission goals"
+              : "Volunteer work boosts resumes",
+          action: "/applications",
+        },
+      ];
+    },
+    [activeCourses, applicationsCount, loading, resumesCount, summary]
   );
 
   const highlightStats = useMemo<HighlightStat[]>(
-    () => [
-      {
-        title: "Career momentum",
-        value: loading ? "—" : summary?.applicationsCount ?? applicationsCount,
-        description: "Total applications across jobs & volunteer roles",
-      },
-      {
-        title: "Completed tracks",
-        value: loading ? "—" : summary?.completedEnrollmentsCount ?? 0,
-        description: "Courses fully mastered",
-      },
-      {
-        title: "Profile reach",
-        value: loading ? "—" : summary?.resumeViewsCount ?? 0,
-        description: "Public resume impressions",
-      },
-    ], [applicationsCount, loading, summary]
+    () => {
+      if (!summary) {
+        return LOADING_HIGHLIGHTS;
+      }
+
+      return [
+        {
+          title: "Career momentum",
+          value: loading ? "—" : summary.applicationsCount ?? applicationsCount,
+          helper: "Total applications across jobs & volunteer roles",
+        },
+        {
+          title: "Completed tracks",
+          value: loading ? "—" : summary.completedEnrollmentsCount ?? 0,
+          helper: "Courses fully mastered",
+        },
+        {
+          title: "Profile reach",
+          value: loading ? "—" : summary.resumeViewsCount ?? 0,
+          helper: "Public resume impressions",
+        },
+      ];
+    },
+    [applicationsCount, loading, summary]
   );
 
-  const tabContent = useMemo(
-    () => [
-      {
-        value: "overview",
-        label: "Overview",
-        content: (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <GlassCard className="p-5">
-              {loading && !data?.enrollments[0] ? <Skeleton className="h-16 w-full" /> : <LatestCourse data={data} errors={errors} />}
-            </GlassCard>
-            <GlassCard className="p-5">
-              {loading && !data?.applications.jobs[0] && !data?.applications.volunteer[0]
-                ? <Skeleton className="h-16 w-full" />
-                : <PipelineHighlight data={data} errors={errors} />}
-            </GlassCard>
-            <GlassCard className="p-5">
-              <InsightsHighlight data={data} errors={errors} />
-            </GlassCard>
-            <GlassCard className="p-5">
-              <JobHighlight data={data} errors={errors} />
-            </GlassCard>
-          </div>
-        ),
-      },
-*** End Patch
-
-interface SectionData {
-  summary: DashboardSummary | null;
-  enrollments: EnrollmentSection[];
-  resumes: ResumeSection[];
-  applications: { jobs: ApplicationSection[]; volunteer: ApplicationSection[] };
-  recommended: RecommendedJob[];
-  savedIds: string[];
-  insights: DashboardInsights;
-}
-
-interface SectionErrors {
-  summary?: string | null;
-  enrollments?: string | null;
-  resumes?: string | null;
-  applications?: string | null;
-  recommended?: string | null;
-  insights?: string | null;
-}
-
-interface EnrollmentSection {
-  id: string;
-  progressPercentage?: number | null;
-  course: {
-    id: string;
-    title: string;
-    slug?: string | null;
-    level?: string | null;
-    tagline?: string | null;
-  };
-}
-
-interface ResumeSection {
-  id: string;
-  title: string;
-  visibility: string;
-  slug: string;
-}
-
-interface ApplicationSection {
-  id: string;
-  status: string;
-  updatedAt?: string | null;
-  submittedAt?: string | null;
-  opportunity: {
-    id?: string;
-    slug?: string;
-    title: string;
-    company?: string;
-    organization?: string;
-  };
-}
-
-interface RecommendedJob {
-  id: string;
-  title: string;
-  company: string;
-  location?: string | null;
-  remoteOption?: string | null;
-  slug: string;
-}
-
-type FocusCard = {
-  id: string;
-  title: string;
-  description: string;
-  actionLabel: string;
-  actionHref: string;
-  accent: "blue" | "amber" | "emerald" | "violet";
-};
-
-type SkillInsights = {
-  personaName?: string | null;
-  targetRoles: string[];
-  targetIndustry?: string | null;
-  highlightSkills: string[];
-  gapSkills: string[];
-  recommendation: string;
-};
-
-type DashboardInsights = {
-  focus: FocusCard[];
-  skills: SkillInsights | null;
-};
-
-type DashboardSummary = {
-  enrollmentsCount: number;
-  completedEnrollmentsCount: number;
-  resumesCount: number;
-  applicationsCount: number;
-  jobApplicationsCount: number;
-  volunteerApplicationsCount: number;
-  resumeViewsCount: number;
-};
-
-type SectionResponse = {
-  data: SectionData;
-  errors: SectionErrors;
-};
-
-export function DashboardSectionsClient() {
-  const [sectionResponse, setSectionResponse] = useState<SectionResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    fetch("/api/dashboard/sections", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((payload: SectionResponse) => {
-        if (isMounted) {
-          setSectionResponse(payload);
-        }
-      })
-      .catch((error) => {
-        console.error("Dashboard sections fetch failed", error);
-      })
-      .finally(() => {
-        if (isMounted) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const data = sectionResponse?.data;
-  const errors = sectionResponse?.errors;
-  const summary = data?.summary;
-  const summaryError = errors?.summary;
-
-  const quickSummary = () => {
-    if (loading) {
-      return "We're collecting your latest stats";
-    }
-
-    if (!data) {
-      return "Stay tuned—your learning signals will appear here.";
-    }
-
-    return `${data.enrollments.length || "No"} active course${data.enrollments.length === 1 ? "" : "s"}, ${
-      data.resumes.length || "no"
-    } resume${data.resumes.length === 1 ? "" : "s"}, ${
-      data.applications.jobs.length + data.applications.volunteer.length || "no"
-    } application${
-      data.applications.jobs.length + data.applications.volunteer.length === 1 ? "" : "s"
-    } in motion.`;
-  };
-
-  const activeCourses = data?.enrollments?.length ?? 0;
-  const resumesCount = data?.resumes?.length ?? 0;
-  const applicationsCount =
-    (data?.applications?.jobs.length ?? 0) + (data?.applications?.volunteer.length ?? 0);
-
-  const topCourse = data?.enrollments?.[0];
-  const topApplication = data?.applications?.jobs?.[0] ?? data?.applications?.volunteer?.[0] ?? null;
-  const featuredFocus = data?.insights?.focus?.[0];
-  const skillInsight = data?.insights?.skills;
-  const featuredJob = data?.recommended?.[0];
-
-  const metrics = [
-    {
-      label: "Courses enrolled",
-      value: loading ? "—" : summary?.enrollmentsCount ?? activeCourses,
-      helper: activeCourses ? "Keep your streak alive" : "Start a track to unlock guidance",
-      action: "/dashboard/courses",
-    },
-    {
-      label: "Courses completed",
-      value: loading ? "—" : summary?.completedEnrollmentsCount ?? 0,
-      helper:
-        (summary?.completedEnrollmentsCount ?? 0) > 0
-          ? "Celebrate milestones"
-          : "Finish a course to unlock certificates",
-      action: "/dashboard/courses",
-    },
-    {
-      label: "Resumes created",
-      value: loading ? "—" : summary?.resumesCount ?? resumesCount,
-      helper: resumesCount ? "Refresh insights anytime" : "Generate an ATS-ready resume",
-      action: "/dashboard/resume",
-    },
-    {
-      label: "Resume views",
-      value: loading ? "—" : summary?.resumeViewsCount ?? 0,
-      helper:
-        (summary?.resumeViewsCount ?? 0) > 0
-          ? "People are checking you out"
-          : "Share your profile link to gain traction",
-      action: "/resume/share",
-    },
-    {
-      label: "Jobs applied",
-      value: loading ? "—" : summary?.jobApplicationsCount ?? 0,
-      helper: applicationsCount ? "Track responses in dashboard" : "Submit at least one this week",
-      action: "/applications",
-    },
-    {
-      label: "Volunteer apps",
-      value: loading ? "—" : summary?.volunteerApplicationsCount ?? 0,
-      helper:
-        (summary?.volunteerApplicationsCount ?? 0) > 0
-          ? "Stay close to your mission goals"
-          : "Volunteer work boosts resumes",
-      action: "/applications",
-    },
-  ];
-
-  const highlightStats = [
-    {
-      title: "Career momentum",
-      value: loading ? "—" : `${summary?.applicationsCount ?? applicationsCount}`,
-      helper: "Total applications this account has shipped",
-    },
-    {
-      title: "Completed tracks",
-      value: loading ? "—" : `${summary?.completedEnrollmentsCount ?? 0}`,
-      helper: "Courses fully mastered",
-    },
-    {
-      title: "Profile reach",
-      value: loading ? "—" : `${summary?.resumeViewsCount ?? 0}`,
-      helper: "Public resume impressions",
-    },
-  ];
-
-  const OverviewSkeleton = () => (
-    <div className="space-y-6">
-      <GlassCard variant="gradient" className="p-6">
-        <Skeleton className="h-4 w-28" />
-        <Skeleton className="h-8 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Skeleton className="h-9 w-32 rounded-full" />
-          <Skeleton className="h-9 w-28 rounded-full" />
-        </div>
-      </GlassCard>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, idx) => (
-          <GlassCard key={idx} className="p-4">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="mt-3 h-7 w-16" />
-            <Skeleton className="mt-2 h-3 w-32" />
-          </GlassCard>
-        ))}
-      </div>
-      <div className="grid gap-6 md:grid-cols-2">
-        {Array.from({ length: 2 }).map((_, idx) => (
-          <GlassCard key={idx} className="p-5">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="mt-2 h-6 w-40" />
-            <Skeleton className="mt-2 h-3 w-48" />
-          </GlassCard>
-        ))}
-      </div>
-    </div>
-  );
+  const topCourse = data?.enrollments[0];
+  const topApplication = data?.applications.jobs[0] ?? data?.applications.volunteer[0];
+  const featuredFocus = data?.insights.focus[0];
+  const skillInsight = data?.insights.skills;
+  const featuredJob = data?.recommended[0];
 
   const renderLatestCourse = () => {
     if (errors?.enrollments) {
@@ -578,9 +329,7 @@ export function DashboardSectionsClient() {
       );
     }
 
-    const opportunityCompany = "company" in topApplication.opportunity
-      ? topApplication.opportunity.company
-      : topApplication.opportunity.organization;
+    const opportunityCompany = topApplication.opportunity.company ?? topApplication.opportunity.organization ?? "";
 
     return (
       <div className="space-y-3">
@@ -601,7 +350,7 @@ export function DashboardSectionsClient() {
             <Link href={`/applications/${topApplication.id}`}>View</Link>
           </Button>
           <Button size="sm" asChild>
-            <Link href={`/jobs/${topApplication.opportunity.id ?? topApplication.opportunity.slug ?? ""}`}>
+            <Link href={`/jobs/${topApplication.opportunity.slug ?? topApplication.opportunity.id ?? ""}`}>
               Review role
             </Link>
           </Button>
@@ -633,7 +382,7 @@ export function DashboardSectionsClient() {
         <div className="space-y-3">
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Skills focus</p>
           <h3 className="text-lg font-semibold text-slate-900">
-            {skillInsight.personaName || skillInsight.targetRoles[0] || "Your skill graph"}
+            {skillInsight.personaName ?? skillInsight.targetRoles[0] ?? "Your skill graph"}
           </h3>
           <div className="flex flex-wrap gap-2">
             {skillInsight.highlightSkills.slice(0, 3).map((skill) => (
@@ -703,7 +452,6 @@ export function DashboardSectionsClient() {
       );
     }
 
-    const enrollments = data.enrollments ?? [];
     return (
       <GlassCard className="space-y-6 p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -716,9 +464,9 @@ export function DashboardSectionsClient() {
             <Link href="/dashboard/courses">Open catalog</Link>
           </Button>
         </div>
-        {enrollments.length ? (
+        {data.enrollments.length ? (
           <div className="grid gap-4 lg:grid-cols-2">
-            {enrollments.map((enrollment) => (
+            {data.enrollments.map((enrollment) => (
               <div key={enrollment.id} className="rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4">
                 <p className="text-sm font-semibold text-slate-900">{enrollment.course.title}</p>
                 <p className="text-xs text-slate-500">{enrollment.course.level ?? "Self-paced"}</p>
@@ -764,7 +512,6 @@ export function DashboardSectionsClient() {
       );
     }
 
-    const resumes = data.resumes ?? [];
     return (
       <GlassCard className="space-y-6 p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -777,9 +524,9 @@ export function DashboardSectionsClient() {
             <Link href="/dashboard/resume">Manage resumes</Link>
           </Button>
         </div>
-        {resumes.length ? (
+        {data.resumes.length ? (
           <div className="grid gap-4 lg:grid-cols-2">
-            {resumes.map((resume) => (
+            {data.resumes.map((resume) => (
               <div key={resume.id} className="rounded-2xl border border-slate-100 bg-white/80 p-4">
                 <p className="text-sm font-semibold text-slate-900">{resume.title}</p>
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{resume.visibility}</p>
@@ -802,7 +549,7 @@ export function DashboardSectionsClient() {
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
-            <p>You haven’t created a resume yet. Build one to unlock AI insights and tracking.</p>
+            <p>You haven&apos;t created a resume yet. Build one to unlock AI insights and tracking.</p>
             <Button asChild size="sm" className="mt-3">
               <Link href="/resume/builder">Launch builder</Link>
             </Button>
@@ -821,7 +568,6 @@ export function DashboardSectionsClient() {
       );
     }
 
-    const recommendedJobs = data.recommended ?? [];
     return (
       <GlassCard className="space-y-6 p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -834,9 +580,9 @@ export function DashboardSectionsClient() {
             <Link href="/jobs">View all roles</Link>
           </Button>
         </div>
-        {recommendedJobs.length ? (
+        {data.recommended.length ? (
           <div className="grid gap-4 lg:grid-cols-2">
-            {recommendedJobs.map((job) => (
+            {data.recommended.map((job) => (
               <div key={job.id} className="rounded-2xl border border-slate-100 bg-white/80 p-4">
                 <p className="text-sm font-semibold text-slate-900">{job.title}</p>
                 <p className="text-xs text-slate-500">{job.company}</p>
@@ -881,7 +627,7 @@ export function DashboardSectionsClient() {
           <div className="space-y-4">
             <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Career pulse</p>
             <h2 className="text-3xl font-semibold text-slate-900">Progress that recruiters notice</h2>
-            <p className="text-sm text-slate-600">{quickSummary()}</p>
+            <p className="text-sm text-slate-600">{quickSummary}</p>
             <div className="flex flex-wrap gap-2">
               <Button asChild className="rounded-full">
                 <Link href="/dashboard/courses">Continue learning</Link>
@@ -892,8 +638,8 @@ export function DashboardSectionsClient() {
             </div>
           </div>
           <div className="space-y-3 rounded-3xl border border-slate-100/60 bg-white/70 p-5">
-            {summaryError ? (
-              <GlassCardError message={summaryError} />
+            {errors?.summary ? (
+              <GlassCardError message={errors.summary} />
             ) : (
               highlightStats.map((stat) => (
                 <div key={stat.title} className="rounded-2xl border border-slate-100 bg-white/90 p-4">
@@ -949,5 +695,39 @@ export function DashboardSectionsClient() {
         <TabsContent value="jobs">{renderJobsTab()}</TabsContent>
       </Tabs>
     </section>
+  );
+}
+
+function OverviewSkeleton() {
+  return (
+    <div className="space-y-6">
+      <GlassCard variant="gradient" className="p-6">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Skeleton className="h-9 w-32 rounded-full" />
+          <Skeleton className="h-9 w-28 rounded-full" />
+        </div>
+      </GlassCard>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <GlassCard key={idx} className="p-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="mt-3 h-7 w-16" />
+            <Skeleton className="mt-2 h-3 w-32" />
+          </GlassCard>
+        ))}
+      </div>
+      <div className="grid gap-6 md:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, idx) => (
+          <GlassCard key={idx} className="p-5">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="mt-2 h-6 w-40" />
+            <Skeleton className="mt-2 h-3 w-48" />
+          </GlassCard>
+        ))}
+      </div>
+    </div>
   );
 }
