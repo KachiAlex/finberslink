@@ -652,48 +652,6 @@ export function DashboardSectionsClient() {
           </div>
         </div>
       </GlassCard>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {metrics.map((metric) => (
-          <GlassCard key={metric.label} className="space-y-2 border-slate-100 bg-white/90 p-4">
-            <p className="text-[11px] uppercase tracking-[0.35em] text-slate-400">{metric.label}</p>
-            <p className="text-3xl font-semibold text-slate-900">{metric.value}</p>
-            <p className="text-sm text-slate-500">{metric.helper}</p>
-            <Button asChild variant="link" size="sm" className="px-0 text-slate-600">
-              <Link href={metric.action}>Open</Link>
-            </Button>
-          </GlassCard>
-        ))}
-      </div>
-
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-slate-50 p-1 text-sm">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="courses">Courses</TabsTrigger>
-          <TabsTrigger value="resumes">Resumes</TabsTrigger>
-          <TabsTrigger value="jobs">Jobs</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <GlassCard className="p-5">
-              {loading && !topCourse ? <Skeleton className="h-16 w-full" /> : renderLatestCourse()}
-            </GlassCard>
-            <GlassCard className="p-5">
-              {loading && !topApplication ? <Skeleton className="h-16 w-full" /> : renderPipelineHighlight()}
-            </GlassCard>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <GlassCard className="p-5">{renderFocusHighlight()}</GlassCard>
-            <GlassCard className="p-5">{renderJobHighlight()}</GlassCard>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="courses">{renderCoursesTab()}</TabsContent>
-        <TabsContent value="resumes">{renderResumesTab()}</TabsContent>
-        <TabsContent value="jobs">{renderJobsTab()}</TabsContent>
-      </Tabs>
     </section>
   );
 }
