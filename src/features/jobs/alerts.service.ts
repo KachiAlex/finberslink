@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { JobType } from "@prisma/client";
+import type { JobType, Prisma } from "@prisma/client";
 
 export interface JobAlertData {
   userId: string;
@@ -75,7 +75,7 @@ export async function updateJobAlert(alertId: string, data: Partial<JobAlertData
     throw new Error("alertId is required");
   }
 
-  const update: any = {};
+  const update: Prisma.JobAlertUpdateInput = {};
 
   if (data.keywords && data.keywords.length > 0) {
     update.keywords = data.keywords.map((k) => k.toLowerCase().trim());
@@ -126,7 +126,7 @@ export async function permanentlyDeleteJobAlert(alertId: string) {
  * Find jobs matching the given alert criteria
  */
 export async function findMatchingJobs(alert: JobAlertFilters, limit = 20) {
-  const where: any = {
+  const where: Prisma.JobOpportunityWhereInput = {
     isActive: true,
   };
 
@@ -246,7 +246,13 @@ export async function processJobAlerts() {
       },
     });
 
-    const results = [];
+    const results: Array<{
+      alertId: string;
+      userId: string;
+      matchCount: number;
+      success: boolean;
+      error?: string;
+    }> = [];
 
     for (const alert of alerts) {
       try {
@@ -324,9 +330,9 @@ export async function getSuggestedKeywords(userId: string) {
   // Collect and deduplicate keywords
   const keywordSet = new Set<string>();
 
-  [...savedJobs, ...applications].forEach((item: any) => {
+  [...savedJobs, ...applications].forEach((item) => {
     if (item.job.tags) {
-      item.job.tags.forEach((tag: string) => {
+      item.job.tags.forEach((tag) => {
         keywordSet.add(tag.toLowerCase());
       });
     }

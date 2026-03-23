@@ -1,14 +1,277 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { GlassCardError } from "@/components/ui/glass-card-error";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+interface EnrollmentSection {
+  id: string;
+  progressPercentage?: number | null;
+  course: {
+    id: string;
+    title: string;
+    slug?: string | null;
+    level?: string | null;
+    tagline?: string | null;
+  };
+}
+
+interface ResumeSection {
+  id: string;
+  title: string;
+  visibility: string;
+  slug: string;
+}
+
+interface ApplicationSection {
+  id: string;
+  status: string;
+  updatedAt?: string | null;
+  submittedAt?: string | null;
+  opportunity: {
+    id?: string;
+    slug?: string;
+    title: string;
+    company?: string;
+    organization?: string;
+  };
+}
+
+interface RecommendedJob {
+  id: string;
+  title: string;
+  company: string;
+  location?: string | null;
+  remoteOption?: string | null;
+  slug: string;
+}
+
+type FocusCard = {
+  id: string;
+  title: string;
+  description: string;
+  actionLabel: string;
+  actionHref: string;
+  accent: "blue" | "amber" | "emerald" | "violet";
+};
+
+type SkillInsights = {
+  personaName?: string | null;
+  targetRoles: string[];
+  targetIndustry?: string | null;
+  highlightSkills: string[];
+  gapSkills: string[];
+  recommendation: string;
+};
+
+type DashboardInsights = {
+  focus: FocusCard[];
+  skills: SkillInsights | null;
+};
+
+type DashboardSummary = {
+  enrollmentsCount: number;
+  completedEnrollmentsCount: number;
+  resumesCount: number;
+  applicationsCount: number;
+  jobApplicationsCount: number;
+  volunteerApplicationsCount: number;
+  resumeViewsCount: number;
+};
+
+interface SectionData {
+  summary: DashboardSummary | null;
+  enrollments: EnrollmentSection[];
+  resumes: ResumeSection[];
+  applications: { jobs: ApplicationSection[]; volunteer: ApplicationSection[] };
+  recommended: RecommendedJob[];
+  savedIds: string[];
+  insights: DashboardInsights;
+}
+
+interface SectionErrors {
+  summary?: string | null;
+  enrollments?: string | null;
+  resumes?: string | null;
+  applications?: string | null;
+  recommended?: string | null;
+  insights?: string | null;
+}
+
+type SectionResponse = {
+  data: SectionData;
+  errors: SectionErrors;
+};
+
+type Metric = {
+  label: string;
+  value: string | number;
+  helper: string;
+  action: string;
+};
+
+type HighlightStat = {
+  title: string;
+  value: string | number;
+  description: string;
+};
+
+export function DashboardSectionsClient() {
+  const [sectionResponse, setSectionResponse] = useState<SectionResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSections = async () => {
+      try {
+        const res = await fetch("/api/dashboard/sections", { cache: "no-store" });
+        const payload = (await res.json()) as SectionResponse;
+        if (isMounted) {
+          setSectionResponse(payload);
+        }
+      } catch (error) {
+        console.error("Dashboard sections fetch failed", error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadSections();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const data = sectionResponse?.data;
+  const errors = sectionResponse?.errors;
+  const summary = data?.summary;
+
+  const activeCourses = data?.enrollments.length ?? 0;
+  const resumesCount = data?.resumes.length ?? 0;
+  const applicationsCount =
+    (data?.applications.jobs.length ?? 0) + (data?.applications.volunteer.length ?? 0);
+
+  const quickSummary = useMemo(() => {
+    if (loading) {
+      return "We're collecting your latest stats";
+    }
+    if (!data) {
+      return "Stay tuned—your learning signals will appear here.";
+    }
+
+    const applicationTotal = data.applications.jobs.length + data.applications.volunteer.length;
+    return `${data.enrollments.length || "No"} active course${data.enrollments.length === 1 ? "" : "s"}, ${
+      data.resumes.length || "no"
+    } resume${data.resumes.length === 1 ? "" : "s"}, ${
+      applicationTotal || "no"
+    } application${applicationTotal === 1 ? "" : "s"} in motion.`;
+  }, [data, loading]);
+
+  const metrics = useMemo<Metric[]>(
+    () => [
+      {
+        label: "Courses enrolled",
+        value: loading ? "—" : summary?.enrollmentsCount ?? activeCourses,
+        helper: activeCourses ? "Keep your streak alive" : "Start a track to unlock guidance",
+        action: "/dashboard/courses",
+      },
+      {
+        label: "Courses completed",
+        value: loading ? "—" : summary?.completedEnrollmentsCount ?? 0,
+        helper:
+          (summary?.completedEnrollmentsCount ?? 0) > 0
+            ? "Celebrate milestones"
+            : "Finish a course to unlock certificates",
+        action: "/dashboard/courses",
+      },
+      {
+        label: "Resumes created",
+        value: loading ? "—" : summary?.resumesCount ?? resumesCount,
+        helper: resumesCount ? "Refresh insights anytime" : "Generate an ATS-ready resume",
+        action: "/dashboard/resume",
+      },
+      {
+        label: "Resume views",
+        value: loading ? "—" : summary?.resumeViewsCount ?? 0,
+        helper:
+          (summary?.resumeViewsCount ?? 0) > 0
+            ? "People are checking you out"
+            : "Share your profile link to gain traction",
+        action: "/resume/share",
+      },
+      {
+        label: "Jobs applied",
+        value: loading ? "—" : summary?.jobApplicationsCount ?? 0,
+        helper: applicationsCount ? "Track responses in dashboard" : "Submit at least one this week",
+        action: "/applications",
+      },
+      {
+        label: "Volunteer apps",
+        value: loading ? "—" : summary?.volunteerApplicationsCount ?? 0,
+        helper:
+          (summary?.volunteerApplicationsCount ?? 0) > 0
+            ? "Stay close to your mission goals"
+            : "Volunteer work boosts resumes",
+        action: "/applications",
+      },
+    ], [activeCourses, applicationsCount, loading, resumesCount, summary]
+  );
+
+  const highlightStats = useMemo<HighlightStat[]>(
+    () => [
+      {
+        title: "Career momentum",
+        value: loading ? "—" : summary?.applicationsCount ?? applicationsCount,
+        description: "Total applications across jobs & volunteer roles",
+      },
+      {
+        title: "Completed tracks",
+        value: loading ? "—" : summary?.completedEnrollmentsCount ?? 0,
+        description: "Courses fully mastered",
+      },
+      {
+        title: "Profile reach",
+        value: loading ? "—" : summary?.resumeViewsCount ?? 0,
+        description: "Public resume impressions",
+      },
+    ], [applicationsCount, loading, summary]
+  );
+
+  const tabContent = useMemo(
+    () => [
+      {
+        value: "overview",
+        label: "Overview",
+        content: (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <GlassCard className="p-5">
+              {loading && !data?.enrollments[0] ? <Skeleton className="h-16 w-full" /> : <LatestCourse data={data} errors={errors} />}
+            </GlassCard>
+            <GlassCard className="p-5">
+              {loading && !data?.applications.jobs[0] && !data?.applications.volunteer[0]
+                ? <Skeleton className="h-16 w-full" />
+                : <PipelineHighlight data={data} errors={errors} />}
+            </GlassCard>
+            <GlassCard className="p-5">
+              <InsightsHighlight data={data} errors={errors} />
+            </GlassCard>
+            <GlassCard className="p-5">
+              <JobHighlight data={data} errors={errors} />
+            </GlassCard>
+          </div>
+        ),
+      },
+*** End Patch
 
 interface SectionData {
   summary: DashboardSummary | null;

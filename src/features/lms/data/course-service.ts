@@ -218,7 +218,7 @@ export async function getLearnerCourseDetail(
     include: courseDetailInclude,
   });
 
-  if (!course && userId !== DEFAULT_LEARNER_ID) {
+  if (!course) {
     const enrollment = await prisma.enrollment.findFirst({
       where: {
         userId,

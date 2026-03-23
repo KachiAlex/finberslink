@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { env } from "@/lib/env";
 
 const openai = new OpenAI({
@@ -220,7 +221,7 @@ export async function updateResumeWithGeneratedContent(
     throw new Error("resumeId is required");
   }
 
-  const data: any = { updatedAt: new Date() };
+  const data: Prisma.ResumeUpdateInput = { updatedAt: new Date() };
 
   if (content.summary) {
     data.summary = content.summary;

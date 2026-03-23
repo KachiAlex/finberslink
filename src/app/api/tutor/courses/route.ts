@@ -3,7 +3,7 @@ import { CourseLevel, LessonFormat, ResourceType } from "@prisma/client";
 import { z } from "zod";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import { createTutorCourseWithAssessments } from "@/features/tutor/service";
+import { upsertTutorCourseDraft } from "@/features/tutor/service";
 
 const LessonResourceSchema = z.object({
   title: z.string().min(1),
@@ -46,17 +46,19 @@ const SectionSchema = z.object({
 });
 
 const BodySchema = z.object({
-  coverImage: z.string().min(1),
-  title: z.string().min(1),
-  slug: z.string().min(1),
-  tagline: z.string().min(1),
-  description: z.string().min(1),
-  category: z.string().min(1),
-  level: z.nativeEnum(CourseLevel),
+  courseId: z.string().optional(),
+  coverImage: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
+  slug: z.string().min(1).optional(),
+  tagline: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
+  category: z.string().min(1).optional(),
+  level: z.nativeEnum(CourseLevel).optional(),
   outcomes: z.array(z.string()).optional(),
   skills: z.array(z.string()).optional(),
-  sections: z.array(SectionSchema).min(1),
+  sections: z.array(SectionSchema).optional(),
   finalExam: ExamConfigSchema.optional(),
+  draftStructure: z.any().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     const body = parsed.data;
 
-    const course = await createTutorCourseWithAssessments({
+    const course = await upsertTutorCourseDraft(body.courseId ?? null, {
       tutorId: user.sub,
       coverImage: body.coverImage,
       title: body.title,
@@ -91,14 +93,15 @@ export async function POST(request: NextRequest) {
       level: body.level,
       outcomes: body.outcomes,
       skills: body.skills,
-      sections: body.sections.map((section) => ({
+      sections: body.sections?.map((section) => ({
         ...section,
         exam: section.exam ? { ...section.exam, modules: section.exam.modules } : undefined,
       })),
       finalExam: body.finalExam ? { ...body.finalExam, modules: body.finalExam.modules } : undefined,
+      draftStructure: body.draftStructure,
     });
 
-    return NextResponse.json({ course }, { status: 201 });
+    return NextResponse.json({ course }, { status: body.courseId ? 200 : 201 });
   } catch (error: any) {
     console.error("Tutor course creation error:", error);
     return NextResponse.json({ error: error.message ?? "Failed to create course" }, { status: 500 });

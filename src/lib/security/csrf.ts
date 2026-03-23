@@ -218,7 +218,7 @@ export function createCsrfProtection(config: CsrfProtectionConfig = {}) {
   } = config;
 
   return function csrfProtectionMiddleware(
-    handler: (request: NextRequest) => Promise<NextResponse>
+    handler: (_request: NextRequest) => Promise<NextResponse>
   ) {
     return async (request: NextRequest): Promise<NextResponse> => {
       const { pathname } = request.nextUrl;
@@ -292,7 +292,7 @@ export function createCsrfProtection(config: CsrfProtectionConfig = {}) {
  * ```
  */
 export function initializeCsrfToken(
-  handler: (request: NextRequest) => Promise<NextResponse>
+  handler: (_request: NextRequest) => Promise<NextResponse>
 ) {
   return async (request: NextRequest): Promise<NextResponse> => {
     const response = await handler(request);

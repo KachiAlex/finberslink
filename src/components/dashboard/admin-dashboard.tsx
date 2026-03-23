@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Users, Briefcase, GraduationCap, BarChart3, Shield } from "lucide-react";
+import { Users, Briefcase, GraduationCap, Shield } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { DashboardHero } from "@/components/dashboard/dashboard-hero";
 import { DashboardSection } from "@/components/dashboard/dashboard-section";

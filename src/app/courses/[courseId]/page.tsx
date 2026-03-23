@@ -8,12 +8,15 @@ import { LessonList } from "@/features/lms/components/lesson-list";
 import { getLearnerCourseDetail } from "@/features/lms/data/course-service";
 import { requireSession } from "@/lib/auth/session";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function CourseDetailPage({
   params,
 }: {
-  params: Promise<{ courseId: string }>;
+  params: { courseId: string };
 }) {
-  const { courseId } = await params;
+  const { courseId } = params;
   const session = await requireSession({ allowedRoles: ["STUDENT"], failureMode: "redirect" });
   const course = await getLearnerCourseDetail(courseId, session.sub);
 

@@ -7,6 +7,7 @@ test.describe("Student course flow", () => {
   test("student can resume a course and start a lesson", async ({ page, request }) => {
     const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
     const baseOrigin = new URL(baseUrl).origin;
+    const secureForOrigin = baseOrigin.startsWith("https://");
 
     const loginResponse = await request.post("/api/auth/login", {
       data: { email: STUDENT_EMAIL, password: STUDENT_PASSWORD },
@@ -15,16 +16,19 @@ test.describe("Student course flow", () => {
     expect(await loginResponse.ok()).toBeTruthy();
 
     const storageState = await request.storageState();
+    console.log("storageState", JSON.stringify(storageState.cookies, null, 2));
     const enrichedCookies = storageState.cookies.map((cookie) => {
       if (cookie.domain) {
         return {
           ...cookie,
+          secure: secureForOrigin,
           path: cookie.path ?? "/",
         };
       }
 
       return {
         ...cookie,
+        secure: secureForOrigin,
         path: cookie.path ?? "/",
         url: baseOrigin,
       };

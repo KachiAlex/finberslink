@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 export interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
   maxRequests: number; // Max requests per window
-  keyGenerator?: (request: NextRequest) => string; // Custom key generator
+  keyGenerator?: (_request: NextRequest) => string; // Custom key generator
   skipSuccessfulRequests?: boolean; // Don't count successful responses
   skipFailedRequests?: boolean; // Don't count failed responses (5xx, 4xx)
   message?: string; // Error message
@@ -133,7 +133,7 @@ export function createRateLimit(config: RateLimitConfig) {
   } = config;
 
   return function rateLimitMiddleware(
-    handler: (request: NextRequest) => Promise<NextResponse>
+    handler: (_request: NextRequest) => Promise<NextResponse>
   ) {
     return async (request: NextRequest): Promise<NextResponse> => {
       const key = keyGenerator(request);
