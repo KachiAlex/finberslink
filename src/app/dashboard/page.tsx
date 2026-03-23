@@ -38,13 +38,5 @@ export default async function DashboardPage() {
     }
   };
 
-  return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900">
-      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-br from-blue-100/70 via-white to-cyan-50 blur-2xl" />
-
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
-        {getDashboardComponent(session.role as Role)}
-      </div>
-    </main>
-  );
+  return getDashboardComponent(session.role as Role);
 }

@@ -4,9 +4,6 @@ import Link from "next/link";
 import { DashboardSectionsClient } from "@/app/dashboard/sections-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
-import { buildDashboardCoursesUrl } from "@/lib/dashboard-courses-url";
-import { GraduationCap, LayoutDashboard, MessageSquare, Sparkles, Briefcase, ClipboardList } from "lucide-react";
 
 interface StudentDashboardProps {
   userId: string;
@@ -40,61 +37,7 @@ const StatCard = ({
 
 export function StudentDashboard(_props: StudentDashboardProps) {
   return (
-    <div className="grid gap-8 lg:grid-cols-[260px_1fr] xl:grid-cols-[300px_1fr]">
-      <DashboardSidebar
-        title="Student Hub"
-        subtitle="Everything tied to your learning arc sits here—no more scattered cards."
-        meta="Focus mode"
-        items={[
-          {
-            label: "Dashboard",
-            description: "Overview & quick stats",
-            href: "/dashboard",
-            icon: LayoutDashboard,
-          },
-          {
-            label: "Courses",
-            description: "Browse catalog & enroll",
-            href: buildDashboardCoursesUrl(),
-            icon: GraduationCap,
-          },
-          {
-            label: "Resumes",
-            description: "Create & manage resumes",
-            href: "/resumes",
-            icon: Sparkles,
-          },
-          {
-            label: "Jobs",
-            description: "Find opportunities",
-            href: "/jobs",
-            icon: Briefcase,
-          },
-          {
-            label: "Applications",
-            description: "Track submissions",
-            href: "/dashboard/applications",
-            icon: ClipboardList,
-          },
-          {
-            label: "Messages",
-            description: "Notifications & inbox",
-            href: "/notifications",
-            icon: MessageSquare,
-          },
-        ]}
-        footer={
-          <>
-            <p className="font-medium text-slate-900">Stuck?</p>
-            <p className="text-sm text-slate-600">Join the community forum to get help fast.</p>
-            <Link href="/forum" className="mt-2 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700">
-              Go to forum →
-            </Link>
-          </>
-        }
-      />
-
-      <div className="space-y-8">
+    <div className="space-y-8">
         {/* Promotional Banner */}
         <Card className="border-0 bg-gradient-to-r from-slate-900 to-slate-800 text-white overflow-hidden">
           <CardContent className="p-0">
@@ -220,6 +163,5 @@ export function StudentDashboard(_props: StudentDashboardProps) {
         {/* Sections Client for Dynamic Content */}
         <DashboardSectionsClient />
       </div>
-    </div>
   );
 }
