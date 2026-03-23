@@ -61,7 +61,7 @@ export function StudentDashboard(_props: StudentDashboardProps) {
           {
             label: "Resumes",
             description: "Create & manage resumes",
-            href: "/dashboard/resume",
+            href: "/resumes",
             icon: Sparkles,
           },
           {

@@ -163,7 +163,7 @@ export default function ProfilePage() {
                   <TabsTrigger value="activity">Activity</TabsTrigger>
                 </TabsList>
                 <Button asChild>
-                  <Link href="/dashboard/resume">Open Resume Studio</Link>
+                  <Link href="/resumes/builder">Open Resume Studio</Link>
                 </Button>
               </div>
 

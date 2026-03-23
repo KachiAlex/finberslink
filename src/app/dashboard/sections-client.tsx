@@ -125,7 +125,7 @@ type HighlightStat = {
 const LOADING_METRICS: Metric[] = [
   { label: "Courses enrolled", value: "—", helper: "Loading", action: "/dashboard/courses" },
   { label: "Courses completed", value: "—", helper: "Loading", action: "/dashboard/courses" },
-  { label: "Resumes created", value: "—", helper: "Loading", action: "/dashboard/resume" },
+  { label: "Resumes created", value: "—", helper: "Loading", action: "/resumes" },
   { label: "Resume views", value: "—", helper: "Loading", action: "/resume/share" },
   { label: "Jobs applied", value: "—", helper: "Loading", action: "/applications" },
   { label: "Volunteer apps", value: "—", helper: "Loading", action: "/applications" },
@@ -219,7 +219,7 @@ export function DashboardSectionsClient() {
           label: "Resumes created",
           value: loading ? "—" : summary.resumesCount ?? resumesCount,
           helper: resumesCount ? "Refresh insights anytime" : "Generate an ATS-ready resume",
-          action: "/dashboard/resume",
+          action: "/resumes",
         },
         {
           label: "Resume views",
@@ -521,7 +521,7 @@ export function DashboardSectionsClient() {
             <p className="text-sm text-slate-500">Manage versions, AI feedback, and visibility.</p>
           </div>
           <Button asChild>
-            <Link href="/dashboard/resume">Manage resumes</Link>
+            <Link href="/resumes">Manage resumes</Link>
           </Button>
         </div>
         {data.resumes.length ? (

@@ -15,7 +15,7 @@ export const siteConfig = {
   dashboardNav: [
     { title: "Overview", href: "/dashboard" },
     { title: "Courses", href: "/dashboard/courses" },
-    { title: "Resume", href: "/dashboard/resume" },
+    { title: "Resume", href: "/resumes" },
     { title: "Applications", href: "/dashboard/applications" },
     { title: "Notifications", href: "/dashboard/notifications" },
   ],

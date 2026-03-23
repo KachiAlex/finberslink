@@ -50,8 +50,6 @@ model User {
   courseAssignmentsReceived    CourseAssignment[]     @relation("StudentCourseAssignments")
   courseAssignmentsCreated     CourseAssignment[]     @relation("AdminCourseAssignments")
   courseCertificates           CourseCertificate[]    @relation("CertificateStudent")
-  coursesSubmitted             Course[]               @relation("CourseSubmittedBy")
-  coursesReviewed              Course[]               @relation("CourseReviewedBy")
   issuedCertificates           CourseCertificate[]    @relation("CertificatesIssuedBy")
 }
 
@@ -78,10 +76,6 @@ model Course {
   category             String
   coverImage           String
   approvalStatus       CourseApprovalStatus @default(DRAFT)
-  submittedAt          DateTime?
-  submittedById        String?
-  reviewedAt           DateTime?
-  reviewedById         String?
   publishedAt          DateTime?
   tutorEditingLocked   Boolean       @default(false)
   draftStructure       Json?
@@ -93,8 +87,6 @@ model Course {
   skills               String[]      @default([])
   chatSpaces           ChatSpace[]
   instructor           User          @relation("CourseInstructor", fields: [instructorId], references: [id])
-  submittedBy          User?         @relation("CourseSubmittedBy", fields: [submittedById], references: [id])
-  reviewedBy           User?         @relation("CourseReviewedBy", fields: [reviewedById], references: [id])
   enrollments          Enrollment[]
   exams                Exam[]
   forumThreads         ForumThread[]
@@ -165,7 +157,6 @@ model Enrollment {
   status             EnrollmentStatus @default(ACTIVE)
   progressPercentage Int              @default(0)
   lastAccessedAt     DateTime?
-  assignmentId       String?          @unique
   acceptedAt         DateTime?
   completedAt        DateTime?
   createdAt          DateTime         @default(now())
@@ -173,7 +164,6 @@ model Enrollment {
   course             Course           @relation(fields: [courseId], references: [id])
   user               User             @relation(fields: [userId], references: [id])
   lessonProgress     LessonProgress[]
-  assignment         CourseAssignment? @relation("EnrollmentAssignment", fields: [assignmentId], references: [id])
   certificate        CourseCertificate?
 
   @@unique([userId, courseId])
@@ -193,7 +183,6 @@ model CourseAssignment {
   course        Course                   @relation(fields: [courseId], references: [id])
   student       User                     @relation("StudentCourseAssignments", fields: [studentId], references: [id])
   assignedBy    User                     @relation("AdminCourseAssignments", fields: [assignedById], references: [id])
-  enrollment    Enrollment?              @relation("EnrollmentAssignment")
 
   @@index([courseId])
   @@index([studentId])

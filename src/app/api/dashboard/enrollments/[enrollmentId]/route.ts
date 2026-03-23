@@ -24,7 +24,7 @@ export async function POST(request: NextRequest, { params }: { params: { enrollm
 
     const enrollment = await prisma.enrollment.findFirst({
       where: { id: params.enrollmentId, userId: session.sub },
-      select: { id: true, status: true, assignmentId: true },
+      select: { id: true, status: true },
     });
 
     if (!enrollment) {
@@ -45,18 +45,6 @@ export async function POST(request: NextRequest, { params }: { params: { enrollm
           acceptedAt: now,
         },
       });
-
-      if (enrollment.assignmentId) {
-        await prisma.courseAssignment.update({
-          where: { id: enrollment.assignmentId },
-          data: {
-            status: "ACCEPTED",
-            acceptedAt: now,
-            declinedAt: null,
-            revokedAt: null,
-          },
-        });
-      }
     } else {
       await prisma.enrollment.update({
         where: { id: enrollment.id },
@@ -65,16 +53,6 @@ export async function POST(request: NextRequest, { params }: { params: { enrollm
           acceptedAt: null,
         },
       });
-
-      if (enrollment.assignmentId) {
-        await prisma.courseAssignment.update({
-          where: { id: enrollment.assignmentId },
-          data: {
-            status: "DECLINED",
-            declinedAt: now,
-          },
-        });
-      }
     }
 
     return NextResponse.json({ success: true });
