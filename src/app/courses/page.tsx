@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,11 +7,22 @@ import { listLearnerCourses } from "@/features/lms/data/course-service";
 import { GradientText } from "@/components/shared/animated-components";
 import { ArrowRight, BookOpen, Search, Filter, Star, Users, Clock, Trophy } from "lucide-react";
 import Link from "next/link";
+import { requireSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function CoursesPage() {
+  // Check if user is authenticated
+  const session = await requireSession({
+    failureMode: "allow",
+  });
+
+  // Redirect authenticated students to dashboard courses
+  if (session && session.role === "STUDENT") {
+    redirect("/dashboard/courses");
+  }
+
   const courses = await listLearnerCourses();
   
   // Split courses into featured, popular, and all
