@@ -537,7 +537,6 @@ export function DashboardCoursesClient({
             ))}
           </div>
         </div>
-      </div>
 
       <DashboardSection
         eyebrow="Assigned"
