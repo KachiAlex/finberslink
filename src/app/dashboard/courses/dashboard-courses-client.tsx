@@ -156,37 +156,47 @@ export function DashboardCoursesClient({
         setCatalogError(null);
 
         const params = new URLSearchParams();
-        if (nextFilters.search.trim()) {
+        if (nextFilters.search && nextFilters.search.trim()) {
           params.set("search", nextFilters.search.trim());
         }
-        if (nextFilters.level !== "all") {
+        if (nextFilters.level && nextFilters.level !== "all") {
           params.set("level", nextFilters.level);
         }
-        if (nextFilters.category !== "all") {
+        if (nextFilters.category && nextFilters.category !== "all") {
           params.set("category", nextFilters.category);
         }
-        params.set("sort", nextFilters.sort);
-        params.set("page", String(nextFilters.page));
+        if (nextFilters.sort) {
+          params.set("sort", nextFilters.sort);
+        }
+        params.set("page", String(nextFilters.page || 1));
 
-        const response = await fetch(`/api/dashboard/courses?${params.toString()}`, {
+        const queryString = params.toString();
+        const url = `/api/dashboard/courses${queryString ? `?${queryString}` : ""}`;
+
+        const response = await fetch(url, {
           method: "GET",
-          cache: "no-store",
+          headers: { "Content-Type": "application/json" },
         });
 
         if (!response.ok) {
-          throw new Error("Failed to load catalog courses");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to load catalog (${response.status})`);
         }
 
-        const payload = (await response.json()) as {
+        const data = await response.json();
+        const payload = data as {
           courses: CourseSummary[];
           pagination: PaginationState;
         };
 
-        setCatalog(payload.courses);
-        setPagination(payload.pagination);
+        setCatalog(payload.courses || []);
+        setPagination(payload.pagination || { page: 1, pageSize: 12, total: 0, totalPages: 0 });
       } catch (error) {
-        console.error("Dashboard catalog fetch failed", error);
-        setCatalogError("Unable to load catalog right now. Please try again.");
+        const message = error instanceof Error ? error.message : "Unable to load catalog";
+        console.error("Dashboard catalog fetch failed:", error);
+        setCatalogError(message);
+        setCatalog([]);
+        setPagination({ page: 1, pageSize: 12, total: 0, totalPages: 0 });
       } finally {
         setCatalogLoading(false);
       }
@@ -197,18 +207,20 @@ export function DashboardCoursesClient({
   const applyFilters = useCallback(
     (partial: Partial<FiltersState>, options?: { resetPage?: boolean }) => {
       setFilters((prev) => {
-        const merged = { ...prev, ...partial };
-        const normalized: FiltersState = {
-          ...merged,
-          page: options?.resetPage ? 1 : merged.page,
+        const merged: FiltersState = {
+          search: partial.search !== undefined ? partial.search : prev.search,
+          level: partial.level !== undefined ? partial.level : prev.level,
+          category: partial.category !== undefined ? partial.category : prev.category,
+          sort: partial.sort !== undefined ? partial.sort : prev.sort,
+          page: options?.resetPage ? 1 : (partial.page !== undefined ? partial.page : prev.page),
         };
 
         startTransition(() => {
-          updateUrl(normalized);
+          updateUrl(merged);
+          void fetchCatalog(merged);
         });
-        void fetchCatalog(normalized);
 
-        return normalized;
+        return merged;
       });
     },
     [fetchCatalog, updateUrl],

@@ -325,7 +325,7 @@ export function DashboardSectionsClient() {
         <div className="space-y-3 text-sm text-slate-600">
           <p>No applications in play.</p>
           <Button size="sm" asChild variant="secondary">
-            <Link href="/jobs">Browse roles</Link>
+            <Link href="/dashboard/jobs">Browse roles</Link>
           </Button>
         </div>
       );
@@ -349,7 +349,7 @@ export function DashboardSectionsClient() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="ghost" asChild className="text-slate-600">
-            <Link href={`/applications/${topApplication.id}`}>View</Link>
+            <Link href='/dashboard/jobs'>View</Link>
           </Button>
           <Button size="sm" asChild>
             <Link href={`/jobs/${topApplication.opportunity.slug ?? topApplication.opportunity.id ?? ""}`}>
@@ -418,7 +418,7 @@ export function DashboardSectionsClient() {
         <div className="space-y-3 text-sm text-slate-600">
           <p>No tailored roles yet. Update your profile or enroll in a course to unlock matches.</p>
           <Button size="sm" variant="secondary" asChild>
-            <Link href="/jobs">Browse roles</Link>
+            <Link href="/dashboard/jobs">Browse roles</Link>
           </Button>
         </div>
       );
@@ -626,10 +626,10 @@ export function DashboardSectionsClient() {
                 </div>
                 <div className="mt-4 flex gap-2">
                   <Button asChild size="sm" variant="secondary" className="rounded-full">
-                    <Link href={`/dashboard/resumes/${resume.slug}/edit`}>Edit</Link>
+                    <Link href={`/resume/${resume.slug}/edit`}>Edit</Link>
                   </Button>
                   <Button asChild size="sm" variant="ghost" className="rounded-full">
-                    <Link href={`/dashboard/resumes/${resume.slug}/share`}>Share</Link>
+                    <Link href={`/resume/share?slug=${resume.slug}`}>Share</Link>
                   </Button>
                 </div>
               </div>
@@ -739,7 +739,7 @@ export function DashboardSectionsClient() {
               Update your profile or enroll in a course to unlock tailored job recommendations.
             </p>
             <Button asChild size="sm" variant="secondary" className="w-fit">
-              <Link href="/jobs">Browse roles</Link>
+              <Link href="/dashboard/jobs">Browse roles</Link>
             </Button>
           </GlassCard>
         )}
@@ -779,7 +779,7 @@ export function DashboardSectionsClient() {
                       {application.status.replace("_", " ")}
                     </Badge>
                     <Button asChild size="sm" variant="ghost">
-                      <Link href={`/applications/${application.id}`}>View</Link>
+                      <Link href='/dashboard/jobs'>View</Link>
                     </Button>
                   </div>
                 </div>
@@ -844,7 +844,7 @@ export function DashboardSectionsClient() {
                   {application.status.replace(/_/g, " ")}
                 </Badge>
                 <Button asChild size="sm" variant="ghost" className="rounded-full text-slate-600">
-                  <Link href={`/applications/${application.id}`}>View</Link>
+                  <Link href='/dashboard/jobs'>View</Link>
                 </Button>
               </div>
             </div>
