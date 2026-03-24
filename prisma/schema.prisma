@@ -237,17 +237,23 @@ model LessonProgress {
 }
 
 model ForumThread {
-  id        String          @id @default(cuid())
-  title     String
-  courseId  String
-  authorId  String
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-  posts     ForumPost[]
-  author    User            @relation(fields: [authorId], references: [id])
-  course    Course          @relation(fields: [courseId], references: [id])
-  mentions  ThreadMention[]
-  reads     ThreadRead[]
+  id             String          @id @default(cuid())
+  title          String
+  courseId       String
+  authorId       String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  lastActivityAt DateTime        @default(now())
+  posts          ForumPost[]
+  author         User            @relation(fields: [authorId], references: [id])
+  course         Course          @relation(fields: [courseId], references: [id])
+  mentions       ThreadMention[]
+  reads          ThreadRead[]
+
+  @@index([courseId])
+  @@index([createdAt])
+  @@index([lastActivityAt])
+  @@index([authorId])
 }
 
 model ForumPost {
@@ -264,6 +270,11 @@ model ForumPost {
   parent    ForumPost?  @relation("PostReplies", fields: [parentId], references: [id])
   replies   ForumPost[] @relation("PostReplies")
   thread    ForumThread @relation(fields: [threadId], references: [id])
+
+  @@index([threadId])
+  @@index([authorId])
+  @@index([parentId])
+  @@index([createdAt])
 }
 
 model Resume {
