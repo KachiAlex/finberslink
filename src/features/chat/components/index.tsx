@@ -1,6 +1,12 @@
 import { ChatSpace, ChatThread, ChatMessage, useChatSpaces, useChatThreads, useChatMessages, useMarkThreadRead, useSendChatMessage } from "../hooks";
 import { useEffect, useState } from "react";
 
+// Export new components
+export { ChatSwitcher } from "./chat-switcher";
+export { DirectMessagesList } from "./direct-messages-list";
+export { CourseChatsList } from "./course-chats-list";
+export { CommunityForumsList } from "./community-forums-list";
+
 export function ChatSpaceList({
   selected,
   onSelect,
