@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
+import { Slot } from "@radix-ui/react-slot";
 import { ArrowRight, Star } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +17,7 @@ export const GradientText = ({ children, className = "" }: { children: React.Rea
 export const RippleButton = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode; asChild?: boolean }
->(({ children, className = "", ...props }, ref) => {
+>(({ children, className = "", asChild = false, ...props }, ref) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
 
@@ -35,8 +36,10 @@ export const RippleButton = React.forwardRef<
     props.onClick?.(e);
   };
 
+  const Comp = asChild ? Slot : "button";
+
   return (
-    <button
+    <Comp
       ref={buttonRef || ref}
       className={`relative overflow-hidden transition-all duration-200 ${className}`}
       onClick={handleClick}
@@ -70,7 +73,7 @@ export const RippleButton = React.forwardRef<
         }
       `}</style>
       {children}
-    </button>
+    </Comp>
   );
 });
 RippleButton.displayName = "RippleButton";

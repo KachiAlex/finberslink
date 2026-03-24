@@ -7,6 +7,7 @@ import Link from "next/link";
 import { DashboardSectionsClient } from "@/app/dashboard/sections-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { GradientText, RippleButton } from "@/components/shared/animated-components";
 
 interface StudentDashboardProps {
   userId: string;
@@ -65,76 +66,6 @@ const CornerAccent = ({ position }: { position: "top-left" | "top-right" | "bott
 // Skeleton Loader Component
 const SkeletonLoader = ({ className = "" }: { className?: string }) => (
   <div className={`animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded ${className}`} />
-);
-
-// Ripple Button Component
-const RippleButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }
->(({ children, className = "", ...props }, ref) => {
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
-
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const id = Date.now();
-      
-      setRipples(prev => [...prev, { x, y, id }]);
-      setTimeout(() => {
-        setRipples(prev => prev.filter(r => r.id !== id));
-      }, 600);
-    }
-    props.onClick?.(e);
-  };
-
-  return (
-    <button
-      ref={buttonRef || ref}
-      className={`relative overflow-hidden transition-all duration-200 ${className}`}
-      onClick={handleClick}
-      {...props}
-    >
-      {ripples.map(ripple => (
-        <span
-          key={ripple.id}
-          className="absolute rounded-full bg-white/40"
-          style={{
-            left: ripple.x,
-            top: ripple.y,
-            width: "20px",
-            height: "20px",
-            marginLeft: "-10px",
-            marginTop: "-10px",
-            animation: "ripple 0.6s ease-out",
-          }}
-        />
-      ))}
-      <style>{`
-        @keyframes ripple {
-          0% {
-            transform: scale(0);
-            opacity: 1;
-          }
-          100% {
-            transform: scale(4);
-            opacity: 0;
-          }
-        }
-      `}</style>
-      {children}
-    </button>
-  );
-});
-RippleButton.displayName = "RippleButton";
-
-// Gradient Text Component
-const GradientText = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <span className={`bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent ${className}`}>
-    {children}
-  </span>
 );
 
 // Bounce Animation Icon
