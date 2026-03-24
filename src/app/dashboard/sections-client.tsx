@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassCardError } from "@/components/ui/glass-card-error";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { JobBrowserButton } from "@/components/jobs/job-browser-button";
 
 interface EnrollmentSection {
