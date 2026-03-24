@@ -621,38 +621,9 @@ export function DashboardSectionsClient() {
   }
 
   return (
-    <section className="space-y-8">
-      <GlassCard variant="gradient" className="overflow-hidden border border-slate-200/70">
-        <div className="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Career pulse</p>
-            <h2 className="text-3xl font-semibold text-slate-900">Progress that recruiters notice</h2>
-            <p className="text-sm text-slate-600">{quickSummary}</p>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild className="rounded-full">
-                <Link href="/dashboard/courses">Continue learning</Link>
-              </Button>
-              <Button asChild variant="outline" className="rounded-full">
-                <Link href="/applications">Track applications</Link>
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-3 rounded-3xl border border-slate-100/60 bg-white/70 p-5">
-            {errors?.summary ? (
-              <GlassCardError message={errors.summary} />
-            ) : (
-              highlightStats.map((stat) => (
-                <div key={stat.title} className="rounded-2xl border border-slate-100 bg-white/90 p-4">
-                  <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{stat.title}</p>
-                  <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
-                  <p className="text-xs text-slate-500">{stat.helper}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </GlassCard>
-    </section>
+    <div className="space-y-8">
+      {/* Section can be empty or contain other content */}
+    </div>
   );
 }
 

@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { getJobs, getFeaturedJobs, getPopularCompanies, getJobTags, listSavedJobs } from "@/features/jobs/service";
 import { getSessionFromCookies } from "@/lib/auth/session";
 
-type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
-type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
-
 import { JobCard } from "./_components/job-card";
 import { JobFilters } from "./_components/job-filters";
+import { CareerPulseSection } from "./_components/career-pulse";
+
+type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
+type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -111,6 +112,11 @@ export default async function JobsPage({
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Career Pulse Section */}
+        <div className="mb-12">
+          <CareerPulseSection />
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar Filters */}
           <div className="lg:col-span-1">

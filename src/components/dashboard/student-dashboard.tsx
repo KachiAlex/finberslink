@@ -564,49 +564,6 @@ export function StudentDashboard(_props: StudentDashboardProps) {
         />
       </div>
 
-      {/* My Courses Section - Enhanced */}
-      <div className="space-y-6 relative z-10">
-        <div className="flex items-center justify-between group">
-          <div>
-            <h2 className="text-3xl font-bold transition-all duration-300">
-              <GradientText>My Learning Path</GradientText>
-            </h2>
-            <p className="mt-1 text-sm text-slate-600">Continue where you left off or start something new</p>
-          </div>
-          <RippleButton asChild className="gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-md hover:shadow-lg transition-all px-6 py-2 rounded-lg font-medium">
-            <Link href="/dashboard/courses" className="flex items-center">
-              View All Courses <ArrowRight className="h-4 w-4" />
-            </Link>
-          </RippleButton>
-        </div>
-
-        {/* Course Cards Grid with Advanced Features */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <CourseCard title="Infodemic Management" enrolled={0} rating={5} delay={0} />
-          <CourseCard title="Process Improvement (Result driven course)" enrolled={23} rating={5} delay={100} />
-          <CourseCard title="Soft Skill Course (In conjunction with HCPA) - Cynthia Eguozuwa" enrolled={147} rating={5} delay={200} />
-          <CourseCard title="Test Course" enrolled={0} rating={5} delay={300} />
-        </div>
-
-        {/* Enhanced Empty State */}
-        <div className="group rounded-2xl border-2 border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-blue-50 p-12 text-center transition-all duration-300 hover:border-blue-400 hover:shadow-lg hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50 cursor-pointer relative overflow-hidden">
-          {/* Corner Accents */}
-          <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-blue-300 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-blue-300 rounded-tl-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 transition-all duration-300 group-hover:scale-125 group-hover:bg-blue-200 group-hover:shadow-lg">
-            <BookOpen className="h-8 w-8 text-blue-600 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
-          </div>
-          <h3 className="text-xl font-semibold text-slate-900 mb-2 transition-colors duration-300">No courses yet?</h3>
-          <p className="text-slate-600 mb-6 transition-colors duration-300 group-hover:text-slate-700">Discover our comprehensive catalog and start your learning journey today.</p>
-          <RippleButton asChild className="gap-2 bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-700 hover:via-cyan-700 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all px-6 py-2 rounded-lg font-medium inline-flex items-center">
-            <Link href="/dashboard/courses" className="flex items-center">
-              Browse Course Catalog <ArrowRight className="h-4 w-4" />
-            </Link>
-          </RippleButton>
-        </div>
-      </div>
-
       {/* Sections Client for Dynamic Content */}
       <div className="relative z-10">
         <DashboardSectionsClient />
