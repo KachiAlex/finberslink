@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, MessageSquare, Sparkles, Briefcase, MessageCircle } from "lucide-react";
+import { GraduationCap, LayoutDashboard, MessageSquare, Sparkles, Briefcase, MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
@@ -9,6 +9,7 @@ import { getUnreadCount } from "@/features/notifications/service";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { requireSession } from "@/lib/auth/session";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { buildDashboardCoursesUrl } from "@/lib/dashboard-courses-url";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +76,12 @@ export default async function DashboardLayout({
                 description: "Overview & quick stats",
                 href: "/dashboard",
                 icon: LayoutDashboard,
+              },
+              {
+                label: "Courses",
+                description: "Browse catalog & enroll",
+                href: buildDashboardCoursesUrl(),
+                icon: GraduationCap,
               },
               {
                 label: "Resumes",

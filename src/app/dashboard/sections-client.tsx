@@ -10,6 +10,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { GlassCardError } from "@/components/ui/glass-card-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { JobBrowserButton } from "@/components/jobs/job-browser-button";
+import { DashboardCoursesTab } from "@/components/dashboard/dashboard-courses-tab";
 
 interface EnrollmentSection {
   id: string;
@@ -688,6 +689,23 @@ export function DashboardSectionsClient() {
 
   return (
     <div className="space-y-8">
+      {/* COURSES SECTION */}
+      <div>
+        <DashboardCoursesTab 
+          courses={
+            data?.enrollments.map((enrollment) => ({
+              id: enrollment.id,
+              title: enrollment.course.title,
+              slug: enrollment.course.slug,
+              level: enrollment.course.level,
+              tagline: enrollment.course.tagline,
+              progress: enrollment.progressPercentage,
+            })) ?? []
+          } 
+          loading={loading} 
+        />
+      </div>
+
       {/* JOBS SECTION */}
       <div className="space-y-6">
         {/* Job Recommendations */}
