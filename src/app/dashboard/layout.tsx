@@ -10,6 +10,7 @@ import { NotificationsBell } from "@/components/notifications/notifications-bell
 import { requireSession } from "@/lib/auth/session";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { buildDashboardCoursesUrl } from "@/lib/dashboard-courses-url";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -25,6 +26,14 @@ export default async function DashboardLayout({
   });
 
   const unreadCount = await getUnreadCount(session.sub);
+  
+  // Fetch user data for personalized greeting
+  const user = await prisma.user.findUnique({
+    where: { id: session.sub },
+    select: { firstName: true, lastName: true }
+  }).catch(() => null);
+  
+  const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
@@ -36,7 +45,12 @@ export default async function DashboardLayout({
             </span>
             <span className="text-xs text-muted-foreground">Dashboard</span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6">
+            {userName && (
+              <span className="text-sm font-medium text-slate-700">
+                Welcome, <span className="font-semibold text-slate-900">{userName}</span>
+              </span>
+            )}
             <NotificationsBell unreadCount={unreadCount} />
             <span className="text-sm text-slate-600 capitalize">
               {session.role.replace("_", " ")}

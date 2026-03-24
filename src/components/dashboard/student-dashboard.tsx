@@ -461,13 +461,6 @@ export function StudentDashboard(_props: StudentDashboardProps) {
       {/* Floating Particles Background */}
       <FloatingParticles />
 
-      {/* Welcome Greeting - Top Right */}
-      <div className="flex justify-end">
-        <div className="w-full md:w-1/2">
-          <AnimatedGreeting />
-        </div>
-      </div>
-
       {/* Animated Stats Cards with Decorative Elements */}
       <div className="grid gap-6 sm:grid-cols-3 relative z-10">
         <StatCard
@@ -496,7 +489,7 @@ export function StudentDashboard(_props: StudentDashboardProps) {
         />
       </div>
 
-      {/* Animated Banner - Now Below Stats */}
+      {/* Animated Banner - Below Stats */}
       <AnimatedBanner />
 
       {/* Sections Client for Dynamic Content */}
