@@ -127,10 +127,10 @@ type HighlightStat = {
 const LOADING_METRICS: Metric[] = [
   { label: "Courses enrolled", value: "—", helper: "Loading", action: "/dashboard/courses" },
   { label: "Courses completed", value: "—", helper: "Loading", action: "/dashboard/courses" },
-  { label: "Resumes created", value: "—", helper: "Loading", action: "/resumes" },
-  { label: "Resume views", value: "—", helper: "Loading", action: "/resume/share" },
-  { label: "Jobs applied", value: "—", helper: "Loading", action: "/applications" },
-  { label: "Volunteer apps", value: "—", helper: "Loading", action: "/applications" },
+  { label: "Resumes created", value: "—", helper: "Loading", action: "/dashboard/resumes" },
+  { label: "Resume views", value: "—", helper: "Loading", action: "/dashboard/resumes" },
+  { label: "Jobs applied", value: "—", helper: "Loading", action: "/dashboard/jobs" },
+  { label: "Volunteer apps", value: "—", helper: "Loading", action: "/dashboard/jobs" },
 ];
 
 const LOADING_HIGHLIGHTS: HighlightStat[] = [
@@ -221,7 +221,7 @@ export function DashboardSectionsClient() {
           label: "Resumes created",
           value: loading ? "—" : summary.resumesCount ?? resumesCount,
           helper: resumesCount ? "Refresh insights anytime" : "Generate an ATS-ready resume",
-          action: "/resumes",
+          action: "/dashboard/resumes",
         },
         {
           label: "Resume views",
@@ -230,13 +230,13 @@ export function DashboardSectionsClient() {
             (summary.resumeViewsCount ?? 0) > 0
               ? "People are checking you out"
               : "Share your profile link to gain traction",
-          action: "/resume/share",
+          action: "/dashboard/resumes",
         },
         {
           label: "Jobs applied",
           value: loading ? "—" : summary.jobApplicationsCount ?? 0,
           helper: applicationsCount ? "Track responses in dashboard" : "Submit at least one this week",
-          action: "/applications",
+          action: "/dashboard/jobs",
         },
         {
           label: "Volunteer apps",
@@ -245,7 +245,7 @@ export function DashboardSectionsClient() {
             (summary.volunteerApplicationsCount ?? 0) > 0
               ? "Stay close to your mission goals"
               : "Volunteer work boosts resumes",
-          action: "/applications",
+          action: "/dashboard/jobs",
         },
       ];
     },
@@ -402,7 +402,7 @@ export function DashboardSectionsClient() {
       <div className="space-y-3 text-sm text-slate-600">
         <p>Build a resume to unlock AI insights tailored to your target roles.</p>
         <Button size="sm" asChild>
-          <Link href="/resume/builder">Create resume</Link>
+          <Link href="/dashboard/resumes">Create resume</Link>
         </Button>
       </div>
     );
@@ -609,7 +609,7 @@ export function DashboardSectionsClient() {
             <p className="text-sm text-slate-500">Manage versions, AI feedback, and visibility.</p>
           </div>
           <Button asChild>
-            <Link href="/resumes">Manage resumes</Link>
+            <Link href="/dashboard/resumes">Manage resumes</Link>
           </Button>
         </div>
         {data.resumes.length ? (
@@ -626,10 +626,10 @@ export function DashboardSectionsClient() {
                 </div>
                 <div className="mt-4 flex gap-2">
                   <Button asChild size="sm" variant="secondary" className="rounded-full">
-                    <Link href={`/resume/${resume.slug}/edit`}>Edit</Link>
+                    <Link href={`/dashboard/resumes/${resume.slug}/edit`}>Edit</Link>
                   </Button>
                   <Button asChild size="sm" variant="ghost" className="rounded-full">
-                    <Link href={`/resume/share/${resume.slug}`}>Share</Link>
+                    <Link href={`/dashboard/resumes/${resume.slug}/share`}>Share</Link>
                   </Button>
                 </div>
               </div>
@@ -639,7 +639,7 @@ export function DashboardSectionsClient() {
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
             <p>You haven&apos;t created a resume yet. Build one to unlock AI insights and tracking.</p>
             <Button asChild size="sm" className="mt-3">
-              <Link href="/resume/builder">Launch builder</Link>
+              <Link href="/dashboard/resumes">Launch builder</Link>
             </Button>
           </div>
         )}
