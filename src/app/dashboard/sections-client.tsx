@@ -513,37 +513,8 @@ export function DashboardSectionsClient() {
     const volunteerApplications = data.applications.volunteer;
     const allApplications = [...jobApplications, ...volunteerApplications];
 
-    // Stats for job applications
-    const appliedCount = jobApplications.length;
-    const inProgressCount = jobApplications.filter((app) => app.status === "APPLIED" || app.status === "UNDER_REVIEW").length;
-    const succeededCount = jobApplications.filter((app) => app.status === "ACCEPTED").length;
-
     return (
       <div className="space-y-8">
-        {/* Application Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <GlassCard className="p-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Jobs Applied</p>
-            <p className="text-3xl font-bold text-slate-900 mt-2">{appliedCount}</p>
-            <p className="text-xs text-slate-500 mt-2">Total applications</p>
-          </GlassCard>
-          <GlassCard className="p-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">In Progress</p>
-            <p className="text-3xl font-bold text-blue-600 mt-2">{inProgressCount}</p>
-            <p className="text-xs text-slate-500 mt-2">Under review</p>
-          </GlassCard>
-          <GlassCard className="p-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Interviews</p>
-            <p className="text-3xl font-bold text-emerald-600 mt-2">{jobApplications.filter((app) => app.status === "INTERVIEW_SCHEDULED").length}</p>
-            <p className="text-xs text-slate-500 mt-2">Scheduled</p>
-          </GlassCard>
-          <GlassCard className="p-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Offers</p>
-            <p className="text-3xl font-bold text-amber-600 mt-2">{succeededCount}</p>
-            <p className="text-xs text-slate-500 mt-2">Accepted offers</p>
-          </GlassCard>
-        </div>
-
         {/* Job Recommendations */}
         {data.recommended.length > 0 ? (
           <GlassCard className="space-y-6 p-6">
