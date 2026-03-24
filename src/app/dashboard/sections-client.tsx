@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Briefcase } from "lucide-react";
+import { BookOpen, Briefcase, MapPin, Calendar, Filter, FileText } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { GlassCardError } from "@/components/ui/glass-card-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { JobBrowserButton } from "@/components/jobs/job-browser-button";
 
 interface EnrollmentSection {
   id: string;
@@ -790,6 +791,169 @@ export function DashboardSectionsClient() {
     );
   };
 
+  const renderCoursesTab = () => {
+    if (errors?.enrollments) {
+      return <GlassCardError message={errors.enrollments} />;
+    }
+
+    if (!data?.enrollments || data.enrollments.length === 0) {
+      return (
+        <div className="space-y-4 py-8 text-center">
+          <div className="inline-block p-4 rounded-full bg-blue-50 mb-2">
+            <BookOpen className="h-8 w-8 text-blue-600" />
+          </div>
+          <h3 className="text-xl font-semibold text-slate-900">No courses yet</h3>
+          <p className="text-sm text-slate-600 max-w-md mx-auto">Start learning by enrolling in a course from our catalog</p>
+          <Button asChild className="rounded-full">
+            <Link href="/dashboard/courses">Browse Courses</Link>
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {data.enrollments.map((enrollment) => (
+          <div
+            key={enrollment.id}
+            className="rounded-xl border border-slate-100 bg-white/50 p-4 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <h4 className="font-semibold text-slate-900 mb-1">{enrollment.course.title}</h4>
+                <p className="text-xs text-slate-500">{enrollment.course.tagline || "Learn"}</p>
+                {enrollment.progressPercentage !== null && enrollment.progressPercentage !== undefined && (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-600">Progress</span>
+                      <span className="font-semibold text-blue-600">{Math.round(enrollment.progressPercentage)}%</span>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all"
+                        style={{ width: `${enrollment.progressPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <Button asChild size="sm" variant="ghost" className="rounded-full text-blue-600">
+                <Link href={`/courses/${enrollment.course.slug || enrollment.course.id}`}>Continue</Link>
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderResumesTab = () => {
+    if (errors?.resumes) {
+      return <GlassCardError message={errors.resumes} />;
+    }
+
+    if (!data?.resumes || data.resumes.length === 0) {
+      return (
+        <div className="space-y-4 py-8 text-center">
+          <div className="inline-block p-4 rounded-full bg-emerald-50 mb-2">
+            <BookOpen className="h-8 w-8 text-emerald-600" />
+          </div>
+          <h3 className="text-xl font-semibold text-slate-900">No resumes yet</h3>
+          <p className="text-sm text-slate-600 max-w-md mx-auto">Create your first resume to start applying for jobs</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {data.resumes.map((resume) => (
+          <div
+            key={resume.id}
+            className="rounded-xl border border-slate-100 bg-white/50 p-4 hover:bg-white hover:border-emerald-200 hover:shadow-md transition-all"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h4 className="font-semibold text-slate-900">{resume.title}</h4>
+                <p className="text-xs text-slate-500 mt-1 capitalize">{resume.visibility} Resume</p>
+              </div>
+              <div className="flex gap-2">
+                <Button asChild size="sm" variant="ghost" className="text-slate-600 rounded-full">
+                  <Link href={`/resume/${resume.slug}`}>View</Link>
+                </Button>
+                <Button asChild size="sm" className="rounded-full">
+                  <Link href={`/resume/${resume.slug}/edit`}>Edit</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderApplicationsInJobsTab = () => {
+    const jobApplications = data?.applications.jobs ?? [];
+    const volunteerApplications = data?.applications.volunteer ?? [];
+    const allApplications = [...jobApplications, ...volunteerApplications];
+
+    if (allApplications.length === 0) {
+      return (
+        <div className="space-y-4 py-8 text-center">
+          <div className="inline-block p-4 rounded-full bg-amber-50 mb-2">
+            <Briefcase className="h-8 w-8 text-amber-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900">No applications yet</h3>
+          <p className="text-sm text-slate-600 mb-4">Start your job search by browsing opportunities</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        {allApplications.map((application) => (
+          <div
+            key={application.id}
+            className="rounded-lg border border-slate-100 bg-white/50 p-4 hover:bg-white hover:border-slate-200 transition-all"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-slate-900 line-clamp-1">{application.opportunity.title}</h4>
+                <p className="text-sm text-slate-600 line-clamp-1">
+                  {application.opportunity.company || application.opportunity.organization}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Applied {
+                    application.submittedAt
+                      ? new Date(application.submittedAt).toLocaleDateString()
+                      : new Date(application.updatedAt || Date.now()).toLocaleDateString()
+                  }
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Badge
+                  className={`whitespace-nowrap text-xs font-medium ${
+                    application.status === "ACCEPTED"
+                      ? "bg-emerald-100 text-emerald-800"
+                      : application.status === "REJECTED"
+                        ? "bg-red-100 text-red-800"
+                        : application.status === "INTERVIEW_SCHEDULED"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-amber-100 text-amber-800"
+                  }`}
+                >
+                  {application.status.replace(/_/g, " ")}
+                </Badge>
+                <Button asChild size="sm" variant="ghost" className="rounded-full text-slate-600">
+                  <Link href={`/applications/${application.id}`}>View</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   if (loading && !data) {
     return (
       <section>
@@ -800,7 +964,124 @@ export function DashboardSectionsClient() {
 
   return (
     <div className="space-y-8">
-      {/* Section can be empty or contain other content */}
+      <Tabs defaultValue="jobs" className="w-full">
+        {/* Tab Navigation */}
+        <TabsList className="grid w-full grid-cols-3 rounded-xl bg-slate-100 p-1 mb-6 lg:w-fit">
+          <TabsTrigger
+            value="jobs"
+            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+          >
+            <Briefcase className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Jobs</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="courses"
+            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Courses</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="resumes"
+            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Resumes</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* JOBS TAB - Main Focus */}
+        <TabsContent value="jobs" className="space-y-6 mt-0">
+          {/* Job Stats Cards */}
+          {data && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <GlassCard className="p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Applied</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{data.applications.jobs.length}</p>
+                <p className="text-xs text-slate-500 mt-2">Job applications</p>
+              </GlassCard>
+              <GlassCard className="p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">In Progress</p>
+                <p className="text-2xl font-bold text-blue-600 mt-1">
+                  {data.applications.jobs.filter((a) => a.status === "APPLIED" || a.status === "UNDER_REVIEW").length}
+                </p>
+                <p className="text-xs text-slate-500 mt-2">Under review</p>
+              </GlassCard>
+              <GlassCard className="p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Interviews</p>
+                <p className="text-2xl font-bold text-emerald-600 mt-1">
+                  {data.applications.jobs.filter((a) => a.status === "INTERVIEW_SCHEDULED").length}
+                </p>
+                <p className="text-xs text-slate-500 mt-2">Scheduled</p>
+              </GlassCard>
+              <GlassCard className="p -4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Offers</p>
+                <p className="text-2xl font-bold text-amber-600 mt-1">
+                  {data.applications.jobs.filter((a) => a.status === "ACCEPTED").length}
+                </p>
+                <p className="text-xs text-slate-500 mt-2">Accepted</p>
+              </GlassCard>
+            </div>
+          )}
+
+          {/* Job Recommendations */}
+          {data && data.recommended.length > 0 && (
+            <GlassCard className="space-y-4 p-6">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Opportunities</p>
+                <h3 className="text-lg font-bold text-slate-900 mt-1">Matching opportunities</h3>
+                <p className="text-sm text-slate-600 mt-1">Roles tailored to your profile and skills.</p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {data.recommended.slice(0, 4).map((job) => (
+                  <div
+                    key={job.id}
+                    className="rounded-lg border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4 hover:border-blue-200 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-start gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-blue-50">
+                        <Briefcase className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-semibold text-slate-900 line-clamp-1">{job.title}</h4>
+                        <p className="text-xs text-slate-600 line-clamp-1 mt-0.5">{job.company}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-3">{job.location || job.remoteOption || "Remote friendly"}</p>
+                    <Button asChild size="sm" className="w-full rounded-lg bg-blue-600 hover:bg-blue-700">
+                      <Link href={`/jobs/${job.slug}`}>View & Apply</Link>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          )}
+
+          {/* Active Applications Section */}
+          <GlassCard className="space-y-4 p-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Pipeline</p>
+              <h3 className="text-lg font-bold text-slate-900 mt-1">Your applications</h3>
+              <p className="text-sm text-slate-600 mt-1">Track where you are in the hiring process.</p>
+            </div>
+            {renderApplicationsInJobsTab()}
+          </GlassCard>
+        </TabsContent>
+
+        {/* COURSES TAB */}
+        <TabsContent value="courses" className="mt-0">
+          <GlassCard className="p-6">
+            {renderCoursesTab()}
+          </GlassCard>
+        </TabsContent>
+
+        {/* RESUMES TAB */}
+        <TabsContent value="resumes" className="mt-0">
+          <GlassCard className="p-6">
+            {renderResumesTab()}
+          </GlassCard>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
