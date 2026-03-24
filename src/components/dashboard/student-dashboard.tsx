@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Briefcase, Clock, CheckCircle, Star, ArrowRight } from "lucide-react";
+import { Briefcase, Clock, CheckCircle, Star, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { DashboardSectionsClient } from "@/app/dashboard/sections-client";
@@ -267,6 +267,136 @@ const CourseCard = ({
   );
 };
 
+// Animated Premium Badge
+const PremiumBadge = () => (
+  <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-50 to-orange-50 px-4 py-2 border border-yellow-200 backdrop-blur-sm group hover:shadow-lg hover:border-yellow-300 transition-all duration-300">
+    <Sparkles className="h-4 w-4 text-yellow-600 animate-pulse" />
+    <span className="text-xs font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">Premium Features</span>
+  </div>
+);
+
+// Animated Corner Accent Component
+const CornerAccent = ({ position }: { position: "top-left" | "top-right" | "bottom-left" | "bottom-right" }) => {
+  const positions = {
+    "top-left": "top-0 left-0",
+    "top-right": "top-0 right-0",
+    "bottom-left": "bottom-0 left-0",
+    "bottom-right": "bottom-0 right-0",
+  };
+
+  return (
+    <div className={`absolute ${positions[position]} w-32 h-32 pointer-events-none`}>
+      <div className={`absolute inset-0 opacity-20 animate-pulse ${
+        position.includes("top-left") || position.includes("bottom-right")
+          ? "bg-gradient-to-br from-blue-500 to-transparent"
+          : "bg-gradient-to-tl from-cyan-500 to-transparent"
+      }`} />
+    </div>
+  );
+};
+
+// Animated Banner Component
+const AnimatedBanner = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setMousePos({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+    }
+  };
+
+  return (
+    <div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white shadow-2xl transition-all duration-1000 group ${
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      }`}
+    >
+      {/* Corner Accents */}
+      <CornerAccent position="top-left" />
+      <CornerAccent position="top-right" />
+      <CornerAccent position="bottom-left" />
+      <CornerAccent position="bottom-right" />
+
+      {/* Dynamic Gradient Spotlight */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"
+        style={{
+          background: `radial-gradient(600px at ${mousePos.x}px ${mousePos.y}px, rgba(59, 130, 246, 0.15), transparent 80%)`,
+        }}
+      />
+
+      {/* Decorative Animated Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl animate-pulse" />
+        <div className="absolute -left-40 -bottom-40 h-80 w-80 rounded-full bg-cyan-500/10 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 -left-20 h-60 w-60 rounded-full bg-emerald-500/5 blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+      </div>
+
+      <div className="relative z-10 grid gap-8 p-8 md:grid-cols-2 md:items-center md:p-12">
+        <div className="space-y-4">
+          <PremiumBadge />
+          <h3 className="text-3xl font-bold leading-tight md:text-4xl transition-all duration-500">
+            <GradientText className="block">Self-Paced Agile</GradientText>
+            Virtual Certifications
+          </h3>
+          <p className="text-lg text-blue-100 transition-all duration-500">
+            Earn industry-recognized credentials from expert-led sessions at your own pace.
+          </p>
+          <ul className="space-y-3 pt-2">
+            {["Agile certification prep", "Industry recognized credentials", "Expert-led sessions"].map((item, i) => (
+              <li key={i} className="flex items-center gap-3 text-blue-100 transition-all duration-300 hover:translate-x-3 group cursor-pointer">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400/40 to-cyan-400/20 transition-all duration-300 group-hover:scale-110 group-hover:from-cyan-400/60 group-hover:to-cyan-400/40">
+                  <span className="text-sm font-bold text-cyan-300">✓</span>
+                </div>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="flex flex-col items-start gap-4 md:items-end">
+          <div className="rounded-2xl bg-white/10 p-6 backdrop-blur-md border border-white/20 transition-all duration-300 hover:bg-white/20 hover:border-white/40 hover:scale-105 group cursor-pointer">
+            <p className="text-sm font-semibold uppercase tracking-widest text-cyan-300 mb-2 transition-colors duration-300 group-hover:text-cyan-200">Get in Touch</p>
+            <p className="text-2xl font-bold mb-1 group-hover:text-cyan-50 transition-colors duration-300">+234 803 655 5555</p>
+            <p className="text-sm text-blue-200 group-hover:text-blue-100 transition-colors duration-300">CYBSECURITY@FINBERSGROUP.COM</p>
+          </div>
+          
+          <RippleButton asChild className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all px-6 py-2 rounded-lg font-medium">
+            <Link href="/dashboard/courses" className="gap-2 flex items-center">
+              Explore Certifications <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
+          </RippleButton>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Animated Greeting Section
 const AnimatedGreeting = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -393,6 +523,9 @@ export function StudentDashboard(_props: StudentDashboardProps) {
           delay={200}
         />
       </div>
+
+      {/* Animated Banner - Below Stats */}
+      <AnimatedBanner />
 
       {/* Sections Client for Dynamic Content */}
       <div className="relative z-10">
