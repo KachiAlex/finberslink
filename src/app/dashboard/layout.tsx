@@ -72,7 +72,7 @@ export default async function DashboardLayout({
               {
                 label: "Resumes",
                 description: "Create & manage resumes",
-                href: "/resumes",
+                href: "/dashboard/resumes",
                 icon: Sparkles,
               },
               {

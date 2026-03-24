@@ -10,6 +10,12 @@ export const revalidate = 0;
 
 export default async function ResumesPage() {
   const session = await getSessionFromCookies();
+  
+  // Redirect authenticated students to dashboard resumes
+  if (session && session.role === "STUDENT") {
+    redirect("/dashboard/resumes");
+  }
+
   if (!session) redirect("/login");
 
   const resumes = await prisma.resume.findMany({
