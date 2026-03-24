@@ -76,7 +76,7 @@ export default async function DashboardResumesPage() {
                     className="flex-1"
                     asChild
                   >
-                    <Link href={`/resumes/${resume.id}/edit`}>
+                    <Link href={`/resume/${resume.slug}/edit`}>
                       <Edit2 className="h-4 w-4 mr-1" />
                       Edit
                     </Link>
@@ -87,7 +87,7 @@ export default async function DashboardResumesPage() {
                     className="flex-1"
                     asChild
                   >
-                    <Link href={`/resumes/${resume.id}`}>
+                    <Link href={`/resume/${resume.slug}`}>
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Link>
@@ -98,7 +98,7 @@ export default async function DashboardResumesPage() {
                     className="flex-1"
                     asChild
                   >
-                    <Link href={`/resumes/${resume.id}/export`}>
+                    <Link href={`/api/resumes/${resume.id}/export`}>
                       <Download className="h-4 w-4 mr-1" />
                       Export
                     </Link>
@@ -115,7 +115,7 @@ export default async function DashboardResumesPage() {
         <h2 className="text-xl font-semibold text-slate-900 mb-6">AI Resume Tools</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Link
-            href="/resumes/builder?mode=optimize"
+            href="/resume/builder?mode=optimize"
             className="p-4 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 group"
           >
             <h3 className="font-medium text-slate-900 group-hover:text-blue-900 transition-colors">
@@ -126,7 +126,7 @@ export default async function DashboardResumesPage() {
             </p>
           </Link>
           <Link
-            href="/resumes/builder?mode=skills"
+            href="/resume/builder?mode=skills"
             className="p-4 rounded-lg border border-slate-200 hover:border-green-300 hover:bg-green-50 transition-all duration-300 group"
           >
             <h3 className="font-medium text-slate-900 group-hover:text-green-900 transition-colors">
@@ -137,7 +137,7 @@ export default async function DashboardResumesPage() {
             </p>
           </Link>
           <Link
-            href="/resumes/builder?mode=bullets"
+            href="/resume/builder?mode=bullets"
             className="p-4 rounded-lg border border-slate-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-300 group"
           >
             <h3 className="font-medium text-slate-900 group-hover:text-purple-900 transition-colors">
@@ -148,7 +148,7 @@ export default async function DashboardResumesPage() {
             </p>
           </Link>
           <Link
-            href="/resumes/builder?mode=summary"
+            href="/resume/builder?mode=summary"
             className="p-4 rounded-lg border border-slate-200 hover:border-amber-300 hover:bg-amber-50 transition-all duration-300 group"
           >
             <h3 className="font-medium text-slate-900 group-hover:text-amber-900 transition-colors">

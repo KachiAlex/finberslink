@@ -38,7 +38,7 @@ export default async function ResumesPage() {
             </p>
           </div>
           <Button asChild size="lg" className="w-fit">
-            <Link href="/resumes/builder">
+            <Link href="/resume/builder">
               <Plus className="mr-2 h-4 w-4" />
               Create Resume
             </Link>
@@ -57,7 +57,7 @@ export default async function ResumesPage() {
               Create your first resume and start applying to opportunities
             </p>
             <Button asChild>
-              <Link href="/resumes/builder">
+              <Link href="/resume/builder">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Your First Resume
               </Link>
@@ -92,7 +92,7 @@ export default async function ResumesPage() {
                       className="flex-1"
                       asChild
                     >
-                      <Link href={`/resumes/${resume.id}/edit`}>
+                      <Link href={`/resume/${resume.slug}/edit`}>
                         <Edit2 className="h-4 w-4 mr-1" />
                         Edit
                       </Link>
@@ -103,7 +103,7 @@ export default async function ResumesPage() {
                       className="flex-1"
                       asChild
                     >
-                      <Link href={`/resumes/${resume.id}`}>
+                      <Link href={`/resume/${resume.slug}`}>
                         <Eye className="h-4 w-4 mr-1" />
                         View
                       </Link>
@@ -114,7 +114,7 @@ export default async function ResumesPage() {
                       className="flex-1"
                       asChild
                     >
-                      <Link href={`/resumes/${resume.id}/export`}>
+                      <Link href={`/api/resumes/${resume.id}/export`}>
                         <Download className="h-4 w-4 mr-1" />
                         Export
                       </Link>

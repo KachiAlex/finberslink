@@ -58,7 +58,7 @@ export default async function DashboardCoursesPage({ searchParams }: DashboardCo
     id: enrollment.id,
     status: enrollment.status,
     progress: enrollment.progressPercentage ?? 0,
-    acceptedAt: enrollment.acceptedAt?.toISOString() ?? null,
+    acceptedAt: null, // TODO: Add acceptedAt column to Enrollment table
     assignment: null,
     course: {
       id: enrollment.course.id,
