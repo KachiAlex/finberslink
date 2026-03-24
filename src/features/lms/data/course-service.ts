@@ -141,9 +141,27 @@ export async function listDashboardCatalogCourses(options: DashboardCatalogOptio
 
   const where: Prisma.CourseWhereInput = {
     approvalStatus: "APPROVED",
-    instructor: {
-      role: { in: ["TUTOR", "ADMIN", "SUPER_ADMIN"] },
-    },
+    AND: [
+      {
+        OR: [
+          // Courses from ADMIN or SUPER_ADMIN instructors
+          {
+            instructor: {
+              role: { in: ["ADMIN", "SUPER_ADMIN"] },
+            },
+          },
+          // Courses from approved TUTOR instructors
+          {
+            instructor: {
+              role: "TUTOR",
+              tutorApprovalAsStudent: {
+                status: "APPROVED",
+              },
+            },
+          },
+        ],
+      },
+    ],
   };
 
   if (search?.trim()) {
@@ -195,9 +213,27 @@ export async function listLearnerCourses(_userId = DEFAULT_LEARNER_ID): Promise<
   const courses = await prisma.course.findMany({
     where: {
       approvalStatus: "APPROVED",
-      instructor: {
-        role: { in: ["TUTOR", "ADMIN", "SUPER_ADMIN"] },
-      },
+      AND: [
+        {
+          OR: [
+            // Courses from ADMIN or SUPER_ADMIN instructors
+            {
+              instructor: {
+                role: { in: ["ADMIN", "SUPER_ADMIN"] },
+              },
+            },
+            // Courses from approved TUTOR instructors
+            {
+              instructor: {
+                role: "TUTOR",
+                tutorApprovalAsStudent: {
+                  status: "APPROVED",
+                },
+              },
+            },
+          ],
+        },
+      ],
     },
     orderBy: { createdAt: "desc" },
     include: courseSummaryInclude,

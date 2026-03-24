@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Sparkles, Wand2, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { isVideoUrlValid, toEmbedUrl } from "@/lib/video";
 
 const steps = [
   {
@@ -67,7 +68,7 @@ function splitByLines(value: string) {
     .filter(Boolean);
 }
 
-export function ResumeBuilderWizard() {
+export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,6 +82,8 @@ export function ResumeBuilderWizard() {
   const canGoNext =
     (step === 1 && Boolean(form.title.trim())) ||
     (step === 2 && Boolean(form.summary.trim() || form.notableAchievements.trim()));
+
+  const videoEmbedUrl = form.introVideoUrl && isVideoUrlValid(form.introVideoUrl) ? toEmbedUrl(form.introVideoUrl) : null;
 
   function handleFieldChange(field: keyof FormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -206,7 +209,11 @@ export function ResumeBuilderWizard() {
       const data = await response.json();
       const slug = data?.resume?.slug;
       if (slug) {
-        router.push(`/resume/${slug}/edit`);
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push(`/resume/${slug}/edit`);
+        }
         return;
       }
 
@@ -232,103 +239,126 @@ export function ResumeBuilderWizard() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <Card className="border-slate-200/70 bg-white/95">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold text-slate-900">Resume Studio</CardTitle>
-          <CardDescription>Create an ATS-ready resume with AI guidance.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {steps.map((item) => (
-              <div
-                key={item.id}
-                className={`rounded-2xl border px-4 py-3 text-sm transition ${
-                  item.id === step
-                    ? "border-indigo-500 bg-indigo-50 text-indigo-900"
-                    : "border-slate-200 bg-white text-slate-600"
-                }`}
-              >
-                <p className="font-semibold capitalize">Step {item.id}</p>
-                <p className="text-xs opacity-80">{item.title}</p>
-              </div>
-            ))}
+    <div className="flex flex-col gap-6">
+      {/* Step Indicator */}
+      <div className="grid gap-2 sm:grid-cols-3">
+        {steps.map((item) => (
+          <div
+            key={item.id}
+            className={`rounded-lg border px-3 py-2 text-xs transition ${
+              item.id === step
+                ? "border-blue-500 bg-blue-50 text-blue-900"
+                : "border-slate-200 bg-white text-slate-600"
+            }`}
+          >
+            <p className="font-semibold">Step {item.id}</p>
+            <p className="opacity-75">{item.title}</p>
           </div>
-        </CardContent>
-      </Card>
+        ))}
+      </div>
 
       {step === 1 && (
-        <Card className="border-slate-200/70 bg-white/95">
-          <CardHeader>
-            <CardTitle>Profile & goals</CardTitle>
-            <CardDescription>Set the foundation so AI knows what to optimize for.</CardDescription>
+        <Card className="border-slate-200 bg-white">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Profile & goals</CardTitle>
+            <CardDescription className="text-xs">
+              Set the foundation so AI knows what to optimize for.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
+          <CardContent className="space-y-5">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <Label htmlFor="title">Resume title *</Label>
+                <Label htmlFor="title" className="text-xs">Resume title *</Label>
                 <Input
                   id="title"
                   value={form.title}
                   onChange={(event) => handleFieldChange("title", event.target.value)}
                   placeholder="e.g., Product Manager Resume"
                   required
+                  className="mt-1 h-9"
                 />
               </div>
               <div>
-                <Label htmlFor="persona">Persona name (optional)</Label>
+                <Label htmlFor="persona" className="text-xs">Persona name (optional)</Label>
                 <Input
                   id="persona"
                   value={form.personaName}
                   onChange={(event) => handleFieldChange("personaName", event.target.value)}
                   placeholder="e.g., Growth PM"
+                  className="mt-1 h-9"
                 />
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location" className="text-xs">Location</Label>
                 <Input
                   id="location"
                   value={form.location}
                   onChange={(event) => handleFieldChange("location", event.target.value)}
                   placeholder="City, Country"
+                  className="mt-1 h-9"
                 />
               </div>
               <div>
-                <Label htmlFor="industry">Target industry</Label>
+                <Label htmlFor="industry" className="text-xs">Target industry</Label>
                 <Input
                   id="industry"
                   value={form.targetIndustry}
                   onChange={(event) => handleFieldChange("targetIndustry", event.target.value)}
                   placeholder="e.g., Fintech, Edtech"
+                  className="mt-1 h-9"
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="intro-video">Intro video link (optional)</Label>
+              <Label htmlFor="intro-video" className="text-xs">Intro video link (optional)</Label>
               <Input
                 id="intro-video"
                 value={form.introVideoUrl}
                 onChange={(event) => handleFieldChange("introVideoUrl", event.target.value)}
                 placeholder="https://youtu.be/..."
+                className="mt-1 h-9"
               />
               <p className="mt-1 text-xs text-slate-500">
-                Supports YouTube, Vimeo, Google Drive, and Cloudinary links.
+                YouTube, Vimeo, Google Drive, or Cloudinary. Shows on your resume.
               </p>
+              
+              {videoEmbedUrl && (
+                <div className="mt-3 rounded-lg overflow-hidden border border-slate-200">
+                  <div className="aspect-video bg-slate-900">
+                    <iframe
+                      title="Resume intro video preview"
+                      src={videoEmbedUrl}
+                      className="h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {form.introVideoUrl && !videoEmbedUrl && (
+                <div className="mt-3 rounded-lg bg-amber-50 border border-amber-200 p-3">
+                  <p className="text-xs text-amber-800">
+                    Invalid video URL. Please use YouTube, Vimeo, Google Drive, or Cloudinary links.
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <Label htmlFor="roles">Target roles</Label>
+                <Label htmlFor="roles" className="text-xs">Target roles</Label>
                 <Input
                   id="roles"
                   value={form.targetRolesInput}
                   onChange={(event) => handleFieldChange("targetRolesInput", event.target.value)}
                   placeholder="Comma separated, e.g., Product Manager, Product Lead"
+                  className="mt-1 h-9"
                 />
               </div>
               <div>
-                <Label htmlFor="experience">Years of experience</Label>
+                <Label htmlFor="experience" className="text-xs">Years of experience</Label>
                 <Input
                   id="experience"
                   type="number"
@@ -336,81 +366,90 @@ export function ResumeBuilderWizard() {
                   value={form.yearsExperience}
                   onChange={(event) => handleFieldChange("yearsExperience", event.target.value)}
                   placeholder="e.g., 5"
+                  className="mt-1 h-9"
                 />
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex items-center justify-end gap-2">
-            <Button disabled={!canGoNext} onClick={handleNextStep}>
+          <CardFooter className="flex items-center justify-end gap-2 pt-4">
+            <Button size="sm" disabled={!canGoNext} onClick={handleNextStep}>
               Continue
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-2 h-3 w-3" />
             </Button>
           </CardFooter>
         </Card>
       )}
 
       {step === 2 && (
-        <Card className="border-slate-200/70 bg-white/95">
-          <CardHeader>
-            <CardTitle>Experience & highlights</CardTitle>
-            <CardDescription>List key wins so AI can craft high-impact copy.</CardDescription>
+        <Card className="border-slate-200 bg-white">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Experience & highlights</CardTitle>
+            <CardDescription className="text-xs">
+              List key wins so AI can craft high-impact copy.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-5">
             <div>
-              <Label htmlFor="skills">Top skills</Label>
+              <Label htmlFor="skills" className="text-xs">Top skills</Label>
               <Input
                 id="skills"
                 value={form.topSkillsInput}
                 onChange={(event) => handleFieldChange("topSkillsInput", event.target.value)}
                 placeholder="Comma separated, e.g., Roadmapping, SQL, GTM"
+                className="mt-1 h-9"
               />
             </div>
             <div>
-              <Label htmlFor="achievements">Key achievements / highlights</Label>
+              <Label htmlFor="achievements" className="text-xs">Key achievements / highlights</Label>
               <Textarea
                 id="achievements"
-                rows={5}
+                rows={4}
                 value={form.notableAchievements}
                 onChange={(event) => handleFieldChange("notableAchievements", event.target.value)}
                 placeholder={"Share your proudest wins. One per line works great for the AI."}
+                className="mt-1"
               />
-              <div className="mt-4 space-y-3">
-                <div className="grid gap-4 sm:grid-cols-2">
+              <div className="mt-3 space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <Label htmlFor="ai-job-title">Role for AI</Label>
+                    <Label htmlFor="ai-job-title" className="text-xs">Role for AI</Label>
                     <Input
                       id="ai-job-title"
                       value={form.aiJobTitle}
                       onChange={(event) => handleFieldChange("aiJobTitle", event.target.value)}
                       placeholder="e.g., Senior Product Manager"
+                      className="mt-1 h-9"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="ai-industry">Industry focus</Label>
+                    <Label htmlFor="ai-industry" className="text-xs">Industry focus</Label>
                     <Input
                       id="ai-industry"
                       value={form.aiIndustry}
                       onChange={(event) => handleFieldChange("aiIndustry", event.target.value)}
                       placeholder={form.targetIndustry || "e.g., Fintech"}
+                      className="mt-1 h-9"
                     />
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm text-slate-500">
-                    Provide the role and industry so AI can tailor quantified bullets for this experience.
+                  <p className="text-xs text-slate-500">
+                    Tailor bullets for this role and industry.
                   </p>
                   <Button
+                    size="sm"
                     variant="outline"
                     type="button"
                     onClick={handleGenerateAchievements}
                     disabled={achievementStatus === "loading"}
+                    className="flex-shrink-0"
                   >
                     {achievementStatus === "loading" ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                     ) : (
-                      <Sparkles className="mr-2 h-4 w-4" />
+                      <Sparkles className="mr-2 h-3 w-3" />
                     )}
-                    Generate achievements
+                    Generate
                   </Button>
                 </div>
                 {achievementMessage && (
@@ -428,32 +467,34 @@ export function ResumeBuilderWizard() {
                 )}
               </div>
             </div>
-            <Separator />
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
+            <Separator className="my-3" />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-900">Professional summary</h3>
-                  <p className="text-sm text-slate-500">
+                  <h3 className="text-xs font-semibold text-slate-900">Professional summary</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Use AI to create an ATS-friendly summary or write your own.
                   </p>
                 </div>
                 <Button
+                  size="sm"
                   variant="outline"
                   type="button"
                   onClick={handleGenerateSummary}
                   disabled={aiStatus === "loading"}
+                  className="flex-shrink-0"
                 >
                   {aiStatus === "loading" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                   ) : (
-                    <Wand2 className="mr-2 h-4 w-4" />
+                    <Wand2 className="mr-2 h-3 w-3" />
                   )}
-                  Generate with AI
+                  Generate
                 </Button>
               </div>
               {aiMessage && (
                 <p
-                  className={`text-sm ${
+                  className={`text-xs ${
                     aiStatus === "error"
                       ? "text-rose-600"
                       : aiStatus === "success"
@@ -466,33 +507,36 @@ export function ResumeBuilderWizard() {
               )}
               <Textarea
                 id="summary"
-                rows={5}
+                rows={4}
                 value={form.summary}
                 onChange={(event) => handleFieldChange("summary", event.target.value)}
                 placeholder="Your AI-crafted summary will appear here. Feel free to edit."
+                className="mt-2"
               />
             </div>
           </CardContent>
-          <CardFooter className="flex items-center justify-between gap-2">
-            <Button variant="ghost" onClick={handlePrevStep}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
+          <CardFooter className="flex items-center justify-between gap-2 pt-4">
+            <Button size="sm" variant="ghost" onClick={handlePrevStep}>
+              <ArrowLeft className="mr-2 h-3 w-3" />
               Back
             </Button>
-            <Button disabled={!canGoNext} onClick={handleNextStep}>
+            <Button size="sm" disabled={!canGoNext} onClick={handleNextStep}>
               Review summary
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-2 h-3 w-3" />
             </Button>
           </CardFooter>
         </Card>
       )}
 
       {step === 3 && (
-        <Card className="border-slate-200/70 bg-white/95">
-          <CardHeader>
-            <CardTitle>Review & create</CardTitle>
-            <CardDescription>Everything looks good? Generate your resume instantly.</CardDescription>
+        <Card className="border-slate-200 bg-white">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Review & create</CardTitle>
+            <CardDescription className="text-xs">
+              Everything looks good? Generate your resume instantly.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Summary preview</p>
               <p className="mt-2 text-sm text-slate-700">{form.summary || "No summary yet."}</p>
@@ -513,22 +557,23 @@ export function ResumeBuilderWizard() {
             </div>
             {error && <p className="text-sm text-rose-600">{error}</p>}
           </CardContent>
-          <CardFooter className="flex flex-wrap items-center justify-between gap-3">
-            <Button variant="ghost" onClick={handlePrevStep}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
+          <CardFooter className="flex flex-wrap items-center justify-between gap-2 pt-4">
+            <Button size="sm" variant="ghost" onClick={handlePrevStep}>
+              <ArrowLeft className="mr-2 h-3 w-3" />
               Back
             </Button>
             <Button
+              size="sm"
               onClick={handleCreateResume}
               disabled={isSubmitting || !form.title.trim()}
               className="flex items-center"
             >
               {isSubmitting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
               ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
+                <Sparkles className="mr-2 h-3 w-3" />
               )}
-              {isSubmitting ? "Creating..." : "Create resume with AI"}
+              {isSubmitting ? "Creating..." : "Create resume"}
             </Button>
           </CardFooter>
         </Card>

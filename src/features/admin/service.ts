@@ -836,6 +836,183 @@ export async function getUserById(userId: string) {
   });
 }
 
+// Tutor Approval Management Functions
+
+export async function approveTutor(tutorId: string, notes?: string, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  
+  // Verify tutor exists
+  const tutor = await prisma.user.findUnique({
+    where: { id: tutorId },
+  });
+
+  if (!tutor || tutor.role !== 'TUTOR') {
+    throw new Error('Tutor not found');
+  }
+
+  return prisma.tutorApproval.upsert({
+    where: { tutorId },
+    create: {
+      tutorId,
+      approvedBy: resolvedAdmin.id,
+      status: 'APPROVED' as any,
+      notes: notes || null,
+      approvedAt: new Date(),
+    },
+    update: {
+      status: 'APPROVED' as any,
+      notes: notes || null,
+      approvedAt: new Date(),
+      approvedBy: resolvedAdmin.id,
+    },
+  });
+}
+
+export async function rejectTutor(tutorId: string, notes?: string, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  
+  // Verify tutor exists
+  const tutor = await prisma.user.findUnique({
+    where: { id: tutorId },
+  });
+
+  if (!tutor || tutor.role !== 'TUTOR') {
+    throw new Error('Tutor not found');
+  }
+
+  return prisma.tutorApproval.upsert({
+    where: { tutorId },
+    create: {
+      tutorId,
+      approvedBy: resolvedAdmin.id,
+      status: 'REJECTED' as any,
+      notes: notes || null,
+    },
+    update: {
+      status: 'REJECTED' as any,
+      notes: notes || null,
+      approvedBy: resolvedAdmin.id,
+    },
+  });
+}
+
+export async function suspendTutor(tutorId: string, notes?: string, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  
+  // Verify tutor exists
+  const tutor = await prisma.user.findUnique({
+    where: { id: tutorId },
+  });
+
+  if (!tutor || tutor.role !== 'TUTOR') {
+    throw new Error('Tutor not found');
+  }
+
+  return prisma.tutorApproval.upsert({
+    where: { tutorId },
+    create: {
+      tutorId,
+      approvedBy: resolvedAdmin.id,
+      status: 'SUSPENDED' as any,
+      notes: notes || null,
+    },
+    update: {
+      status: 'SUSPENDED' as any,
+      notes: notes || null,
+      approvedBy: resolvedAdmin.id,
+    },
+  });
+}
+
+export async function getTutorApprovalStatus(tutorId: string) {
+  const tutor = await prisma.user.findUnique({
+    where: { id: tutorId },
+    include: {
+      tutorApprovalAsStudent: {
+        select: {
+          id: true,
+          status: true,
+          notes: true,
+          approvedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          admin: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!tutor || tutor.role !== 'TUTOR') {
+    throw new Error('Tutor not found');
+  }
+
+  return {
+    tutorId: tutor.id,
+    name: `${tutor.firstName} ${tutor.lastName}`,
+    email: tutor.email,
+    approvalStatus: tutor.tutorApprovalAsStudent?.status ?? 'PENDING',
+    approvalDetails: tutor.tutorApprovalAsStudent,
+  };
+}
+
+export async function listTutorApprovals(filter?: {
+  status?: string;
+  page?: number;
+  limit?: number;
+}, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const page = Math.max(filter?.page ?? 1, 1);
+  const limit = filter?.limit ?? 20;
+
+  const whereApproval: any = {};
+  if (filter?.status) {
+    whereApproval.status = filter.status;
+  }
+
+  const [total, approvals] = await Promise.all([
+    prisma.tutorApproval.count({ where: whereApproval }),
+    prisma.tutorApproval.findMany({
+      where: whereApproval,
+      include: {
+        tutor: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        admin: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+  ]);
+
+  return {
+    approvals,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+    },
+  };
+}
+
 export async function listAdminJobs(admin?: AdminUserWithTenant) {
   const resolvedAdmin = await resolveAdmin(admin);
   const tenantJobWhere = buildJobTenantWhere(resolvedAdmin);

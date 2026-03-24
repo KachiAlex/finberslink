@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Plus, Download, Edit2, Eye } from "lucide-react";
+import { Edit2, Eye, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { CreateResumeButton } from "@/components/resume/create-resume-button";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -31,12 +32,7 @@ export default async function DashboardResumesPage() {
             Build, customize, and manage your professional resumes with AI assistance.
           </p>
         </div>
-        <Button asChild size="lg" className="w-fit">
-          <Link href="/resumes/builder">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Resume
-          </Link>
-        </Button>
+        <CreateResumeButton />
       </div>
 
       {/* Resumes List */}
@@ -49,12 +45,7 @@ export default async function DashboardResumesPage() {
           <p className="text-slate-600 mb-6">
             Create your first resume and start applying to opportunities
           </p>
-          <Button asChild>
-            <Link href="/resumes/builder">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Your First Resume
-            </Link>
-          </Button>
+          <CreateResumeButton />
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

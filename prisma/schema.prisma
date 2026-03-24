@@ -51,6 +51,8 @@ model User {
   courseAssignmentsCreated     CourseAssignment[]     @relation("AdminCourseAssignments")
   courseCertificates           CourseCertificate[]    @relation("CertificateStudent")
   issuedCertificates           CourseCertificate[]    @relation("CertificatesIssuedBy")
+  tutorApprovalAsApprover      TutorApproval[]        @relation("ApprovedByAdmin")
+  tutorApprovalAsStudent       TutorApproval[]        @relation("TutorUser")
 }
 
 model Profile {
@@ -204,6 +206,22 @@ model CourseCertificate {
   course       Course             @relation(fields: [courseId], references: [id])
   student      User               @relation("CertificateStudent", fields: [studentId], references: [id])
   issuedBy     User?              @relation("CertificatesIssuedBy", fields: [issuedById], references: [id])
+}
+
+model TutorApproval {
+  id          String    @id @default(cuid())
+  tutorId     String
+  approvedBy  String
+  status      TutorApprovalStatus @default(PENDING)
+  notes       String?
+  approvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  tutor       User      @relation("TutorUser", fields: [tutorId], references: [id])
+  admin       User      @relation("ApprovedByAdmin", fields: [approvedBy], references: [id])
+
+  @@unique([tutorId])
+  @@index([status])
 }
 
 model LessonProgress {
@@ -756,6 +774,13 @@ enum CertificateStatus {
   APPROVED
   ISSUED
   REVOKED
+}
+
+enum TutorApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
 }
 
 enum LessonProgressStatus {
