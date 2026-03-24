@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, BookOpen } from "lucide-react";
 
 import { DashboardSection } from "@/components/dashboard/dashboard-section";
 import { Button } from "@/components/ui/button";
@@ -358,7 +358,110 @@ export function DashboardCoursesClient({
 
   return (
     <div className="space-y-8">
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm">
+      {/* Learning Runway Section */}
+      <div>
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Courses</p>
+            <h3 className="text-2xl font-semibold text-slate-900">Learning runway</h3>
+            <p className="text-sm text-slate-500">Structured roadmap of your enrollments.</p>
+          </div>
+          <Button asChild className="bg-blue-600 hover:bg-blue-700">
+            <Link href="/dashboard/courses">Browse Catalog</Link>
+          </Button>
+        </div>
+
+        {assignedCards.length ? (
+          <div className="grid gap-5 lg:grid-cols-2">
+            {assignedCards.map((enrollment) => {
+              const progressVariant = 
+                (enrollment.progress ?? 0) >= 75 ? 'emerald' :
+                (enrollment.progress ?? 0) >= 50 ? 'blue' :
+                (enrollment.progress ?? 0) >= 25 ? 'amber' : 'slate';
+
+              const progressColor = {
+                emerald: 'from-emerald-500 to-green-500',
+                blue: 'from-blue-500 to-cyan-500',
+                amber: 'from-amber-500 to-orange-500',
+                slate: 'from-slate-400 to-slate-500',
+              }[progressVariant];
+
+              return (
+                <div 
+                  key={enrollment.id} 
+                  className="group rounded-2xl border border-slate-200 hover:border-blue-300 bg-gradient-to-br from-white via-slate-50 to-slate-50 p-5 transition-all duration-300 hover:shadow-lg hover:shadow-blue-200/30"
+                >
+                  {/* Course Header */}
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                        {enrollment.course.title}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-1">{enrollment.course.level ?? "Self-paced"}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-bold text-blue-600">{enrollment.progress ?? 0}%</span>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="mb-4">
+                    <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${progressColor} transition-all duration-500`}
+                        style={{ width: `${enrollment.progress ?? 0}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-3 gap-2 mb-4 py-3 border-y border-slate-200">
+                    <div className="text-center">
+                      <p className="text-xs text-slate-500 uppercase tracking-wider">Lessons</p>
+                      <p className="text-sm font-semibold text-slate-900">8/10</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-500 uppercase tracking-wider">Time</p>
+                      <p className="text-sm font-semibold text-slate-900">12h 30m</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-500 uppercase tracking-wider">Status</p>
+                      <p className="text-sm font-semibold text-emerald-600">On Track</p>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <Button asChild className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" size="sm">
+                      <Link href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}>
+                        Continue
+                      </Link>
+                    </Button>
+                    {(enrollment.progress ?? 0) >= 100 && (
+                      <Button variant="outline" className="flex-1 border-emerald-200 text-emerald-600 hover:bg-emerald-50" size="sm">
+                        View Certificate
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-blue-50 p-8 text-center transition-all hover:border-blue-300 hover:shadow-md">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
+              <BookOpen className="h-7 w-7 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-1">No courses yet</h3>
+            <p className="text-sm text-slate-600 mb-4">Start learning by enrolling in a course from our catalog.</p>
+            <Button asChild className="bg-blue-600 hover:bg-blue-700">
+              <Link href="/dashboard/courses">Browse Courses</Link>
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Filters Section */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Filters</p>

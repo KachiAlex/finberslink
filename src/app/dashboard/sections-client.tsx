@@ -863,47 +863,8 @@ export function DashboardSectionsClient() {
 
   return (
     <div className="space-y-8">
-      {/* COURSES SECTION */}
-      <div>
-        <GlassCard className="p-6">
-          {renderCoursesTab()}
-        </GlassCard>
-      </div>
-
       {/* JOBS SECTION */}
       <div className="space-y-6">
-        {/* Job Stats Cards */}
-        {data && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <GlassCard className="p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Applied</p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">{data.applications.jobs.length}</p>
-              <p className="text-xs text-slate-500 mt-2">Job applications</p>
-            </GlassCard>
-            <GlassCard className="p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">In Progress</p>
-              <p className="text-2xl font-bold text-blue-600 mt-1">
-                {data.applications.jobs.filter((a) => a.status === "APPLIED" || a.status === "UNDER_REVIEW").length}
-              </p>
-              <p className="text-xs text-slate-500 mt-2">Under review</p>
-            </GlassCard>
-            <GlassCard className="p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Interviews</p>
-              <p className="text-2xl font-bold text-emerald-600 mt-1">
-                {data.applications.jobs.filter((a) => a.status === "INTERVIEW_SCHEDULED").length}
-              </p>
-              <p className="text-xs text-slate-500 mt-2">Scheduled</p>
-            </GlassCard>
-            <GlassCard className="p -4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Offers</p>
-              <p className="text-2xl font-bold text-amber-600 mt-1">
-                {data.applications.jobs.filter((a) => a.status === "ACCEPTED").length}
-              </p>
-              <p className="text-xs text-slate-500 mt-2">Accepted</p>
-            </GlassCard>
-          </div>
-        )}
-
         {/* Job Recommendations */}
         {data && data.recommended.length > 0 && (
           <GlassCard className="space-y-4 p-6">
