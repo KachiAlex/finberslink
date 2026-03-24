@@ -92,7 +92,7 @@ const mockCommunityForums = [
   },
 ];
 
-export default function ChatPage() {
+export default function DashboardChatPage() {
   const [chatMode, setChatMode] = useState<"direct" | "courses" | "community">(
     "direct"
   );
@@ -122,7 +122,7 @@ export default function ChatPage() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex flex-col h-screen bg-slate-50">
+      <div className="flex flex-col h-full bg-slate-50 rounded-3xl border border-blue-200/60 overflow-hidden">
         {/* Chat Mode Switcher */}
         <ChatSwitcher
           currentMode={chatMode}
@@ -164,7 +164,7 @@ export default function ChatPage() {
           )}
 
           {/* Chat Thread */}
-          <div className="flex-1 flex flex-col bg-white">
+          <div className="flex-1 flex flex-col bg-white rounded-2xl">
             {/* Header */}
             <div className="px-6 py-4 border-b border-slate-200">
               <h2 className="font-semibold text-slate-900">{getHeaderTitle()}</h2>
