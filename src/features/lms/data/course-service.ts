@@ -152,12 +152,22 @@ export async function listDashboardCatalogCourses(options: DashboardCatalogOptio
           },
           // Courses from approved TUTOR instructors
           {
-            instructor: {
-              role: "TUTOR",
-              tutorApprovalAsStudent: {
-                status: "APPROVED",
+            AND: [
+              {
+                instructor: {
+                  role: "TUTOR",
+                },
               },
-            },
+              {
+                instructor: {
+                  tutorApprovalAsStudent: {
+                    is: {
+                      status: "APPROVED",
+                    },
+                  },
+                },
+              },
+            ],
           },
         ],
       },
@@ -224,12 +234,22 @@ export async function listLearnerCourses(_userId = DEFAULT_LEARNER_ID): Promise<
             },
             // Courses from approved TUTOR instructors
             {
-              instructor: {
-                role: "TUTOR",
-                tutorApprovalAsStudent: {
-                  status: "APPROVED",
+              AND: [
+                {
+                  instructor: {
+                    role: "TUTOR",
+                  },
                 },
-              },
+                {
+                  instructor: {
+                    tutorApprovalAsStudent: {
+                      is: {
+                        status: "APPROVED",
+                      },
+                    },
+                  },
+                },
+              ],
             },
           ],
         },
