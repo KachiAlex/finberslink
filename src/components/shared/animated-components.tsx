@@ -36,10 +36,25 @@ export const RippleButton = React.forwardRef<
     props.onClick?.(e);
   };
 
-  const Comp = asChild ? Slot : "button";
+  // When using asChild, we can only pass a single child to Slot
+  // So we return just the Slot without ripple effects
+  if (asChild) {
+    const Comp = Slot;
+    return (
+      <Comp
+        ref={ref}
+        className={`relative overflow-hidden transition-all duration-200 ${className}`}
+        onClick={handleClick}
+        {...props}
+      >
+        {children}
+      </Comp>
+    );
+  }
 
+  // When not using asChild, render as regular button with ripple effects
   return (
-    <Comp
+    <button
       ref={buttonRef || ref}
       className={`relative overflow-hidden transition-all duration-200 ${className}`}
       onClick={handleClick}
@@ -73,7 +88,7 @@ export const RippleButton = React.forwardRef<
         }
       `}</style>
       {children}
-    </Comp>
+    </button>
   );
 });
 RippleButton.displayName = "RippleButton";
