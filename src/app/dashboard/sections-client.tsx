@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Briefcase } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -655,47 +655,138 @@ export function DashboardSectionsClient() {
       );
     }
 
+    const jobApplications = data.applications.jobs;
+    const volunteerApplications = data.applications.volunteer;
+    const allApplications = [...jobApplications, ...volunteerApplications];
+
+    // Stats for job applications
+    const appliedCount = jobApplications.length;
+    const inProgressCount = jobApplications.filter((app) => app.status === "APPLIED" || app.status === "UNDER_REVIEW").length;
+    const succeededCount = jobApplications.filter((app) => app.status === "ACCEPTED").length;
+
     return (
-      <GlassCard className="space-y-6 p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Jobs</p>
-            <h3 className="text-2xl font-semibold text-slate-900">Opportunities radar</h3>
-            <p className="text-sm text-slate-500">Hand-picked roles plus your latest pipeline.</p>
-          </div>
-          <Button asChild>
-            <Link href="/jobs">View all roles</Link>
-          </Button>
+      <div className="space-y-8">
+        {/* Application Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <GlassCard className="p-6">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Jobs Applied</p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">{appliedCount}</p>
+            <p className="text-xs text-slate-500 mt-2">Total applications</p>
+          </GlassCard>
+          <GlassCard className="p-6">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">In Progress</p>
+            <p className="text-3xl font-bold text-blue-600 mt-2">{inProgressCount}</p>
+            <p className="text-xs text-slate-500 mt-2">Under review</p>
+          </GlassCard>
+          <GlassCard className="p-6">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Interviews</p>
+            <p className="text-3xl font-bold text-emerald-600 mt-2">{jobApplications.filter((app) => app.status === "INTERVIEW_SCHEDULED").length}</p>
+            <p className="text-xs text-slate-500 mt-2">Scheduled</p>
+          </GlassCard>
+          <GlassCard className="p-6">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Offers</p>
+            <p className="text-3xl font-bold text-amber-600 mt-2">{succeededCount}</p>
+            <p className="text-xs text-slate-500 mt-2">Accepted offers</p>
+          </GlassCard>
         </div>
-        {data.recommended.length ? (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {data.recommended.map((job) => (
-              <div key={job.id} className="rounded-2xl border border-slate-100 bg-white/80 p-4">
-                <p className="text-sm font-semibold text-slate-900">{job.title}</p>
-                <p className="text-xs text-slate-500">{job.company}</p>
-                <p className="text-xs text-slate-400">
-                  {job.location ?? job.remoteOption ?? "Remote friendly"}
-                </p>
-                <div className="mt-4 flex gap-2">
-                  <Button asChild size="sm" variant="ghost" className="rounded-full text-slate-600">
-                    <Link href={`/jobs/${job.slug}`}>View</Link>
-                  </Button>
-                  <Button asChild size="sm" className="rounded-full">
-                    <Link href={`/jobs/${job.slug}`}>Apply</Link>
-                  </Button>
-                </div>
+
+        {/* Job Recommendations */}
+        {data.recommended.length > 0 ? (
+          <GlassCard className="space-y-6 p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Recommendations</p>
+                <h3 className="text-2xl font-bold text-slate-900 mt-1">Matching opportunities</h3>
+                <p className="text-sm text-slate-600 mt-1">Roles tailored to your profile.</p>
               </div>
-            ))}
-          </div>
+              <Button asChild className="rounded-full">
+                <Link href="/jobs">View more</Link>
+              </Button>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              {data.recommended.map((job) => (
+                <div key={job.id} className="rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white/80 p-6 hover:border-blue-200 hover:shadow-lg transition-all duration-300">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex-1">
+                      <h4 className="text-sm font-bold text-slate-900 line-clamp-2">{job.title}</h4>
+                      <p className="text-xs text-slate-600 mt-1">{job.company}</p>
+                    </div>
+                    <Briefcase className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                  </div>
+                  <p className="text-xs text-slate-500 mb-4">
+                    {job.location ?? job.remoteOption ?? "Remote friendly"}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button asChild size="sm" variant="ghost" className="rounded-full text-slate-600 flex-1">
+                      <Link href={`/jobs/${job.slug}`}>View</Link>
+                    </Button>
+                    <Button asChild size="sm" className="rounded-full flex-1">
+                      <Link href={`/jobs/${job.slug}`}>Apply</Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
         ) : (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
-            <p>No recommendations yet. Update your profile or enroll in a course to unlock tailored roles.</p>
-            <Button asChild size="sm" className="mt-3" variant="secondary">
+          <GlassCard className="space-y-4 p-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Opportunities</p>
+              <h3 className="text-2xl font-bold text-slate-900 mt-1">No recommendations yet</h3>
+            </div>
+            <p className="text-sm text-slate-600">
+              Update your profile or enroll in a course to unlock tailored job recommendations.
+            </p>
+            <Button asChild size="sm" variant="secondary" className="w-fit">
               <Link href="/jobs">Browse roles</Link>
             </Button>
-          </div>
+          </GlassCard>
         )}
-      </GlassCard>
+
+        {/* Active Applications */}
+        {allApplications.length > 0 && (
+          <GlassCard className="space-y-6 p-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Pipeline</p>
+              <h3 className="text-2xl font-bold text-slate-900 mt-1">Your applications</h3>
+              <p className="text-sm text-slate-600 mt-1">Track where you are in the hiring process.</p>
+            </div>
+            <div className="space-y-3">
+              {allApplications.map((application) => (
+                <div key={application.id} className="rounded-xl border border-slate-100 bg-white/50 p-4 flex items-start justify-between hover:bg-white hover:border-slate-200 transition-all">
+                  <div className="flex-1">
+                    <p className="font-semibold text-slate-900">{application.opportunity.title}</p>
+                    <p className="text-sm text-slate-600">{application.opportunity.company ?? application.opportunity.organization}</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Applied {application.submittedAt
+                        ? new Date(application.submittedAt).toLocaleDateString()
+                        : "recently"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 ml-4">
+                    <Badge
+                      className={
+                        application.status === "ACCEPTED"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : application.status === "REJECTED"
+                            ? "bg-red-100 text-red-800"
+                            : application.status === "INTERVIEW_SCHEDULED"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-amber-100 text-amber-800"
+                      }
+                    >
+                      {application.status.replace("_", " ")}
+                    </Badge>
+                    <Button asChild size="sm" variant="ghost">
+                      <Link href={`/applications/${application.id}`}>View</Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        )}
+      </div>
     );
   };
 

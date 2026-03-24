@@ -472,7 +472,7 @@ export function StudentDashboard(_props: StudentDashboardProps) {
         <StatCard
           icon={BookOpen}
           label="Enrolled Courses"
-          value={isLoading ? <SkeletonLoader className="h-8 w-16" /> : "0"}
+          value={isLoading ? "Loading..." : "0"}
           accent="bg-blue-100 text-blue-600"
           bgGradient="bg-gradient-to-br from-blue-50 via-white to-blue-50"
           delay={0}
@@ -480,7 +480,7 @@ export function StudentDashboard(_props: StudentDashboardProps) {
         <StatCard
           icon={Zap}
           label="Active Courses"
-          value={isLoading ? <SkeletonLoader className="h-8 w-16" /> : "0"}
+          value={isLoading ? "Loading..." : "0"}
           accent="bg-amber-100 text-amber-600"
           bgGradient="bg-gradient-to-br from-amber-50 via-white to-amber-50"
           delay={100}
@@ -488,7 +488,7 @@ export function StudentDashboard(_props: StudentDashboardProps) {
         <StatCard
           icon={Trophy}
           label="Completed Courses"
-          value={isLoading ? <SkeletonLoader className="h-8 w-16" /> : "0"}
+          value={isLoading ? "Loading..." : "0"}
           accent="bg-emerald-100 text-emerald-600"
           bgGradient="bg-gradient-to-br from-emerald-50 via-white to-emerald-50"
           delay={200}
