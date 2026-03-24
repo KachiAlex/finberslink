@@ -98,7 +98,7 @@ export default async function DashboardCoursesPage({ searchParams }: DashboardCo
       </div>
     );
   } catch (error) {
-    console.error("Failed to load courses page", error);
+    console.error("Failed to load courses page:", error);
     return (
       <div className="space-y-10">
         <DashboardHero
@@ -112,11 +112,12 @@ export default async function DashboardCoursesPage({ searchParams }: DashboardCo
           ]}
         />
         
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6">
-          <h3 className="font-semibold text-yellow-900">Unable to load courses</h3>
-          <p className="mt-2 text-sm text-yellow-800">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6">
+          <h3 className="font-semibold text-red-900">Unable to load courses</h3>
+          <p className="mt-2 text-sm text-red-800">
             We're having trouble connecting to the database. Please try again in a moment, or contact support if the problem persists.
           </p>
+          <p className="mt-2 text-xs text-red-700">{error instanceof Error ? error.message : String(error)}</p>
         </div>
       </div>
     );

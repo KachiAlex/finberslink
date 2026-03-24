@@ -15,35 +15,56 @@ const ListDashboardCoursesSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const session = requireAuth(request);
+    let session;
+    try {
+      session = requireAuth(request);
+    } catch (authError) {
+      console.error("[api/dashboard/courses] Auth error:", authError);
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     if (session.role !== "STUDENT") {
-      return NextResponse.json({ error: "Only students can view dashboard catalog" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Only students can view dashboard catalog" },
+        { status: 403 }
+      );
     }
 
     const urlParams = Object.fromEntries(request.nextUrl.searchParams.entries());
-    const params = ListDashboardCoursesSchema.parse(urlParams);
+    const validParams = ListDashboardCoursesSchema.safeParse(urlParams);
 
+    if (!validParams.success) {
+      console.error("[api/dashboard/courses] Validation error:", validParams.error.issues);
+      return NextResponse.json(
+        { error: "Invalid query parameters", issues: validParams.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const params = validParams.data;
     const result = await listDashboardCatalogCourses({
       search: params.search?.trim() ? params.search.trim() : undefined,
       category: params.category?.trim() ? params.category.trim() : undefined,
       level: params.level,
-      sort: params.sort,
-      page: params.page,
-      pageSize: params.pageSize,
+      sort: params.sort || "recent",
+      page: params.page || 1,
+      pageSize: params.pageSize || 12,
     });
 
-    return NextResponse.json(result, { status: 200 });
+    return NextResponse.json(result, {
+      status: 200,
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid query parameters", issues: error.issues }, { status: 400 });
-    }
-
-    if (error instanceof AuthError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-
-    console.error("[api/dashboard/courses] unexpected error", error);
-    return NextResponse.json({ error: "Failed to load catalog courses" }, { status: 500 });
+    console.error("[api/dashboard/courses] Unexpected error:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to load catalog courses",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
   }
 }
