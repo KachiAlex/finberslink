@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { BookOpen, Trophy, Zap, ArrowRight, Star, Sparkles, TrendingUp } from "lucide-react";
+import { BookOpen, Trophy, Zap, ArrowRight, Star, Sparkles, TrendingUp, Briefcase, Clock, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 import { DashboardSectionsClient } from "@/app/dashboard/sections-client";
@@ -11,6 +11,15 @@ import { GradientText, RippleButton } from "@/components/shared/animated-compone
 
 interface StudentDashboardProps {
   userId: string;
+}
+
+interface DashboardStats {
+  enrolledCourses: number;
+  activeCourses: number;
+  completedCourses: number;
+  appliedJobs: number;
+  inProgressApplications: number;
+  interviewsScheduled: number;
 }
 
 // Floating Particles Component
@@ -448,12 +457,49 @@ const AnimatedGreeting = () => {
 };
 
 export function StudentDashboard(_props: StudentDashboardProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats>({
+    enrolledCourses: 0,
+    activeCourses: 0,
+    completedCourses: 0,
+    appliedJobs: 0,
+    inProgressApplications: 0,
+    interviewsScheduled: 0,
+  });
 
   useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 500);
-    return () => clearTimeout(timer);
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/dashboard/sections");
+        if (!response.ok) throw new Error("Failed to fetch stats");
+        
+        const { data } = await response.json();
+        
+        // Calculate stats from the response data
+        const enrolledCount = data.summary?.enrollmentsCount ?? 0;
+        const completedCount = data.summary?.completedEnrollmentsCount ?? 0;
+        const jobApps = data.applications?.jobs ?? [];
+        
+        setStats({
+          enrolledCourses: enrolledCount,
+          activeCourses: Math.max(0, enrolledCount - completedCount), // Active = Enrolled - Completed
+          completedCourses: completedCount,
+          appliedJobs: jobApps.length,
+          inProgressApplications: jobApps.filter(
+            (app: any) => app.status === "APPLIED" || app.status === "UNDER_REVIEW"
+          ).length,
+          interviewsScheduled: jobApps.filter(
+            (app: any) => app.status === "INTERVIEW_SCHEDULED"
+          ).length,
+        });
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   return (
@@ -461,12 +507,13 @@ export function StudentDashboard(_props: StudentDashboardProps) {
       {/* Floating Particles Background */}
       <FloatingParticles />
 
-      {/* Animated Stats Cards with Decorative Elements */}
-      <div className="grid gap-6 sm:grid-cols-3 relative z-10">
+      {/* Animated Stats Cards with Decorative Elements - 2x3 Grid */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 relative z-10">
+        {/* Course Stats */}
         <StatCard
           icon={BookOpen}
           label="Enrolled Courses"
-          value={isLoading ? "Loading..." : "0"}
+          value={isLoading ? "—" : stats.enrolledCourses}
           accent="bg-blue-100 text-blue-600"
           bgGradient="bg-gradient-to-br from-blue-50 via-white to-blue-50"
           delay={0}
@@ -474,7 +521,7 @@ export function StudentDashboard(_props: StudentDashboardProps) {
         <StatCard
           icon={Zap}
           label="Active Courses"
-          value={isLoading ? "Loading..." : "0"}
+          value={isLoading ? "—" : stats.activeCourses}
           accent="bg-amber-100 text-amber-600"
           bgGradient="bg-gradient-to-br from-amber-50 via-white to-amber-50"
           delay={100}
@@ -482,10 +529,36 @@ export function StudentDashboard(_props: StudentDashboardProps) {
         <StatCard
           icon={Trophy}
           label="Completed Courses"
-          value={isLoading ? "Loading..." : "0"}
+          value={isLoading ? "—" : stats.completedCourses}
           accent="bg-emerald-100 text-emerald-600"
           bgGradient="bg-gradient-to-br from-emerald-50 via-white to-emerald-50"
           delay={200}
+        />
+
+        {/* Job Stats */}
+        <StatCard
+          icon={Briefcase}
+          label="Jobs Applied"
+          value={isLoading ? "—" : stats.appliedJobs}
+          accent="bg-purple-100 text-purple-600"
+          bgGradient="bg-gradient-to-br from-purple-50 via-white to-purple-50"
+          delay={300}
+        />
+        <StatCard
+          icon={Clock}
+          label="In Progress"
+          value={isLoading ? "—" : stats.inProgressApplications}
+          accent="bg-indigo-100 text-indigo-600"
+          bgGradient="bg-gradient-to-br from-indigo-50 via-white to-indigo-50"
+          delay={400}
+        />
+        <StatCard
+          icon={CheckCircle}
+          label="Interviews"
+          value={isLoading ? "—" : stats.interviewsScheduled}
+          accent="bg-rose-100 text-rose-600"
+          bgGradient="bg-gradient-to-br from-rose-50 via-white to-rose-50"
+          delay={500}
         />
       </div>
 

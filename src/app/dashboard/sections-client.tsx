@@ -864,124 +864,97 @@ export function DashboardSectionsClient() {
 
   return (
     <div className="space-y-8">
-      <Tabs defaultValue="jobs" className="w-full">
-        {/* Tab Navigation */}
-        <TabsList className="grid w-full grid-cols-3 rounded-xl bg-slate-100 p-1 mb-6 lg:w-fit">
-          <TabsTrigger
-            value="jobs"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
-          >
-            <Briefcase className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Jobs</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="courses"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
-          >
-            <BookOpen className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Courses</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="resumes"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Resumes</span>
-          </TabsTrigger>
-        </TabsList>
+      {/* COURSES SECTION */}
+      <div>
+        <GlassCard className="p-6">
+          {renderCoursesTab()}
+        </GlassCard>
+      </div>
 
-        {/* JOBS TAB - Main Focus */}
-        <TabsContent value="jobs" className="space-y-6 mt-0">
-          {/* Job Stats Cards */}
-          {data && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <GlassCard className="p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Applied</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">{data.applications.jobs.length}</p>
-                <p className="text-xs text-slate-500 mt-2">Job applications</p>
-              </GlassCard>
-              <GlassCard className="p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">In Progress</p>
-                <p className="text-2xl font-bold text-blue-600 mt-1">
-                  {data.applications.jobs.filter((a) => a.status === "APPLIED" || a.status === "UNDER_REVIEW").length}
-                </p>
-                <p className="text-xs text-slate-500 mt-2">Under review</p>
-              </GlassCard>
-              <GlassCard className="p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Interviews</p>
-                <p className="text-2xl font-bold text-emerald-600 mt-1">
-                  {data.applications.jobs.filter((a) => a.status === "INTERVIEW_SCHEDULED").length}
-                </p>
-                <p className="text-xs text-slate-500 mt-2">Scheduled</p>
-              </GlassCard>
-              <GlassCard className="p -4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Offers</p>
-                <p className="text-2xl font-bold text-amber-600 mt-1">
-                  {data.applications.jobs.filter((a) => a.status === "ACCEPTED").length}
-                </p>
-                <p className="text-xs text-slate-500 mt-2">Accepted</p>
-              </GlassCard>
-            </div>
-          )}
-
-          {/* Job Recommendations */}
-          {data && data.recommended.length > 0 && (
-            <GlassCard className="space-y-4 p-6">
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Opportunities</p>
-                <h3 className="text-lg font-bold text-slate-900 mt-1">Matching opportunities</h3>
-                <p className="text-sm text-slate-600 mt-1">Roles tailored to your profile and skills.</p>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                {data.recommended.slice(0, 4).map((job) => (
-                  <div
-                    key={job.id}
-                    className="rounded-lg border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4 hover:border-blue-200 hover:shadow-md transition-all"
-                  >
-                    <div className="flex items-start gap-3 mb-2">
-                      <div className="p-2 rounded-lg bg-blue-50">
-                        <Briefcase className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-slate-900 line-clamp-1">{job.title}</h4>
-                        <p className="text-xs text-slate-600 line-clamp-1 mt-0.5">{job.company}</p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-500 mb-3">{job.location || job.remoteOption || "Remote friendly"}</p>
-                    <Button asChild size="sm" className="w-full rounded-lg bg-blue-600 hover:bg-blue-700">
-                      <Link href={`/jobs/${job.slug}`}>View & Apply</Link>
-                    </Button>
-                  </div>
-                ))}
-              </div>
+      {/* JOBS SECTION */}
+      <div className="space-y-6">
+        {/* Job Stats Cards */}
+        {data && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <GlassCard className="p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Applied</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1">{data.applications.jobs.length}</p>
+              <p className="text-xs text-slate-500 mt-2">Job applications</p>
             </GlassCard>
-          )}
+            <GlassCard className="p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">In Progress</p>
+              <p className="text-2xl font-bold text-blue-600 mt-1">
+                {data.applications.jobs.filter((a) => a.status === "APPLIED" || a.status === "UNDER_REVIEW").length}
+              </p>
+              <p className="text-xs text-slate-500 mt-2">Under review</p>
+            </GlassCard>
+            <GlassCard className="p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Interviews</p>
+              <p className="text-2xl font-bold text-emerald-600 mt-1">
+                {data.applications.jobs.filter((a) => a.status === "INTERVIEW_SCHEDULED").length}
+              </p>
+              <p className="text-xs text-slate-500 mt-2">Scheduled</p>
+            </GlassCard>
+            <GlassCard className="p -4">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Offers</p>
+              <p className="text-2xl font-bold text-amber-600 mt-1">
+                {data.applications.jobs.filter((a) => a.status === "ACCEPTED").length}
+              </p>
+              <p className="text-xs text-slate-500 mt-2">Accepted</p>
+            </GlassCard>
+          </div>
+        )}
 
-          {/* Active Applications Section */}
+        {/* Job Recommendations */}
+        {data && data.recommended.length > 0 && (
           <GlassCard className="space-y-4 p-6">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Pipeline</p>
-              <h3 className="text-lg font-bold text-slate-900 mt-1">Your applications</h3>
-              <p className="text-sm text-slate-600 mt-1">Track where you are in the hiring process.</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Opportunities</p>
+              <h3 className="text-lg font-bold text-slate-900 mt-1">Matching opportunities</h3>
+              <p className="text-sm text-slate-600 mt-1">Roles tailored to your profile and skills.</p>
             </div>
-            {renderApplicationsInJobsTab()}
+            <div className="grid gap-3 md:grid-cols-2">
+              {data.recommended.slice(0, 4).map((job) => (
+                <div
+                  key={job.id}
+                  className="rounded-lg border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4 hover:border-blue-200 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-blue-50">
+                      <Briefcase className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-semibold text-slate-900 line-clamp-1">{job.title}</h4>
+                      <p className="text-xs text-slate-600 line-clamp-1 mt-0.5">{job.company}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-3">{job.location || job.remoteOption || "Remote friendly"}</p>
+                  <Button asChild size="sm" className="w-full rounded-lg bg-blue-600 hover:bg-blue-700">
+                    <Link href={`/jobs/${job.slug}`}>View & Apply</Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
           </GlassCard>
-        </TabsContent>
+        )}
 
-        {/* COURSES TAB */}
-        <TabsContent value="courses" className="mt-0">
-          <GlassCard className="p-6">
-            {renderCoursesTab()}
-          </GlassCard>
-        </TabsContent>
+        {/* Active Applications Section */}
+        <GlassCard className="space-y-4 p-6">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Pipeline</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-1">Your applications</h3>
+            <p className="text-sm text-slate-600 mt-1">Track where you are in the hiring process.</p>
+          </div>
+          {renderApplicationsInJobsTab()}
+        </GlassCard>
+      </div>
 
-        {/* RESUMES TAB */}
-        <TabsContent value="resumes" className="mt-0">
-          <GlassCard className="p-6">
-            {renderResumesTab()}
-          </GlassCard>
-        </TabsContent>
-      </Tabs>
+      {/* RESUMES SECTION */}
+      <div>
+        <GlassCard className="p-6">
+          {renderResumesTab()}
+        </GlassCard>
+      </div>
     </div>
   );
 }
