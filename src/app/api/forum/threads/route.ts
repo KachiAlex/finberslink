@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { listForumThreads, createForumThread } from "@/features/forum/service";
+import { listForumThreads, createForumThread, getUnreadThreadCount } from "@/features/forum/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
 
@@ -13,10 +13,29 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const courseId = searchParams.get("courseId");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
+    const cursor = searchParams.get("cursor") || undefined;
 
-    const threads = await listForumThreads({ courseId: courseId || undefined, limit });
-    return NextResponse.json({ threads });
+    const threads = await listForumThreads({ 
+      courseId: courseId || undefined, 
+      limit,
+      cursor: cursor || undefined,
+    });
+    
+    const unreadCount = searchParams.get("includeUnread") === "true" 
+      ? await getUnreadThreadCount(searchParams.get("userId") || "", courseId || undefined)
+      : undefined;
+
+    const nextCursor = threads.length === limit ? threads[threads.length - 1]?.id : null;
+
+    return NextResponse.json({ 
+      threads,
+      pagination: {
+        nextCursor,
+        hasMore: threads.length === limit,
+      },
+      ...(unreadCount !== undefined && { unreadCount }),
+    });
   } catch (error) {
     console.error("Forum threads fetch error:", error);
     return NextResponse.json(

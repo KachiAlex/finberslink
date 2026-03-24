@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getForumThreadById, createForumPost } from "@/features/forum/service";
+import { getForumThreadById, createForumPost, listThreadPosts, markThreadAsRead } from "@/features/forum/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
 
@@ -17,6 +17,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    
     const thread = await getForumThreadById(id);
     if (!thread) {
       return NextResponse.json(
@@ -25,7 +27,29 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ thread });
+    // Mark thread as read if user is authenticated
+    const accessToken = request.cookies.get("access_token")?.value;
+    if (accessToken) {
+      try {
+        const user = verifyToken(accessToken);
+        await markThreadAsRead(user.sub, id);
+      } catch (err) {
+        // Silently ignore auth errors for marking as read
+      }
+    }
+
+    // Optionally include posts
+    let posts;
+    if (searchParams.get("includePosts") === "true") {
+      const limit = Math.min(parseInt(searchParams.get("postsLimit") || "50"), 100);
+      const cursor = searchParams.get("postsCursor") || undefined;
+      posts = await listThreadPosts(id, { limit, cursor: cursor || undefined });
+    }
+
+    return NextResponse.json({ 
+      thread,
+      ...(posts && { posts }),
+    });
   } catch (error) {
     console.error("Thread fetch error:", error);
     return NextResponse.json(
