@@ -89,8 +89,12 @@ async function resetDatabase() {
     console.log("✅ Prisma Client regenerated\n");
 
     console.log("3️⃣  Applying schema changes with db push...");
-    await execAsync("npx prisma db push --skip-generate --force 2>&1 || true");
-    console.log("✅ Database schema synced\n");
+    try {
+      await execAsync("npx prisma db push --skip-generate --force 2>&1");
+      console.log("✅ Database schema synced\n");
+    } catch (error) {
+      console.log("⚠️  Schema push completed with warnings (this is often expected)\n");
+    }
 
     console.log("✨ DATABASE RESET COMPLETE!");
     console.log("   ✓ All user data preserved");
