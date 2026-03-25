@@ -32,7 +32,15 @@ export default async function LessonPage({
 }) {
   const { courseId, lessonId } = await params;
   const session = await requireSession({ allowedRoles: ["STUDENT"], failureMode: "redirect" });
-  const result = await getLearnerLesson(courseId, lessonId, session.sub);
+  
+  let result;
+  try {
+    result = await getLearnerLesson(courseId, lessonId, session.sub);
+  } catch (error) {
+    console.error("[lesson-detail] failed to fetch lesson:", error);
+    notFound();
+  }
+  
   if (!result) {
     notFound();
   }

@@ -21,7 +21,14 @@ export default async function CourseDetailPage({
 }) {
   const { courseId } = params;
   const session = await requireSession({ allowedRoles: ["STUDENT"], failureMode: "redirect" });
-  const course = await getLearnerCourseDetail(courseId, session.sub);
+  
+  let course;
+  try {
+    course = await getLearnerCourseDetail(courseId, session.sub);
+  } catch (error) {
+    console.error("[course-detail] failed to fetch course:", error);
+    notFound();
+  }
 
   if (!course) {
     notFound();
@@ -66,11 +73,17 @@ export default async function CourseDetailPage({
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button className="bg-cyan-600 hover:bg-cyan-700 text-white" asChild>
-                  <Link href={`/courses/${course.id}/lessons/${course.lessons?.[0]?.id}`}>
-                    Continue Learning <BookOpen className="w-4 h-4 ml-2" />
-                  </Link>
-                </Button>
+                {course.lessons && course.lessons.length > 0 ? (
+                  <Button className="bg-cyan-600 hover:bg-cyan-700 text-white" asChild>
+                    <Link href={`/courses/${course.id}/lessons/${course.lessons[0]?.id}`}>
+                      Continue Learning <BookOpen className="w-4 h-4 ml-2" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button className="bg-slate-600 cursor-not-allowed text-white" disabled>
+                    No Lessons Available <BookOpen className="w-4 h-4 ml-2" />
+                  </Button>
+                )}
                 <Button variant="outline" className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10">
                   <Share2 className="w-4 h-4" />
                 </Button>
