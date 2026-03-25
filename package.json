@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "vercel-build": "prisma migrate deploy && next build",
+    "vercel-build": "prisma migrate resolve --rolled-back 20260323083000_add_enrollment_assignment_id && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
