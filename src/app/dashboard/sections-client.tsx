@@ -308,8 +308,8 @@ export function DashboardSectionsClient() {
           <h3 className="text-lg font-semibold text-slate-900">{topCourse.course.title}</h3>
           <p className="text-sm text-slate-500">{topCourse.course.tagline ?? "Keep shipping lessons"}</p>
         </div>
-        <Button asChild size="sm" className="rounded-full">
-          <Link href={`/courses/${topCourse.course.slug ?? topCourse.course.id}`}>Continue course</Link>
+          <Button asChild size="sm" className="rounded-full">
+          <Link href={`/courses/${topCourse.course.id}`}>Continue course</Link>
         </Button>
       </div>
     );
