@@ -245,11 +245,8 @@ export async function upsertTutorCourseDraft(courseId: string | null, input: Tut
     instructorId: input.tutorId,
     approvalStatus: CourseApprovalStatus.DRAFT,
     tutorEditingLocked: false,
+    draftStructure: input.draftStructure ?? Prisma.JsonNull,
   };
-
-  if (input.draftStructure !== undefined) {
-    baseData.draftStructure = input.draftStructure;
-  }
 
   if (!courseId) {
     const course = await prisma.course.create({
@@ -282,7 +279,7 @@ export async function upsertTutorCourseDraft(courseId: string | null, input: Tut
       ...baseData,
       outcomes: input.outcomes ?? course.outcomes,
       skills: input.skills ?? course.skills,
-      draftStructure: input.draftStructure ?? course.draftStructure,
+      draftStructure: input.draftStructure !== undefined ? input.draftStructure : (course.draftStructure ?? Prisma.JsonNull),
     },
   });
 

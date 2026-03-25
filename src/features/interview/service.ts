@@ -1,4 +1,5 @@
-import type { InterviewFlowStep, InterviewSessionStatus, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import type { InterviewFlowStep, InterviewSessionStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { generateInterviewSessionInsights } from "./ai";
@@ -61,7 +62,7 @@ export async function createInterviewSession(input: CreateInterviewSessionInput)
         ? {
             create: {
               prompt: input.initialQuestion.prompt,
-              rubric: input.initialQuestion.rubric ?? null,
+              rubric: input.initialQuestion.rubric ?? Prisma.JsonNull,
               sequence: sequence!,
             },
           }
@@ -132,7 +133,7 @@ export async function addInterviewQuestion(sessionId: string, userId: string, in
     data: {
       sessionId,
       prompt: input.prompt,
-      rubric: input.rubric ?? null,
+      rubric: input.rubric ?? Prisma.JsonNull,
       sequence: nextSequence,
     },
   });

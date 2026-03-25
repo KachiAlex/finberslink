@@ -136,17 +136,20 @@ export async function findMatchingJobs(alert: JobAlertFilters, limit = 20) {
     where.OR = [
       {
         title: {
-          search: keywordPatterns.join(" | "),
+          contains: keywordPatterns[0],
+          mode: "insensitive" as const,
         },
       },
       {
         company: {
-          search: keywordPatterns.join(" | "),
+          contains: keywordPatterns[0],
+          mode: "insensitive" as const,
         },
       },
       {
         description: {
-          search: keywordPatterns.join(" | "),
+          contains: keywordPatterns[0],
+          mode: "insensitive" as const,
         },
       },
       {
@@ -162,7 +165,7 @@ export async function findMatchingJobs(alert: JobAlertFilters, limit = 20) {
     if (!where.AND) {
       where.AND = [];
     }
-    where.AND.push({
+    (where.AND as Prisma.JobOpportunityWhereInput[]).push({
       location: {
         contains: alert.location,
         mode: "insensitive",
@@ -175,7 +178,7 @@ export async function findMatchingJobs(alert: JobAlertFilters, limit = 20) {
     if (!where.AND) {
       where.AND = [];
     }
-    where.AND.push({
+    (where.AND as Prisma.JobOpportunityWhereInput[]).push({
       jobType: alert.jobType,
     });
   }
@@ -309,7 +312,7 @@ export async function getSuggestedKeywords(userId: string) {
   const savedJobs = await prisma.jobSave.findMany({
     where: { userId },
     include: {
-      job: {
+      jobOpportunity: {
         select: { tags: true, title: true },
       },
     },
@@ -320,7 +323,7 @@ export async function getSuggestedKeywords(userId: string) {
   const applications = await prisma.jobApplication.findMany({
     where: { userId },
     include: {
-      job: {
+      opportunity: {
         select: { tags: true, title: true },
       },
     },

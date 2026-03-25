@@ -214,7 +214,7 @@ export async function createTenantAdminInvite(input: {
   expiresAt?: Date;
 }) {
   function generateToken(bytes: number): string {
-    return Math.random().toString("hex").substring(2, 2 + bytes * 2);
+    return Math.random().toString(16).substring(2, 2 + bytes * 2);
   }
 
   return prisma.tenantInvite.create({

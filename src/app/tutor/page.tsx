@@ -1,21 +1,6 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, CheckCircle2, CircleDashed, MessageSquare, PenSquare, Plus } from "lucide-react";
-import {
-  getTutorCohorts,
-  getPendingForumPosts,
-  getTutorOfficeHours,
-  getTutorForumThreads,
-  listTutorExams,
-  type TutorCohort,
-  type PendingForumPost,
-  type TutorOfficeHourSession,
-  type TutorExam,
-  type ForumThreadWithFlags,
-} from "@/features/tutor/service";
-import { NotificationsBell } from "@/components/notifications/notifications-bell";
-import { getUnreadCount } from "@/features/notifications/service";
+import { BarChart3, BookOpen, PenSquare, Users, Plus } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { requireSession } from "@/lib/auth/session";
 
@@ -29,289 +14,71 @@ export default async function TutorPage() {
     failureMode: "error",
   });
 
-  let dashboardError: unknown = null;
-  let cohorts: TutorCohort[] = [];
-  let pendingPosts: PendingForumPost[] = [];
-  let officeHours: TutorOfficeHourSession[] = [];
-  let unreadCount = 0;
-  let exams: TutorExam[] = [];
-  let forumThreads: ForumThreadWithFlags[] = [];
+  // Get key stats
+  const [coursesCount, enrollmentsCount, lessonsCount] = await Promise.all([
+    prisma.course.count({ where: { instructorId: session.sub } }),
+    prisma.enrollment.count({ where: { course: { instructorId: session.sub } } }),
+    prisma.courseLesson.count({ where: { course: { instructorId: session.sub } } }),
+  ]);
 
-  try {
-    [cohorts, pendingPosts, officeHours, unreadCount, exams, forumThreads] = await Promise.all([
-      getTutorCohorts(session.sub),
-      getPendingForumPosts(session.sub),
-      getTutorOfficeHours(session.sub),
-      getUnreadCount(session.sub),
-      listTutorExams(session.sub),
-      getTutorForumThreads(session.sub, 5),
-    ]);
-  } catch (err) {
-    console.error("Failed to load tutor dashboard", err);
-    dashboardError = err;
-  }
-
-  const DashboardError = ({ label, error }: { label: string; error?: unknown }) => {
-    if (!error) return null;
-    return (
-      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        <p className="font-semibold">{label}</p>
-        <p className="text-xs text-red-600">We couldn’t load this section. Try reloading.</p>
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+  }: {
+    title: string;
+    value: number;
+    icon: React.ComponentType<{ className?: string }>;
+  }) => (
+    <div className="flex flex-col items-center justify-center rounded-lg border border-slate-200 bg-white p-6 text-center">
+      <div className="mb-3 rounded-full bg-blue-50 p-2 text-blue-600">
+        <Icon className="h-5 w-5" />
       </div>
-    );
-  };
-
-  const formatDate = (value: Date | string) => {
-    const date = typeof value === "string" ? new Date(value) : value;
-    return `${date.toLocaleDateString()} · ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-  };
+      <p className="text-2xl font-bold text-slate-900">{value.toLocaleString()}</p>
+      <p className="mt-1 text-xs font-medium text-slate-600">{title}</p>
+    </div>
+  );
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
-        <header className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold text-slate-900">Tutor Dashboard</h1>
-            <p className="text-slate-600">Manage your cohorts, lessons, and student engagement.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <NotificationsBell unreadCount={unreadCount} />
-          </div>
-        </header>
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="border border-slate-200/70 bg-white/95">
-            <CardHeader className="flex items-start justify-between gap-3">
-              <div>
-                <CardTitle className="text-lg font-semibold text-slate-900">My Cohorts</CardTitle>
-                <CardDescription>Courses you are instructing</CardDescription>
-              </div>
-              <Button asChild>
-                <Link href="/tutor/courses/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create course
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <DashboardError label="Cohorts unavailable" error={dashboardError} />
-              {cohorts.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                  <p>No cohorts yet. Start by proposing a course and outlining its sections.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {cohorts.map((course) => (
-                    <div key={course.id} className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-slate-900">{course.title}</h3>
-                        <Badge variant="outline">{course.enrollments.length} students</Badge>
-                      </div>
-                      <p className="text-sm text-slate-600 mb-3">{course.category}</p>
-                      <div className="flex items-center justify-between text-sm text-slate-500">
-                        <span>{course.lessons.length} lessons</span>
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/tutor/cohort/${course.slug}`}>Manage</Link>
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="border border-slate-200/70 bg-white/95">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold text-slate-900">Forum Moderation</CardTitle>
-              <CardDescription>Posts pending your review</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DashboardError label="Forum posts unavailable" error={dashboardError} />
-              {pendingPosts.length === 0 ? (
-                <p className="text-sm text-slate-500">No pending posts.</p>
-              ) : (
-                <div className="space-y-3">
-                  {pendingPosts.slice(0, 5).map((post) => {
-                    const authorName = [post.author?.firstName, post.author?.lastName].filter(Boolean).join(" ") || "Unknown";
-                    const courseLabel = post.course?.title ?? "Course";
-                    return (
-                      <div key={post.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 truncate">{post.title}</p>
-                          <p className="text-xs text-slate-500">
-                            {authorName} · {courseLabel}
-                          </p>
-                        </div>
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/tutor/forum/${post.id}`}>Review</Link>
-                        </Button>
-                      </div>
-                    );
-                  })}
-                  {pendingPosts.length > 5 && (
-                    <Button variant="ghost" size="sm" className="w-full">
-                      View all {pendingPosts.length} pending posts
-                    </Button>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+    <main className="min-h-screen bg-white">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-4 py-16 sm:px-6 lg:px-8">
+        {/* Stats Grid */}
+        <div className="grid gap-6 sm:grid-cols-3">
+          <StatCard title="Courses" value={coursesCount} icon={BookOpen} />
+          <StatCard title="Students" value={enrollmentsCount} icon={Users} />
+          <StatCard title="Lessons" value={lessonsCount} icon={BarChart3} />
         </div>
 
-        <Card className="border border-slate-200/70 bg-white/95">
-          <CardHeader className="flex items-start justify-between gap-3">
-            <div>
-              <CardTitle className="text-lg font-semibold text-slate-900">Exams & assessments</CardTitle>
-              <CardDescription>Build per-section or final exams and submit for approval.</CardDescription>
-            </div>
-            <Button asChild>
+        {/* Quick Actions */}
+        <div className="flex flex-col gap-6">
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-600">Quick Actions</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Button asChild size="lg" className="h-12">
+              <Link href="/tutor/courses/new">
+                <Plus className="mr-2 h-5 w-5" />
+                Create Course
+              </Link>
+            </Button>
+            <Button asChild size="lg" className="h-12">
+              <Link href="/tutor/courses">
+                <BookOpen className="mr-2 h-5 w-5" />
+                Manage Courses
+              </Link>
+            </Button>
+            <Button asChild size="lg" className="h-12">
               <Link href="/tutor/exams/new">
-                <PenSquare className="mr-2 h-4 w-4" />
-                Create exam
+                <PenSquare className="mr-2 h-5 w-5" />
+                Create Exam
               </Link>
             </Button>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <DashboardError label="Exams unavailable" error={dashboardError} />
-            {exams.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                No exams yet. Start by choosing a course section or final exam target, then add modules and submit for admin approval.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {exams.slice(0, 5).map((exam) => {
-                  const statusColor =
-                    exam.status === "APPROVED"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : exam.status === "SUBMITTED"
-                      ? "bg-amber-50 text-amber-700"
-                      : "bg-slate-100 text-slate-700";
-                  const statusIcon =
-                    exam.status === "APPROVED" ? (
-                      <CheckCircle2 className="h-4 w-4" />
-                    ) : exam.status === "SUBMITTED" ? (
-                      <ArrowRight className="h-4 w-4" />
-                    ) : (
-                      <CircleDashed className="h-4 w-4" />
-                    );
-                  return (
-                    <div
-                      key={exam.id}
-                      className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3"
-                    >
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-slate-900">{exam.title}</p>
-                        <p className="text-xs text-slate-500">
-                          Target: {exam.target} · Updated {exam.updatedAt}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className={statusColor + " flex items-center gap-1"}>
-                          {statusIcon}
-                          <span className="capitalize">{exam.status.toLowerCase()}</span>
-                        </Badge>
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/tutor/exams/${exam.id}`}>Open</Link>
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200/70 bg-white/95">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-slate-900">Office Hours</CardTitle>
-            <CardDescription>Upcoming 1:1 sessions with students</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DashboardError label="Office hours unavailable" error={dashboardError} />
-            {officeHours.length === 0 ? (
-              <p className="text-sm text-slate-500">No office hours scheduled.</p>
-            ) : (
-              <div className="space-y-4">
-                {officeHours.slice(0, 3).map((session) => (
-                  <div key={session.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">{formatDate(session.startTime)}</p>
-                      <p className="text-xs text-slate-500">
-                        {session.bookings.length} student{session.bookings.length !== 1 ? "s" : ""} booked
-                      </p>
-                    </div>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/tutor/office-hours/${session.id}`}>Manage</Link>
-                    </Button>
-                  </div>
-                ))}
-                {officeHours.length > 3 && (
-                  <Button variant="ghost" size="sm" className="w-full">
-                    View all sessions
-                  </Button>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200/70 bg-white/95">
-          <CardHeader className="flex items-start justify-between gap-3">
-            <div>
-              <CardTitle className="text-lg font-semibold text-slate-900">Messages & forums</CardTitle>
-              <CardDescription>Stay close to student questions and threads.</CardDescription>
-            </div>
-            <Button variant="outline" asChild>
-              <Link href="/tutor/messages">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Open inbox
+            <Button asChild size="lg" className="h-12">
+              <Link href="/tutor/exams">
+                <BarChart3 className="mr-2 h-5 w-5" />
+                Manage Exams
               </Link>
             </Button>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <DashboardError label="Messages unavailable" error={dashboardError} />
-            <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-              <span>Unread messages</span>
-              <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-                {unreadCount}
-              </Badge>
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Recent forums</p>
-              {forumThreads.length === 0 ? (
-                <p className="text-sm text-slate-500">No recent threads.</p>
-              ) : (
-                <div className="space-y-2">
-                  {forumThreads.map((thread) => (
-                    <div
-                      key={thread.id}
-                      className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-slate-900">{thread.title}</p>
-                        <p className="text-xs text-slate-500">{thread.course?.title ?? "Course"}</p>
-                      </div>
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/forum/thread/${thread.id}`}>Open</Link>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button className="w-full" variant="outline" asChild>
-                <Link href="/forum">View course forums</Link>
-              </Button>
-              <Button className="w-full" asChild>
-                <Link href="/forum/new">Create forum thread</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </main>
   );

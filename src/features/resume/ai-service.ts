@@ -226,9 +226,6 @@ export async function updateResumeWithGeneratedContent(
   if (content.summary) {
     data.summary = content.summary;
   }
-  if (content.objective) {
-    data.objective = content.objective;
-  }
 
   return prisma.resume.update({
     where: { id: resumeId },

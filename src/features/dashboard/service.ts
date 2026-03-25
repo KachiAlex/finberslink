@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import type { SkillAnalysisResponse } from "@/lib/ai/resume";
@@ -374,13 +374,13 @@ export async function getDashboardInsights(userId: string) {
     where: { userId },
     update: {
       focus: payload.focus as unknown as Prisma.JsonValue,
-      skills: (payload.skills ?? null) as Prisma.JsonValue,
+      skills: payload.skills ? (payload.skills as unknown as Prisma.JsonValue) : Prisma.JsonNull,
       refreshedAt: new Date(),
     },
     create: {
       userId,
       focus: payload.focus as unknown as Prisma.JsonValue,
-      skills: (payload.skills ?? null) as Prisma.JsonValue,
+      skills: payload.skills ? (payload.skills as unknown as Prisma.JsonValue) : Prisma.JsonNull,
     },
   });
 
