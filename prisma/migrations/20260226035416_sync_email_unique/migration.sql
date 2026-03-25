@@ -1,3 +1,0 @@
--- This migration was created in production but failed.
--- It's being reconciled to allow new migrations to proceed.
--- No changes are applied in this reconciliation.
