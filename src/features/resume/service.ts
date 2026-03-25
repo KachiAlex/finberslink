@@ -320,16 +320,61 @@ export async function regenerateResumeShareSlug(slug: string) {
 }
 
 export async function listUserResumes(userId: string) {
-  return prisma.resume.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    include: {
-      experiences: {
-        orderBy: { order: "asc" },
+  try {
+    return await prisma.resume.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        experiences: {
+          orderBy: { order: "asc" },
+        },
+        projects: {
+          orderBy: { order: "asc" },
+        },
       },
-      projects: {
-        orderBy: { order: "asc" },
-      },
-    },
-  });
+    });
+  } catch (error: any) {
+    // If the production database is missing the `template` column (Prisma P2022),
+    // fall back to selecting explicit columns excluding `template` so the
+    // query doesn't reference a missing column. This avoids crashing the
+    // Server Component render in production while the migration is applied.
+    if (error?.code === "P2022") {
+      console.warn("Fallback resume query due to missing column (P2022)", error?.meta ?? "");
+      return prisma.resume.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          userId: true,
+          title: true,
+          summary: true,
+          slug: true,
+          shareSlug: true,
+          visibility: true,
+          createdAt: true,
+          updatedAt: true,
+          location: true,
+          notableAchievements: true,
+          personaName: true,
+          targetIndustry: true,
+          targetRoles: true,
+          topSkills: true,
+          yearsExperience: true,
+          viewCount: true,
+          introVideoUrl: true,
+          introVideoEmbedUrl: true,
+        },
+        include: {
+          experiences: {
+            orderBy: { order: "asc" },
+          },
+          projects: {
+            orderBy: { order: "asc" },
+          },
+        },
+      });
+    }
+
+    throw error;
+  }
 }
