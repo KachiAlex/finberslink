@@ -161,7 +161,7 @@ export async function listDashboardCatalogCourses(options: DashboardCatalogOptio
               {
                 instructor: {
                   tutorApprovalAsStudent: {
-                    is: {
+                    some: {
                       status: "APPROVED",
                     },
                   },
@@ -243,7 +243,7 @@ export async function listLearnerCourses(_userId = DEFAULT_LEARNER_ID): Promise<
                 {
                   instructor: {
                     tutorApprovalAsStudent: {
-                      is: {
+                      some: {
                         status: "APPROVED",
                       },
                     },
