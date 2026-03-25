@@ -357,40 +357,29 @@ const AnimatedBanner = () => {
         <div className="absolute top-1/2 -left-20 h-60 w-60 rounded-full bg-emerald-500/5 blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
       </div>
 
-      <div className="relative z-10 grid gap-8 p-8 md:grid-cols-2 md:items-center md:p-12">
+      <div className="relative z-10 space-y-6 p-8 md:p-12">
         <div className="space-y-4">
-          <PremiumBadge />
+          <p className="text-xs uppercase tracking-[0.45em] text-blue-200">Student Workspace</p>
           <h3 className="text-3xl font-bold leading-tight md:text-4xl transition-all duration-500">
-            <GradientText className="block">Self-Paced Agile</GradientText>
-            Virtual Certifications
+            Stay on track and take action.
           </h3>
-          <p className="text-lg text-blue-100 transition-all duration-500">
-            Earn industry-recognized credentials from expert-led sessions at your own pace.
+          <p className="text-lg text-blue-100 transition-all duration-500 max-w-2xl">
+            Continue your courses or follow up on your applications without searching through menus.
           </p>
-          <ul className="space-y-3 pt-2">
-            {["Agile certification prep", "Industry recognized credentials", "Expert-led sessions"].map((item, i) => (
-              <li key={i} className="flex items-center gap-3 text-blue-100 transition-all duration-300 hover:translate-x-3 group cursor-pointer">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400/40 to-cyan-400/20 transition-all duration-300 group-hover:scale-110 group-hover:from-cyan-400/60 group-hover:to-cyan-400/40">
-                  <span className="text-sm font-bold text-cyan-300">✓</span>
-                </div>
-                {item}
-              </li>
-            ))}
-          </ul>
         </div>
 
-        <div className="flex flex-col items-start gap-4 md:items-end">
-          <div className="rounded-2xl bg-white/10 p-6 backdrop-blur-md border border-white/20 transition-all duration-300 hover:bg-white/20 hover:border-white/40 hover:scale-105 group cursor-pointer">
-            <p className="text-sm font-semibold uppercase tracking-widest text-cyan-300 mb-2 transition-colors duration-300 group-hover:text-cyan-200">Get in Touch</p>
-            <p className="text-2xl font-bold mb-1 group-hover:text-cyan-50 transition-colors duration-300">+234 803 655 5555</p>
-            <p className="text-sm text-blue-200 group-hover:text-blue-100 transition-colors duration-300">CYBSECURITY@FINBERSGROUP.COM</p>
-          </div>
-          
-          <RippleButton asChild className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all px-6 py-2 rounded-lg font-medium">
+        <div className="flex flex-wrap gap-3">
+          <RippleButton asChild className="bg-slate-800 text-white hover:bg-slate-700 shadow-lg hover:shadow-xl transition-all px-5 py-2.5 rounded-full font-medium text-sm">
             <Link href="/dashboard/courses" className="gap-2 flex items-center">
-              Explore Certifications <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              Continue learning <ArrowRight className="h-4 w-4" />
             </Link>
           </RippleButton>
+          <Button asChild variant="secondary" className="rounded-full text-slate-700 border-slate-300 hover:bg-slate-100">
+            <Link href="/dashboard/courses">Explore beginner tracks</Link>
+          </Button>
+          <Button asChild variant="secondary" className="rounded-full text-slate-700 border-slate-300 hover:bg-slate-100">
+            <Link href="/dashboard/jobs">Review applications</Link>
+          </Button>
         </div>
       </div>
     </div>
