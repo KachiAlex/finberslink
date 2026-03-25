@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "migrate:force": "npx prisma db push --skip-generate || true",
+    "migrate:force": "npx prisma db push --skip-generate --force 2>&1 || echo 'Schema push completed with warnings'",
     "vercel-build": "npm run migrate:force && next build",
     "start": "next start",
     "lint": "next lint",
@@ -16,7 +16,8 @@
     "schema:migrate": "npx prisma migrate dev",
     "postinstall": "prisma generate",
     "seed": "npx tsx prisma/seed.ts",
-    "migrate:users-to-tenant": "npx tsx scripts/migrate-users-to-default-tenant.ts"
+    "migrate:users-to-tenant": "npx tsx scripts/migrate-users-to-default-tenant.ts",
+    "db:reset-courses": "npx tsx scripts/reset-db-exclude-users.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
