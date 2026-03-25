@@ -402,6 +402,42 @@ export async function submitTutorCourse(courseId: string, tutorId: string) {
   });
 }
 
+export async function listTutorCourses(tutorId: string) {
+  const courses = await prisma.course.findMany({
+    where: { instructorId: tutorId },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      tagline: true,
+      category: true,
+      level: true,
+      approvalStatus: true,
+      tutorEditingLocked: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: {
+        select: { enrollments: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return courses.map((course) => ({
+    id: course.id,
+    slug: course.slug,
+    title: course.title,
+    tagline: course.tagline,
+    category: course.category,
+    level: course.level,
+    approvalStatus: course.approvalStatus,
+    tutorEditingLocked: course.tutorEditingLocked,
+    createdAt: course.createdAt,
+    updatedAt: course.updatedAt,
+    enrollmentCount: course._count.enrollments,
+  }));
+}
+
 export async function getTutorCourseDraft(tutorId: string, courseId?: string | null) {
   const course = await prisma.course.findFirst({
     where: courseId
