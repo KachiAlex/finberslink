@@ -47,7 +47,28 @@ export default async function TutorLayout({
           </div>
         </div>
       </header>
-      <main>{children}</main>
+
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Sidebar */}
+          <aside className="hidden md:block md:col-span-1">
+            <nav className="sticky top-20 space-y-3 rounded-lg border border-slate-100 bg-white p-4">
+              <div className="mb-2 px-1 text-xs uppercase tracking-wide text-slate-500">Workspace</div>
+              <Link href="/tutor" className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Overview</Link>
+              <Link href="/tutor/courses" className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Courses</Link>
+              <Link href="/tutor/exams" className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Exams</Link>
+              <Link href="/tutor/forums" className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Forums</Link>
+              <Link href="/tutor/messages" className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Messages</Link>
+              <Link href="/tutor/analytics" className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Analytics</Link>
+            </nav>
+          </aside>
+
+          {/* Main content */}
+          <section className="md:col-span-3">
+            {children}
+          </section>
+        </div>
+      </main>
     </div>
   );
 }
