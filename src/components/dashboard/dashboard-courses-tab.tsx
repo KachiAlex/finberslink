@@ -353,13 +353,11 @@ export function DashboardCoursesTab({ courses, loading = false }: DashboardCours
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-2">
-                        {course.slug && (
-                          <Button asChild size="sm" className="flex-1 rounded-lg">
-                            <Link href={`/courses/${course.slug}`}>
-                              {progress >= 100 ? "Review" : "Continue"}
-                            </Link>
-                          </Button>
-                        )}
+                        <Button asChild size="sm" className="flex-1 rounded-lg">
+                          <Link href={`/courses/${course.id}`}>
+                            {progress >= 100 ? "Review" : "Continue"}
+                          </Link>
+                        </Button>
                         <Button asChild variant="outline" size="sm" className="flex-1 rounded-lg">
                           <Link href="/dashboard/courses">Details</Link>
                         </Button>

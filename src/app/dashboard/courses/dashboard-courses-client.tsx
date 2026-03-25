@@ -433,7 +433,7 @@ export function DashboardCoursesClient({
                   {/* Action Buttons */}
                   <div className="flex gap-2">
                     <Button asChild className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" size="sm">
-                      <Link href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}>
+                      <Link href={`/courses/${enrollment.course.id}`}>
                         Continue
                       </Link>
                     </Button>
@@ -602,7 +602,7 @@ export function DashboardCoursesClient({
                       <Link
                         aria-disabled={enrollment.status !== "ACTIVE"}
                         tabIndex={enrollment.status !== "ACTIVE" ? -1 : 0}
-                        href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}
+                        href={`/courses/${enrollment.course.id}`}
                       >
                         {enrollment.status === "COMPLETED" ? "Review" : "Continue"}
                       </Link>
