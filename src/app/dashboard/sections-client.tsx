@@ -195,6 +195,10 @@ export function DashboardSectionsClient() {
     } application${applicationTotal === 1 ? "" : "s"} in motion.`;
   }, [data, loading]);
 
+  // Overview section - Your current status
+  const overviewTitle = "Your current status.";
+  const overviewLabel = "OVERVIEW";
+
   const metrics = useMemo<Metric[]>(
     () => {
       if (!summary) {
@@ -689,6 +693,14 @@ export function DashboardSectionsClient() {
 
   return (
     <div className="space-y-8">
+      {/* OVERVIEW SECTION */}
+      <div className="space-y-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.45em] text-slate-500">{overviewLabel}</p>
+          <h2 className="text-3xl font-bold text-slate-900 mt-2">{overviewTitle}</h2>
+        </div>
+      </div>
+
       {/* COURSES SECTION */}
       <div>
         <DashboardCoursesTab 
