@@ -706,58 +706,9 @@ export function DashboardSectionsClient() {
         />
       </div>
 
-      {/* JOBS SECTION */}
-      <div className="space-y-6">
-        {/* Job Recommendations */}
-        {data && data.recommended.length > 0 && (
-          <GlassCard className="space-y-4 p-6">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Opportunities</p>
-              <h3 className="text-lg font-bold text-slate-900 mt-1">Matching opportunities</h3>
-              <p className="text-sm text-slate-600 mt-1">Roles tailored to your profile and skills.</p>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              {data.recommended.slice(0, 4).map((job) => (
-                <div
-                  key={job.id}
-                  className="rounded-lg border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4 hover:border-blue-200 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-start gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-blue-50">
-                      <Briefcase className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-slate-900 line-clamp-1">{job.title}</h4>
-                      <p className="text-xs text-slate-600 line-clamp-1 mt-0.5">{job.company}</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500 mb-3">{job.location || job.remoteOption || "Remote friendly"}</p>
-                  <Button asChild size="sm" className="w-full rounded-lg bg-blue-600 hover:bg-blue-700">
-                    <Link href={`/jobs/${job.slug}`}>View & Apply</Link>
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
-        )}
+      {/* JOBS SECTION (removed matching opportunities & applications per request) */}
 
-        {/* Active Applications Section */}
-        <GlassCard className="space-y-4 p-6">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-medium">Pipeline</p>
-            <h3 className="text-lg font-bold text-slate-900 mt-1">Your applications</h3>
-            <p className="text-sm text-slate-600 mt-1">Track where you are in the hiring process.</p>
-          </div>
-          {renderApplicationsInJobsTab()}
-        </GlassCard>
-      </div>
-
-      {/* RESUMES SECTION */}
-      <div>
-        <GlassCard className="p-6">
-          {renderResumesTab()}
-        </GlassCard>
-      </div>
+      {/* RESUMES SECTION removed per request */}
     </div>
   );
 }
