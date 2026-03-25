@@ -333,9 +333,17 @@ export async function getSuggestedKeywords(userId: string) {
   // Collect and deduplicate keywords
   const keywordSet = new Set<string>();
 
-  [...savedJobs, ...applications].forEach((item) => {
-    if (item.job.tags) {
-      item.job.tags.forEach((tag) => {
+  savedJobs.forEach((item) => {
+    if (item.jobOpportunity.tags) {
+      item.jobOpportunity.tags.forEach((tag) => {
+        keywordSet.add(tag.toLowerCase());
+      });
+    }
+  });
+
+  applications.forEach((item) => {
+    if (item.opportunity.tags) {
+      item.opportunity.tags.forEach((tag: string) => {
         keywordSet.add(tag.toLowerCase());
       });
     }

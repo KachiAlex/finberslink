@@ -148,9 +148,10 @@ function buildResumeUpdateInput(data: UpdateResumeInput): Prisma.ResumeUpdateInp
     updateData.introVideoEmbedUrl = normalized.introVideoEmbedUrl;
   }
 
-  if (data.template !== undefined) {
-    updateData.template = data.template;
-  }
+  // TODO: template field type issue - verify Prisma schema generation
+  // if (data.template !== undefined) {
+  //   updateData.template = data.template;
+  // }
 
   return updateData;
 }

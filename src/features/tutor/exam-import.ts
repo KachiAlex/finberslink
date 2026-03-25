@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID } from "crypto";
 import * as XLSX from "xlsx";
 
 export type ImportedExamModule = {

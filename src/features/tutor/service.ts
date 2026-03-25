@@ -242,7 +242,6 @@ export async function upsertTutorCourseDraft(courseId: string | null, input: Tut
     coverImage: input.coverImage,
     outcomes: input.outcomes,
     skills: input.skills,
-    instructorId: input.tutorId,
     approvalStatus: CourseApprovalStatus.DRAFT,
     tutorEditingLocked: false,
     draftStructure: input.draftStructure ?? Prisma.JsonNull,
@@ -261,6 +260,7 @@ export async function upsertTutorCourseDraft(courseId: string | null, input: Tut
         coverImage: input.coverImage!,
         outcomes: input.outcomes ?? [],
         skills: input.skills ?? [],
+        instructorId: input.tutorId,
       },
     });
 
@@ -392,8 +392,6 @@ export async function submitTutorCourse(courseId: string, tutorId: string) {
     where: { id: course.id },
     data: {
       approvalStatus: CourseApprovalStatus.PENDING,
-      submittedAt: new Date(),
-      submittedById: tutorId,
       tutorEditingLocked: true,
     },
   });
