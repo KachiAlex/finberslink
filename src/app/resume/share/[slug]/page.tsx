@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getResumeByShareSlug, incrementResumeViewCount } from "@/features/resume/service";
-import { ResumePublicView } from "@/components/resume/resume-public-view";
+import { ResumeTemplateWrapper } from "@/components/resume/resume-template-wrapper";
 
 export default async function ResumeSharePage({ params }: { params: { slug: string } }) {
   const { slug } = params;
@@ -14,5 +14,5 @@ export default async function ResumeSharePage({ params }: { params: { slug: stri
     await incrementResumeViewCount(resume.id);
   }
 
-  return <ResumePublicView resume={resume} />;
+  return <ResumeTemplateWrapper template={resume.template} resume={resume} />;
 }

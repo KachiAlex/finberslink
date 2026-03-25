@@ -53,6 +53,7 @@ export interface CreateResumeInput {
   visibility?: ResumeVisibility;
   introVideoUrl?: string | null;
   shareSlug?: string;
+  template?: string;
 }
 
 export async function updateResumeSkillSnapshot(
@@ -145,6 +146,10 @@ function buildResumeUpdateInput(data: UpdateResumeInput): Prisma.ResumeUpdateInp
     const normalized = normalizeIntroVideo(data.introVideoUrl);
     updateData.introVideoUrl = normalized.introVideoUrl;
     updateData.introVideoEmbedUrl = normalized.introVideoEmbedUrl;
+  }
+
+  if (data.template !== undefined) {
+    updateData.template = data.template;
   }
 
   return updateData;

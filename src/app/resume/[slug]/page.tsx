@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getResumeBySlug } from "@/features/resume/service";
-import { ResumePublicView } from "@/components/resume/resume-public-view";
+import { ResumeTemplateWrapper } from "@/components/resume/resume-template-wrapper";
 
 export default async function ResumePublicPage({ params }: { params: { slug: string } }) {
   const { slug } = params;
@@ -10,5 +10,5 @@ export default async function ResumePublicPage({ params }: { params: { slug: str
     notFound();
   }
 
-  return <ResumePublicView resume={resume} />;
+  return <ResumeTemplateWrapper template={resume.template} resume={resume} />;
 }

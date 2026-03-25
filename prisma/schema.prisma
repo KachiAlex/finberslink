@@ -298,6 +298,7 @@ model Resume {
   skillAnalysisSnapshot Json?
   introVideoUrl       String?
   introVideoEmbedUrl  String?
+  template            String             @default("modern")
   jobApplications     JobApplication[]
   user                User               @relation(fields: [userId], references: [id])
   experiences         ResumeExperience[]
