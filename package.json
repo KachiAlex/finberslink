@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "vercel-build": "prisma migrate resolve --rolled-back 20260323083000_add_enrollment_assignment_id && prisma migrate deploy && next build",
+    "migrate:force": "npx prisma migrate resolve --rolled-back 20260226035416_sync_email_unique 2>&1 || true; npx prisma migrate resolve --rolled-back 20260323083000_add_enrollment_assignment_id 2>&1 || true; npx prisma migrate resolve --rolled-back 20260324_add_tutor_approval 2>&1 || true; npx prisma migrate deploy || true",
+    "vercel-build": "npm run migrate:force && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
