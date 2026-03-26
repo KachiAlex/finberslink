@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "Resume" ADD COLUMN "template" STRING NOT NULL DEFAULT 'modern';
+ALTER TABLE "Resume" ADD COLUMN IF NOT EXISTS "template" text NOT NULL DEFAULT 'modern';
