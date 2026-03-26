@@ -87,7 +87,7 @@ export default async function DashboardResumesPage() {
                     className="flex-1"
                     asChild
                   >
-                    <Link href={`/resume/${resume.slug}/preview`}>
+                    <Link href={`/resume/share/${resume.shareSlug}`} target="_blank" rel="noopener noreferrer">
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Link>

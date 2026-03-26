@@ -1,4 +1,53 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import type { Prisma } from "@prisma/client";
+import type { ResumeVisibility } from "@prisma/client";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  createResumeExperience,
+  createResumeProject,
+  getResumeBySlug,
+  regenerateResumeShareSlug,
+  updateResume,
+  updateResumeExperience,
+  updateResumeSkillSnapshot,
+} from "@/features/resume/service";
+import { ResumeExperienceSchema, ResumeProjectSchema } from "@/features/resume/schemas";
+import {
+  analyzeATSMatch,
+  analyzeSkills,
+  generateBulletPoints,
+  generateCoverLetter,
+  optimizeResumeSummary,
+} from "@/lib/ai/resume";
+import { verifyToken } from "@/lib/auth/jwt";
+import { invalidateDashboardInsights } from "@/features/dashboard/service";
+import type {
+  ATSActionState,
+  BulletActionState,
+  CoverLetterActionState,
+  SummaryActionState,
+  SkillActionState,
+} from "./ai-types";
+import {
+  SummaryAIForm,
+  ExperienceBulletsAIForm,
+  SkillAnalysisForm,
+  ATSAnalysisForm,
+  CoverLetterAIForm,
+} from "./ai-forms";
+import { ShareLinkCopy } from "./share-link";
+import { NewExperienceForm, NewProjectForm } from "./forms";
+import { ResumeTemplateWrapper } from "@/components/resume/resume-template-wrapper";
+import { ResumeTemplateSelector } from "@/components/resume/resume-template-selector";
 
 // Add Experience Action
 async function addExperienceAction(formData: FormData) {
@@ -614,15 +663,317 @@ export default async function ResumeEditPage({
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
-        <header>
-          <h1 className="text-3xl font-semibold text-slate-900">Edit Resume</h1>
-          <p className="text-slate-600">Update your resume details and sections.</p>
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
+        <header className="mb-8">
+          <h1 className="text-3xl font-semibold text-slate-900">Resume Studio</h1>
+          <p className="text-slate-600">Build and preview your resume in real-time</p>
         </header>
 
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          <Card className="border border-slate-200/70 bg-white/95">
-            <CardHeader>
+        {/* Main Grid Layout */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+          {/* Left Panel: Forms */}
+          <div className="space-y-6">
+            {/* Basic Info Card */}
+            <Card className="border border-slate-200/70 bg-white/95">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-slate-900">Resume Title</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form className="space-y-4" action={updateResumeAction}>
+                  <input type="hidden" name="slug" value={(resume as any).slug} />
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input id="title" name="title" defaultValue={(resume as any).title} required />
+                  </div>
+                  <Button type="submit">Save</Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Summary Card */}
+            <Card className="border border-slate-200/70 bg-white/95">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-slate-900">Professional Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form className="space-y-4" action={updateResumeAction}>
+                  <input type="hidden" name="slug" value={(resume as any).slug} />
+                  <Textarea 
+                    name="summary" 
+                    defaultValue={(resume as any).summary ?? ""} 
+                    rows={4}
+                    placeholder="Write a brief summary of your professional background..."
+                  />
+                  <div className="flex gap-2">
+                    <Button type="submit" variant="outline">Save</Button>
+                    <SummaryAIForm
+                      slug={(resume as any).slug}
+                      currentSummary={(resume as any).summary ?? ""}
+                      action={optimizeSummaryAction}
+                    />
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Intro Video Card */}
+            <Card className="border border-slate-200/70 bg-white/95">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-slate-900">Intro Video (optional)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form className="space-y-4" action={updateResumeAction}>
+                  <input type="hidden" name="slug" value={(resume as any).slug} />
+                  <div className="space-y-2">
+                    <Label htmlFor="introVideoUrl">Video URL</Label>
+                    <Input
+                      id="introVideoUrl"
+                      name="introVideoUrl"
+                      placeholder="https://youtu.be/..."
+                      defaultValue={(resume as any).introVideoUrl ?? ""}
+                    />
+                    <p className="text-xs text-slate-500">
+                      Supports YouTube, Vimeo, Google Drive, and Cloudinary links.
+                    </p>
+                  </div>
+                  {(resume as any).introVideoEmbedUrl ? (
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-wide text-slate-500">
+                        Preview
+                      </Label>
+                      <div className="aspect-video overflow-hidden rounded-xl border border-slate-200">
+                        <iframe
+                          title="Intro video preview"
+                          src={(resume as any).introVideoEmbedUrl}
+                          className="h-full w-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                  <Button type="submit">Save</Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Experience Section */}
+            <Card className="border border-slate-200/70 bg-white/95">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-slate-900">Experience</CardTitle>
+                <CardDescription>Add your work experience</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {(resume as any).experiences.length > 0 ? (
+                  <div className="space-y-4 mb-6">
+                    {(resume as any).experiences.map((experience: any) => (
+                      <div key={experience.id} className="border rounded-lg p-4 bg-slate-50">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h4 className="font-semibold">{experience.role}</h4>
+                            <p className="text-sm text-slate-600">{experience.company}</p>
+                            <p className="text-xs text-slate-500">
+                              {new Date(experience.startDate).toLocaleDateString()} - {experience.endDate ? new Date(experience.endDate).toLocaleDateString() : "Present"}
+                            </p>
+                          </div>
+                        </div>
+                        <ul className="text-sm text-slate-700 space-y-1">
+                          {experience.achievements.map((achievement: any, idx: number) => (
+                            <li key={idx} className="flex items-start">
+                              <span className="text-blue-500 mr-2">•</span>
+                              {achievement}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 mb-4 text-sm">No experience added yet.</p>
+                )}
+                <div className="space-y-4 border-t pt-4">
+                  <NewExperienceForm
+                    slug={(resume as any).slug}
+                    action={addExperienceAction}
+                    industryHint={(resume as any).targetIndustry ?? null}
+                    defaultRole={(resume as any).targetRoles?.[0] ?? null}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Skills Section */}
+            <Card className="border border-slate-200/70 bg-white/95">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-slate-900">Skills</CardTitle>
+                <CardDescription>Your technical and soft skills</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {(resume as any).skills.map((skill: any) => (
+                    <Badge key={skill} variant="secondary">
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+                <div className="border-t pt-4">
+                  <SkillAnalysisForm
+                    slug={(resume as any).slug}
+                    action={analyzeSkillsAction}
+                    onApply={applySkillSelectionAction}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Projects Section */}
+            <Card className="border border-slate-200/70 bg-white/95">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-slate-900">Projects</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(resume as any).projects.length > 0 ? (
+                  <div className="space-y-4 mb-6">
+                    {(resume as any).projects.map((project: any) => (
+                      <div key={project.id} className="border rounded-lg p-4 bg-slate-50">
+                        <h4 className="font-semibold mb-2">{project.name}</h4>
+                        <p className="text-sm text-slate-600 mb-2">{project.summary}</p>
+                        {project.techStack.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {project.techStack.map((tech: any) => (
+                              <Badge key={tech} variant="outline" className="text-xs">
+                                {tech}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 mb-4 text-sm">No projects added yet.</p>
+                )}
+                <div className="border-t pt-4">
+                  <NewProjectForm slug={(resume as any).slug} action={addProjectAction} />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Job Targeting Section */}
+            <Card className="border border-slate-200/70 bg-white/95">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-slate-900">Job Matching</CardTitle>
+                <CardDescription>ATS check & cover letter generation</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <section className="space-y-3">
+                  <p className="text-sm font-semibold text-slate-900">ATS Alignment Check</p>
+                  <ATSAnalysisForm slug={(resume as any).slug} action={atsAnalysisAction} />
+                </section>
+                <section className="space-y-3 border-t pt-4">
+                  <p className="text-sm font-semibold text-slate-900">Generate Cover Letter</p>
+                  <CoverLetterAIForm slug={(resume as any).slug} action={coverLetterAction} />
+                </section>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Panel: Live Preview */}
+          <div className="sticky top-8 h-[calc(100vh-100px)] overflow-y-auto bg-slate-900 rounded-lg shadow-xl border border-slate-800 hidden lg:block">
+            <div className="h-full overflow-auto">
+              <ResumeTemplateWrapper
+                template={(resume as any).template || "modern"}
+                resume={resume as any}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Publish & Share Footer */}
+        <Card className="border border-indigo-200 bg-white/95 mt-8">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-slate-900">Publish & Share</CardTitle>
+            <CardDescription>Control visibility and share your resume</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Visibility Options */}
+              <form action={updateVisibilityAction} className="space-y-4">
+                <input type="hidden" name="slug" value={(resume as any).slug} />
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Visibility</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["PRIVATE", "NETWORK", "PUBLIC"] as ResumeVisibility[]).map((visibilityOption) => (
+                      <label
+                        key={visibilityOption}
+                        className={`cursor-pointer rounded-lg border px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide ${
+                          (resume as any).visibility === visibilityOption
+                            ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                            : "border-slate-200 hover:border-indigo-200"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="visibility"
+                          value={visibilityOption}
+                          defaultChecked={(resume as any).visibility === visibilityOption}
+                          className="sr-only"
+                        />
+                        {visibilityOption.toLowerCase()}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <Button type="submit" variant="outline" size="sm">
+                  Update Visibility
+                </Button>
+              </form>
+
+              {/* Share Link */}
+              <div className="space-y-2 border-t pt-4">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Shareable Link
+                </Label>
+                <ShareLinkCopy href={shareUrl} />
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span>ID: {(resume as any).shareSlug ?? "pending"}</span>
+                  <form action={regenerateShareSlugAction} className="inline">
+                    <input type="hidden" name="slug" value={(resume as any).slug} />
+                    <Button type="submit" variant="ghost" size="sm" className="px-2 text-xs" >
+                      Refresh
+                    </Button>
+                  </form>
+                </div>
+              </div>
+
+              {/* Template Selector */}
+              <div className="border-t pt-4">
+                <Label className="text-sm font-semibold mb-3 block">Template</Label>
+                <ResumeTemplateSelector
+                  currentTemplate={(resume as any).template}
+                  onSelect={async (templateId: string) => {
+                    "use server";
+                    await updateResume((resume as any).slug, { template: templateId });
+                  }}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-2 border-t pt-4">
+                <Button asChild variant="secondary" className="w-full">
+                  <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                    Open Public View
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  );
+}
               <CardTitle className="text-lg font-semibold text-slate-900">Basic Info</CardTitle>
               <CardDescription>Title and summary</CardDescription>
             </CardHeader>
@@ -683,8 +1034,10 @@ export default async function ResumeEditPage({
       currentSummary={(resume as any).summary ?? ""}
       action={optimizeSummaryAction}
     />
-    <Button variant="outline" className="w-full">
-      Preview Public View
+    <Button variant="outline" className="w-full" asChild>
+      <Link href={`/resume/share/${(resume as any).shareSlug}`} target="_blank" rel="noopener noreferrer">
+        Preview Public View
+      </Link>
     </Button>
   </CardContent>
 </Card>

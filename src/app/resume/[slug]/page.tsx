@@ -1,14 +1,18 @@
-import { notFound } from "next/navigation";
-
+import { redirect, notFound } from "next/navigation";
 import { getResumeBySlug } from "@/features/resume/service";
-import { ResumeTemplateWrapper } from "@/components/resume/resume-template-wrapper";
 
 export default async function ResumePublicPage({ params }: any) {
   const { slug } = params as { slug: string };
   const resume = await getResumeBySlug(slug);
-  if (!resume || resume.visibility !== "PUBLIC") {
+  
+  if (!resume) {
     notFound();
   }
 
-  return <ResumeTemplateWrapper template={resume.template} resume={resume} />;
+  // Redirect all resume view requests to the share link
+  if (resume.shareSlug) {
+    redirect(`/resume/share/${resume.shareSlug}`);
+  }
+
+  notFound();
 }

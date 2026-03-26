@@ -454,7 +454,11 @@ export function StudentDashboard(_props: StudentDashboardProps) {
     const fetchStats = async () => {
       try {
         const response = await fetch("/api/dashboard/sections");
-        if (!response.ok) throw new Error("Failed to fetch stats");
+        if (!response.ok) {
+          console.error("Failed to fetch stats:", response.status);
+          setIsLoading(false);
+          return;
+        }
         
         const { data } = await response.json();
         

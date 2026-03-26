@@ -25,15 +25,24 @@ export default async function DashboardLayout({
     failureMode: "error",
   });
 
-  const unreadCount = await getUnreadCount(session.sub);
+  let unreadCount = 0;
+  try {
+    unreadCount = await getUnreadCount(session.sub);
+  } catch (error) {
+    console.error("Failed to fetch unread count:", error);
+  }
   
   // Fetch user data for personalized greeting
-  const user = await prisma.user.findUnique({
-    where: { id: session.sub },
-    select: { firstName: true, lastName: true }
-  }).catch(() => null);
-  
-  const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : null;
+  let userName: string | null = null;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.sub },
+      select: { firstName: true, lastName: true }
+    });
+    userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : null;
+  } catch (error) {
+    console.error("Failed to fetch user data:", error);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">

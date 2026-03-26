@@ -149,12 +149,20 @@ export function DashboardSectionsClient() {
     const loadSections = async () => {
       try {
         const res = await fetch("/api/dashboard/sections", { cache: "no-store" });
+        if (!res.ok) {
+          console.error("Failed to fetch dashboard sections:", res.status);
+          setSectionResponse(null);
+          return;
+        }
         const payload = (await res.json()) as SectionResponse;
         if (isMounted) {
           setSectionResponse(payload);
         }
       } catch (error) {
         console.error("Dashboard sections fetch failed", error);
+        if (isMounted) {
+          setSectionResponse(null);
+        }
       } finally {
         if (isMounted) {
           setLoading(false);

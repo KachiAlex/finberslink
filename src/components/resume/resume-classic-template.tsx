@@ -37,22 +37,20 @@ export function ResumeClassicTemplate({ resume }: ResumeTemplateProps) {
 
   return (
     <main className="min-h-screen bg-white">
-      <div className="mx-auto w-full max-w-3xl px-6 py-12">
+      <div className="mx-auto w-full max-w-4xl px-8 py-12">
         {/* Header */}
-        <div className="border-b-2 border-slate-800 pb-6 mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">{resume.title}</h1>
-          {resume.personaName && (
-            <p className="text-sm text-slate-600 mt-1">{resume.personaName}</p>
-          )}
-          {resume.location && (
-            <p className="text-sm text-slate-600">{resume.location}</p>
-          )}
+        <div className="border-b-2 border-slate-950 pb-6 mb-8">
+          <h1 className="text-3xl font-bold text-slate-950">{resume.title}</h1>
+          <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-600">
+            {resume.personaName && <span>{resume.personaName}</span>}
+            {resume.location && <span>{resume.location}</span>}
+          </div>
         </div>
 
         {/* Professional Summary */}
         {resume.summary && (
-          <div className="mb-6">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">
+          <div className="mb-8">
+            <h2 className="text-sm font-bold text-slate-950 uppercase tracking-wider mb-3">
               Professional Summary
             </h2>
             <p className="text-sm text-slate-700 leading-relaxed">{resume.summary}</p>
@@ -61,8 +59,8 @@ export function ResumeClassicTemplate({ resume }: ResumeTemplateProps) {
 
         {/* Skills */}
         {skills.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">
+          <div className="mb-8">
+            <h2 className="text-sm font-bold text-slate-950 uppercase tracking-wider mb-3">
               Skills
             </h2>
             <p className="text-sm text-slate-700">
@@ -73,11 +71,11 @@ export function ResumeClassicTemplate({ resume }: ResumeTemplateProps) {
 
         {/* Experience */}
         {experiences.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">
+          <div className="mb-8">
+            <h2 className="text-sm font-bold text-slate-950 uppercase tracking-wider mb-4">
               Professional Experience
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-5">
               {experiences.map((exp) => {
                 const start = formatDate(exp.startDate);
                 const end = formatDate(exp.endDate) ?? "Present";
@@ -86,20 +84,23 @@ export function ResumeClassicTemplate({ resume }: ResumeTemplateProps) {
                   <div key={exp.id}>
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-bold text-slate-900">{exp.role}</p>
+                        <p className="font-bold text-slate-950">{exp.role}</p>
                         <p className="text-sm text-slate-700">{exp.company}</p>
                       </div>
-                      <span className="text-xs text-slate-600 whitespace-nowrap ml-4">
+                      <span className="text-xs text-slate-600 whitespace-nowrap ml-4 font-semibold">
                         {start} – {end}
                       </span>
                     </div>
                     {exp.description && (
-                      <p className="text-sm text-slate-700 mt-1">{exp.description}</p>
+                      <p className="text-sm text-slate-700 mt-2">{exp.description}</p>
                     )}
                     {achievements.length > 0 && (
-                      <ul className="mt-2 text-sm text-slate-700 list-disc list-inside">
+                      <ul className="mt-2 text-sm text-slate-700">
                         {achievements.map((achievement, i) => (
-                          <li key={`${exp.id}-achievement-${i}`}>{achievement}</li>
+                          <li key={`${exp.id}-achievement-${i}`} className="flex gap-2">
+                            <span>•</span>
+                            <span>{achievement}</span>
+                          </li>
                         ))}
                       </ul>
                     )}
@@ -112,25 +113,25 @@ export function ResumeClassicTemplate({ resume }: ResumeTemplateProps) {
 
         {/* Projects */}
         {projects.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">
+          <div className="mb-8">
+            <h2 className="text-sm font-bold text-slate-950 uppercase tracking-wider mb-4">
               Projects
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-5">
               {projects.map((project) => (
                 <div key={project.id}>
-                  <p className="font-bold text-slate-900">{project.name}</p>
+                  <p className="font-bold text-slate-950">{project.name}</p>
                   {project.summary && (
                     <p className="text-sm text-slate-700 mt-1">{project.summary}</p>
-                  )}
-                  {(project.techStack ?? []).length > 0 && (
-                    <p className="text-sm text-slate-700 mt-1">
-                      Technologies: {(project.techStack ?? []).join(", ")}
-                    </p>
                   )}
                   {project.link && (
                     <p className="text-sm text-slate-700 mt-1">
                       {project.link}
+                    </p>
+                  )}
+                  {(project.techStack ?? []).length > 0 && (
+                    <p className="text-sm text-slate-700 mt-1">
+                      Tech: {(project.techStack ?? []).join(", ")}
                     </p>
                   )}
                 </div>
@@ -138,6 +139,24 @@ export function ResumeClassicTemplate({ resume }: ResumeTemplateProps) {
             </div>
           </div>
         )}
+
+        {/* Intro Video */}
+        {resume.introVideoEmbedUrl ? (
+          <div>
+            <h2 className="text-sm font-bold text-slate-950 uppercase tracking-wider mb-3">
+              Introduction Video
+            </h2>
+            <div className="aspect-video overflow-hidden rounded border border-slate-300">
+              <iframe
+                title="Candidate introduction video"
+                src={resume.introVideoEmbedUrl}
+                className="h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
     </main>
   );

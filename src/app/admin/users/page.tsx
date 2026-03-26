@@ -120,7 +120,7 @@ export default async function AdminUsersPage(props: any) {
     const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
     await createTenantInvite({
-      tenantId: admin.tenantId,
+      tenantId: admin.tenantId!,
       email,
       role,
       createdById: admin.id,

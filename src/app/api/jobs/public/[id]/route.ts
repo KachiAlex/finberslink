@@ -11,7 +11,7 @@ const publicRateLimit = createRateLimit(rateLimitPresets.public);
  * GET /api/jobs/public/[id]
  * Get detailed job information (public, no auth required)
  */
-export const GET = publicRateLimit(async (request: NextRequest, context: any) => {
+export const GET = publicRateLimit(async (request: NextRequest) => {
   try {
     const rawParams = context?.params;
     const params = rawParams && typeof rawParams.then === "function" ? await rawParams : rawParams ?? {};

@@ -818,6 +818,20 @@ export async function getUserById(userId: string) {
           resumes: true,
         },
       },
+      enrollments: {
+        select: {
+          id: true,
+          enrolledAt: true,
+          course: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+        orderBy: { enrolledAt: "desc" },
+        take: 5,
+      },
       jobApplications: {
         select: {
           id: true,
