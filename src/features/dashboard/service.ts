@@ -370,19 +370,34 @@ export async function getDashboardInsights(userId: string) {
     skills: buildSkillInsights(resume ?? undefined),
   };
 
-  await prisma.dashboardInsight.upsert({
-    where: { userId },
-    update: {
-      focus: payload.focus as unknown as Prisma.InputJsonValue,
-      skills: payload.skills ? (payload.skills as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
-      refreshedAt: new Date(),
-    },
-    create: {
-      userId,
-      focus: payload.focus as unknown as Prisma.InputJsonValue,
-      skills: payload.skills ? (payload.skills as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
-    },
-  });
+  // Use a safer update-or-create pattern that doesn't rely on unique constraints
+  try {
+    const existing = await prisma.dashboardInsight.findFirst({
+      where: { userId },
+    });
+
+    if (existing) {
+      await prisma.dashboardInsight.update({
+        where: { id: existing.id },
+        data: {
+          focus: payload.focus as unknown as Prisma.InputJsonValue,
+          skills: payload.skills ? (payload.skills as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
+          refreshedAt: new Date(),
+        },
+      });
+    } else {
+      await prisma.dashboardInsight.create({
+        data: {
+          userId,
+          focus: payload.focus as unknown as Prisma.InputJsonValue,
+          skills: payload.skills ? (payload.skills as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
+        },
+      });
+    }
+  } catch (error) {
+    // Silently fail on insights - it's not critical
+    console.error("Failed to update dashboard insights:", error);
+  }
 
   return payload;
 }
