@@ -156,60 +156,7 @@ async function addProjectAction(formData: FormData) {
   revalidatePath(`/resume/${slug}/edit`);
 }
 
-// Local placeholder removed — using imported `NewProjectForm` from ./forms
-
-import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
-import type { Prisma } from "@prisma/client";
-
-import type { ResumeVisibility } from "@prisma/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { AIButton } from "@/components/ai/ai-button";
-import { BulletSuggestions } from "@/components/ai/bullet-suggestions";
-import { SkillAnalysis } from "@/components/ai/skill-analysis";
-import {
-  createResumeExperience,
-  createResumeProject,
-  getResumeBySlug,
-  regenerateResumeShareSlug,
-  updateResume,
-  updateResumeExperience,
-  updateResumeSkillSnapshot,
-} from "@/features/resume/service";
-import { ResumeExperienceSchema, ResumeProjectSchema } from "@/features/resume/schemas";
-import {
-  analyzeATSMatch,
-  analyzeSkills,
-  generateBulletPoints,
-  generateCoverLetter,
-  optimizeResumeSummary,
-} from "@/lib/ai/resume";
-import { verifyToken } from "@/lib/auth/jwt";
-import { invalidateDashboardInsights } from "@/features/dashboard/service";
-import type {
-  ATSActionState,
-  BulletActionState,
-  CoverLetterActionState,
-  ExperienceFormState,
-  ProjectFormState,
-  SkillActionState,
-  SummaryActionState,
-} from "./ai-types";
-import {
-  SummaryAIForm,
-  ExperienceBulletsAIForm,
-  SkillAnalysisForm,
-  ATSAnalysisForm,
-  CoverLetterAIForm,
-} from "./ai-forms";
-import { ShareLinkCopy } from "./share-link";
-import { NewExperienceForm, NewProjectForm } from "./forms";
-
+// Helper function
 async function requireUser() {
   const store = await cookies();
   const token = store.get("access_token")?.value;
