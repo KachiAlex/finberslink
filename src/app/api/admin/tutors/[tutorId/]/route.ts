@@ -7,10 +7,7 @@ import { prisma } from "@/lib/prisma";
  * GET /api/admin/tutors/[tutorId]
  * Get tutor details and approval status
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { tutorId: string } }
-) {
+export async function GET(request: NextRequest, context: any) {
   try {
     const accessToken = request.cookies.get("access_token")?.value;
     if (!accessToken) {
@@ -24,6 +21,9 @@ export async function GET(
         { status: 403 }
       );
     }
+
+    const rawParams = context?.params;
+    const params = await Promise.resolve(rawParams ?? {} as any);
 
     const tutor = await prisma.user.findUnique({
       where: { id: params.tutorId },
@@ -108,10 +108,7 @@ const UpdateApprovalSchema = z.object({
   notes: z.string().optional(),
 });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { tutorId: string } }
-) {
+export async function PATCH(request: NextRequest, context: any) {
   try {
     const accessToken = request.cookies.get("access_token")?.value;
     if (!accessToken) {
@@ -140,6 +137,9 @@ export async function PATCH(
     }
 
     const { status, notes } = parsed.data;
+
+    const rawParams = context?.params;
+    const params = await Promise.resolve(rawParams ?? {} as any);
 
     // Verify tutor exists
     const tutor = await prisma.user.findUnique({

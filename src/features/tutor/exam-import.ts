@@ -1,4 +1,5 @@
-import { randomUUID } from "crypto";
+// lightweight id generator used for imported exam modules (avoids Node crypto typings)
+const generateId = () => `imp_${Math.random().toString(36).slice(2,9)}`;
 import * as XLSX from "xlsx";
 
 export type ImportedExamModule = {
@@ -83,13 +84,13 @@ export function parseExamImport(buffer: ArrayBuffer): ExamImportResult {
     const resolved = resolveQuestionType(typeRaw);
 
     if (resolved === "UPLOAD") {
-      modules.push({ id: randomUUID(), type: "UPLOAD", prompt: prompt.trim() });
+      modules.push({ id: generateId(), type: "UPLOAD", prompt: prompt.trim() });
       return;
     }
 
     if (resolved === "SHORT_ANSWER") {
       const answer = normalizedRow.answer || normalizedRow.correctanswer || normalizedRow.answerkey || "";
-      modules.push({ id: randomUUID(), type: "SHORT_ANSWER", prompt: prompt.trim(), answer: answer.trim() || undefined });
+      modules.push({ id: generateId(), type: "SHORT_ANSWER", prompt: prompt.trim(), answer: answer.trim() || undefined });
       return;
     }
 
@@ -109,7 +110,7 @@ export function parseExamImport(buffer: ArrayBuffer): ExamImportResult {
       }
       const normalizedAnswer = ["true", "t", "yes"].includes(answerNormalized) ? "True" : "False";
       modules.push({
-        id: randomUUID(),
+        id: generateId(),
         type: "MCQ",
         prompt: prompt.trim(),
         choices: ["True", "False"],
@@ -141,7 +142,7 @@ export function parseExamImport(buffer: ArrayBuffer): ExamImportResult {
     }
 
     modules.push({
-      id: randomUUID(),
+      id: generateId(),
       type: "MCQ",
       prompt: prompt.trim(),
       choices: options,

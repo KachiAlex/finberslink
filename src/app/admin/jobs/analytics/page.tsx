@@ -26,9 +26,9 @@ export default async function JobAnalyticsPage() {
   // Application status breakdown
   const statusBreakdown = {
     SUBMITTED: allApplications.filter((application) => application.status === "SUBMITTED").length,
-    REVIEWING: allApplications.filter((application) => application.status === "REVIEWING").length,
+    IN_REVIEW: allApplications.filter((application) => application.status === "IN_REVIEW").length,
     INTERVIEW: allApplications.filter((application) => application.status === "INTERVIEW").length,
-    OFFER: allApplications.filter((application) => application.status === "OFFER").length,
+    OFFERED: allApplications.filter((application) => application.status === "OFFERED").length,
     REJECTED: allApplications.filter((application) => application.status === "REJECTED").length,
   } satisfies Record<JobApplicationStatus, number>;
 
@@ -101,9 +101,9 @@ export default async function JobAnalyticsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{statusBreakdown.REVIEWING}</div>
+              <div className="text-2xl font-bold">{statusBreakdown.IN_REVIEW}</div>
               <p className="text-xs text-gray-600 mt-1">
-                {totalApplications > 0 ? Math.round((statusBreakdown.REVIEWING / totalApplications) * 100) : 0}% of total
+                {totalApplications > 0 ? Math.round((statusBreakdown.IN_REVIEW / totalApplications) * 100) : 0}% of total
               </p>
             </CardContent>
           </Card>
@@ -116,9 +116,9 @@ export default async function JobAnalyticsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{statusBreakdown.OFFER}</div>
+              <div className="text-2xl font-bold">{statusBreakdown.OFFERED}</div>
               <p className="text-xs text-gray-600 mt-1">
-                {totalApplications > 0 ? Math.round((statusBreakdown.OFFER / totalApplications) * 100) : 0}% conversion
+                {totalApplications > 0 ? Math.round((statusBreakdown.OFFERED / totalApplications) * 100) : 0}% conversion
               </p>
             </CardContent>
           </Card>
@@ -138,9 +138,9 @@ export default async function JobAnalyticsPage() {
                 const percentage = totalApplications > 0 ? Math.round((count / totalApplications) * 100) : 0;
                 const statusColors = {
                   SUBMITTED: "bg-blue-100",
-                  REVIEWING: "bg-yellow-100",
+                  IN_REVIEW: "bg-yellow-100",
                   INTERVIEW: "bg-indigo-100",
-                  OFFER: "bg-green-100",
+                  OFFERED: "bg-green-100",
                   REJECTED: "bg-red-100",
                 };
 

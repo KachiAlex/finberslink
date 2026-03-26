@@ -22,12 +22,11 @@ const UpdateAlertSchema = z.object({
  * GET /api/jobs/alerts/[alertId]
  * Get a specific job alert with matching jobs
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { alertId: string } }
-) {
+export async function GET(request: NextRequest, context: any) {
   try {
     const session = requireAuth(request);
+    const rawParams = context?.params;
+    const params = (await Promise.resolve(rawParams ?? {})) as Record<string, string>;
     const alertId = params.alertId;
 
     if (!alertId) {
@@ -73,12 +72,11 @@ export async function GET(
  * PATCH /api/jobs/alerts/[alertId]
  * Update a job alert
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { alertId: string } }
-) {
+export async function PATCH(request: NextRequest, context: any) {
   try {
     const session = requireAuth(request);
+    const rawParams = context?.params;
+    const params = (await Promise.resolve(rawParams ?? {})) as Record<string, string>;
     const alertId = params.alertId;
 
     if (!alertId) {
@@ -120,12 +118,11 @@ export async function PATCH(
  * DELETE /api/jobs/alerts/[alertId]
  * Delete a job alert
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { alertId: string } }
-) {
+export async function DELETE(request: NextRequest, context: any) {
   try {
     const session = requireAuth(request);
+    const rawParams = context?.params;
+    const params = (await Promise.resolve(rawParams ?? {})) as Record<string, string>;
     const alertId = params.alertId;
 
     if (!alertId) {

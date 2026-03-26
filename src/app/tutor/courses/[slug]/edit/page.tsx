@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { requireSession } from "@/lib/auth/session";
 import { getTutorCourseDraft } from "@/features/tutor/service";
 import { prisma } from "@/lib/prisma";
+import type { CourseLevel } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -40,27 +41,22 @@ async function EditCourseAction(formData: FormData) {
   }
 
   // Update course and set status back to PENDING for admin review
-  const updatedCourse = await prisma.course.update({
+  await prisma.course.update({
     where: { id: courseId },
     data: {
       title,
       tagline,
       description,
       category,
-      level: level as any,
+      level: level as CourseLevel,
       approvalStatus: course.approvalStatus === "CHANGES" ? "PENDING" : course.approvalStatus,
       updatedAt: new Date(),
     },
   });
-
-  return { success: true, course: updatedCourse };
 }
 
-export default async function EditCoursePage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default async function EditCoursePage(props: any) {
+  const { params } = props as { params: { slug: string } };
   const session = await requireSession({
     allowedRoles: ["TUTOR"],
     requireTenant: true,

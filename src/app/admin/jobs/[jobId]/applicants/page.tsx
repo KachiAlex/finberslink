@@ -11,9 +11,9 @@ import { AdminShell } from "../../../_components/admin-shell";
 
 const JOB_APPLICATION_STATUS_VALUES: JobApplicationStatus[] = [
   "SUBMITTED",
-  "REVIEWING",
+  "IN_REVIEW",
   "INTERVIEW",
-  "OFFER",
+  "OFFERED",
   "REJECTED",
 ];
 
@@ -22,17 +22,17 @@ export const revalidate = 0;
 
 const statusColors = {
   SUBMITTED: "bg-blue-100 text-blue-800",
-  REVIEWING: "bg-yellow-100 text-yellow-800",
+  IN_REVIEW: "bg-yellow-100 text-yellow-800",
   INTERVIEW: "bg-indigo-100 text-indigo-800",
-  OFFER: "bg-green-100 text-green-800",
+  OFFERED: "bg-green-100 text-green-800",
   REJECTED: "bg-red-100 text-red-800",
 } satisfies Record<JobApplicationStatus, string>;
 
 const statusIcons = {
   SUBMITTED: Clock,
-  REVIEWING: Clock,
+  IN_REVIEW: Clock,
   INTERVIEW: CheckCircle,
-  OFFER: CheckCircle,
+  OFFERED: CheckCircle,
   REJECTED: XCircle,
 } satisfies Record<JobApplicationStatus, typeof Clock>;
 
@@ -55,12 +55,8 @@ async function updateApplicationStatusAction(formData: FormData) {
   }
 }
 
-export default async function JobApplicantsPage({
-  params,
-}: {
-  params: { jobId: string };
-}) {
-  const { jobId } = params;
+export default async function JobApplicantsPage(props: any) {
+  const { jobId } = props.params as { jobId: string };
   const [job, applications] = await Promise.all([
     getJobById(jobId),
     getJobApplicationsForAdmin(jobId),
@@ -101,7 +97,7 @@ export default async function JobApplicantsPage({
               <div>
                 <div className="text-sm text-gray-600">Under Review</div>
                 <div className="text-2xl font-bold">
-                  {applications.filter((application) => application.status === "REVIEWING").length}
+                  {applications.filter((application) => application.status === "IN_REVIEW").length}
                 </div>
               </div>
               <div>
@@ -113,7 +109,7 @@ export default async function JobApplicantsPage({
               <div>
                 <div className="text-sm text-gray-600">Offers</div>
                 <div className="text-2xl font-bold">
-                  {applications.filter((application) => application.status === "OFFER").length}
+                  {applications.filter((application) => application.status === "OFFERED").length}
                 </div>
               </div>
             </div>

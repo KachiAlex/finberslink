@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import {
   BriefcaseBusiness,
   GraduationCap,
@@ -12,7 +12,7 @@ import {
 export type AdminNavItem = {
   title: string;
   href: string;
-  icon: LucideIcon;
+  icon: React.ElementType;
 };
 
 export const adminNav: AdminNavItem[] = [

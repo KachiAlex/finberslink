@@ -253,7 +253,11 @@ export async function getJobApplicationsForAdmin(jobId?: string) {
   const where = jobId ? { jobOpportunityId: jobId } : {};
   return prisma.jobApplication.findMany({
     where,
-    include: { user: true, opportunity: true, resume: true },
+    include: {
+      user: { include: { profile: true } },
+      opportunity: true,
+      resume: true,
+    },
     orderBy: { submittedAt: 'desc' },
   });
 }

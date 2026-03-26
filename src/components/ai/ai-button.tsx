@@ -12,7 +12,7 @@ interface AIButtonProps {
   className?: string;
   variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
   size?: "default" | "sm" | "lg" | "icon";
-  formAction?: (_formData: FormData) => Promise<unknown>;
+  formAction?: (formData: FormData) => void | Promise<void>;
   type?: "button" | "submit" | "reset";
   form?: string;
 }

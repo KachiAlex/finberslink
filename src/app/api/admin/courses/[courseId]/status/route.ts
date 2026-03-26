@@ -8,8 +8,10 @@ const BodySchema = z.object({
   status: z.enum(["PENDING", "APPROVED", "CHANGES"]),
 });
 
-export async function POST(request: NextRequest, { params }: { params: { courseId: string } }) {
+export async function POST(request: NextRequest, context: any) {
   try {
+    const rawParams = context?.params;
+    const params = rawParams && typeof rawParams.then === "function" ? await rawParams : rawParams ?? {};
     const accessToken = request.cookies.get("access_token")?.value;
     if (!accessToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -27,8 +29,12 @@ export async function POST(request: NextRequest, { params }: { params: { courseI
       return NextResponse.json({ error: "Invalid status", details: parsed.error.issues }, { status: 400 });
     }
 
-    const courseId = params.courseId;
-    await updateCourseApprovalStatus(courseId, parsed.data.status);
+    const courseId = (params as { courseId?: string }).courseId;
+    if (!courseId) {
+      return NextResponse.json({ error: "Course ID is required" }, { status: 400 });
+    }
+
+    await updateCourseApprovalStatus(String(courseId), parsed.data.status);
 
     return NextResponse.json({ success: true });
   } catch (error) {

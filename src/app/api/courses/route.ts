@@ -81,14 +81,15 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
       orderBy,
       include: {
         instructor: {
-          select: { id: true, name: true, email: true },
+          select: { id: true, firstName: true, lastName: true, email: true },
         },
         lessons: {
           select: { id: true },
         },
         enrollments: {
           where: { userId: session.sub },
-          select: { progress: true, completedAt: true },
+          // Enrollment model stores `progressPercentage` not `progress`
+          select: { progressPercentage: true, completedAt: true },
         },
         _count: {
           select: { enrollments: true, lessons: true },
@@ -102,9 +103,13 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
       {
         courses: courses.map((course) => ({
           ...course,
-          enrollmentCount: course._count.enrollments,
-          lessonCount: course._count.lessons,
-          userProgress: course.enrollments[0]?.progress || 0,
+          // Provide a `name` alias for UI compatibility
+          name: course.title,
+          // Use `any` casts where TS cannot infer joined relation properties
+          instructorName: `${(course as any).instructor?.firstName || ""} ${(course as any).instructor?.lastName || ""}`.trim(),
+          enrollmentCount: (course as any)._count?.enrollments || 0,
+          lessonCount: (course as any)._count?.lessons || 0,
+          userProgress: (course as any).enrollments?.[0]?.progressPercentage || 0,
         })),
         pagination: {
           skip,

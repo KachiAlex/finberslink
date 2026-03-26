@@ -42,18 +42,17 @@ const statusColors = {
   INVITED: "bg-yellow-100 text-yellow-800",
 };
 
-export default async function AdminUsersPage({
-  searchParams,
-}: {
-  searchParams?: {
-    role?: string;
-    status?: string;
-    search?: string;
-    page?: string;
-    error?: string;
-    success?: string;
+export default async function AdminUsersPage(props: any) {
+  const { searchParams } = props as {
+    searchParams?: {
+      role?: string;
+      status?: string;
+      search?: string;
+      page?: string;
+      error?: string;
+      success?: string;
+    };
   };
-}) {
   const filters = {
     role: searchParams?.role as Role | undefined,
     status: searchParams?.status as UserStatus | undefined,

@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { getResumeByShareSlug, incrementResumeViewCount } from "@/features/resume/service";
 import { ResumeTemplateWrapper } from "@/components/resume/resume-template-wrapper";
 
-export default async function ResumeSharePage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default async function ResumeSharePage({ params }: any) {
+  const { slug } = params as { slug: string };
   const resume = await getResumeByShareSlug(slug);
   if (!resume || resume.visibility !== "PUBLIC") {
     notFound();

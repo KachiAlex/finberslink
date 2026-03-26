@@ -343,6 +343,8 @@ export async function listUserResumes(userId: string) {
       return prisma.resume.findMany({
         where: { userId },
         orderBy: { createdAt: "desc" },
+        // Return a restricted set of top-level fields to avoid referencing
+        // any missing columns (e.g. `template`) in older production DBs.
         select: {
           id: true,
           userId: true,
@@ -363,14 +365,6 @@ export async function listUserResumes(userId: string) {
           viewCount: true,
           introVideoUrl: true,
           introVideoEmbedUrl: true,
-        },
-        include: {
-          experiences: {
-            orderBy: { order: "asc" },
-          },
-          projects: {
-            orderBy: { order: "asc" },
-          },
         },
       });
     }

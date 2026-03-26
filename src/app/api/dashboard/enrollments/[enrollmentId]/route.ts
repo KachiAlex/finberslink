@@ -8,7 +8,9 @@ const AssignmentActionSchema = z.object({
   action: z.enum(["accept", "decline"]),
 });
 
-export async function POST(request: NextRequest, { params }: { params: { enrollmentId: string } }) {
+export async function POST(request: NextRequest, context: any) {
+  const rawParams = context?.params;
+  const params = rawParams && typeof rawParams.then === "function" ? await rawParams : rawParams ?? {};
   try {
     const session = requireAuth(request);
 
@@ -42,7 +44,6 @@ export async function POST(request: NextRequest, { params }: { params: { enrollm
         where: { id: enrollment.id },
         data: {
           status: "ACTIVE",
-          acceptedAt: now,
         },
       });
     } else {
@@ -50,7 +51,6 @@ export async function POST(request: NextRequest, { params }: { params: { enrollm
         where: { id: enrollment.id },
         data: {
           status: "WITHDRAWN",
-          acceptedAt: null,
         },
       });
     }

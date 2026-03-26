@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -9,14 +8,14 @@ import { cn } from "@/lib/utils";
 export type SectionAction = {
   label: string;
   href: string;
-  icon?: LucideIcon;
+  icon?: React.ElementType;
   variant?: "primary" | "secondary" | "ghost";
   size?: "sm" | "default";
 };
 
 interface DashboardSectionProps {
   eyebrow?: string;
-  title: string;
+  title: ReactNode;
   description?: string;
   actions?: SectionAction[];
   children: ReactNode;

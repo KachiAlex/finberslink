@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -8,12 +7,12 @@ export interface DashboardSidebarItem {
   label: string;
   href: string;
   description?: string;
-  icon?: LucideIcon;
+  icon?: React.ElementType;
   badge?: string;
 }
 
 interface DashboardSidebarProps {
-  title: string;
+  title: ReactNode;
   subtitle?: string;
   meta?: string;
   items: DashboardSidebarItem[];

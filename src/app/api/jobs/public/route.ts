@@ -33,7 +33,6 @@ export const GET = publicRateLimit(async (request: NextRequest) => {
     // Build where clause for filtering
     const where: any = {
       isActive: true,
-      status: "OPEN",
     };
 
     if (params.search) {
@@ -143,7 +142,6 @@ export async function getJobsFeatured(request: NextRequest) {
       where: {
         isActive: true,
         featured: true,
-        status: "OPEN",
       },
       take,
       orderBy: { createdAt: "desc" },
@@ -178,11 +176,10 @@ export async function getJobsFeatured(request: NextRequest) {
  * GET /api/jobs/public/[id]
  * Get detailed job information - exported for import in [id] route
  */
-export async function getJobDetail(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function getJobDetail(request: NextRequest, context: any) {
   try {
+    const rawParams = context?.params;
+    const params = (await Promise.resolve(rawParams ?? {})) as { id?: string };
     const { id } = params;
 
     if (!id) {
@@ -205,7 +202,6 @@ export async function getJobDetail(
         tags: true,
         featured: true,
         isActive: true,
-        status: true,
         createdAt: true,
         updatedAt: true,
         postedBy: {

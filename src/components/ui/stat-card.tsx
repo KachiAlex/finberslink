@@ -1,11 +1,10 @@
 import { cn } from "@/lib/utils";
 import { forwardRef } from "react";
-import { Icon as LucideIcon } from "lucide-react";
 
 interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: React.ElementType;
   trend?: {
     value: number;
     isPositive: boolean;

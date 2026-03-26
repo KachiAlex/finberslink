@@ -1,3 +1,5 @@
+import { notFound, redirect } from "next/navigation";
+
 // Add Experience Action
 async function addExperienceAction(formData: FormData) {
   "use server";
@@ -105,36 +107,11 @@ async function addProjectAction(formData: FormData) {
   revalidatePath(`/resume/${slug}/edit`);
 }
 
-// Replace placeholder NewProjectForm with actual form component
-function NewProjectForm({ slug }: { slug: string }) {
-  return (
-    <form className="space-y-4" action={addProjectAction}>
-      <input type="hidden" name="slug" value={slug} />
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="name">Project Name</Label>
-          <Input id="name" name="name" placeholder="Project name" />
-        </div>
-        <div>
-          <Label htmlFor="link">Link (optional)</Label>
-          <Input id="link" name="link" placeholder="https://..." />
-        </div>
-      </div>
-      <div>
-        <Label htmlFor="summary">Summary (optional)</Label>
-        <Textarea id="summary" name="summary" placeholder="Brief project description" rows={3} />
-      </div>
-      <div>
-        <Label htmlFor="techStack">Tech Stack (comma separated)</Label>
-        <Input id="techStack" name="techStack" placeholder="React, Node, PostgreSQL" />
-      </div>
-      <Button type="submit">Add Project</Button>
-    </form>
-  );
-}
+// Local placeholder removed — using imported `NewProjectForm` from ./forms
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import type { Prisma } from "@prisma/client";
 
 import type { ResumeVisibility } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -422,11 +399,11 @@ async function optimizeSummaryAction(
       targetRole: resume.targetRoles?.[0] ?? resume.targetIndustry ?? undefined,
     });
 
-    await updateResume(slug, { summary: optimizedSummary });
+    await updateResume(slug, { summary: optimizedSummary.summary });
     revalidatePath(`/resume/${slug}/edit`);
     return {
       status: "success",
-      optimizedSummary,
+      optimizedSummary: optimizedSummary.summary,
       message: "Summary updated with AI rewrite.",
     };
   } catch (error) {
@@ -575,10 +552,12 @@ async function applyGeneratedBulletsAction(input: {
   }
 
   await updateResumeExperience(input.experienceId, { achievements: input.bullets });
-  await updateResumeSkillSnapshot(resume.id, await analyzeSkills({
+  const skillAnalysis = await analyzeSkills({
     experience: collectExperienceHighlights(resume.experiences as any),
     targetRole: resume.targetRoles?.[0] || undefined,
-  }));
+  });
+
+  await updateResumeSkillSnapshot(resume.id, skillAnalysis as unknown as Prisma.InputJsonValue);
   await invalidateDashboardInsights(user.sub);
   revalidatePath(`/resume/${input.slug}/edit`);
 }
@@ -698,7 +677,7 @@ export default async function ResumeEditPage({
   </CardHeader>
   <CardContent className="space-y-4">
     {/* Add Experience button removed; form is below */}
-    <NewProjectForm slug={(resume as any).slug} />
+    <NewProjectForm slug={(resume as any).slug} action={addProjectAction} />
     <SummaryAIForm
       slug={(resume as any).slug}
       currentSummary={(resume as any).summary ?? ""}

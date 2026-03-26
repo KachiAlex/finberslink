@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { ElementType } from "react";
 import {
   LayoutDashboard,
   Building2,
@@ -11,7 +11,7 @@ import {
 export type SuperAdminNavItem = {
   title: string;
   href: string;
-  icon: LucideIcon;
+  icon: ElementType;
 };
 
 export const superAdminNav: SuperAdminNavItem[] = [

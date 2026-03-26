@@ -373,14 +373,14 @@ export async function getDashboardInsights(userId: string) {
   await prisma.dashboardInsight.upsert({
     where: { userId },
     update: {
-      focus: payload.focus as unknown as Prisma.JsonValue,
-      skills: payload.skills ? (payload.skills as unknown as Prisma.JsonValue) : Prisma.JsonNull,
+      focus: payload.focus as unknown as Prisma.InputJsonValue,
+      skills: payload.skills ? (payload.skills as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
       refreshedAt: new Date(),
     },
     create: {
       userId,
-      focus: payload.focus as unknown as Prisma.JsonValue,
-      skills: payload.skills ? (payload.skills as unknown as Prisma.JsonValue) : Prisma.JsonNull,
+      focus: payload.focus as unknown as Prisma.InputJsonValue,
+      skills: payload.skills ? (payload.skills as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
     },
   });
 

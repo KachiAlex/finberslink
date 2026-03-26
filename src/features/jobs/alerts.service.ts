@@ -31,7 +31,7 @@ export async function createJobAlert(data: JobAlertData) {
       userId: data.userId,
       keywords: data.keywords.map((k) => k.toLowerCase().trim()),
       location: data.location,
-      jobType: data.jobType,
+      jobType: data.jobType as any,
       isActive: true,
     },
   });
@@ -86,7 +86,7 @@ export async function updateJobAlert(alertId: string, data: Partial<JobAlertData
   }
 
   if (data.jobType !== undefined) {
-    update.jobType = data.jobType;
+    update.jobType = data.jobType as any;
   }
 
   return prisma.jobAlert.update({
@@ -179,7 +179,7 @@ export async function findMatchingJobs(alert: JobAlertFilters, limit = 20) {
       where.AND = [];
     }
     (where.AND as Prisma.JobOpportunityWhereInput[]).push({
-      jobType: alert.jobType,
+      jobType: alert.jobType ?? undefined,
     });
   }
 
@@ -209,7 +209,7 @@ export async function findMatchingJobs(alert: JobAlertFilters, limit = 20) {
       where: {
         isActive: true,
         location: alert.location ? { contains: alert.location, mode: "insensitive" } : undefined,
-        jobType: alert.jobType,
+        jobType: alert.jobType ?? undefined,
       },
       take: limit,
       orderBy: { createdAt: "desc" },

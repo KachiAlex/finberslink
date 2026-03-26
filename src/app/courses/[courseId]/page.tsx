@@ -14,12 +14,8 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function CourseDetailPage({
-  params,
-}: {
-  params: { courseId: string };
-}) {
-  const { courseId } = params;
+export default async function CourseDetailPage(props: any) {
+  const { courseId } = props.params as { courseId: string };
   const session = await requireSession({ allowedRoles: ["STUDENT"], failureMode: "redirect" });
   
   let course;

@@ -956,7 +956,7 @@ export async function getTutorApprovalStatus(tutorId: string) {
     tutorId: tutor.id,
     name: `${tutor.firstName} ${tutor.lastName}`,
     email: tutor.email,
-    approvalStatus: tutor.tutorApprovalAsStudent?.status ?? 'PENDING',
+    approvalStatus: tutor.tutorApprovalAsStudent?.[0]?.status ?? 'PENDING',
     approvalDetails: tutor.tutorApprovalAsStudent,
   };
 }

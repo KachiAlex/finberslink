@@ -23,7 +23,6 @@ export const GET = publicRateLimit(async (request: NextRequest) => {
       prisma.jobOpportunity.findMany({
         where: {
           isActive: true,
-          status: "OPEN",
           title: { contains: query, mode: "insensitive" },
         },
         distinct: ["title"],
@@ -33,7 +32,6 @@ export const GET = publicRateLimit(async (request: NextRequest) => {
       prisma.jobOpportunity.findMany({
         where: {
           isActive: true,
-          status: "OPEN",
           company: { contains: query, mode: "insensitive" },
         },
         distinct: ["company"],

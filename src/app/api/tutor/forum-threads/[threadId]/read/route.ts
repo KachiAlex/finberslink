@@ -3,8 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth/jwt";
 import { prisma } from "@/lib/prisma";
 
-export async function POST(request: NextRequest, { params }: { params: { threadId: string } }) {
+export async function POST(request: NextRequest, context: any) {
   try {
+    const rawParams = context?.params;
+    const params = rawParams && typeof rawParams.then === "function" ? await rawParams : rawParams ?? {};
     const accessToken = request.cookies.get("access_token")?.value;
     if (!accessToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -15,7 +17,7 @@ export async function POST(request: NextRequest, { params }: { params: { threadI
       return NextResponse.json({ error: "Forbidden - Tutor access required" }, { status: 403 });
     }
 
-    const threadId = params.threadId;
+    const threadId = (params as { threadId?: string }).threadId;
     if (!threadId) {
       return NextResponse.json({ error: "threadId required" }, { status: 400 });
     }

@@ -11,9 +11,11 @@ const publicRateLimit = createRateLimit(rateLimitPresets.public);
  * GET /api/jobs/public/[id]
  * Get detailed job information (public, no auth required)
  */
-export const GET = publicRateLimit(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const GET = publicRateLimit(async (request: NextRequest, context: any) => {
   try {
-    const { id } = params;
+    const rawParams = context?.params;
+    const params = rawParams && typeof rawParams.then === "function" ? await rawParams : rawParams ?? {};
+    const { id } = params as { id?: string };
 
     if (!id) {
       return NextResponse.json({ error: "Job ID is required" }, { status: 400 });
@@ -35,7 +37,6 @@ export const GET = publicRateLimit(async (request: NextRequest, { params }: { pa
         tags: true,
         featured: true,
         isActive: true,
-        status: true,
         createdAt: true,
         updatedAt: true,
         postedBy: {

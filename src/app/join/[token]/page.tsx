@@ -103,7 +103,8 @@ async function acceptInviteAction(formData: FormData) {
   }
 }
 
-export default async function JoinPage({ params, searchParams }: JoinPageProps) {
+export default async function JoinPage(props: any) {
+  const { params, searchParams } = props as { params: { token: string }; searchParams?: Record<string, string | string[] | undefined> };
   const invite = await getInviteByToken(params.token);
   const errorKey = typeof searchParams?.error === "string" ? searchParams.error : undefined;
   const errorMessage = errorKey ? errorMessages[errorKey] ?? errorMessages.server : undefined;

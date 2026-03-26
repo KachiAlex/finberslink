@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const UpdateApplicationStatusSchema = z.object({
-  status: z.enum(["SUBMITTED", "REVIEWING", "INTERVIEW", "OFFER", "REJECTED"]),
+  status: z.enum(["SUBMITTED", "IN_REVIEW", "INTERVIEW", "OFFERED", "REJECTED"]),
 });
 
 export async function GET(

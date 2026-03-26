@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import type { TutorApprovalStatus } from "@prisma/client";
 import { verifyToken } from "@/lib/auth/jwt";
 import { prisma } from "@/lib/prisma";
 
@@ -60,9 +61,9 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    // Filter by approval status if requested
+    // Filter by approval status if requested (take the most recent approval record)
     const filteredTutors = status
-      ? tutors.filter((tutor) => tutor.tutorApprovalAsStudent?.status === status)
+      ? tutors.filter((tutor) => tutor.tutorApprovalAsStudent?.[0]?.status === status)
       : tutors;
 
     return NextResponse.json({
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
         id: tutor.id,
         name: `${tutor.firstName} ${tutor.lastName}`,
         email: tutor.email,
-        approvalStatus: tutor.tutorApprovalAsStudent?.status ?? "PENDING",
+        approvalStatus: tutor.tutorApprovalAsStudent?.[0]?.status ?? "PENDING",
         approvalDetails: tutor.tutorApprovalAsStudent,
         totalCourses: tutor.coursesTaught.length,
         approvedCourses: tutor.coursesTaught.filter(
@@ -145,12 +146,12 @@ export async function POST(request: NextRequest) {
       create: {
         tutorId,
         approvedBy: user.sub,
-        status: status as any,
+        status: status as TutorApprovalStatus,
         notes: notes || null,
         approvedAt: status === "APPROVED" ? new Date() : null,
       },
       update: {
-        status: status as any,
+        status: status as TutorApprovalStatus,
         notes: notes || null,
         approvedAt: status === "APPROVED" ? new Date() : null,
         approvedBy: user.sub,

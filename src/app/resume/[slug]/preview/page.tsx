@@ -13,12 +13,8 @@ async function updateResumeTemplate(slug: string, templateId: string) {
   await updateResume(slug, { template: templateId });
 }
 
-export default async function ResumePreviewPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const { slug } = params;
+export default async function ResumePreviewPage({ params }: any) {
+  const { slug } = params as { slug: string };
   const session = await getSessionFromCookies();
 
   const resume = await getResumeBySlug(slug);
@@ -48,7 +44,13 @@ export default async function ResumePreviewPage({
 
           {/* Template Selector */}
           <div className="bg-slate-700/50 rounded-lg p-4">
-            <TemplateSelector currentTemplate={resume.template} slug={slug} />
+            <ResumeTemplateSelector
+              currentTemplate={resume.template}
+              onSelect={async (templateId: string) => {
+                "use server";
+                await updateResumeTemplate(slug, templateId);
+              }}
+            />
           </div>
         </div>
       </div>
@@ -56,33 +58,5 @@ export default async function ResumePreviewPage({
       {/* Preview content */}
       <ResumeTemplateWrapper template={resume.template} resume={resume} />
     </div>
-  );
-}
-
-function TemplateSelector({ currentTemplate, slug }: { currentTemplate?: string | null; slug: string }) {
-  return (
-    <form
-      action={async (formData) => {
-        "use server";
-        const templateId = formData.get("template") as string;
-        await updateResumeTemplate(slug, templateId);
-      }}
-      className="flex items-center gap-3"
-    >
-      <label className="text-sm font-medium text-slate-200">Template:</label>
-      <select
-        name="template"
-        defaultValue={currentTemplate || "modern"}
-        onChange={(e) => {
-          const form = e.currentTarget.form;
-          if (form) form.requestSubmit();
-        }}
-        className="px-3 py-1 rounded text-sm border border-slate-600 bg-slate-800 text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        <option value="modern">Modern</option>
-        <option value="classic">Classic</option>
-        <option value="minimal">Minimal</option>
-      </select>
-    </form>
   );
 }

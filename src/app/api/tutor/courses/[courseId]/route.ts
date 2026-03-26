@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth/jwt";
 import { prisma } from "@/lib/prisma";
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { courseId: string } }
-) {
+export async function DELETE(request: NextRequest, context: any) {
   try {
     const accessToken = request.cookies.get("access_token")?.value;
     if (!accessToken) {
@@ -23,6 +20,8 @@ export async function DELETE(
       );
     }
 
+    const rawParams = context?.params;
+    const params = await Promise.resolve(rawParams ?? {} as any);
     const courseId = params.courseId;
 
     // Verify course exists and belongs to tutor

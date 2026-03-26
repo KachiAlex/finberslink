@@ -13,10 +13,6 @@ export const revalidate = 0;
 type LevelQuery = "beginner" | "intermediate" | "advanced";
 type SortQuery = "recent" | "popular";
 
-interface DashboardCoursesPageProps {
-  searchParams?: Record<string, string | string[]>;
-}
-
 // Gradient Text Component
 const GradientText = ({ children }: { children: React.ReactNode }) => (
   <span className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent">
@@ -24,7 +20,8 @@ const GradientText = ({ children }: { children: React.ReactNode }) => (
   </span>
 );
 
-export default async function DashboardCoursesPage({ searchParams }: DashboardCoursesPageProps) {
+export default async function DashboardCoursesPage(props: any) {
+  const { searchParams } = props as { searchParams?: Record<string, string | string[]> };
   const session = await requireSession({ failureMode: "error" });
 
   if (session.role !== "STUDENT") {
