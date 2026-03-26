@@ -20,4 +20,4 @@ jobs:
       - name: Run Prisma Migrate Deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npx prisma migrate deploy --print
+        run: npx prisma migrate deploy
