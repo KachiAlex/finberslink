@@ -602,7 +602,7 @@ export function DashboardCoursesClient({
                       <Link
                         aria-disabled={enrollment.status !== "ACTIVE"}
                         tabIndex={enrollment.status !== "ACTIVE" ? -1 : 0}
-                        href={`/courses/${enrollment.course.id}`}
+                        href={`/courses/${enrollment.course.slug ?? enrollment.course.id}`}
                       >
                         {enrollment.status === "COMPLETED" ? "Review" : "Continue"}
                       </Link>

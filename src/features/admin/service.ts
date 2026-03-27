@@ -789,7 +789,7 @@ export async function assignCourseToStudent(
       approvalStatus: 'APPROVED',
       ...tenantCourseWhere,
     },
-    select: { id: true, title: true },
+    select: { id: true, title: true, slug: true },
   });
 
   if (!course) {
@@ -829,7 +829,7 @@ export async function assignCourseToStudent(
     const enrollment = await upsertEnrollmentWithoutUnique(prisma, input.studentId, input.courseId);
 
     const studentName = `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim() || "you";
-    const actionUrl = `/dashboard/courses`;
+    const actionUrl = `/courses/${course.slug ?? course.id}`;
 
     await createNotificationIfMissing({
       userId: student.id,
@@ -885,7 +885,7 @@ export async function assignCourseToStudent(
   });
 
   const studentName = `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim() || "you";
-  const actionUrl = `/dashboard/courses`;
+  const actionUrl = `/courses/${course.slug ?? course.id}`;
 
   await createNotificationIfMissing({
     userId: student.id,

@@ -278,21 +278,29 @@ export async function getLearnerCourseDetail(
   });
 
   if (!course) {
-    const enrollment = await prisma.enrollment.findFirst({
+    const matchedCourse = await prisma.course.findFirst({
       where: {
-        userId,
-        course: {
-          OR: [{ id: slug }, { slug }],
-        },
+        OR: [{ id: slug }, { slug }],
       },
-      include: {
-        course: {
-          include: courseDetailInclude,
-        },
-      },
+      select: { id: true },
     });
 
-    course = enrollment?.course ?? null;
+    if (matchedCourse) {
+      const enrollment = await prisma.enrollment.findFirst({
+        where: {
+          userId,
+          courseId: matchedCourse.id,
+        },
+        select: { courseId: true },
+      });
+
+      if (enrollment) {
+        course = await prisma.course.findUnique({
+          where: { id: enrollment.courseId },
+          include: courseDetailInclude,
+        });
+      }
+    }
   }
 
   if (!course) {
@@ -349,49 +357,24 @@ export async function getLearnerLesson(
   lessonSlug: string,
   _userId = DEFAULT_LEARNER_ID,
 ): Promise<{ course: CourseDetail; lesson: Lesson } | null> {
+  const matchedCourse = await prisma.course.findFirst({
+    where: {
+      OR: [{ id: courseSlug }, { slug: courseSlug }],
+    },
+    select: { id: true },
+  });
+
+  if (!matchedCourse) {
+    return null;
+  }
+
   const enrollment = await prisma.enrollment.findFirst({
     where: {
       userId: _userId,
-      course: {
-        OR: [{ id: courseSlug }, { slug: courseSlug }],
-      },
+      courseId: matchedCourse.id,
     },
-    include: {
-      course: {
-        include: {
-          instructor: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              avatarUrl: true,
-              profile: { select: { headline: true } },
-            },
-          },
-          lessons: {
-            orderBy: { order: "asc" },
-            select: {
-              id: true,
-              slug: true,
-              order: true,
-              title: true,
-              durationMinutes: true,
-              format: true,
-              summary: true,
-              content: true,
-              videoUrl: true,
-              resources: {
-                select: {
-                  id: true,
-                  title: true,
-                  type: true,
-                  url: true,
-                },
-              },
-            },
-          },
-        },
-      },
+    select: {
+      courseId: true,
       lessonProgress: {
         select: {
           lessonId: true,
@@ -405,7 +388,51 @@ export async function getLearnerLesson(
     return null;
   }
 
-  const courseRecord = enrollment.course;
+  const courseRecord = await prisma.course.findUnique({
+    where: { id: enrollment.courseId },
+    include: {
+      instructor: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+          profile: { select: { headline: true } },
+        },
+      },
+      lessons: {
+        orderBy: { order: "asc" },
+        select: {
+          id: true,
+          slug: true,
+          order: true,
+          title: true,
+          durationMinutes: true,
+          format: true,
+          summary: true,
+          content: true,
+          videoUrl: true,
+          resources: {
+            select: {
+              id: true,
+              title: true,
+              type: true,
+              url: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!courseRecord) {
+    console.error("[course-lesson] enrollment references missing course", {
+      userId: _userId,
+      courseId: enrollment.courseId,
+    });
+    return null;
+  }
+
   const rawLesson = courseRecord.lessons.find((lesson) => lesson.id === lessonSlug || lesson.slug === lessonSlug);
 
   if (!rawLesson) {
