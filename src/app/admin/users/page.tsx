@@ -42,6 +42,16 @@ const statusColors = {
   INVITED: "bg-yellow-100 text-yellow-800",
 };
 
+function buildPageRange(current: number, total: number) {
+  const start = Math.max(1, current - 2);
+  const end = Math.min(total, current + 2);
+  const pages: number[] = [];
+  for (let page = start; page <= end; page += 1) {
+    pages.push(page);
+  }
+  return pages;
+}
+
 export default async function AdminUsersPage(props: any) {
   const { searchParams } = props as {
     searchParams?: {
@@ -463,20 +473,42 @@ export default async function AdminUsersPage(props: any) {
         {/* Pagination */}
         {result.pagination.totalPages > 1 && (
           <div className="flex justify-center gap-2">
-            {Array.from({ length: result.pagination.totalPages }, (_, i) => i + 1).map(
-              (page) => (
-                <Button
-                  key={page}
-                  variant={page === result.pagination.page ? "default" : "outline"}
-                  size="sm"
-                  asChild
-                >
-                  <a href={`?page=${page}&role=${filters.role || ""}&status=${filters.status || ""}&search=${filters.search || ""}`}>
-                    {page}
-                  </a>
-                </Button>
-              )
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              disabled={result.pagination.page <= 1}
+            >
+              <a
+                href={`?page=${Math.max(result.pagination.page - 1, 1)}&role=${filters.role || ""}&status=${filters.status || ""}&search=${filters.search || ""}`}
+              >
+                Previous
+              </a>
+            </Button>
+            {buildPageRange(result.pagination.page, result.pagination.totalPages).map((page) => (
+              <Button
+                key={page}
+                variant={page === result.pagination.page ? "default" : "outline"}
+                size="sm"
+                asChild
+              >
+                <a href={`?page=${page}&role=${filters.role || ""}&status=${filters.status || ""}&search=${filters.search || ""}`}>
+                  {page}
+                </a>
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              disabled={result.pagination.page >= result.pagination.totalPages}
+            >
+              <a
+                href={`?page=${Math.min(result.pagination.page + 1, result.pagination.totalPages)}&role=${filters.role || ""}&status=${filters.status || ""}&search=${filters.search || ""}`}
+              >
+                Next
+              </a>
+            </Button>
           </div>
         )}
       </AdminShell>

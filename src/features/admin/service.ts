@@ -996,14 +996,28 @@ export async function unassignCourseFromStudent(
   return result;
 }
 
-export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTenant) {
+export async function listRecentCourseAssignmentEvents(
+  options?: { page?: number; limit?: number },
+  admin?: AdminUserWithTenant,
+) {
   const resolvedAdmin = await resolveAdmin(admin);
   const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
   const tenantStudentWhere = buildUserTenantWhere(resolvedAdmin);
   const fallbackAssignedByName = `${resolvedAdmin.firstName ?? ""} ${resolvedAdmin.lastName ?? ""}`.trim() || 'Admin';
   const fallbackAssignedByEmail = resolvedAdmin.email;
+  const page = Math.max(options?.page ?? 1, 1);
+  const limit = options?.limit ?? 10;
+  const offset = (page - 1) * limit;
 
   const enrollmentFallbackEvents = async () => {
+    const total = await prisma.enrollment.count({
+      where: {
+        status: { in: ['ACTIVE', 'WITHDRAWN'] },
+        course: tenantCourseWhere,
+        user: tenantStudentWhere,
+      },
+    });
+
     const enrollments = await prisma.enrollment.findMany({
       where: {
         status: { in: ['ACTIVE', 'WITHDRAWN'] },
@@ -1011,7 +1025,8 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
         user: tenantStudentWhere,
       },
       orderBy: { updatedAt: 'desc' },
-      take: 20,
+      skip: offset,
+      take: limit,
       select: {
         id: true,
         createdAt: true,
@@ -1022,7 +1037,7 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
       },
     });
 
-    return enrollments.map((item) => ({
+    const events = enrollments.map((item) => ({
       id: `enrollment-${item.id}`,
       status: item.status === 'WITHDRAWN' ? 'REVOKED' : 'ACCEPTED',
       assignedAt: item.status === 'WITHDRAWN' ? item.updatedAt : item.createdAt,
@@ -1036,6 +1051,16 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
       assignedByName: fallbackAssignedByName,
       assignedByEmail: fallbackAssignedByEmail,
     }));
+
+    return {
+      events,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(Math.ceil(total / limit), 1),
+      },
+    };
   };
 
   const tableAvailable = await isCourseAssignmentTableAvailable();
@@ -1044,14 +1069,23 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
   }
 
   let assignments;
+  let total = 0;
   try {
+    total = await prisma.courseAssignment.count({
+      where: {
+        course: tenantCourseWhere,
+        student: tenantStudentWhere,
+      },
+    });
+
     assignments = await prisma.courseAssignment.findMany({
       where: {
         course: tenantCourseWhere,
         student: tenantStudentWhere,
       },
       orderBy: { assignedAt: 'desc' },
-      take: 20,
+      skip: offset,
+      take: limit,
       select: {
         id: true,
         status: true,
@@ -1088,8 +1122,16 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
     assignedByEmail: item.assignedBy.email,
   }));
 
-  if (assignmentEvents.length > 0) {
-    return assignmentEvents;
+  if (assignmentEvents.length > 0 || total > 0) {
+    return {
+      events: assignmentEvents,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(Math.ceil(total / limit), 1),
+      },
+    };
   }
 
   return enrollmentFallbackEvents();
@@ -1223,18 +1265,28 @@ export async function listStudentAssignedCourses(
   return assignmentMap;
 }
 
-export async function listStudents(admin?: AdminUserWithTenant) {
+export async function listStudents(
+  options?: { page?: number; limit?: number },
+  admin?: AdminUserWithTenant,
+) {
   const resolvedAdmin = await resolveAdmin(admin);
   const tenantWhere = buildUserTenantWhere(resolvedAdmin);
+  const page = Math.max(options?.page ?? 1, 1);
+  const limit = options?.limit ?? 12;
+
+  const where: Prisma.UserWhereInput = { role: 'STUDENT', ...tenantWhere };
+
+  const total = await prisma.user.count({ where });
 
   const students = await prisma.user.findMany({
-    where: { role: 'STUDENT', ...tenantWhere },
+    where,
     orderBy: { createdAt: 'desc' },
-    take: 100,
+    skip: (page - 1) * limit,
+    take: limit,
   });
 
   const seen = new Set<string>();
-  return students.filter((student) => {
+  const items = students.filter((student) => {
     const key = student.email ? student.email.toLowerCase() : student.id;
     if (seen.has(key)) {
       return false;
@@ -1242,6 +1294,16 @@ export async function listStudents(admin?: AdminUserWithTenant) {
     seen.add(key);
     return true;
   });
+
+  return {
+    students: items,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.max(Math.ceil(total / limit), 1),
+    },
+  };
 }
 
 export async function updateStudentStatus(userId: string, status: UserStatus, admin?: AdminUserWithTenant) {

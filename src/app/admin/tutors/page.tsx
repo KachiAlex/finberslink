@@ -34,6 +34,16 @@ const statusStyles: Record<UserStatus, string> = {
   SUSPENDED: "bg-rose-100 text-rose-700",
 };
 
+function buildPageRange(current: number, total: number) {
+  const start = Math.max(1, current - 2);
+  const end = Math.min(total, current + 2);
+  const pages: number[] = [];
+  for (let page = start; page <= end; page += 1) {
+    pages.push(page);
+  }
+  return pages;
+}
+
 async function updateTutorStatusAction(formData: FormData) {
   "use server";
 
@@ -274,8 +284,22 @@ export default async function AdminTutorsPage({
               </div>
 
               {tutorResult.pagination.totalPages > 1 ? (
-                <div className="flex justify-center gap-2 pt-2">
-                  {Array.from({ length: tutorResult.pagination.totalPages }, (_, index) => index + 1).map((page) => (
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    disabled={tutorResult.pagination.page <= 1}
+                  >
+                    <a
+                      href={`?page=${Math.max(tutorResult.pagination.page - 1, 1)}&status=${filters.status ?? ""}&search=${encodeURIComponent(
+                        filters.search ?? "",
+                      )}`}
+                    >
+                      Previous
+                    </a>
+                  </Button>
+                  {buildPageRange(tutorResult.pagination.page, tutorResult.pagination.totalPages).map((page) => (
                     <Button
                       key={page}
                       variant={page === tutorResult.pagination.page ? "default" : "outline"}
@@ -291,6 +315,21 @@ export default async function AdminTutorsPage({
                       </a>
                     </Button>
                   ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    disabled={tutorResult.pagination.page >= tutorResult.pagination.totalPages}
+                  >
+                    <a
+                      href={`?page=${Math.min(
+                        tutorResult.pagination.page + 1,
+                        tutorResult.pagination.totalPages,
+                      )}&status=${filters.status ?? ""}&search=${encodeURIComponent(filters.search ?? "")}`}
+                    >
+                      Next
+                    </a>
+                  </Button>
                 </div>
               ) : null}
             </CardContent>

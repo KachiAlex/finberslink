@@ -144,18 +144,25 @@ export default async function AdminStudentsPage(props: any) {
     searchParams?: {
       success?: string;
       error?: string;
+      studentPage?: string;
+      auditPage?: string;
     };
   };
+  const studentPage = Math.max(parseInt(searchParams?.studentPage ?? "1", 10) || 1, 1);
+  const auditPage = Math.max(parseInt(searchParams?.auditPage ?? "1", 10) || 1, 1);
 
   let runtimeError: string | null = null;
   let admin: { role: string } = { role: "ADMIN" };
-  let students: Awaited<ReturnType<typeof listStudents>> = [];
+  let studentResult: Awaited<ReturnType<typeof listStudents>> = {
+    students: [],
+    pagination: { page: studentPage, limit: 12, total: 0, totalPages: 1 },
+  };
   let assignableCourses: Awaited<ReturnType<typeof listAssignableCourses>> = [];
 
   try {
-    [admin, students, assignableCourses] = await Promise.all([
+    [admin, studentResult, assignableCourses] = await Promise.all([
       requireAdminUser(),
-      listStudents(),
+      listStudents({ page: studentPage, limit: 12 }),
       listAssignableCourses(),
     ]);
   } catch (error) {
@@ -166,13 +173,22 @@ export default async function AdminStudentsPage(props: any) {
     runtimeError = "Student data is temporarily unavailable due to a database sync issue. Try again in a moment.";
   }
 
-  let assignmentEvents: Awaited<ReturnType<typeof listRecentCourseAssignmentEvents>> = [];
+  let assignmentEventsResult: Awaited<ReturnType<typeof listRecentCourseAssignmentEvents>> = {
+    events: [],
+    pagination: { page: auditPage, limit: 8, total: 0, totalPages: 1 },
+  };
   try {
-    assignmentEvents = await listRecentCourseAssignmentEvents();
+    assignmentEventsResult = await listRecentCourseAssignmentEvents({ page: auditPage, limit: 8 });
   } catch {
-    assignmentEvents = [];
+    assignmentEventsResult = {
+      events: [],
+      pagination: { page: auditPage, limit: 8, total: 0, totalPages: 1 },
+    };
     runtimeError = runtimeError ?? "Assignment audit trail is temporarily unavailable.";
   }
+
+  const students = studentResult.students;
+  const assignmentEvents = assignmentEventsResult.events;
 
   let assignedCoursesMap: Record<string, Array<{
     courseId: string;
@@ -332,6 +348,38 @@ export default async function AdminStudentsPage(props: any) {
                 </tbody>
               </table>
             </div>
+
+            {studentResult.pagination.totalPages > 1 ? (
+              <div className="mt-4 flex items-center justify-between gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  disabled={studentResult.pagination.page <= 1}
+                >
+                  <a
+                    href={`?studentPage=${Math.max(studentResult.pagination.page - 1, 1)}&auditPage=${assignmentEventsResult.pagination.page}&success=${encodeURIComponent(successParam)}&error=${encodeURIComponent(errorParam)}`}
+                  >
+                    Previous
+                  </a>
+                </Button>
+                <span className="text-xs text-slate-500">
+                  Student page {studentResult.pagination.page} of {studentResult.pagination.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  disabled={studentResult.pagination.page >= studentResult.pagination.totalPages}
+                >
+                  <a
+                    href={`?studentPage=${Math.min(studentResult.pagination.page + 1, studentResult.pagination.totalPages)}&auditPage=${assignmentEventsResult.pagination.page}&success=${encodeURIComponent(successParam)}&error=${encodeURIComponent(errorParam)}`}
+                  >
+                    Next
+                  </a>
+                </Button>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -388,6 +436,38 @@ export default async function AdminStudentsPage(props: any) {
                 </tbody>
               </table>
             </div>
+
+            {assignmentEventsResult.pagination.totalPages > 1 ? (
+              <div className="mt-4 flex items-center justify-between gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  disabled={assignmentEventsResult.pagination.page <= 1}
+                >
+                  <a
+                    href={`?studentPage=${studentResult.pagination.page}&auditPage=${Math.max(assignmentEventsResult.pagination.page - 1, 1)}&success=${encodeURIComponent(successParam)}&error=${encodeURIComponent(errorParam)}`}
+                  >
+                    Previous
+                  </a>
+                </Button>
+                <span className="text-xs text-slate-500">
+                  Audit page {assignmentEventsResult.pagination.page} of {assignmentEventsResult.pagination.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  disabled={assignmentEventsResult.pagination.page >= assignmentEventsResult.pagination.totalPages}
+                >
+                  <a
+                    href={`?studentPage=${studentResult.pagination.page}&auditPage=${Math.min(assignmentEventsResult.pagination.page + 1, assignmentEventsResult.pagination.totalPages)}&success=${encodeURIComponent(successParam)}&error=${encodeURIComponent(errorParam)}`}
+                  >
+                    Next
+                  </a>
+                </Button>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </AdminShell>
