@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth/jwt";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { createJobApplication } from "@/features/jobs/service";
 
 const ApplyJobSchema = z.object({
   resumeId: z.string().min(1),
@@ -56,13 +57,11 @@ export async function POST(
     }
 
     // Create application
-    const application = await prisma.jobApplication.create({
-      data: {
-        userId: user.sub,
-        jobOpportunityId: job.id,
-        resumeId: parsed.data.resumeId,
-        status: 'SUBMITTED',
-      },
+    const application = await createJobApplication({
+      userId: user.sub,
+      jobOpportunityId: job.id,
+      resumeId: parsed.data.resumeId,
+      coverLetter: parsed.data.coverLetter,
     });
 
     return NextResponse.json(

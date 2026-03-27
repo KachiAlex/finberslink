@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import type { SkillAnalysisResponse } from "@/lib/ai/resume";
+import { invalidateDashboardSectionsFullCache } from "@/features/dashboard/sections-cache";
 
 type FocusCard = {
   id: string;
@@ -408,4 +409,6 @@ export async function invalidateDashboardInsights(userId: string) {
   } catch (error) {
     // Ignore missing cache entries
   }
+
+  invalidateDashboardSectionsFullCache(userId);
 }

@@ -1,22 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Briefcase, Clock, CheckCircle, Star, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 
-import { DashboardSectionsClient } from "@/app/dashboard/sections-client";
+import { DashboardSectionsClient, type SectionResponse } from "@/app/dashboard/sections-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GradientText, RippleButton } from "@/components/shared/animated-components";
 
 interface StudentDashboardProps {
   userId: string;
-}
-
-interface DashboardStats {
-  appliedJobs: number;
-  inProgressApplications: number;
-  interviewsScheduled: number;
 }
 
 // Floating Particles Component
@@ -444,45 +438,74 @@ const AnimatedGreeting = () => {
 
 export function StudentDashboard(_props: StudentDashboardProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState<DashboardStats>({
-    appliedJobs: 0,
-    inProgressApplications: 0,
-    interviewsScheduled: 0,
-  });
+  const [sectionResponse, setSectionResponse] = useState<SectionResponse | null>(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    let isMounted = true;
+
+    const fetchDashboardSectionsFast = async () => {
       try {
-        const response = await fetch("/api/dashboard/sections");
+        const response = await fetch("/api/dashboard/sections?mode=fast", { cache: "no-store" });
         if (!response.ok) {
-          console.error("Failed to fetch stats:", response.status);
-          setIsLoading(false);
+          console.error("Failed to fetch fast sections:", response.status);
           return;
         }
-        
-        const { data } = await response.json();
-        
-        // Calculate stats from the response data
-        const jobApps = data.applications?.jobs ?? [];
-        
-        setStats({
-          appliedJobs: jobApps.length,
-          inProgressApplications: jobApps.filter(
-            (app: any) => app.status === "APPLIED" || app.status === "UNDER_REVIEW"
-          ).length,
-          interviewsScheduled: jobApps.filter(
-            (app: any) => app.status === "INTERVIEW_SCHEDULED"
-          ).length,
-        });
+
+        const payload = (await response.json()) as SectionResponse;
+        if (isMounted) {
+          setSectionResponse(payload);
+        }
       } catch (error) {
-        console.error("Failed to fetch dashboard stats:", error);
+        console.error("Failed to fetch fast dashboard sections:", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    fetchStats();
+    const fetchDashboardSectionsFull = async () => {
+      try {
+        const response = await fetch("/api/dashboard/sections?mode=full", {
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          console.error("Failed to fetch full sections:", response.status);
+          return;
+        }
+
+        const payload = (await response.json()) as SectionResponse;
+        if (isMounted) {
+          setSectionResponse(payload);
+        }
+      } catch (error) {
+        console.error("Failed to fetch full dashboard sections:", error);
+      }
+    };
+
+    void (async () => {
+      await fetchDashboardSectionsFast();
+      await fetchDashboardSectionsFull();
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const stats = useMemo(() => {
+    const jobApps = sectionResponse?.data.applications?.jobs ?? [];
+
+    return {
+      appliedJobs: jobApps.length,
+      inProgressApplications: jobApps.filter(
+        (app) => app.status === "APPLIED" || app.status === "UNDER_REVIEW"
+      ).length,
+      interviewsScheduled: jobApps.filter(
+        (app) => app.status === "INTERVIEW_SCHEDULED"
+      ).length,
+    };
+  }, [sectionResponse]);
 
   return (
     <div className="space-y-10 relative">
@@ -522,7 +545,7 @@ export function StudentDashboard(_props: StudentDashboardProps) {
 
       {/* Sections Client for Dynamic Content */}
       <div className="relative z-10">
-        <DashboardSectionsClient />
+        <DashboardSectionsClient sectionResponse={sectionResponse} loading={isLoading} />
       </div>
     </div>
   );

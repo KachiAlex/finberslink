@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
+import { invalidateDashboardInsights } from "@/features/dashboard/service";
 
 interface ImportResumeRequest {
   title: string;
@@ -69,6 +70,8 @@ export async function POST(request: NextRequest) {
         skills: extractSkills(rawContent),
       },
     });
+
+    await invalidateDashboardInsights(session.sub);
 
     return NextResponse.json({
       success: true,

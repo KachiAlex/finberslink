@@ -11,7 +11,6 @@ export const siteConfig = {
     { title: "News", href: "/news" },
     { title: "Forum", href: "/forum" },
     { title: "Chat", href: "/chat" },
-    { title: "Profile", href: "/profile" },
   ],
   dashboardNav: [
     { title: "Overview", href: "/dashboard" },

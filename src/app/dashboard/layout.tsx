@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { GraduationCap, LayoutDashboard, MessageSquare, Sparkles, Briefcase, MessageCircle } from "lucide-react";
+import { GraduationCap, LayoutDashboard, MessageSquare, Sparkles, Briefcase, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
@@ -88,7 +88,7 @@ export default async function DashboardLayout({
               {
                 label: "Insights & Guidance",
                 description: "Get tips and recommendations.",
-                href: "/dashboard",
+                href: "/dashboard#insights-guidance",
                 icon: Sparkles,
               },
               {
@@ -114,6 +114,12 @@ export default async function DashboardLayout({
                 description: "Check messages and updates.",
                 href: "/notifications",
                 icon: MessageSquare,
+              },
+              {
+                label: "Profile",
+                description: "View and edit your personal profile.",
+                href: "/dashboard/profile",
+                icon: User,
               },
             ]}
             footer={

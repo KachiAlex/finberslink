@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth/jwt";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { updateJobApplicationStatus } from "@/features/jobs/service";
 
 const UpdateApplicationStatusSchema = z.object({
   status: z.enum(["SUBMITTED", "IN_REVIEW", "INTERVIEW", "OFFERED", "REJECTED"]),
@@ -77,11 +78,19 @@ export async function PUT(
       );
     }
 
-    const application = await prisma.jobApplication.update({
+    await updateJobApplicationStatus(applicationId, parsed.data.status);
+
+    const application = await prisma.jobApplication.findUnique({
       where: { id: applicationId },
-      data: { status: parsed.data.status },
       include: { opportunity: true, user: true, resume: true },
     });
+
+    if (!application) {
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       message: "Application status updated successfully",

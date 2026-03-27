@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { AuthError, requireAuth } from "@/lib/auth/guards";
+import { invalidateDashboardInsights } from "@/features/dashboard/service";
 
 const AssignmentActionSchema = z.object({
   action: z.enum(["accept", "decline"]),
@@ -54,6 +55,8 @@ export async function POST(request: NextRequest, context: any) {
         },
       });
     }
+
+    await invalidateDashboardInsights(session.sub);
 
     return NextResponse.json({ success: true });
   } catch (error) {

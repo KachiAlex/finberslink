@@ -1,6 +1,7 @@
 import type { JobApplicationStatus, JobOpportunity, JobType, RemoteOption } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { invalidateDashboardInsights } from "@/features/dashboard/service";
 
 type JobListing = JobOpportunity & {
   _count?: {
@@ -185,7 +186,7 @@ export async function createJobApplication(data: {
   resumeId?: string;
   coverLetter?: string;
 }) {
-  return prisma.jobApplication.create({
+  const application = await prisma.jobApplication.create({
     data: {
       userId: data.userId,
       jobOpportunityId: data.jobOpportunityId,
@@ -194,6 +195,10 @@ export async function createJobApplication(data: {
       status: 'SUBMITTED',
     },
   });
+
+  await invalidateDashboardInsights(data.userId);
+
+  return application;
 }
 
 export async function getUserJobApplications(userId: string) {
@@ -208,10 +213,14 @@ export async function updateJobApplicationStatus(
   applicationId: string,
   status: JobApplicationStatus
 ) {
-  return prisma.jobApplication.update({
+  const application = await prisma.jobApplication.update({
     where: { id: applicationId },
     data: { status },
   });
+
+  await invalidateDashboardInsights(application.userId);
+
+  return application;
 }
 
 export async function saveJob(userId: string, jobOpportunityId: string) {

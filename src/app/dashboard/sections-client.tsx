@@ -107,10 +107,29 @@ interface SectionErrors {
   insights?: string | null;
 }
 
-type SectionResponse = {
+export type SectionResponse = {
   data: SectionData;
   errors: SectionErrors;
+  meta?: {
+    mode: "fast" | "full";
+    cached?: boolean;
+    generatedAt: string;
+    timings: {
+      summaryMs: number;
+      enrollmentsMs: number;
+      resumesMs: number;
+      applicationsMs: number;
+      recommendedMs: number;
+      savedIdsMs: number;
+      insightsMs: number;
+    };
+  };
 };
+
+interface DashboardSectionsClientProps {
+  sectionResponse?: SectionResponse | null;
+  loading?: boolean;
+}
 
 type Metric = {
   label: string;
@@ -124,6 +143,41 @@ type HighlightStat = {
   value: string | number;
   helper: string;
 };
+
+function getTimingBadgeClass(durationMs: number) {
+  if (durationMs <= 250) {
+    return "bg-emerald-100 text-emerald-800 border-emerald-200";
+  }
+
+  if (durationMs <= 700) {
+    return "bg-amber-100 text-amber-800 border-amber-200";
+  }
+
+  return "bg-rose-100 text-rose-800 border-rose-200";
+}
+
+function getCriticalTimingWarnings(meta?: SectionResponse["meta"]) {
+  if (!meta) {
+    return [] as string[];
+  }
+
+  const warnings: string[] = [];
+  const { timings } = meta;
+
+  if (timings.insightsMs > 1000) {
+    warnings.push(`Insights is slow (${timings.insightsMs}ms)`);
+  }
+
+  if (timings.summaryMs > 800) {
+    warnings.push(`Summary is slow (${timings.summaryMs}ms)`);
+  }
+
+  if (timings.applicationsMs > 900) {
+    warnings.push(`Applications is slow (${timings.applicationsMs}ms)`);
+  }
+
+  return warnings;
+}
 
 const LOADING_METRICS: Metric[] = [
   { label: "Courses enrolled", value: "—", helper: "Loading", action: "/dashboard/courses" },
@@ -140,33 +194,46 @@ const LOADING_HIGHLIGHTS: HighlightStat[] = [
   { title: "Profile reach", value: "—", helper: "Loading" },
 ];
 
-export function DashboardSectionsClient() {
-  const [sectionResponse, setSectionResponse] = useState<SectionResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+export function DashboardSectionsClient({
+  sectionResponse: externalSectionResponse,
+  loading: externalLoading,
+}: DashboardSectionsClientProps = {}) {
+  const [internalSectionResponse, setInternalSectionResponse] = useState<SectionResponse | null>(null);
+  const [internalLoading, setInternalLoading] = useState(true);
+
+  const isExternallyControlled =
+    externalSectionResponse !== undefined || externalLoading !== undefined;
+  const sectionResponse =
+    externalSectionResponse !== undefined ? externalSectionResponse : internalSectionResponse;
+  const loading = externalLoading !== undefined ? externalLoading : internalLoading;
 
   useEffect(() => {
+    if (isExternallyControlled) {
+      return;
+    }
+
     let isMounted = true;
 
     const loadSections = async () => {
       try {
-        const res = await fetch("/api/dashboard/sections", { cache: "no-store" });
+        const res = await fetch("/api/dashboard/sections?mode=fast", { cache: "no-store" });
         if (!res.ok) {
           console.error("Failed to fetch dashboard sections:", res.status);
-          setSectionResponse(null);
+          setInternalSectionResponse(null);
           return;
         }
         const payload = (await res.json()) as SectionResponse;
         if (isMounted) {
-          setSectionResponse(payload);
+          setInternalSectionResponse(payload);
         }
       } catch (error) {
         console.error("Dashboard sections fetch failed", error);
         if (isMounted) {
-          setSectionResponse(null);
+          setInternalSectionResponse(null);
         }
       } finally {
         if (isMounted) {
-          setLoading(false);
+          setInternalLoading(false);
         }
       }
     };
@@ -176,10 +243,12 @@ export function DashboardSectionsClient() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isExternallyControlled]);
 
   const data = sectionResponse?.data;
   const errors = sectionResponse?.errors;
+  const meta = sectionResponse?.meta;
+  const criticalWarnings = useMemo(() => getCriticalTimingWarnings(meta), [meta]);
   const summary = data?.summary;
 
   const activeCourses = data?.enrollments.length ?? 0;
@@ -458,6 +527,103 @@ export function DashboardSectionsClient() {
     );
   };
 
+  const renderInsightsTab = () => {
+    if (loading && !data) {
+      return <InsightsTabSkeleton />;
+    }
+
+    return (
+      <div className="space-y-6">
+        <GlassCard variant="gradient" className="space-y-4 p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Insights &amp; Guidance</p>
+              <h3 className="text-2xl font-semibold text-slate-900">Your next best moves</h3>
+              <p className="text-sm text-slate-600">{quickSummary}</p>
+            </div>
+            <Button asChild size="sm" variant="secondary" className="rounded-full">
+              <Link href="/dashboard/resumes">Refresh resume signals</Link>
+            </Button>
+          </div>
+
+          {process.env.NODE_ENV !== "production" && meta && (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white/70 px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Dev diagnostics
+              </p>
+              <p className="mt-1 text-xs text-slate-600">
+                mode={meta.mode}
+                {typeof meta.cached === "boolean" ? ` · cache=${meta.cached ? "HIT" : "MISS"}` : ""}
+                {` · generated=${new Date(meta.generatedAt).toLocaleTimeString()}`}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {[
+                  { label: "summary", value: meta.timings.summaryMs },
+                  { label: "insights", value: meta.timings.insightsMs },
+                  { label: "applications", value: meta.timings.applicationsMs },
+                  { label: "recommended", value: meta.timings.recommendedMs },
+                  { label: "enrollments", value: meta.timings.enrollmentsMs },
+                  { label: "resumes", value: meta.timings.resumesMs },
+                  { label: "savedIds", value: meta.timings.savedIdsMs },
+                ].map((item) => (
+                  <span
+                    key={item.label}
+                    className={`rounded-full border px-2 py-1 text-[11px] font-semibold ${getTimingBadgeClass(item.value)}`}
+                  >
+                    {item.label}: {item.value}ms
+                  </span>
+                ))}
+              </div>
+
+              {criticalWarnings.length > 0 && (
+                <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5 text-xs text-rose-800">
+                  <span className="font-semibold">Regression warning:</span> {criticalWarnings.join(" | ")}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="grid gap-3 md:grid-cols-3">
+            {highlightStats.map((stat) => (
+              <div key={stat.title} className="rounded-2xl border border-slate-100 bg-white/80 p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">{stat.title}</p>
+                <p className="mt-1 text-2xl font-semibold text-slate-900">{stat.value}</p>
+                <p className="mt-1 text-xs text-slate-500">{stat.helper}</p>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          <GlassCard className="p-5">{renderFocusHighlight()}</GlassCard>
+          <GlassCard className="p-5">{renderPipelineHighlight()}</GlassCard>
+          <GlassCard className="p-5">{renderJobHighlight()}</GlassCard>
+        </div>
+
+        <GlassCard className="space-y-4 p-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-900">Performance metrics</p>
+            <Badge variant="secondary" className="rounded-full">
+              Live snapshot
+            </Badge>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {metrics.map((metric) => (
+              <div key={metric.label} className="rounded-2xl border border-slate-100 bg-white/80 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{metric.label}</p>
+                <p className="mt-1 text-xl font-semibold text-slate-900">{metric.value}</p>
+                <p className="mt-1 text-xs text-slate-500">{metric.helper}</p>
+                <Button asChild variant="ghost" size="sm" className="mt-2 px-0 text-slate-600 hover:text-slate-900">
+                  <Link href={metric.action}>Open</Link>
+                </Button>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+      </div>
+    );
+  };
+
   const renderResumesTab = () => {
     if (!data) {
       return (
@@ -698,14 +864,6 @@ export function DashboardSectionsClient() {
     );
   };
 
-  if (loading && !data) {
-    return (
-      <section>
-        <OverviewSkeleton />
-      </section>
-    );
-  }
-
   return (
     <div className="space-y-8">
       {/* OVERVIEW SECTION */}
@@ -714,6 +872,11 @@ export function DashboardSectionsClient() {
           <p className="text-xs uppercase tracking-[0.45em] text-slate-500">{overviewLabel}</p>
           <h2 className="text-3xl font-bold text-slate-900 mt-2">{overviewTitle}</h2>
         </div>
+      </div>
+
+      {/* INSIGHTS & GUIDANCE SECTION */}
+      <div id="insights-guidance" className="scroll-mt-28">
+        {renderInsightsTab()}
       </div>
 
       {/* COURSES SECTION */}
@@ -768,6 +931,38 @@ function OverviewSkeleton() {
             <Skeleton className="h-4 w-28" />
             <Skeleton className="mt-2 h-6 w-40" />
             <Skeleton className="mt-2 h-3 w-48" />
+          </GlassCard>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function InsightsTabSkeleton() {
+  return (
+    <div className="space-y-6">
+      <GlassCard variant="gradient" className="space-y-4 p-6">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-8 w-72" />
+        <Skeleton className="h-4 w-full max-w-2xl" />
+        <div className="grid gap-3 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, idx) => (
+            <div key={idx} className="rounded-2xl border border-slate-100 bg-white/80 p-4">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="mt-2 h-7 w-12" />
+              <Skeleton className="mt-2 h-3 w-28" />
+            </div>
+          ))}
+        </div>
+      </GlassCard>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, idx) => (
+          <GlassCard key={idx} className="p-5">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="mt-3 h-6 w-3/4" />
+            <Skeleton className="mt-2 h-3 w-full" />
+            <Skeleton className="mt-4 h-8 w-28 rounded-full" />
           </GlassCard>
         ))}
       </div>
