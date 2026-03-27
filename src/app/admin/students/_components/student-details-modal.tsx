@@ -42,12 +42,14 @@ export function StudentDetailsModal({
   assignedCourses,
   assignAction,
   unassignAction,
+  statusAction,
 }: {
   student: StudentSummary;
   assignableCourses: AssignableCourse[];
   assignedCourses: AssignedCourse[];
   assignAction: Action;
   unassignAction: Action;
+  statusAction: Action;
 }) {
   const assignedIds = new Set(assignedCourses.map((course) => course.courseId));
 
@@ -85,6 +87,27 @@ export function StudentDetailsModal({
             <p className="text-xs uppercase tracking-wide text-slate-500">Assigned courses</p>
             <p className="mt-1 font-medium text-slate-700">{assignedCourses.length}</p>
           </div>
+        </div>
+
+        <div className="space-y-2 border-t border-slate-200 pt-3">
+          <h3 className="text-sm font-semibold text-slate-900">Account actions</h3>
+          {student.status === "SUSPENDED" ? (
+            <form action={statusAction}>
+              <input type="hidden" name="userId" value={student.id} />
+              <input type="hidden" name="status" value="ACTIVE" />
+              <Button type="submit" size="sm" variant="outline" className="text-emerald-700 border-emerald-300 hover:bg-emerald-50">
+                Reactivate account
+              </Button>
+            </form>
+          ) : (
+            <form action={statusAction}>
+              <input type="hidden" name="userId" value={student.id} />
+              <input type="hidden" name="status" value="SUSPENDED" />
+              <Button type="submit" size="sm" variant="outline" className="text-rose-600 border-rose-300 hover:bg-rose-50">
+                Suspend account
+              </Button>
+            </form>
+          )}
         </div>
 
         <div className="space-y-2">

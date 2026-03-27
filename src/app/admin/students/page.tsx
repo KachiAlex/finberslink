@@ -279,15 +279,13 @@ export default async function AdminStudentsPage(props: any) {
                     <th className="pb-3">Email</th>
                     <th className="pb-3">Status</th>
                     <th className="pb-3">Joined</th>
-                    <th className="pb-3">Assign course</th>
-                    <th className="pb-3">Actions</th>
+                    <th className="pb-3"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {students.map((student) => {
                     const statusLabel = (student.status ?? "ACTIVE").toString().toLowerCase();
                     const assignedCourses = assignedCoursesMap[student.id] ?? [];
-                    const assignedCourseIds = new Set(assignedCourses.map((course) => course.courseId));
                     return (
                     <tr key={student.id} className="text-slate-700">
                       <td className="py-3 font-semibold">
@@ -306,70 +304,27 @@ export default async function AdminStudentsPage(props: any) {
                         }).format(student.createdAt)}
                       </td>
                       <td>
-                        <form action={assignCourseToStudentAction} className="inline-flex items-center gap-2">
-                          <input type="hidden" name="studentId" value={student.id} />
-                          <select
-                            name="courseId"
-                            defaultValue=""
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
-                            required
-                            disabled={assignableCourses.length === 0}
-                          >
-                            <option value="" disabled>
-                              Select course
-                            </option>
-                            {assignableCourses.map((course) => (
-                              <option key={course.id} value={course.id} disabled={assignedCourseIds.has(course.id)}>
-                                {course.title}{assignedCourseIds.has(course.id) ? " (assigned)" : ""}
-                              </option>
-                            ))}
-                          </select>
-                          <input type="hidden" name="notes" value="Assigned by admin from student roster" />
-                          <Button type="submit" size="sm" className="text-xs" disabled={assignableCourses.length === 0}>
-                            Assign
-                          </Button>
-                        </form>
-                      </td>
-                      <td>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <StudentDetailsModal
-                            student={{
-                              id: student.id,
-                              name: `${student.firstName} ${student.lastName}`,
-                              email: student.email,
-                              status: String(student.status ?? "ACTIVE"),
-                              createdAt: student.createdAt,
-                            }}
-                            assignableCourses={assignableCourses}
-                            assignedCourses={assignedCourses}
-                            assignAction={assignCourseToStudentAction}
-                            unassignAction={unassignCourseFromStudentAction}
-                          />
-                          <form action={updateStudentStatusAction} className="inline-flex">
-                            <input type="hidden" name="userId" value={student.id} />
-                            <select
-                              name="status"
-                              defaultValue={student.status ?? "ACTIVE"}
-                              className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
-                            >
-                              {UserStatusValues.map((option) => (
-                                <option key={option} value={option}>
-                                  {option.toLowerCase()}
-                                </option>
-                              ))}
-                            </select>
-                            <Button type="submit" size="sm" className="ml-2 text-xs">
-                              Update
-                            </Button>
-                          </form>
-                        </div>
+                        <StudentDetailsModal
+                          student={{
+                            id: student.id,
+                            name: `${student.firstName} ${student.lastName}`,
+                            email: student.email,
+                            status: String(student.status ?? "ACTIVE"),
+                            createdAt: student.createdAt,
+                          }}
+                          assignableCourses={assignableCourses}
+                          assignedCourses={assignedCourses}
+                          assignAction={assignCourseToStudentAction}
+                          unassignAction={unassignCourseFromStudentAction}
+                          statusAction={updateStudentStatusAction}
+                        />
                       </td>
                     </tr>
                     );
                   })}
                   {students.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-sm text-slate-500">
+                      <td colSpan={5} className="py-8 text-center text-sm text-slate-500">
                         No students yet. Enrollments will appear as learners join programs.
                       </td>
                     </tr>
