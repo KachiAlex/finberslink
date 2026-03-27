@@ -37,15 +37,36 @@ export function ResumeTemplateWrapper({
   template = "modern",
   resume,
 }: ResumeTemplateWrapperProps) {
-  switch (template) {
-    case "classic":
-      return <ResumeClassicTemplate resume={resume} />;
-    case "minimal":
-      return <ResumeMinimalTemplate resume={resume} />;
-    case "executive":
-      return <ResumeExecutiveTemplate resume={resume} />;
-    case "modern":
-    default:
-      return <ResumeModernTemplate resume={resume} />;
-  }
+  const renderedTemplate = (() => {
+    switch (template) {
+      case "classic":
+        return <ResumeClassicTemplate resume={resume} />;
+      case "minimal":
+        return <ResumeMinimalTemplate resume={resume} />;
+      case "executive":
+        return <ResumeExecutiveTemplate resume={resume} />;
+      case "modern":
+      default:
+        return <ResumeModernTemplate resume={resume} />;
+    }
+  })();
+
+  const handleDownloadPdf = () => {
+    window.print();
+  };
+
+  return (
+    <>
+      <div className="fixed bottom-4 right-4 z-50 print:hidden">
+        <button
+          type="button"
+          onClick={handleDownloadPdf}
+          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:bg-slate-700"
+        >
+          Download PDF
+        </button>
+      </div>
+      {renderedTemplate}
+    </>
+  );
 }
