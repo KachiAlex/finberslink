@@ -22,6 +22,24 @@ async function ensureDbSchema() {
     await client.query('ALTER TABLE "Course" ADD COLUMN IF NOT EXISTS "hasPendingEdit" BOOLEAN NOT NULL DEFAULT FALSE');
     await client.query('ALTER TABLE "Course" ADD COLUMN IF NOT EXISTS "archivedAt" TIMESTAMP(3)');
 
+    // Ensure enrollment uniqueness used by application logic when data allows it.
+    await client.query(`
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_indexes
+    WHERE schemaname = 'public'
+      AND indexname = 'Enrollment_userId_courseId_key'
+  ) THEN
+    CREATE UNIQUE INDEX "Enrollment_userId_courseId_key" ON "Enrollment"("userId", "courseId");
+  END IF;
+EXCEPTION
+  WHEN unique_violation THEN NULL;
+END
+$$;
+`);
+
     // Ensure enum exists for assignment table.
     await client.query(`
 DO $$

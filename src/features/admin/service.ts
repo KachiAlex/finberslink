@@ -766,25 +766,37 @@ export async function assignCourseToStudent(
     throw new Error('Course not found, not approved, or outside your tenant');
   }
 
-  const tableAvailable = await isCourseAssignmentTableAvailable();
+  const upsertEnrollmentWithoutUnique = async (
+    db: Pick<typeof prisma, 'enrollment'>,
+    userId: string,
+    courseId: string,
+  ) => {
+    const existingEnrollment = await db.enrollment.findFirst({
+      where: { userId, courseId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    });
 
-  if (!tableAvailable) {
-    const enrollment = await prisma.enrollment.upsert({
-      where: {
-        userId_courseId: {
-          userId: input.studentId,
-          courseId: input.courseId,
-        },
-      },
-      update: {
-        status: 'ACTIVE',
-      },
-      create: {
-        userId: input.studentId,
-        courseId: input.courseId,
+    if (existingEnrollment) {
+      return db.enrollment.update({
+        where: { id: existingEnrollment.id },
+        data: { status: 'ACTIVE' },
+      });
+    }
+
+    return db.enrollment.create({
+      data: {
+        userId,
+        courseId,
         status: 'ACTIVE',
       },
     });
+  };
+
+  const tableAvailable = await isCourseAssignmentTableAvailable();
+
+  if (!tableAvailable) {
+    const enrollment = await upsertEnrollmentWithoutUnique(prisma, input.studentId, input.courseId);
 
     const studentName = `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim() || "you";
     const actionUrl = `/dashboard/courses`;
@@ -802,22 +814,7 @@ export async function assignCourseToStudent(
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    const enrollment = await tx.enrollment.upsert({
-      where: {
-        userId_courseId: {
-          userId: input.studentId,
-          courseId: input.courseId,
-        },
-      },
-      update: {
-        status: 'ACTIVE',
-      },
-      create: {
-        userId: input.studentId,
-        courseId: input.courseId,
-        status: 'ACTIVE',
-      },
-    });
+    const enrollment = await upsertEnrollmentWithoutUnique(tx, input.studentId, input.courseId);
 
     const existingAssignment = await tx.courseAssignment.findFirst({
       where: {
