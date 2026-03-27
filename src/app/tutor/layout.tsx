@@ -21,7 +21,12 @@ export default async function TutorLayout({
     failureMode: "error",
   });
 
-  const unreadCount = await getUnreadCount(session.sub);
+  let unreadCount = 0;
+  try {
+    unreadCount = await getUnreadCount(session.sub);
+  } catch (error) {
+    console.error("Failed to fetch tutor unread notifications:", error);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">

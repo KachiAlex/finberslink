@@ -11,6 +11,7 @@ import { GlassCardError } from "@/components/ui/glass-card-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { JobBrowserButton } from "@/components/jobs/job-browser-button";
 import { DashboardCoursesTab } from "@/components/dashboard/dashboard-courses-tab";
+import { ImportResumeModal } from "@/components/resume/import-resume-modal";
 
 interface EnrollmentSection {
   id: string;
@@ -474,9 +475,12 @@ export function DashboardSectionsClient() {
             <h3 className="text-2xl font-semibold text-slate-900">Storyteller toolkit</h3>
             <p className="text-sm text-slate-500">Manage versions, AI feedback, and visibility.</p>
           </div>
-          <Button asChild>
-            <Link href="/dashboard/resumes">Manage resumes</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <ImportResumeModal />
+            <Button asChild>
+              <Link href="/dashboard/resumes">Manage resumes</Link>
+            </Button>
+          </div>
         </div>
         {data.resumes.length ? (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -504,9 +508,12 @@ export function DashboardSectionsClient() {
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
             <p>You haven&apos;t created a resume yet. Build one to unlock AI insights and tracking.</p>
-            <Button asChild size="sm" className="mt-3">
-              <Link href="/dashboard/resumes">Launch builder</Link>
-            </Button>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <ImportResumeModal />
+              <Button asChild size="sm">
+                <Link href="/dashboard/resumes">Launch builder</Link>
+              </Button>
+            </div>
           </div>
         )}
       </GlassCard>
@@ -726,9 +733,10 @@ export function DashboardSectionsClient() {
         />
       </div>
 
-      {/* JOBS SECTION (removed matching opportunities & applications per request) */}
-
-      {/* RESUMES SECTION removed per request */}
+      {/* RESUMES SECTION */}
+      <div>
+        {renderResumesTab()}
+      </div>
     </div>
   );
 }

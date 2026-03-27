@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Upload, Loader2, AlertCircle, CheckCircle, Zap } from "lucide-react";
 import { parseResumeFile } from "@/lib/resume/parser";
 import { analyzeATSMatch } from "@/lib/ai/resume";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -92,11 +91,13 @@ export function ImportResumeModal() {
       });
 
       setATSResult({
-        score: Math.round(analysis.matchPercentage || 0),
-        matchedKeywords: analysis.matchedKeywords || [],
+        score: Math.round(analysis.matchScore || 0),
+        matchedKeywords: analysis.strongMatches || [],
         missingKeywords: analysis.missingKeywords || [],
-        suggestions: analysis.improvements || [],
-        overallFeedback: `${usedFallback ? "[Using local analysis] " : ""}${analysis.feedback || "Resume analyzed successfully"}`,
+        suggestions: analysis.recommendations || analysis.improvements || [],
+        overallFeedback: usedFallback
+          ? "Using fallback ATS analysis. Review recommendations before applying changes."
+          : "Resume analyzed successfully.",
       });
 
       setStep("analyze");
@@ -243,10 +244,12 @@ export function ImportResumeModal() {
 
             {/* Error Alert */}
             {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{error}</span>
+                </div>
+              </div>
             )}
 
             {/* Action Buttons */}
@@ -363,10 +366,12 @@ export function ImportResumeModal() {
 
             {/* Error Alert */}
             {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{error}</span>
+                </div>
+              </div>
             )}
 
             {/* Action Buttons */}
@@ -439,10 +444,12 @@ export function ImportResumeModal() {
 
             {/* Error Alert */}
             {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{error}</span>
+                </div>
+              </div>
             )}
 
             {/* Action Buttons */}

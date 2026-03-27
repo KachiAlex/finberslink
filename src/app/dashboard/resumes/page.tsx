@@ -5,6 +5,7 @@ import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { CreateResumeButton } from "@/components/resume/create-resume-button";
+import { ImportResumeModal } from "@/components/resume/import-resume-modal";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -32,7 +33,10 @@ export default async function DashboardResumesPage() {
             Build, customize, and manage your professional resumes with AI assistance.
           </p>
         </div>
-        <CreateResumeButton />
+        <div className="flex gap-2">
+          <ImportResumeModal />
+          <CreateResumeButton />
+        </div>
       </div>
 
       {/* Resumes List */}
