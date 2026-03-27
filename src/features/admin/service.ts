@@ -40,7 +40,7 @@ const FEATURE_FLAG_BLUEPRINT = [
 
 const featureFlagOverrides: Record<string, boolean> = {};
 
-type AdminUserWithTenant = Prisma.UserGetPayload<{ include: { tenant: true } }>;
+type AdminUserWithTenant = Prisma.UserGetPayload<{}>;
 
 function isSuperAdmin(admin: AdminUserWithTenant) {
   return admin.role === "SUPER_ADMIN";
@@ -98,9 +98,6 @@ export async function requireAdminUser(
 
   const admin = await prisma.user.findUnique({
     where: { id: resolvedUserId },
-    include: {
-      tenant: true,
-    },
   });
 
   if (!admin || !ADMIN_ROLES.includes(admin.role)) {

@@ -104,11 +104,25 @@ export default async function AdminStudentsPage(props: any) {
     };
   };
 
-  const [admin, students, assignableCourses] = await Promise.all([
-    requireAdminUser(),
-    listStudents(),
-    listAssignableCourses(),
-  ]);
+  let runtimeError: string | null = null;
+  let admin: { role: string } = { role: "ADMIN" };
+  let students: Awaited<ReturnType<typeof listStudents>> = [];
+  let assignableCourses: Awaited<ReturnType<typeof listAssignableCourses>> = [];
+
+  try {
+    [admin, students, assignableCourses] = await Promise.all([
+      requireAdminUser(),
+      listStudents(),
+      listAssignableCourses(),
+    ]);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to load admin student data";
+    if (message === "Not authenticated") {
+      throw error;
+    }
+    runtimeError = "Student data is temporarily unavailable due to a database sync issue. Try again in a moment.";
+  }
+
   const assignmentEvents: Array<{
     id: string;
     status: string;
@@ -120,7 +134,14 @@ export default async function AdminStudentsPage(props: any) {
     assignedByEmail: string;
     notes: string | null;
   }> = [];
-  const assignedCourseMap = await listStudentAssignedCourseIds(students.map((student) => student.id));
+
+  let assignedCourseMap: Record<string, string[]> = {};
+  try {
+    assignedCourseMap = await listStudentAssignedCourseIds(students.map((student) => student.id));
+  } catch {
+    assignedCourseMap = {};
+    runtimeError = runtimeError ?? "Student enrollment map is temporarily unavailable due to a database sync issue.";
+  }
 
   const successParam = searchParams?.success ?? "";
   const errorParam = searchParams?.error ?? "";
@@ -146,6 +167,11 @@ export default async function AdminStudentsPage(props: any) {
         {errorParam ? (
           <Card className="border border-rose-200 bg-rose-50">
             <CardContent className="py-3 text-sm text-rose-700">{decodeURIComponent(errorParam)}</CardContent>
+          </Card>
+        ) : null}
+        {runtimeError ? (
+          <Card className="border border-amber-200 bg-amber-50">
+            <CardContent className="py-3 text-sm text-amber-800">{runtimeError}</CardContent>
           </Card>
         ) : null}
 
