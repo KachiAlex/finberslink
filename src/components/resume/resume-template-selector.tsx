@@ -42,6 +42,12 @@ const TEMPLATES: Template[] = [
     description: "Minimalist design with maximum readability and elegance",
     preview: "✨ Simple & elegant",
   },
+  {
+    id: "executive",
+    name: "Executive",
+    description: "Formal professional layout with executive summary focus",
+    preview: "🎯 Corporate polished",
+  },
 ];
 
 export function ResumeTemplateSelector({
@@ -56,7 +62,7 @@ export function ResumeTemplateSelector({
         <h3 className="text-lg font-semibold text-slate-900">Resume Template</h3>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         {TEMPLATES.map((template) => (
           <Card
             key={template.id}

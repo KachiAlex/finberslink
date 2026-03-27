@@ -9,6 +9,7 @@ import type {
 import { ResumeModernTemplate } from "@/components/resume/resume-modern-template";
 import { ResumeClassicTemplate } from "@/components/resume/resume-classic-template";
 import { ResumeMinimalTemplate } from "@/components/resume/resume-minimal-template";
+import { ResumeExecutiveTemplate } from "@/components/resume/resume-executive-template";
 
 export interface ResumeTemplateWrapperProps {
   template?: string | null;
@@ -41,6 +42,8 @@ export function ResumeTemplateWrapper({
       return <ResumeClassicTemplate resume={resume} />;
     case "minimal":
       return <ResumeMinimalTemplate resume={resume} />;
+    case "executive":
+      return <ResumeExecutiveTemplate resume={resume} />;
     case "modern":
     default:
       return <ResumeModernTemplate resume={resume} />;

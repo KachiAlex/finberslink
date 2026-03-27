@@ -286,11 +286,36 @@ export async function getResumeBySlug(slug: string) {
 export async function getResumeByShareSlug(shareSlug: string) {
   return prisma.resume.findUnique({
     where: { shareSlug },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      summary: true,
+      skills: true,
+      personaName: true,
+      location: true,
+      visibility: true,
+      introVideoEmbedUrl: true,
+      template: true,
       experiences: {
+        select: {
+          id: true,
+          company: true,
+          role: true,
+          startDate: true,
+          endDate: true,
+          description: true,
+          achievements: true,
+        },
         orderBy: { order: "asc" },
       },
       projects: {
+        select: {
+          id: true,
+          name: true,
+          summary: true,
+          link: true,
+          techStack: true,
+        },
         orderBy: { order: "asc" },
       },
     },
