@@ -14,5 +14,11 @@ export default async function ResumeSharePage({ params }: any) {
     await incrementResumeViewCount(resume.id);
   }
 
-  return <ResumeTemplateWrapper template={resume.template} resume={resume} />;
+  return (
+    <ResumeTemplateWrapper
+      template={resume.template}
+      resume={resume}
+      showDownloadAction
+    />
+  );
 }

@@ -13,6 +13,7 @@ import { ResumeExecutiveTemplate } from "@/components/resume/resume-executive-te
 
 export interface ResumeTemplateWrapperProps {
   template?: string | null;
+  showDownloadAction?: boolean;
   resume: {
     title: string;
     summary: string | null;
@@ -35,6 +36,7 @@ export interface ResumeTemplateWrapperProps {
 
 export function ResumeTemplateWrapper({
   template = "modern",
+  showDownloadAction = false,
   resume,
 }: ResumeTemplateWrapperProps) {
   const renderedTemplate = (() => {
@@ -57,15 +59,17 @@ export function ResumeTemplateWrapper({
 
   return (
     <>
-      <div className="fixed bottom-4 right-4 z-50 print:hidden">
-        <button
-          type="button"
-          onClick={handleDownloadPdf}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:bg-slate-700"
-        >
-          Download PDF
-        </button>
-      </div>
+      {showDownloadAction ? (
+        <div className="fixed bottom-4 right-4 z-50 print:hidden">
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:bg-slate-700"
+          >
+            Download PDF
+          </button>
+        </div>
+      ) : null}
       {renderedTemplate}
     </>
   );
