@@ -2,12 +2,17 @@
 
 const { execSync } = require('child_process');
 
-const neonDatabaseUrl = 'postgresql://neondb_owner:npg_udNGF8hZj9vO@ep-young-math-anf24idu-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  console.error('✗ DATABASE_URL is not set.');
+  process.exit(1);
+}
 
 try {
   console.log('Deploying migrations to Neon database...');
   const output = execSync('npx prisma migrate deploy --skip-generate', {
-    env: { ...process.env, DATABASE_URL: neonDatabaseUrl },
+    env: { ...process.env, DATABASE_URL: databaseUrl },
     stdio: 'inherit',
     cwd: process.cwd(),
   });

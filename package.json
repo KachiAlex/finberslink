@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "migrate:force": "npx prisma db push --skip-generate --force 2>&1 || echo 'Schema push completed with warnings'",
-    "vercel-build": "npm run migrate:force && next build",
+    "db:ensure-schema": "node scripts/ensure-db-schema.js",
+    "db:prepare": "node scripts/vercel-db-prepare.js",
+    "vercel-build": "npm run db:prepare && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
