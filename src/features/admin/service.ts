@@ -4,6 +4,7 @@ import type {
   InviteStatus,
   JobApplicationStatus,
   JobType,
+  NotificationType,
   Prisma,
   RemoteOption,
   Role,
@@ -12,6 +13,7 @@ import type {
 
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth/session";
+import { createNotificationIfMissing } from "@/features/notifications/service";
 
 const ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN'];
 const FEATURE_FLAG_BLUEPRINT = [
@@ -559,6 +561,242 @@ export async function createCourse(input: {
   coverImage: string;
 }) {
   return createAdminCourse(input);
+}
+
+export async function listAssignableCourses(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+
+  return prisma.course.findMany({
+    where: {
+      ...tenantCourseWhere,
+      approvalStatus: 'APPROVED',
+    },
+    orderBy: { title: 'asc' },
+    select: {
+      id: true,
+      title: true,
+      level: true,
+      category: true,
+    },
+  });
+}
+
+export async function assignCourseToStudent(
+  input: {
+    studentId: string;
+    courseId: string;
+    notes?: string;
+  },
+  admin?: AdminUserWithTenant,
+) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantStudentWhere = buildUserTenantWhere(resolvedAdmin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+
+  const student = await prisma.user.findFirst({
+    where: {
+      id: input.studentId,
+      role: 'STUDENT',
+      ...tenantStudentWhere,
+    },
+    select: { id: true, firstName: true, lastName: true },
+  });
+
+  if (!student) {
+    throw new Error('Student not found in your tenant');
+  }
+
+  const course = await prisma.course.findFirst({
+    where: {
+      id: input.courseId,
+      approvalStatus: 'APPROVED',
+      ...tenantCourseWhere,
+    },
+    select: { id: true, title: true },
+  });
+
+  if (!course) {
+    throw new Error('Course not found, not approved, or outside your tenant');
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const enrollment = await tx.enrollment.upsert({
+      where: {
+        userId_courseId: {
+          userId: input.studentId,
+          courseId: input.courseId,
+        },
+      },
+      update: {
+        status: 'ACTIVE',
+      },
+      create: {
+        userId: input.studentId,
+        courseId: input.courseId,
+        status: 'ACTIVE',
+      },
+    });
+
+    const existingAssignment = await tx.courseAssignment.findFirst({
+      where: {
+        studentId: input.studentId,
+        courseId: input.courseId,
+        status: {
+          in: ['PENDING', 'ACCEPTED'],
+        },
+      },
+      orderBy: { assignedAt: 'desc' },
+      select: { id: true },
+    });
+
+    const assignment = existingAssignment
+      ? await tx.courseAssignment.update({
+          where: { id: existingAssignment.id },
+          data: {
+            assignedById: resolvedAdmin.id,
+            status: 'ACCEPTED',
+            acceptedAt: new Date(),
+            declinedAt: null,
+            revokedAt: null,
+            notes: input.notes?.trim() || null,
+          },
+        })
+      : await tx.courseAssignment.create({
+          data: {
+            courseId: input.courseId,
+            studentId: input.studentId,
+            assignedById: resolvedAdmin.id,
+            status: 'ACCEPTED',
+            acceptedAt: new Date(),
+            notes: input.notes?.trim() || null,
+          },
+        });
+
+    return { enrollment, assignment };
+  });
+
+  const studentName = `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim() || "you";
+  const actionUrl = `/dashboard/courses`;
+
+  await createNotificationIfMissing({
+    userId: student.id,
+    type: "ENROLLMENT_UPDATE" as NotificationType,
+    title: `New course assigned: ${course.title}`,
+    body: `An admin assigned ${course.title} to ${studentName}.`,
+    actionUrl,
+    dedupeWindowHours: 72,
+  });
+
+  return result;
+}
+
+export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+  const tenantStudentWhere = buildUserTenantWhere(resolvedAdmin);
+
+  const assignments = await prisma.courseAssignment.findMany({
+    where: {
+      course: tenantCourseWhere,
+      student: tenantStudentWhere,
+    },
+    orderBy: { assignedAt: 'desc' },
+    take: 20,
+    select: {
+      id: true,
+      status: true,
+      assignedAt: true,
+      acceptedAt: true,
+      declinedAt: true,
+      revokedAt: true,
+      notes: true,
+      course: { select: { id: true, title: true } },
+      student: { select: { id: true, firstName: true, lastName: true, email: true } },
+      assignedBy: { select: { id: true, firstName: true, lastName: true, email: true } },
+    },
+  });
+
+  return assignments.map((item) => ({
+    id: item.id,
+    status: item.status,
+    assignedAt: item.assignedAt,
+    acceptedAt: item.acceptedAt,
+    declinedAt: item.declinedAt,
+    revokedAt: item.revokedAt,
+    notes: item.notes,
+    courseTitle: item.course.title,
+    studentName: `${item.student.firstName ?? ""} ${item.student.lastName ?? ""}`.trim(),
+    studentEmail: item.student.email,
+    assignedByName: `${item.assignedBy.firstName ?? ""} ${item.assignedBy.lastName ?? ""}`.trim(),
+    assignedByEmail: item.assignedBy.email,
+  }));
+}
+
+export async function assignCourseToStudentsBulk(
+  input: {
+    studentIds: string[];
+    courseId: string;
+    notes?: string;
+  },
+  admin?: AdminUserWithTenant,
+) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const uniqueStudentIds = Array.from(new Set(input.studentIds.map((id) => id.trim()).filter(Boolean)));
+
+  if (uniqueStudentIds.length === 0) {
+    throw new Error('Select at least one student');
+  }
+
+  let assigned = 0;
+  for (const studentId of uniqueStudentIds) {
+    await assignCourseToStudent(
+      {
+        studentId,
+        courseId: input.courseId,
+        notes: input.notes,
+      },
+      resolvedAdmin,
+    );
+    assigned += 1;
+  }
+
+  return { assigned };
+}
+
+export async function listStudentAssignedCourseIds(
+  studentIds: string[],
+  admin?: AdminUserWithTenant,
+) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantStudentWhere = buildUserTenantWhere(resolvedAdmin);
+  const ids = Array.from(new Set(studentIds.map((id) => id.trim()).filter(Boolean)));
+
+  if (ids.length === 0) {
+    return {} as Record<string, string[]>;
+  }
+
+  const enrollments = await prisma.enrollment.findMany({
+    where: {
+      userId: { in: ids },
+      status: 'ACTIVE',
+      user: tenantStudentWhere,
+    },
+    select: {
+      userId: true,
+      courseId: true,
+    },
+  });
+
+  const assignmentMap: Record<string, string[]> = {};
+  for (const enrollment of enrollments) {
+    if (!assignmentMap[enrollment.userId]) {
+      assignmentMap[enrollment.userId] = [];
+    }
+    assignmentMap[enrollment.userId].push(enrollment.courseId);
+  }
+
+  return assignmentMap;
 }
 
 export async function listStudents(admin?: AdminUserWithTenant) {

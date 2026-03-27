@@ -40,3 +40,20 @@
 - [ ] File upload service backed by AWS S3-compatible storage
 - [ ] Add rate limiting, CSRF protection, and Zod validation helpers
 - [ ] Provide Dockerfile + docker-compose + environment docs + rich seed data
+
+## Course creation and assignment rollout (Mar 2026)
+- [x] Keep lesson videos embed-only (remove direct video upload button)
+- [x] Auto-attach uploaded lesson resources immediately after file selection
+- [x] Reuse one course-creation wizard UI for tutor and admin
+- [x] Admin create flow skips review and publishes immediately
+- [x] Preserve tutor submit-to-review flow while admin publishes directly
+- [x] Add per-student course assignment controls in admin students roster
+- [x] Add bulk course assignment for selected students
+- [x] Show assignment success/error feedback on admin students page
+- [x] Disable already-assigned courses in per-student assign dropdown
+- [x] Add Select all / Clear all controls for bulk student picker
+- [x] Add search by student name/email in bulk student picker
+- [x] Add Show only selected toggle in bulk student picker
+- [x] Add selected-students preview summary in bulk student picker
+- [x] Add assignment audit table (who assigned, when, status transitions)
+- [x] Add idempotent assignment notifications (prevent duplicate alerts)

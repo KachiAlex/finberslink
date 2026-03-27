@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
     }
 
     const user = verifyToken(accessToken);
-    if (user.role !== "TUTOR") {
-      return NextResponse.json({ error: "Tutor access required" }, { status: 403 });
+    if (!["TUTOR", "ADMIN", "SUPER_ADMIN"].includes(user.role)) {
+      return NextResponse.json({ error: "Tutor or admin access required" }, { status: 403 });
     }
 
     const courseId = request.nextUrl.searchParams.get("courseId");

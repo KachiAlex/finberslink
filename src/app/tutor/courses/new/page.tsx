@@ -108,6 +108,14 @@ type CourseDraftPersistence = {
   currentStep: number;
 };
 
+type CourseBuilderProps = {
+  draftEndpoint?: string;
+  coursesEndpoint?: string;
+  backHref?: string;
+  backLabel?: string;
+  requiresReview?: boolean;
+};
+
 type TutorCourseSummary = {
   id: string;
   approvalStatus: CourseApprovalStatus;
@@ -180,7 +188,13 @@ const createSection = (index: number): SectionState => ({
   exam: defaultExamConfig(`Section ${index} quiz`),
 });
 
-export default function TutorCourseCreatePage() {
+export function TutorCourseBuilder({
+  draftEndpoint = "/api/tutor/courses/draft",
+  coursesEndpoint = "/api/tutor/courses",
+  backHref = "/tutor",
+  backLabel = "Back to tutor dashboard",
+  requiresReview = true,
+}: CourseBuilderProps = {}) {
   const [basics, setBasics] = useState(INITIAL_BASICS);
   const [outcomesInput, setOutcomesInput] = useState("");
   const [skillsInput, setSkillsInput] = useState("");
@@ -196,7 +210,6 @@ export default function TutorCourseCreatePage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [resourceDrafts, setResourceDrafts] = useState<Record<string, ResourceDraft>>({});
   const [uploadingResourceFor, setUploadingResourceFor] = useState<string | null>(null);
-  const [uploadingVideoFor, setUploadingVideoFor] = useState<string | null>(null);
   const [courseMeta, setCourseMeta] = useState<TutorCourseSummary | null>(null);
   const [courseId, setCourseId] = useState<string | null>(null);
   const [loadingDraft, setLoadingDraft] = useState(true);
@@ -256,7 +269,7 @@ export default function TutorCourseCreatePage() {
     let mounted = true;
     async function fetchDraft() {
       try {
-        const res = await fetch("/api/tutor/courses/draft", { cache: "no-store" });
+        const res = await fetch(draftEndpoint, { cache: "no-store" });
         if (!res.ok) {
           throw new Error("Failed to fetch draft");
         }
@@ -281,7 +294,7 @@ export default function TutorCourseCreatePage() {
     return () => {
       mounted = false;
     };
-  }, [hydrateFromDraft, hydrateFromSummary]);
+  }, [draftEndpoint, hydrateFromDraft, hydrateFromSummary]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -430,7 +443,7 @@ export default function TutorCourseCreatePage() {
           draftStructure: buildDraftSnapshot(),
         };
 
-        const res = await fetch("/api/tutor/courses", {
+        const res = await fetch(coursesEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -470,6 +483,7 @@ export default function TutorCourseCreatePage() {
       finalExamEnabled,
       finalExam,
       buildDraftSnapshot,
+      coursesEndpoint,
     ],
   );
 
@@ -489,7 +503,7 @@ export default function TutorCourseCreatePage() {
         throw new Error("Unable to determine course to submit");
       }
 
-      const res = await fetch(`/api/tutor/courses/${idToSubmit}/submit`, {
+      const res = await fetch(`${coursesEndpoint}/${idToSubmit}/submit`, {
         method: "POST",
       });
 
@@ -501,14 +515,14 @@ export default function TutorCourseCreatePage() {
       const data = (await res.json()) as { course: TutorCourseSummary };
       setCourseMeta(data.course);
       setCourseId(data.course.id);
-      setSuccess("Course submitted for review");
+      setSuccess(requiresReview ? "Course submitted for review" : "Course published");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to submit course";
       setError(message);
     } finally {
       setSubmitting(false);
     }
-  }, [canSubmit, submitting, courseId, editingLocked, upsertDraft]);
+  }, [canSubmit, submitting, courseId, coursesEndpoint, editingLocked, requiresReview, upsertDraft]);
 
   const nextStep = () => {
     if (currentStep === WIZARD_STEPS.length - 1) return;
@@ -616,7 +630,7 @@ export default function TutorCourseCreatePage() {
     }));
   };
 
-  const handleResourceUpload = async (moduleId: string, file: File) => {
+  const handleResourceUpload = async (sectionId: string, moduleId: string, file: File) => {
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
       setError("File too large. Max 10MB.");
@@ -634,14 +648,36 @@ export default function TutorCourseCreatePage() {
       const data = (await res.json()) as { url?: string; name?: string };
       if (!data.url) throw new Error("Upload did not return URL");
       const uploadedUrl = data.url as string;
+      const uploadedTitle = data.name || file.name;
+
+      updateSection(sectionId, (section) => ({
+        ...section,
+        modules: section.modules.map((mod) =>
+          mod.id === moduleId
+            ? {
+                ...mod,
+                resources: [
+                  ...(mod.resources || []),
+                  {
+                    id: crypto.randomUUID(),
+                    title: uploadedTitle,
+                    type: ensureResourceDraft(resourceDrafts[moduleId]).type,
+                    url: uploadedUrl,
+                  },
+                ],
+              }
+            : mod,
+        ),
+      }));
+
       setResourceDrafts((prev) => {
         const current = ensureResourceDraft(prev[moduleId]);
         return {
           ...prev,
           [moduleId]: {
             ...current,
-            title: data.name || current.title,
-            url: uploadedUrl,
+            title: "",
+            url: "",
           },
         };
       });
@@ -651,40 +687,6 @@ export default function TutorCourseCreatePage() {
       setError(message);
     } finally {
       setUploadingResourceFor(null);
-    }
-  };
-
-  const handleVideoUpload = async (moduleId: string, file: File) => {
-    if (!file) return;
-    const MAX_VIDEO_SIZE = 250 * 1024 * 1024;
-    if (file.size > MAX_VIDEO_SIZE) {
-      setError("Video too large. Max 250MB.");
-      return;
-    }
-    setUploadingVideoFor(moduleId);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("intent", "lessonVideo");
-      const res = await fetch("/api/uploads/lesson", { method: "POST", body: formData });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Video upload failed");
-      }
-      const data = (await res.json()) as { url?: string };
-      if (!data.url) throw new Error("Upload did not return URL");
-      setSections((prev) =>
-        prev.map((section) => ({
-          ...section,
-          modules: section.modules.map((mod) => (mod.id === moduleId ? { ...mod, videoUrl: data.url } : mod)),
-        })),
-      );
-    } catch (error) {
-      console.error(error);
-      const message = error instanceof Error ? error.message : "Failed to upload video";
-      setError(message);
-    } finally {
-      setUploadingVideoFor(null);
     }
   };
 
@@ -989,9 +991,7 @@ export default function TutorCourseCreatePage() {
                       <div className="space-y-2 rounded-lg border border-blue-100/70 bg-blue-50/50 p-3">
                         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                           <p className="text-xs font-semibold text-slate-700">Lesson video</p>
-                          <p className="text-[11px] text-slate-500">
-                            Paste YouTube/Vimeo or upload mp4 (≤250&nbsp;MB)
-                          </p>
+                          <p className="text-[11px] text-slate-500">Paste a YouTube/Vimeo embed link only.</p>
                         </div>
                         <div className="flex flex-col gap-2 md:flex-row md:items-center">
                           <Input
@@ -1026,21 +1026,6 @@ export default function TutorCourseCreatePage() {
                             >
                               Preview
                             </Button>
-                            <label className="inline-flex items-center justify-center rounded-md border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm hover:bg-blue-50">
-                              <input
-                                type="file"
-                                accept="video/mp4,video/*"
-                                className="hidden"
-                                onChange={(event) => {
-                                  const file = event.target.files?.[0];
-                                  if (file) {
-                                    handleVideoUpload(module.id, file);
-                                    event.target.value = "";
-                                  }
-                                }}
-                              />
-                              {uploadingVideoFor === module.id ? "Uploading..." : "Upload video"}
-                            </label>
                           </div>
                         </div>
                         {module.videoUrl?.trim() ? (
@@ -1074,7 +1059,7 @@ export default function TutorCourseCreatePage() {
                             </p>
                           )
                         ) : (
-                          <p className="text-[11px] text-slate-500">Add a link or upload a file to show preview.</p>
+                          <p className="text-[11px] text-slate-500">Add an embed link to show preview.</p>
                         )}
                       </div>
                     ) : null}
@@ -1137,7 +1122,7 @@ export default function TutorCourseCreatePage() {
                               input.onchange = (ev) => {
                                 const target = ev.target as HTMLInputElement;
                                 const file = target.files?.[0];
-                                if (file) handleResourceUpload(module.id, file);
+                                if (file) handleResourceUpload(section.id, module.id, file);
                               };
                               input.click();
                             }}
@@ -1242,8 +1227,12 @@ export default function TutorCourseCreatePage() {
   const renderReview = () => (
     <Card className="border border-slate-200/70 bg-white/95">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-slate-900">Review & submit</CardTitle>
-        <CardDescription>Confirm details before sending for admin approval.</CardDescription>
+        <CardTitle className="text-lg font-semibold text-slate-900">
+          {requiresReview ? "Review & submit" : "Review & publish"}
+        </CardTitle>
+        <CardDescription>
+          {requiresReview ? "Confirm details before sending for admin approval." : "Confirm details before publishing this course."}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-slate-700">
         <p>
@@ -1264,13 +1253,13 @@ export default function TutorCourseCreatePage() {
         </p>
         <div className="flex gap-2 pt-2">
           <Button variant="outline" asChild>
-            <Link href="/tutor">Cancel</Link>
+            <Link href={backHref}>Cancel</Link>
           </Button>
           <Button onClick={() => upsertDraft()} disabled={savingDraft || editingLocked} variant="secondary">
             {savingDraft ? "Saving..." : editingLocked ? "Editing locked" : "Save draft"}
           </Button>
           <Button onClick={handleSubmitDraft} disabled={!canSubmit || submitting || !courseId || editingLocked}>
-            {submitting ? "Submitting..." : editingLocked ? "Locked" : "Submit for review"}
+            {submitting ? (requiresReview ? "Submitting..." : "Publishing...") : editingLocked ? "Locked" : requiresReview ? "Submit for review" : "Publish course"}
           </Button>
         </div>
       </CardContent>
@@ -1294,8 +1283,8 @@ export default function TutorCourseCreatePage() {
           <div>
             <div className="flex items-center gap-2 text-sm text-slate-500">
               <ArrowLeft className="h-4 w-4" />
-              <Link href="/tutor" className="text-slate-700 hover:text-slate-900">
-                Back to tutor dashboard
+              <Link href={backHref} className="text-slate-700 hover:text-slate-900">
+                {backLabel}
               </Link>
             </div>
             <h1 className="mt-2 text-3xl font-semibold text-slate-900">Create course</h1>
@@ -1411,7 +1400,7 @@ export default function TutorCourseCreatePage() {
                   {savingDraft ? "Saving..." : editingLocked ? "Locked" : "Save draft"}
                 </Button>
                 <Button onClick={handleSubmitDraft} disabled={!canSubmit || submitting || !courseId || editingLocked}>
-                  {submitting ? "Submitting..." : editingLocked ? "Locked" : "Submit course"}
+                  {submitting ? (requiresReview ? "Submitting..." : "Publishing...") : editingLocked ? "Locked" : requiresReview ? "Submit course" : "Publish course"}
                 </Button>
               </div>
             )}
@@ -1420,4 +1409,8 @@ export default function TutorCourseCreatePage() {
       </div>
     </main>
   );
+}
+
+export default function TutorCourseCreatePage() {
+  return <TutorCourseBuilder />;
 }

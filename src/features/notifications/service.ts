@@ -21,6 +21,43 @@ export async function createNotification(input: {
   });
 }
 
+export async function createNotificationIfMissing(input: {
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body?: string;
+  actionUrl?: string;
+  dedupeWindowHours?: number;
+}) {
+  const dedupeWindowHours = input.dedupeWindowHours ?? 24;
+  const threshold = new Date(Date.now() - dedupeWindowHours * 60 * 60 * 1000);
+
+  const recent = await prisma.notification.findMany({
+    where: {
+      userId: input.userId,
+      type: input.type,
+      createdAt: { gte: threshold },
+    },
+    take: 20,
+    orderBy: { createdAt: "desc" },
+  });
+
+  const duplicate = recent.find((item) => {
+    const payload = (item.payload ?? {}) as {
+      title?: string;
+      actionUrl?: string;
+    };
+
+    return payload.title === input.title && (payload.actionUrl ?? "") === (input.actionUrl ?? "");
+  });
+
+  if (duplicate) {
+    return duplicate;
+  }
+
+  return createNotification(input);
+}
+
 export async function listUserNotifications(userId: string, limit = 20) {
   return prisma.notification.findMany({
     where: { userId },

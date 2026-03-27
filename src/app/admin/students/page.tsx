@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import type { UserStatus as PrismaUserStatus } from "@prisma/client";
 
 const UserStatusValues: PrismaUserStatus[] = ['ACTIVE', 'SUSPENDED', 'INVITED'];
@@ -6,10 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  assignCourseToStudent,
+  assignCourseToStudentsBulk,
+  listAssignableCourses,
+  listRecentCourseAssignmentEvents,
+  listStudentAssignedCourseIds,
   listStudents,
   requireAdminUser,
   updateStudentStatus,
 } from "@/features/admin/service";
+import { BulkStudentSelector } from "./_components/bulk-student-selector";
 
 import { AdminShell } from "../_components/admin-shell";
 
@@ -32,8 +39,88 @@ async function updateStudentStatusAction(formData: FormData) {
   revalidatePath("/admin/students");
 }
 
-export default async function AdminStudentsPage() {
-  const [admin, students] = await Promise.all([requireAdminUser(), listStudents()]);
+async function assignCourseToStudentAction(formData: FormData) {
+  "use server";
+
+  await requireAdminUser();
+
+  const studentId = String(formData.get("studentId") ?? "").trim();
+  const courseId = String(formData.get("courseId") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
+
+  if (!studentId || !courseId) {
+    redirect("/admin/students?error=missing-assignment-fields");
+    return;
+  }
+
+  try {
+    await assignCourseToStudent({
+      studentId,
+      courseId,
+      notes: notes || undefined,
+    });
+
+    revalidatePath("/admin/students");
+    redirect("/admin/students?success=course-assigned");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to assign course";
+    redirect(`/admin/students?error=${encodeURIComponent(message)}`);
+  }
+}
+
+async function bulkAssignCourseAction(formData: FormData) {
+  "use server";
+
+  await requireAdminUser();
+
+  const courseId = String(formData.get("courseId") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
+  const studentIds = formData.getAll("studentIds").map((value) => String(value));
+
+  if (!courseId || studentIds.length === 0) {
+    redirect("/admin/students?error=select-course-and-students");
+    return;
+  }
+
+  try {
+    const result = await assignCourseToStudentsBulk({
+      studentIds,
+      courseId,
+      notes: notes || undefined,
+    });
+
+    revalidatePath("/admin/students");
+    redirect(`/admin/students?success=bulk-assigned-${result.assigned}`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to bulk assign courses";
+    redirect(`/admin/students?error=${encodeURIComponent(message)}`);
+  }
+}
+
+export default async function AdminStudentsPage(props: any) {
+  const { searchParams } = props as {
+    searchParams?: {
+      success?: string;
+      error?: string;
+    };
+  };
+
+  const [admin, students, assignableCourses, assignmentEvents] = await Promise.all([
+    requireAdminUser(),
+    listStudents(),
+    listAssignableCourses(),
+    listRecentCourseAssignmentEvents(),
+  ]);
+  const assignedCourseMap = await listStudentAssignedCourseIds(students.map((student) => student.id));
+
+  const successParam = searchParams?.success ?? "";
+  const errorParam = searchParams?.error ?? "";
+  const bulkMatch = successParam.match(/^bulk-assigned-(\d+)$/);
+  const successMessage = bulkMatch
+    ? `Assigned course to ${bulkMatch[1]} student${bulkMatch[1] === "1" ? "" : "s"}.`
+    : successParam === "course-assigned"
+      ? "Course assigned successfully."
+      : null;
 
   return (
     <div className="space-y-8">
@@ -42,6 +129,61 @@ export default async function AdminStudentsPage() {
         description="Manage learner access, status, and enrollment health across cohorts."
         actions={<Badge variant="secondary">{admin.role.replace("_", " ")} access</Badge>}
       >
+        {successMessage ? (
+          <Card className="border border-emerald-200 bg-emerald-50">
+            <CardContent className="py-3 text-sm text-emerald-700">{successMessage}</CardContent>
+          </Card>
+        ) : null}
+        {errorParam ? (
+          <Card className="border border-rose-200 bg-rose-50">
+            <CardContent className="py-3 text-sm text-rose-700">{decodeURIComponent(errorParam)}</CardContent>
+          </Card>
+        ) : null}
+
+        <Card className="border border-slate-200/70 bg-white/95">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold text-slate-900">Bulk assign course</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form action={bulkAssignCourseAction} className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                <select
+                  name="courseId"
+                  defaultValue=""
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                  required
+                >
+                  <option value="" disabled>
+                    Select approved course
+                  </option>
+                  {assignableCourses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.title}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  name="notes"
+                  placeholder="Optional note for all selected students"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+
+              <BulkStudentSelector
+                students={students.map((student) => ({
+                  id: student.id,
+                  name: `${student.firstName} ${student.lastName}`,
+                  email: student.email,
+                }))}
+              />
+
+              <Button type="submit" disabled={assignableCourses.length === 0 || students.length === 0}>
+                Assign selected students
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
         <Card className="border border-slate-200/70 bg-white/95">
           <CardHeader>
             <CardTitle className="text-base font-semibold text-slate-900">Student roster</CardTitle>
@@ -55,12 +197,14 @@ export default async function AdminStudentsPage() {
                     <th className="pb-3">Email</th>
                     <th className="pb-3">Status</th>
                     <th className="pb-3">Joined</th>
+                    <th className="pb-3">Assign course</th>
                     <th className="pb-3">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {students.map((student) => {
                     const statusLabel = (student.status ?? "ACTIVE").toString().toLowerCase();
+                    const assignedCourseIds = new Set(assignedCourseMap[student.id] ?? []);
                     return (
                     <tr key={student.id} className="text-slate-700">
                       <td className="py-3 font-semibold">
@@ -77,6 +221,31 @@ export default async function AdminStudentsPage() {
                           month: "short",
                           day: "numeric",
                         }).format(student.createdAt)}
+                      </td>
+                      <td>
+                        <form action={assignCourseToStudentAction} className="inline-flex items-center gap-2">
+                          <input type="hidden" name="studentId" value={student.id} />
+                          <select
+                            name="courseId"
+                            defaultValue=""
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+                            required
+                            disabled={assignableCourses.length === 0}
+                          >
+                            <option value="" disabled>
+                              Select course
+                            </option>
+                            {assignableCourses.map((course) => (
+                              <option key={course.id} value={course.id} disabled={assignedCourseIds.has(course.id)}>
+                                {course.title}{assignedCourseIds.has(course.id) ? " (assigned)" : ""}
+                              </option>
+                            ))}
+                          </select>
+                          <input type="hidden" name="notes" value="Assigned by admin from student roster" />
+                          <Button type="submit" size="sm" className="text-xs" disabled={assignableCourses.length === 0}>
+                            Assign
+                          </Button>
+                        </form>
                       </td>
                       <td>
                         <form action={updateStudentStatusAction} className="inline-flex">
@@ -102,11 +271,69 @@ export default async function AdminStudentsPage() {
                   })}
                   {students.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-sm text-slate-500">
+                      <td colSpan={6} className="py-8 text-center text-sm text-slate-500">
                         No students yet. Enrollments will appear as learners join programs.
                       </td>
                     </tr>
                   )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-200/70 bg-white/95">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold text-slate-900">Assignment audit trail</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] text-left text-sm">
+                <thead>
+                  <tr className="text-xs uppercase tracking-wide text-slate-500">
+                    <th className="pb-3">When</th>
+                    <th className="pb-3">Student</th>
+                    <th className="pb-3">Course</th>
+                    <th className="pb-3">Assigned by</th>
+                    <th className="pb-3">Status</th>
+                    <th className="pb-3">Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {assignmentEvents.map((event) => (
+                    <tr key={event.id} className="text-slate-700">
+                      <td className="py-3">
+                        {new Intl.DateTimeFormat("en", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }).format(event.assignedAt)}
+                      </td>
+                      <td>
+                        <p className="font-medium">{event.studentName || event.studentEmail}</p>
+                        <p className="text-xs text-slate-500">{event.studentEmail}</p>
+                      </td>
+                      <td>{event.courseTitle}</td>
+                      <td>
+                        <p className="font-medium">{event.assignedByName || event.assignedByEmail}</p>
+                        <p className="text-xs text-slate-500">{event.assignedByEmail}</p>
+                      </td>
+                      <td>
+                        <Badge variant="outline" className="capitalize">
+                          {event.status.toLowerCase()}
+                        </Badge>
+                      </td>
+                      <td className="max-w-[240px] truncate text-xs text-slate-600">{event.notes || "—"}</td>
+                    </tr>
+                  ))}
+                  {assignmentEvents.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-sm text-slate-500">
+                        No assignment events yet.
+                      </td>
+                    </tr>
+                  ) : null}
                 </tbody>
               </table>
             </div>
