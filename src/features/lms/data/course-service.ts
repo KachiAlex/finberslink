@@ -268,42 +268,49 @@ export async function getLearnerCourseDetail(
   slug: string,
   userId = DEFAULT_LEARNER_ID,
 ): Promise<CourseDetail | null> {
-  let course = await prisma.course.findFirst({
+  const matchedCourse = await prisma.course.findFirst({
     where: {
       OR: [{ id: slug }, { slug }],
-      approvalStatus: "APPROVED",
-      archivedAt: null,
     },
+    select: {
+      id: true,
+      approvalStatus: true,
+      archivedAt: true,
+    },
+  });
+
+  if (!matchedCourse) {
+    return null;
+  }
+
+  const canAccessApprovedCourse =
+    matchedCourse.approvalStatus === "APPROVED" && matchedCourse.archivedAt === null;
+
+  if (!canAccessApprovedCourse) {
+    const enrollment = await prisma.enrollment.findFirst({
+      where: {
+        userId,
+        courseId: matchedCourse.id,
+      },
+      select: { courseId: true },
+    });
+
+    if (!enrollment) {
+      return null;
+    }
+  }
+
+  const course = await prisma.course.findUnique({
+    where: { id: matchedCourse.id },
     include: courseDetailInclude,
   });
 
   if (!course) {
-    const matchedCourse = await prisma.course.findFirst({
-      where: {
-        OR: [{ id: slug }, { slug }],
-      },
-      select: { id: true },
+    console.error("[course-detail] matched course id no longer exists", {
+      userId,
+      requestedSlug: slug,
+      courseId: matchedCourse.id,
     });
-
-    if (matchedCourse) {
-      const enrollment = await prisma.enrollment.findFirst({
-        where: {
-          userId,
-          courseId: matchedCourse.id,
-        },
-        select: { courseId: true },
-      });
-
-      if (enrollment) {
-        course = await prisma.course.findUnique({
-          where: { id: enrollment.courseId },
-          include: courseDetailInclude,
-        });
-      }
-    }
-  }
-
-  if (!course) {
     return null;
   }
 
