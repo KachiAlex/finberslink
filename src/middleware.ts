@@ -25,6 +25,16 @@ const roleBasedRoutes: Record<string, Role[]> = {
   "/tutor": ["TUTOR"],
 };
 
+function isPublicResumeRoute(pathname: string) {
+  if (pathname.startsWith("/resume/share/")) {
+    return true;
+  }
+
+  // Keep direct resume view routes public while edit/preview remains protected.
+  const publicResumeMatcher = /^\/resume\/[^/]+\/?$/;
+  return publicResumeMatcher.test(pathname);
+}
+
 function redirectToLogin(request: NextRequest, pathname: string) {
   const loginUrl = new URL(NOT_AUTH_REDIRECT, request.url);
   loginUrl.searchParams.set("redirect", pathname);
@@ -33,6 +43,10 @@ function redirectToLogin(request: NextRequest, pathname: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (isPublicResumeRoute(pathname)) {
+    return NextResponse.next();
+  }
 
   // Check if route requires authentication
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
