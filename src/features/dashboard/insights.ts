@@ -1,3 +1,4 @@
+import { listStudentEnrollmentsWithCourses } from "@/features/dashboard/service";
 import { prisma } from "@/lib/prisma";
 
 export interface DashboardInsight {
@@ -16,14 +17,7 @@ export async function getStudentDashboardInsights(userId: string) {
   try {
     const [enrollments, recentEnrollments] = await Promise.all([
       prisma.enrollment.count({ where: { userId } }),
-      prisma.enrollment.findMany({
-        where: { userId, status: "ACTIVE" },
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: {
-          course: { select: { id: true, title: true, coverImage: true } },
-        },
-      }),
+      listStudentEnrollmentsWithCourses({ userId, limit: 5, statuses: ["ACTIVE"] }),
     ]);
 
     const totalProgress =
@@ -235,15 +229,10 @@ export async function getUserActivityFeed(userId: string, limit: number = 10) {
     const activities: UserActivity[] = [];
 
     // Course enrollments
-    const enrollments = await prisma.enrollment.findMany({
-      where: { userId },
-      take: limit,
-      orderBy: { createdAt: "desc" },
-      include: { course: { select: { id: true, title: true } } },
-    });
+    const enrollmentsWithCourses = await listStudentEnrollmentsWithCourses({ userId, limit });
 
     activities.push(
-      ...enrollments.map<UserActivity>((e) => ({
+      ...enrollmentsWithCourses.map<UserActivity>((e) => ({
         type: "ENROLLMENT",
         timestamp: e.createdAt,
         description: `Enrolled in ${e.course.title}`,

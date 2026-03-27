@@ -6,9 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { listStudentEnrollmentsWithCourses } from "@/features/dashboard/service";
 import { createForumThread } from "@/features/forum/service";
 import { requireSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -36,23 +36,9 @@ export default async function NewThreadPage() {
   const session = await requireSession();
 
   // Fetch user's enrolled courses
-  const courses = await prisma.enrollment.findMany({
-    where: { userId: session.sub },
-    select: {
-      course: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-        },
-      },
-    },
-    orderBy: {
-      course: {
-        title: "asc",
-      },
-    },
-  });
+  const courses = (await listStudentEnrollmentsWithCourses({ userId: session.sub }))
+    .slice()
+    .sort((left, right) => left.course.title.localeCompare(right.course.title));
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">

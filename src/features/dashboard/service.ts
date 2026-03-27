@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import type { EnrollmentStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import type { SkillAnalysisResponse } from "@/lib/ai/resume";
@@ -29,15 +30,97 @@ type DashboardInsightsPayload = {
 
 const DASHBOARD_INSIGHTS_TTL_MINUTES = 60;
 
-export async function getStudentEnrollments(userId: string, limit?: number) {
-  return prisma.enrollment.findMany({
-    where: { userId },
-    include: {
-      course: true,
+type EnrollmentCourseSummary = {
+  id: string;
+  title: string;
+  slug: string | null;
+  level: string | null;
+  tagline: string | null;
+  category: string | null;
+  coverImage: string | null;
+};
+
+export type StudentEnrollmentWithCourse = {
+  id: string;
+  userId: string;
+  courseId: string;
+  status: EnrollmentStatus;
+  progressPercentage: number;
+  lastAccessedAt: Date | null;
+  completedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  course: EnrollmentCourseSummary;
+};
+
+export async function listStudentEnrollmentsWithCourses(options: {
+  userId: string;
+  limit?: number;
+  statuses?: EnrollmentStatus[];
+}): Promise<StudentEnrollmentWithCourse[]> {
+  const enrollments = await prisma.enrollment.findMany({
+    where: {
+      userId: options.userId,
+      ...(options.statuses?.length ? { status: { in: options.statuses } } : {}),
+    },
+    select: {
+      id: true,
+      userId: true,
+      courseId: true,
+      status: true,
+      progressPercentage: true,
+      lastAccessedAt: true,
+      completedAt: true,
+      createdAt: true,
+      updatedAt: true,
     },
     orderBy: { createdAt: 'desc' },
-    take: limit,
+    take: options.limit,
   });
+
+  if (enrollments.length === 0) {
+    return [];
+  }
+
+  const courseIds = Array.from(new Set(enrollments.map((enrollment) => enrollment.courseId)));
+  const courses = await prisma.course.findMany({
+    where: { id: { in: courseIds } },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      level: true,
+      tagline: true,
+      category: true,
+      coverImage: true,
+    },
+  });
+
+  const courseMap = new Map(courses.map((course) => [course.id, course]));
+  const missingCourseIds = courseIds.filter((courseId) => !courseMap.has(courseId));
+
+  if (missingCourseIds.length > 0) {
+    console.error("[Dashboard] Found enrollments with missing course records", {
+      userId: options.userId,
+      missingCourseIds,
+    });
+  }
+
+  return enrollments.flatMap((enrollment) => {
+    const course = courseMap.get(enrollment.courseId);
+    if (!course) {
+      return [];
+    }
+
+    return [{
+      ...enrollment,
+      course,
+    }];
+  });
+}
+
+export async function getStudentEnrollments(userId: string, limit?: number) {
+  return listStudentEnrollmentsWithCourses({ userId, limit });
 }
 
 export async function getStudentResumes(userId: string, limit?: number) {
