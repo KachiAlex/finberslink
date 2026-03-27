@@ -897,9 +897,42 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
   const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
   const tenantStudentWhere = buildUserTenantWhere(resolvedAdmin);
 
+  const enrollmentFallbackEvents = async () => {
+    const enrollments = await prisma.enrollment.findMany({
+      where: {
+        status: 'ACTIVE',
+        course: tenantCourseWhere,
+        user: tenantStudentWhere,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        createdAt: true,
+        course: { select: { title: true } },
+        user: { select: { firstName: true, lastName: true, email: true } },
+      },
+    });
+
+    return enrollments.map((item) => ({
+      id: `enrollment-${item.id}`,
+      status: 'ACCEPTED',
+      assignedAt: item.createdAt,
+      acceptedAt: item.createdAt,
+      declinedAt: null,
+      revokedAt: null,
+      notes: 'Assignment recorded via enrollment',
+      courseTitle: item.course.title,
+      studentName: `${item.user.firstName ?? ""} ${item.user.lastName ?? ""}`.trim(),
+      studentEmail: item.user.email,
+      assignedByName: 'System',
+      assignedByEmail: 'system@finbers.link',
+    }));
+  };
+
   const tableAvailable = await isCourseAssignmentTableAvailable();
   if (!tableAvailable) {
-    return [];
+    return enrollmentFallbackEvents();
   }
 
   let assignments;
@@ -927,12 +960,12 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
   } catch (error) {
     if (isCourseAssignmentMissingError(error)) {
       // Allow admin pages to render even if assignment table migration is pending.
-      return [];
+      return enrollmentFallbackEvents();
     }
     throw error;
   }
 
-  return assignments.map((item) => ({
+  const assignmentEvents = assignments.map((item) => ({
     id: item.id,
     status: item.status,
     assignedAt: item.assignedAt,
@@ -946,6 +979,12 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
     assignedByName: `${item.assignedBy.firstName ?? ""} ${item.assignedBy.lastName ?? ""}`.trim(),
     assignedByEmail: item.assignedBy.email,
   }));
+
+  if (assignmentEvents.length > 0) {
+    return assignmentEvents;
+  }
+
+  return enrollmentFallbackEvents();
 }
 
 export async function assignCourseToStudentsBulk(
