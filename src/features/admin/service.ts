@@ -708,6 +708,29 @@ export async function listAssignableCourses(admin?: AdminUserWithTenant) {
   });
 }
 
+async function isCourseAssignmentTableAvailable() {
+  try {
+    const rows = await prisma.$queryRawUnsafe<Array<{ table_name: string | null }>>(
+      `SELECT to_regclass('public."CourseAssignment"') AS table_name`,
+    );
+    return Boolean(rows[0]?.table_name);
+  } catch {
+    return false;
+  }
+}
+
+function isCourseAssignmentMissingError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2021') {
+    return true;
+  }
+
+  if (error instanceof Error) {
+    return error.message.includes('CourseAssignment') && error.message.includes('does not exist');
+  }
+
+  return false;
+}
+
 export async function assignCourseToStudent(
   input: {
     studentId: string;
@@ -744,6 +767,41 @@ export async function assignCourseToStudent(
 
   if (!course) {
     throw new Error('Course not found, not approved, or outside your tenant');
+  }
+
+  const tableAvailable = await isCourseAssignmentTableAvailable();
+
+  if (!tableAvailable) {
+    const enrollment = await prisma.enrollment.upsert({
+      where: {
+        userId_courseId: {
+          userId: input.studentId,
+          courseId: input.courseId,
+        },
+      },
+      update: {
+        status: 'ACTIVE',
+      },
+      create: {
+        userId: input.studentId,
+        courseId: input.courseId,
+        status: 'ACTIVE',
+      },
+    });
+
+    const studentName = `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim() || "you";
+    const actionUrl = `/dashboard/courses`;
+
+    await createNotificationIfMissing({
+      userId: student.id,
+      type: "ENROLLMENT_UPDATE" as NotificationType,
+      title: `New course assigned: ${course.title}`,
+      body: `An admin assigned ${course.title} to ${studentName}.`,
+      actionUrl,
+      dedupeWindowHours: 72,
+    });
+
+    return { enrollment, assignment: null };
   }
 
   const result = await prisma.$transaction(async (tx) => {
@@ -822,6 +880,11 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
   const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
   const tenantStudentWhere = buildUserTenantWhere(resolvedAdmin);
 
+  const tableAvailable = await isCourseAssignmentTableAvailable();
+  if (!tableAvailable) {
+    return [];
+  }
+
   let assignments;
   try {
     assignments = await prisma.courseAssignment.findMany({
@@ -845,7 +908,7 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
       },
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2021') {
+    if (isCourseAssignmentMissingError(error)) {
       // Allow admin pages to render even if assignment table migration is pending.
       return [];
     }
