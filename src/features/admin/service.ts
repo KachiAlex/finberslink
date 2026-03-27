@@ -822,26 +822,35 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
   const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
   const tenantStudentWhere = buildUserTenantWhere(resolvedAdmin);
 
-  const assignments = await prisma.courseAssignment.findMany({
-    where: {
-      course: tenantCourseWhere,
-      student: tenantStudentWhere,
-    },
-    orderBy: { assignedAt: 'desc' },
-    take: 20,
-    select: {
-      id: true,
-      status: true,
-      assignedAt: true,
-      acceptedAt: true,
-      declinedAt: true,
-      revokedAt: true,
-      notes: true,
-      course: { select: { id: true, title: true } },
-      student: { select: { id: true, firstName: true, lastName: true, email: true } },
-      assignedBy: { select: { id: true, firstName: true, lastName: true, email: true } },
-    },
-  });
+  let assignments;
+  try {
+    assignments = await prisma.courseAssignment.findMany({
+      where: {
+        course: tenantCourseWhere,
+        student: tenantStudentWhere,
+      },
+      orderBy: { assignedAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        status: true,
+        assignedAt: true,
+        acceptedAt: true,
+        declinedAt: true,
+        revokedAt: true,
+        notes: true,
+        course: { select: { id: true, title: true } },
+        student: { select: { id: true, firstName: true, lastName: true, email: true } },
+        assignedBy: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2021') {
+      // Allow admin pages to render even if assignment table migration is pending.
+      return [];
+    }
+    throw error;
+  }
 
   return assignments.map((item) => ({
     id: item.id,
