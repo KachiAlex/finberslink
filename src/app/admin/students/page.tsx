@@ -10,6 +10,7 @@ import {
   assignCourseToStudent,
   assignCourseToStudentsBulk,
   listAssignableCourses,
+  listRecentCourseAssignmentEvents,
   listStudentAssignedCourseIds,
   listStudents,
   requireAdminUser,
@@ -131,17 +132,13 @@ export default async function AdminStudentsPage(props: any) {
     runtimeError = "Student data is temporarily unavailable due to a database sync issue. Try again in a moment.";
   }
 
-  const assignmentEvents: Array<{
-    id: string;
-    status: string;
-    assignedAt: Date;
-    studentName: string;
-    studentEmail: string;
-    courseTitle: string;
-    assignedByName: string;
-    assignedByEmail: string;
-    notes: string | null;
-  }> = [];
+  let assignmentEvents: Awaited<ReturnType<typeof listRecentCourseAssignmentEvents>> = [];
+  try {
+    assignmentEvents = await listRecentCourseAssignmentEvents();
+  } catch {
+    assignmentEvents = [];
+    runtimeError = runtimeError ?? "Assignment audit trail is temporarily unavailable.";
+  }
 
   let assignedCourseMap: Record<string, string[]> = {};
   try {

@@ -690,19 +690,42 @@ export async function listAssignableCourses(admin?: AdminUserWithTenant) {
   const resolvedAdmin = await resolveAdmin(admin);
   const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
 
-  return prisma.course.findMany({
+  const courses = await prisma.course.findMany({
     where: {
       ...tenantCourseWhere,
       approvalStatus: 'APPROVED',
+      archivedAt: null,
     },
-    orderBy: { title: 'asc' },
+    orderBy: { createdAt: 'desc' },
     select: {
       id: true,
+      slug: true,
       title: true,
       level: true,
       category: true,
     },
   });
+
+  const deduped = new Map<string, {
+    id: string;
+    title: string;
+    level: CourseLevel;
+    category: string;
+  }>();
+
+  for (const course of courses) {
+    const key = (course.slug || course.title).trim().toLowerCase();
+    if (!deduped.has(key)) {
+      deduped.set(key, {
+        id: course.id,
+        title: course.title,
+        level: course.level,
+        category: course.category,
+      });
+    }
+  }
+
+  return Array.from(deduped.values()).sort((a, b) => a.title.localeCompare(b.title));
 }
 
 async function isCourseAssignmentTableAvailable() {
@@ -981,12 +1004,15 @@ export async function listStudentAssignedCourseIds(
   });
 
   const assignmentMap: Record<string, string[]> = {};
+  const seenPerStudent: Record<string, Set<string>> = {};
   for (const enrollment of enrollments) {
     if (!assignmentMap[enrollment.userId]) {
       assignmentMap[enrollment.userId] = [];
+      seenPerStudent[enrollment.userId] = new Set<string>();
     }
-    if (!assignmentMap[enrollment.userId].includes(enrollment.courseId)) {
+    if (!seenPerStudent[enrollment.userId].has(enrollment.courseId)) {
       assignmentMap[enrollment.userId].push(enrollment.courseId);
+      seenPerStudent[enrollment.userId].add(enrollment.courseId);
     }
   }
 
