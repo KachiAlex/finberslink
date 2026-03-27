@@ -96,7 +96,7 @@ export default async function AdminOverviewPage({
         )
       : courseSnapshot.recentCourses;
 
-  const statConfig = [
+  const primaryStatConfig = [
     {
       key: "courses" as const,
       label: "Courses live",
@@ -121,19 +121,15 @@ export default async function AdminOverviewPage({
       icon: Users,
       accent: "bg-amber-50 text-amber-700",
     },
-    {
-      key: "resumes" as const,
-      label: "Resumes created",
-      icon: ClipboardCheck,
-      accent: "bg-violet-50 text-violet-700",
-    },
-    {
-      key: "jobApplications" as const,
-      label: "Job applications",
-      icon: Activity,
-      accent: "bg-rose-50 text-rose-700",
-    },
   ];
+
+  const studentsCount = overview.stats.students || 0;
+  const resumesCount = overview.stats.resumes || 0;
+  const applicationsCount = overview.stats.jobApplications || 0;
+  const enrollmentsCount = overview.stats.enrollments || 0;
+  const resumeCoverage = studentsCount > 0 ? Math.round((resumesCount / studentsCount) * 100) : 0;
+  const applicationRate = studentsCount > 0 ? Math.round((applicationsCount / studentsCount) * 100) : 0;
+  const enrollmentPerCourse = overview.stats.courses > 0 ? (enrollmentsCount / overview.stats.courses).toFixed(1) : "0.0";
 
   return (
     <div className="space-y-8">
@@ -151,8 +147,8 @@ export default async function AdminOverviewPage({
           </div>
         }
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-          {statConfig.map(({ key, label, icon, accent }) => (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {primaryStatConfig.map(({ key, label, icon, accent }) => (
             <StatCard
               key={key}
               title={label}
@@ -162,6 +158,64 @@ export default async function AdminOverviewPage({
               trend={{ value: 6, isPositive: true }}
             />
           ))}
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Talent Outcomes</CardTitle>
+              <CardDescription>Resume and application activity across your learner base.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <ClipboardCheck className="h-4 w-4 text-violet-600" />
+                  Resumes created
+                </div>
+                <Badge variant="secondary" className="bg-violet-50 text-violet-700">{resumesCount}</Badge>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <Activity className="h-4 w-4 text-rose-600" />
+                  Job applications
+                </div>
+                <Badge variant="secondary" className="bg-rose-50 text-rose-700">{applicationsCount}</Badge>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Resume coverage</span>
+                <span>{resumeCoverage}% of students</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Application rate</span>
+                <span>{applicationRate}% of students</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Learning Health</CardTitle>
+              <CardDescription>Enrollment density and learner momentum signals.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                <span className="text-sm font-medium text-slate-700">Active enrollments</span>
+                <Badge variant="secondary" className="bg-amber-50 text-amber-700">{enrollmentsCount}</Badge>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                <span className="text-sm font-medium text-slate-700">Enrollments per course</span>
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700">{enrollmentPerCourse}</Badge>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Courses available</span>
+                <span>{overview.stats.courses}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Students onboarded</span>
+                <span>{studentsCount}</span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
