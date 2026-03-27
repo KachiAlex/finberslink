@@ -899,23 +899,124 @@ export async function assignCourseToStudent(
   return result;
 }
 
+export async function unassignCourseFromStudent(
+  input: {
+    studentId: string;
+    courseId: string;
+    notes?: string;
+  },
+  admin?: AdminUserWithTenant,
+) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantStudentWhere = buildUserTenantWhere(resolvedAdmin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+
+  const student = await prisma.user.findFirst({
+    where: {
+      id: input.studentId,
+      role: 'STUDENT',
+      ...tenantStudentWhere,
+    },
+    select: { id: true },
+  });
+
+  if (!student) {
+    throw new Error('Student not found in your tenant');
+  }
+
+  const course = await prisma.course.findFirst({
+    where: {
+      id: input.courseId,
+      ...tenantCourseWhere,
+    },
+    select: { id: true },
+  });
+
+  if (!course) {
+    throw new Error('Course not found in your tenant');
+  }
+
+  const tableAvailable = await isCourseAssignmentTableAvailable();
+
+  const result = await prisma.$transaction(async (tx) => {
+    const enrollment = await tx.enrollment.findFirst({
+      where: {
+        userId: input.studentId,
+        courseId: input.courseId,
+        status: 'ACTIVE',
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    });
+
+    if (!enrollment) {
+      throw new Error('No active assignment found for this student and course');
+    }
+
+    const updatedEnrollment = await tx.enrollment.update({
+      where: { id: enrollment.id },
+      data: {
+        status: 'WITHDRAWN',
+        updatedAt: new Date(),
+      },
+    });
+
+    if (!tableAvailable) {
+      return { enrollment: updatedEnrollment, assignment: null };
+    }
+
+    const assignment = await tx.courseAssignment.findFirst({
+      where: {
+        studentId: input.studentId,
+        courseId: input.courseId,
+        status: {
+          in: ['PENDING', 'ACCEPTED'],
+        },
+      },
+      orderBy: { assignedAt: 'desc' },
+      select: { id: true },
+    });
+
+    if (!assignment) {
+      return { enrollment: updatedEnrollment, assignment: null };
+    }
+
+    const updatedAssignment = await tx.courseAssignment.update({
+      where: { id: assignment.id },
+      data: {
+        status: 'REVOKED',
+        revokedAt: new Date(),
+        notes: input.notes?.trim() || 'Unassigned by admin',
+      },
+    });
+
+    return { enrollment: updatedEnrollment, assignment: updatedAssignment };
+  });
+
+  return result;
+}
+
 export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTenant) {
   const resolvedAdmin = await resolveAdmin(admin);
   const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
   const tenantStudentWhere = buildUserTenantWhere(resolvedAdmin);
+  const fallbackAssignedByName = `${resolvedAdmin.firstName ?? ""} ${resolvedAdmin.lastName ?? ""}`.trim() || 'Admin';
+  const fallbackAssignedByEmail = resolvedAdmin.email;
 
   const enrollmentFallbackEvents = async () => {
     const enrollments = await prisma.enrollment.findMany({
       where: {
-        status: 'ACTIVE',
+        status: { in: ['ACTIVE', 'WITHDRAWN'] },
         course: tenantCourseWhere,
         user: tenantStudentWhere,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { updatedAt: 'desc' },
       take: 20,
       select: {
         id: true,
         createdAt: true,
+        updatedAt: true,
+        status: true,
         course: { select: { title: true } },
         user: { select: { firstName: true, lastName: true, email: true } },
       },
@@ -923,17 +1024,17 @@ export async function listRecentCourseAssignmentEvents(admin?: AdminUserWithTena
 
     return enrollments.map((item) => ({
       id: `enrollment-${item.id}`,
-      status: 'ACCEPTED',
-      assignedAt: item.createdAt,
-      acceptedAt: item.createdAt,
+      status: item.status === 'WITHDRAWN' ? 'REVOKED' : 'ACCEPTED',
+      assignedAt: item.status === 'WITHDRAWN' ? item.updatedAt : item.createdAt,
+      acceptedAt: item.status === 'WITHDRAWN' ? null : item.createdAt,
       declinedAt: null,
-      revokedAt: null,
-      notes: 'Assignment recorded via enrollment',
+      revokedAt: item.status === 'WITHDRAWN' ? item.updatedAt : null,
+      notes: item.status === 'WITHDRAWN' ? 'Unassigned by admin' : 'Assigned by admin',
       courseTitle: item.course.title,
       studentName: `${item.user.firstName ?? ""} ${item.user.lastName ?? ""}`.trim(),
       studentEmail: item.user.email,
-      assignedByName: 'System',
-      assignedByEmail: 'system@finbers.link',
+      assignedByName: fallbackAssignedByName,
+      assignedByEmail: fallbackAssignedByEmail,
     }));
   };
 
@@ -1059,6 +1160,63 @@ export async function listStudentAssignedCourseIds(
     if (!seenPerStudent[enrollment.userId].has(enrollment.courseId)) {
       assignmentMap[enrollment.userId].push(enrollment.courseId);
       seenPerStudent[enrollment.userId].add(enrollment.courseId);
+    }
+  }
+
+  return assignmentMap;
+}
+
+export async function listStudentAssignedCourses(
+  studentIds: string[],
+  admin?: AdminUserWithTenant,
+) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantStudentWhere = buildUserTenantWhere(resolvedAdmin);
+  const ids = Array.from(new Set(studentIds.map((id) => id.trim()).filter(Boolean)));
+
+  if (ids.length === 0) {
+    return {} as Record<string, Array<{ courseId: string; title: string; level: CourseLevel; category: string; assignedAt: Date }>>;
+  }
+
+  const enrollments = await prisma.enrollment.findMany({
+    where: {
+      userId: { in: ids },
+      status: 'ACTIVE',
+      user: tenantStudentWhere,
+    },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      userId: true,
+      createdAt: true,
+      course: {
+        select: {
+          id: true,
+          title: true,
+          level: true,
+          category: true,
+        },
+      },
+    },
+  });
+
+  const assignmentMap: Record<string, Array<{ courseId: string; title: string; level: CourseLevel; category: string; assignedAt: Date }>> = {};
+  const seenPerStudent: Record<string, Set<string>> = {};
+
+  for (const enrollment of enrollments) {
+    if (!assignmentMap[enrollment.userId]) {
+      assignmentMap[enrollment.userId] = [];
+      seenPerStudent[enrollment.userId] = new Set<string>();
+    }
+
+    if (!seenPerStudent[enrollment.userId].has(enrollment.course.id)) {
+      assignmentMap[enrollment.userId].push({
+        courseId: enrollment.course.id,
+        title: enrollment.course.title,
+        level: enrollment.course.level,
+        category: enrollment.course.category,
+        assignedAt: enrollment.createdAt,
+      });
+      seenPerStudent[enrollment.userId].add(enrollment.course.id);
     }
   }
 

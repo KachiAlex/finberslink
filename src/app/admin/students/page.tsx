@@ -11,12 +11,14 @@ import {
   assignCourseToStudentsBulk,
   listAssignableCourses,
   listRecentCourseAssignmentEvents,
-  listStudentAssignedCourseIds,
+  listStudentAssignedCourses,
   listStudents,
   requireAdminUser,
+  unassignCourseFromStudent,
   updateStudentStatus,
 } from "@/features/admin/service";
 import { BulkStudentSelector } from "./_components/bulk-student-selector";
+import { StudentDetailsModal } from "./_components/student-details-modal";
 
 import { AdminShell } from "../_components/admin-shell";
 
@@ -105,6 +107,38 @@ async function bulkAssignCourseAction(formData: FormData) {
   redirect(`/admin/students?success=bulk-assigned-${assignedCount}`);
 }
 
+async function unassignCourseFromStudentAction(formData: FormData) {
+  "use server";
+
+  await requireAdminUser();
+
+  const studentId = String(formData.get("studentId") ?? "").trim();
+  const courseId = String(formData.get("courseId") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
+
+  if (!studentId || !courseId) {
+    redirect("/admin/students?error=missing-unassignment-fields");
+    return;
+  }
+
+  let errorMessage: string | null = null;
+  try {
+    await unassignCourseFromStudent({
+      studentId,
+      courseId,
+      notes: notes || undefined,
+    });
+  } catch (error) {
+    errorMessage = error instanceof Error ? error.message : "Failed to unassign course";
+  }
+
+  revalidatePath("/admin/students");
+  if (errorMessage) {
+    redirect(`/admin/students?error=${encodeURIComponent(errorMessage)}`);
+  }
+  redirect("/admin/students?success=course-unassigned");
+}
+
 export default async function AdminStudentsPage(props: any) {
   const { searchParams } = props as {
     searchParams?: {
@@ -140,11 +174,17 @@ export default async function AdminStudentsPage(props: any) {
     runtimeError = runtimeError ?? "Assignment audit trail is temporarily unavailable.";
   }
 
-  let assignedCourseMap: Record<string, string[]> = {};
+  let assignedCoursesMap: Record<string, Array<{
+    courseId: string;
+    title: string;
+    level: string;
+    category: string;
+    assignedAt: Date;
+  }>> = {};
   try {
-    assignedCourseMap = await listStudentAssignedCourseIds(students.map((student) => student.id));
+    assignedCoursesMap = await listStudentAssignedCourses(students.map((student) => student.id));
   } catch {
-    assignedCourseMap = {};
+    assignedCoursesMap = {};
     runtimeError = runtimeError ?? "Student enrollment map is temporarily unavailable due to a database sync issue.";
   }
 
@@ -155,6 +195,8 @@ export default async function AdminStudentsPage(props: any) {
     ? `Assigned course to ${bulkMatch[1]} student${bulkMatch[1] === "1" ? "" : "s"}.`
     : successParam === "course-assigned"
       ? "Course assigned successfully."
+      : successParam === "course-unassigned"
+        ? "Course unassigned successfully."
       : null;
 
   return (
@@ -244,7 +286,8 @@ export default async function AdminStudentsPage(props: any) {
                 <tbody className="divide-y divide-slate-100">
                   {students.map((student) => {
                     const statusLabel = (student.status ?? "ACTIVE").toString().toLowerCase();
-                    const assignedCourseIds = new Set(assignedCourseMap[student.id] ?? []);
+                    const assignedCourses = assignedCoursesMap[student.id] ?? [];
+                    const assignedCourseIds = new Set(assignedCourses.map((course) => course.courseId));
                     return (
                     <tr key={student.id} className="text-slate-700">
                       <td className="py-3 font-semibold">
@@ -288,23 +331,38 @@ export default async function AdminStudentsPage(props: any) {
                         </form>
                       </td>
                       <td>
-                        <form action={updateStudentStatusAction} className="inline-flex">
-                          <input type="hidden" name="userId" value={student.id} />
-                          <select
-                            name="status"
-                            defaultValue={student.status ?? "ACTIVE"}
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
-                          >
-                            {UserStatusValues.map((option) => (
-                              <option key={option} value={option}>
-                                {option.toLowerCase()}
-                              </option>
-                            ))}
-                          </select>
-                          <Button type="submit" size="sm" className="ml-2 text-xs">
-                            Update
-                          </Button>
-                        </form>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <StudentDetailsModal
+                            student={{
+                              id: student.id,
+                              name: `${student.firstName} ${student.lastName}`,
+                              email: student.email,
+                              status: String(student.status ?? "ACTIVE"),
+                              createdAt: student.createdAt,
+                            }}
+                            assignableCourses={assignableCourses}
+                            assignedCourses={assignedCourses}
+                            assignAction={assignCourseToStudentAction}
+                            unassignAction={unassignCourseFromStudentAction}
+                          />
+                          <form action={updateStudentStatusAction} className="inline-flex">
+                            <input type="hidden" name="userId" value={student.id} />
+                            <select
+                              name="status"
+                              defaultValue={student.status ?? "ACTIVE"}
+                              className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+                            >
+                              {UserStatusValues.map((option) => (
+                                <option key={option} value={option}>
+                                  {option.toLowerCase()}
+                                </option>
+                              ))}
+                            </select>
+                            <Button type="submit" size="sm" className="ml-2 text-xs">
+                              Update
+                            </Button>
+                          </form>
+                        </div>
                       </td>
                     </tr>
                     );
@@ -328,15 +386,13 @@ export default async function AdminStudentsPage(props: any) {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left text-sm">
+              <table className="w-full min-w-[640px] text-left text-sm">
                 <thead>
                   <tr className="text-xs uppercase tracking-wide text-slate-500">
                     <th className="pb-3">When</th>
                     <th className="pb-3">Student</th>
                     <th className="pb-3">Course</th>
-                    <th className="pb-3">Assigned by</th>
-                    <th className="pb-3">Status</th>
-                    <th className="pb-3">Notes</th>
+                    <th className="pb-3">Event</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -356,20 +412,20 @@ export default async function AdminStudentsPage(props: any) {
                       </td>
                       <td>{event.courseTitle}</td>
                       <td>
-                        <p className="font-medium">{event.assignedByName || event.assignedByEmail}</p>
-                        <p className="text-xs text-slate-500">{event.assignedByEmail}</p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="capitalize">
+                            {event.status.toLowerCase()}
+                          </Badge>
+                          <span className="text-xs text-slate-600">
+                            by {event.assignedByName || event.assignedByEmail}
+                          </span>
+                        </div>
                       </td>
-                      <td>
-                        <Badge variant="outline" className="capitalize">
-                          {event.status.toLowerCase()}
-                        </Badge>
-                      </td>
-                      <td className="max-w-[240px] truncate text-xs text-slate-600">{event.notes || "—"}</td>
                     </tr>
                   ))}
                   {assignmentEvents.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-sm text-slate-500">
+                      <td colSpan={4} className="py-8 text-center text-sm text-slate-500">
                         No assignment events yet.
                       </td>
                     </tr>
