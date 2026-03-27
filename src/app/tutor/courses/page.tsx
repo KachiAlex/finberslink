@@ -12,7 +12,7 @@ async function TutorCourseFilterComponent() {
     failureMode: "error",
   });
 
-  let courses = [];
+  let courses: Awaited<ReturnType<typeof listTutorCourses>> = [];
   let error: unknown = null;
 
   try {
@@ -44,6 +44,7 @@ async function TutorCourseFilterComponent() {
         createdAt: course.createdAt,
         updatedAt: course.updatedAt,
         tutorEditingLocked: course.tutorEditingLocked,
+        hasPendingEdit: course.hasPendingEdit,
         enrollmentCount: course.enrollmentCount,
       }))}
     />

@@ -141,6 +141,7 @@ export async function listDashboardCatalogCourses(options: DashboardCatalogOptio
 
   const where: Prisma.CourseWhereInput = {
     approvalStatus: "APPROVED",
+    archivedAt: null,
     AND: [
       {
         OR: [
@@ -223,6 +224,7 @@ export async function listLearnerCourses(_userId = DEFAULT_LEARNER_ID): Promise<
   const courses = await prisma.course.findMany({
     where: {
       approvalStatus: "APPROVED",
+      archivedAt: null,
       AND: [
         {
           OR: [
@@ -270,6 +272,7 @@ export async function getLearnerCourseDetail(
     where: {
       OR: [{ id: slug }, { slug }],
       approvalStatus: "APPROVED",
+      archivedAt: null,
     },
     include: courseDetailInclude,
   });

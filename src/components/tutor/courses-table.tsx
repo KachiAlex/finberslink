@@ -26,6 +26,7 @@ export interface TutorCourse {
   createdAt: Date;
   updatedAt: Date;
   tutorEditingLocked: boolean;
+  hasPendingEdit?: boolean;
   enrollmentCount?: number;
 }
 
@@ -258,6 +259,9 @@ export function CoursesTable({ courses, onDeleteSuccess }: CoursesTableProps) {
                         <Badge className={getStatusColor(course.approvalStatus)}>
                           {getStatusLabel(course.approvalStatus)}
                         </Badge>
+                        {course.hasPendingEdit && (
+                          <p className="text-xs text-violet-600 mt-1">Edit pending admin approval</p>
+                        )}
                         {course.tutorEditingLocked && (
                           <p className="text-xs text-slate-500 mt-1">
                             Locked for review
@@ -275,7 +279,7 @@ export function CoursesTable({ courses, onDeleteSuccess }: CoursesTableProps) {
                             size="sm"
                             variant="outline"
                             asChild
-                            disabled={course.tutorEditingLocked}
+                            disabled={course.tutorEditingLocked && course.approvalStatus !== "APPROVED"}
                           >
                             <Link
                               href={`/tutor/courses/${course.slug}/edit`}

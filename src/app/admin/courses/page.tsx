@@ -12,14 +12,19 @@ import { StatCard } from "@/components/ui/stat-card";
 import {
   createAdminCourse,
   getCourseManagementSnapshot,
+  listArchivedCourses,
   listAdminCourses,
+  listCoursesWithPendingEdits,
   requireAdminUser,
 } from "@/features/admin/service";
 
 import { AdminShell } from "../_components/admin-shell";
+import { CourseAdminActionButton } from "./_components/course-admin-actions";
 import { CreateCourseSheet } from "./_components/create-course-sheet";
 
 type AdminCourse = Awaited<ReturnType<typeof listAdminCourses>>[number];
+type ArchivedCourse = Awaited<ReturnType<typeof listArchivedCourses>>[number];
+type PendingEditCourse = Awaited<ReturnType<typeof listCoursesWithPendingEdits>>[number];
 type CourseSnapshot = Awaited<ReturnType<typeof getCourseManagementSnapshot>>;
 type SnapshotCourse = CourseSnapshot["recentCourses"][number];
 
@@ -60,9 +65,11 @@ async function createCourseAction(formData: FormData) {
 }
 
 export default async function AdminCoursesPage() {
-  const [admin, courses, snapshot] = await Promise.all([
+  const [admin, courses, pendingEditCourses, archivedCourses, snapshot] = await Promise.all([
     requireAdminUser(),
     listAdminCourses(),
+    listCoursesWithPendingEdits(),
+    listArchivedCourses(),
     getCourseManagementSnapshot(),
   ]);
 
@@ -134,8 +141,10 @@ export default async function AdminCoursesPage() {
                       <th className="pb-3">Title</th>
                       <th className="pb-3">Instructor</th>
                       <th className="pb-3">Level</th>
+                      <th className="pb-3">Status</th>
                       <th className="pb-3">Enrollments</th>
                       <th className="pb-3">Created</th>
+                      <th className="pb-3 text-right">Actions</th>
                     </tr>
                   </thead>
                           <tbody className="divide-y divide-slate-100">
@@ -158,18 +167,159 @@ export default async function AdminCoursesPage() {
                             <p className="text-xs text-slate-500">{instructorRoleLabel} author</p>
                           </td>
                           <td className="capitalize">{levelLabel}</td>
+                          <td>
+                            <Badge variant="outline" className="text-xs">
+                              {course.approvalStatus.toLowerCase()}
+                            </Badge>
+                            {course.hasPendingEdit ? (
+                              <p className="mt-1 text-xs text-violet-600">Pending edit review</p>
+                            ) : null}
+                          </td>
                           <td>{enrollmentCount}</td>
                           <td>{formatShortDate(course.createdAt)}</td>
+                          <td>
+                            <div className="flex justify-end">
+                              <CourseAdminActionButton
+                                courseId={course.id}
+                                action="archive"
+                                label="Archive"
+                                variant="ghost"
+                                className="text-rose-600"
+                              />
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}
                     {courses.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="py-8 text-center text-sm text-slate-500">
+                        <td colSpan={7} className="py-8 text-center text-sm text-slate-500">
                           No courses yet. Use the “New course” action to launch your first cohort.
                         </td>
                       </tr>
                     )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-violet-200/70 bg-violet-50/40">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold text-violet-900">Pending Tutor Edit Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-sm">
+                  <thead>
+                    <tr className="text-xs uppercase tracking-wide text-violet-700">
+                      <th className="pb-3">Course</th>
+                      <th className="pb-3">Tutor</th>
+                      <th className="pb-3">Submitted</th>
+                      <th className="pb-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-violet-100">
+                    {pendingEditCourses.map((course: PendingEditCourse) => {
+                      const pendingEdit = course.pendingEdit as { submittedAt?: string } | null;
+                      return (
+                        <tr key={course.id} className="text-slate-700">
+                          <td className="py-3">
+                            <p className="font-semibold">{course.title}</p>
+                            <p className="text-xs text-slate-500">{course.category}</p>
+                          </td>
+                          <td>
+                            <p className="text-sm">
+                              {course.instructor?.firstName} {course.instructor?.lastName}
+                            </p>
+                          </td>
+                          <td>
+                            {pendingEdit?.submittedAt
+                              ? formatShortDate(pendingEdit.submittedAt)
+                              : formatShortDate(course.updatedAt)}
+                          </td>
+                          <td>
+                            <div className="flex justify-end gap-2">
+                              <CourseAdminActionButton
+                                courseId={course.id}
+                                action="approve-edit"
+                                label="Approve edit"
+                                variant="outline"
+                                className="border-emerald-300 text-emerald-700"
+                              />
+                              <CourseAdminActionButton
+                                courseId={course.id}
+                                action="reject-edit"
+                                label="Reject"
+                                variant="ghost"
+                                className="text-rose-600"
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {pendingEditCourses.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="py-8 text-center text-sm text-slate-500">
+                          No pending tutor edit requests.
+                        </td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-slate-200/70 bg-white/95">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold text-slate-900">Archived Courses</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-sm">
+                  <thead>
+                    <tr className="text-xs uppercase tracking-wide text-slate-500">
+                      <th className="pb-3">Title</th>
+                      <th className="pb-3">Instructor</th>
+                      <th className="pb-3">Archived</th>
+                      <th className="pb-3">Enrollments</th>
+                      <th className="pb-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {archivedCourses.map((course: ArchivedCourse) => (
+                      <tr key={course.id} className="text-slate-700">
+                        <td className="py-3">
+                          <div className="font-semibold">{course.title}</div>
+                          <p className="text-xs text-slate-500">{course.category}</p>
+                        </td>
+                        <td>
+                          {course.instructor?.firstName} {course.instructor?.lastName}
+                        </td>
+                        <td>{course.archivedAt ? formatShortDate(course.archivedAt) : "-"}</td>
+                        <td>{course._count?.enrollments ?? 0}</td>
+                        <td>
+                          <div className="flex justify-end">
+                            <CourseAdminActionButton
+                              courseId={course.id}
+                              action="restore"
+                              label="Restore"
+                              variant="outline"
+                              className="border-indigo-300 text-indigo-700"
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {archivedCourses.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-sm text-slate-500">
+                          No archived courses.
+                        </td>
+                      </tr>
+                    ) : null}
                   </tbody>
                 </table>
               </div>

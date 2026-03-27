@@ -370,7 +370,7 @@ async function replaceCourseStructure(
 }
 
 export async function submitTutorCourse(courseId: string, tutorId: string) {
-  const course = await prisma.course.findFirst({ where: { id: courseId, instructorId: tutorId } });
+  const course = await prisma.course.findFirst({ where: { id: courseId, instructorId: tutorId, archivedAt: null } });
   if (!course) {
     throw new Error("Course not found");
   }
@@ -399,7 +399,7 @@ export async function submitTutorCourse(courseId: string, tutorId: string) {
 
 export async function listTutorCourses(tutorId: string) {
   const courses = await prisma.course.findMany({
-    where: { instructorId: tutorId },
+    where: { instructorId: tutorId, archivedAt: null },
     select: {
       id: true,
       slug: true,
@@ -409,6 +409,7 @@ export async function listTutorCourses(tutorId: string) {
       level: true,
       approvalStatus: true,
       tutorEditingLocked: true,
+      hasPendingEdit: true,
       createdAt: true,
       updatedAt: true,
       _count: {
@@ -429,16 +430,85 @@ export async function listTutorCourses(tutorId: string) {
     tutorEditingLocked: course.tutorEditingLocked,
     createdAt: course.createdAt,
     updatedAt: course.updatedAt,
+    hasPendingEdit: course.hasPendingEdit,
     enrollmentCount: course._count.enrollments,
   }));
+}
+
+export type CourseEditRequestPayload = {
+  title: string;
+  tagline: string;
+  description: string;
+  category: string;
+  level: string;
+  coverImage?: string;
+  outcomes?: string[];
+  skills?: string[];
+  submittedAt: string;
+};
+
+export async function submitCourseEditRequest(
+  courseId: string,
+  tutorId: string,
+  data: Omit<CourseEditRequestPayload, "submittedAt">,
+) {
+  const course = await prisma.course.findFirst({
+    where: { id: courseId, instructorId: tutorId, archivedAt: null },
+  });
+
+  if (!course) {
+    throw new Error("Course not found");
+  }
+
+  if (course.approvalStatus !== CourseApprovalStatus.APPROVED) {
+    throw new Error("Edit requests are only for approved courses. Use the draft editor for other statuses.");
+  }
+
+  const payload: CourseEditRequestPayload = {
+    ...data,
+    submittedAt: new Date().toISOString(),
+  };
+
+  return prisma.course.update({
+    where: { id: courseId },
+    data: {
+      pendingEdit: payload as unknown as Prisma.InputJsonValue,
+      hasPendingEdit: true,
+    },
+  });
+}
+
+export async function getTutorCourseForEdit(tutorId: string, slug: string) {
+  return prisma.course.findFirst({
+    where: { slug, instructorId: tutorId, archivedAt: null },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      tagline: true,
+      description: true,
+      category: true,
+      level: true,
+      coverImage: true,
+      outcomes: true,
+      skills: true,
+      approvalStatus: true,
+      tutorEditingLocked: true,
+      hasPendingEdit: true,
+      pendingEdit: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
 }
 
 export async function getTutorCourseDraft(tutorId: string, courseId?: string | null) {
   const course = await prisma.course.findFirst({
     where: courseId
-      ? { id: courseId, instructorId: tutorId }
+      ? { id: courseId, instructorId: tutorId, archivedAt: null }
       : {
           instructorId: tutorId,
+          archivedAt: null,
           approvalStatus: { in: [CourseApprovalStatus.DRAFT, CourseApprovalStatus.CHANGES, CourseApprovalStatus.PENDING] },
         },
     orderBy: courseId ? undefined : { updatedAt: "desc" },

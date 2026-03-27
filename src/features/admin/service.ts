@@ -1,11 +1,12 @@
 // Removed import of randomBytes; using fallback token generator
+import { Prisma } from "@prisma/client";
 import type {
   CourseApprovalStatus,
+  CourseLevel,
   InviteStatus,
   JobApplicationStatus,
   JobType,
   NotificationType,
-  Prisma,
   RemoteOption,
   Role,
   UserStatus,
@@ -401,6 +402,7 @@ export async function updateCourseApprovalStatus(courseId: string, status: Cours
   const course = await prisma.course.findFirst({
     where: {
       id: courseId,
+      archivedAt: null,
       ...tenantCourseWhere,
     },
     select: { id: true },
@@ -421,7 +423,7 @@ export async function listAdminCourses(admin?: AdminUserWithTenant) {
   const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
 
   return prisma.course.findMany({
-    where: tenantCourseWhere,
+    where: { ...tenantCourseWhere, archivedAt: null },
     take: 100,
     orderBy: { createdAt: 'desc' },
     include: {
@@ -440,6 +442,130 @@ export async function listAdminCourses(admin?: AdminUserWithTenant) {
         },
       },
     },
+  });
+}
+
+export async function listArchivedCourses(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+
+  return prisma.course.findMany({
+    where: { ...tenantCourseWhere, archivedAt: { not: null } },
+    take: 100,
+    orderBy: { archivedAt: 'desc' },
+    include: {
+      instructor: {
+        select: { id: true, firstName: true, lastName: true, email: true, role: true },
+      },
+      _count: { select: { enrollments: true } },
+    },
+  });
+}
+
+export async function listCoursesWithPendingEdits(admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+
+  return prisma.course.findMany({
+    where: { ...tenantCourseWhere, hasPendingEdit: true, archivedAt: null },
+    take: 100,
+    orderBy: { updatedAt: 'desc' },
+    include: {
+      instructor: {
+        select: { id: true, firstName: true, lastName: true, email: true, role: true },
+      },
+    },
+  });
+}
+
+export async function archiveCourse(courseId: string, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+
+  const course = await prisma.course.findFirst({
+    where: { id: courseId, ...tenantCourseWhere, archivedAt: null },
+    select: { id: true },
+  });
+
+  if (!course) {
+    throw new Error('Course not found or already archived');
+  }
+
+  return prisma.course.update({
+    where: { id: courseId },
+    data: { archivedAt: new Date() },
+  });
+}
+
+export async function restoreCourse(courseId: string, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+
+  const course = await prisma.course.findFirst({
+    where: { id: courseId, ...tenantCourseWhere, archivedAt: { not: null } },
+    select: { id: true },
+  });
+
+  if (!course) {
+    throw new Error('Course not found or not archived');
+  }
+
+  return prisma.course.update({
+    where: { id: courseId },
+    data: { archivedAt: null },
+  });
+}
+
+export async function approveCourseEdit(courseId: string, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+
+  const course = await prisma.course.findFirst({
+    where: { id: courseId, ...tenantCourseWhere, hasPendingEdit: true },
+  });
+
+  if (!course) {
+    throw new Error('Course not found or no pending edit');
+  }
+
+  const edit = course.pendingEdit as Record<string, unknown> | null;
+  if (!edit) {
+    throw new Error('No pending edit data found');
+  }
+
+  return prisma.course.update({
+    where: { id: courseId },
+    data: {
+      title: typeof edit.title === 'string' ? edit.title : undefined,
+      tagline: typeof edit.tagline === 'string' ? edit.tagline : undefined,
+      description: typeof edit.description === 'string' ? edit.description : undefined,
+      category: typeof edit.category === 'string' ? edit.category : undefined,
+      level: typeof edit.level === 'string' ? (edit.level as CourseLevel) : undefined,
+      coverImage: typeof edit.coverImage === 'string' ? edit.coverImage : undefined,
+      outcomes: Array.isArray(edit.outcomes) ? (edit.outcomes as string[]) : undefined,
+      skills: Array.isArray(edit.skills) ? (edit.skills as string[]) : undefined,
+      pendingEdit: Prisma.DbNull,
+      hasPendingEdit: false,
+    },
+  });
+}
+
+export async function rejectCourseEdit(courseId: string, admin?: AdminUserWithTenant) {
+  const resolvedAdmin = await resolveAdmin(admin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
+
+  const course = await prisma.course.findFirst({
+    where: { id: courseId, ...tenantCourseWhere, hasPendingEdit: true },
+    select: { id: true },
+  });
+
+  if (!course) {
+    throw new Error('Course not found or no pending edit');
+  }
+
+  return prisma.course.update({
+    where: { id: courseId },
+    data: { pendingEdit: Prisma.DbNull, hasPendingEdit: false },
   });
 }
 
