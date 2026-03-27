@@ -10,7 +10,6 @@ import {
   assignCourseToStudent,
   assignCourseToStudentsBulk,
   listAssignableCourses,
-  listRecentCourseAssignmentEvents,
   listStudentAssignedCourseIds,
   listStudents,
   requireAdminUser,
@@ -105,12 +104,22 @@ export default async function AdminStudentsPage(props: any) {
     };
   };
 
-  const [admin, students, assignableCourses, assignmentEvents] = await Promise.all([
+  const [admin, students, assignableCourses] = await Promise.all([
     requireAdminUser(),
     listStudents(),
     listAssignableCourses(),
-    listRecentCourseAssignmentEvents(),
   ]);
+  const assignmentEvents: Array<{
+    id: string;
+    status: string;
+    assignedAt: Date;
+    studentName: string;
+    studentEmail: string;
+    courseTitle: string;
+    assignedByName: string;
+    assignedByEmail: string;
+    notes: string | null;
+  }> = [];
   const assignedCourseMap = await listStudentAssignedCourseIds(students.map((student) => student.id));
 
   const successParam = searchParams?.success ?? "";
