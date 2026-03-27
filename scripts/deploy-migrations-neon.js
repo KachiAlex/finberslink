@@ -11,7 +11,7 @@ if (!databaseUrl) {
 
 try {
   console.log('Deploying migrations to Neon database...');
-  const output = execSync('npx prisma migrate deploy --skip-generate', {
+  const output = execSync('npx prisma migrate deploy', {
     env: { ...process.env, DATABASE_URL: databaseUrl },
     stdio: 'inherit',
     cwd: process.cwd(),

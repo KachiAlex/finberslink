@@ -5,7 +5,7 @@ const { ensureDbSchema } = require('./ensure-db-schema');
 
 function runPrismaMigrateDeploy() {
   try {
-    execSync('npx prisma migrate deploy --skip-generate', {
+    execSync('npx prisma migrate deploy', {
       stdio: 'inherit',
       env: process.env,
     });
