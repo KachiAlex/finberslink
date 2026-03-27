@@ -134,7 +134,7 @@ export async function getTenantAdminDashboard(admin?: AdminUserWithTenant) {
     // Return empty data structure on error
     return {
       overview: {
-        stats: { courses: 0, students: 0, jobs: 0, enrollments: 0 },
+        stats: { courses: 0, students: 0, jobs: 0, enrollments: 0, resumes: 0, jobApplications: 0 },
         recentCourses: [],
         recentStudents: [],
         recentJobs: [],
@@ -149,20 +149,27 @@ export async function getAdminOverview(admin?: AdminUserWithTenant) {
   const resolvedAdmin = await resolveAdmin(admin);
   const tenantUserWhere = buildUserTenantWhere(resolvedAdmin);
   const tenantJobWhere = buildJobTenantWhere(resolvedAdmin);
+  const tenantCourseWhere = buildCourseTenantWhere(resolvedAdmin);
 
-  const [studentCount, jobCount, recentStudents, recentJobs] = await Promise.all([
+  const [courseCount, studentCount, jobCount, enrollmentCount, resumeCount, applicationCount, recentStudents, recentJobs] = await Promise.all([
+    prisma.course.count({ where: { ...tenantCourseWhere, archivedAt: null } }),
     prisma.user.count({ where: { role: 'STUDENT', ...tenantUserWhere } }),
     prisma.jobOpportunity.count({ where: { isActive: true, ...tenantJobWhere } }),
+    prisma.enrollment.count({ where: { user: tenantUserWhere } }),
+    prisma.resume.count({ where: { user: tenantUserWhere } }),
+    prisma.jobApplication.count({ where: { user: tenantUserWhere } }),
     prisma.user.findMany({ where: { role: 'STUDENT', ...tenantUserWhere }, take: 4, orderBy: { createdAt: 'desc' } }),
     prisma.jobOpportunity.findMany({ where: { isActive: true, ...tenantJobWhere }, take: 3, orderBy: { createdAt: 'desc' } }),
   ]);
 
   return {
     stats: {
-      courses: 0,
+      courses: courseCount,
       students: studentCount,
       jobs: jobCount,
-      enrollments: 0,
+      enrollments: enrollmentCount,
+      resumes: resumeCount,
+      jobApplications: applicationCount,
     },
     recentCourses: [],
     recentStudents,
@@ -1328,7 +1335,7 @@ export async function getUserById(userId: string) {
       enrollments: {
         select: {
           id: true,
-          enrolledAt: true,
+          createdAt: true,
           course: {
             select: {
               id: true,
@@ -1336,7 +1343,7 @@ export async function getUserById(userId: string) {
             },
           },
         },
-        orderBy: { enrolledAt: "desc" },
+        orderBy: { createdAt: "desc" },
         take: 5,
       },
       jobApplications: {

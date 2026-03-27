@@ -74,7 +74,7 @@ export default async function AdminOverviewPage({
     dashboardError = err;
     dashboard = {
       overview: {
-        stats: { courses: 0, students: 0, jobs: 0, enrollments: 0 },
+        stats: { courses: 0, students: 0, jobs: 0, enrollments: 0, resumes: 0, jobApplications: 0 },
         recentCourses: [],
         recentStudents: [],
         recentJobs: [],
@@ -121,6 +121,18 @@ export default async function AdminOverviewPage({
       icon: Users,
       accent: "bg-amber-50 text-amber-700",
     },
+    {
+      key: "resumes" as const,
+      label: "Resumes created",
+      icon: ClipboardCheck,
+      accent: "bg-violet-50 text-violet-700",
+    },
+    {
+      key: "jobApplications" as const,
+      label: "Job applications",
+      icon: Activity,
+      accent: "bg-rose-50 text-rose-700",
+    },
   ];
 
   return (
@@ -139,7 +151,7 @@ export default async function AdminOverviewPage({
           </div>
         }
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           {statConfig.map(({ key, label, icon, accent }) => (
             <StatCard
               key={key}
