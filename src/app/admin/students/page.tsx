@@ -52,19 +52,22 @@ async function assignCourseToStudentAction(formData: FormData) {
     return;
   }
 
+  let errorMessage: string | null = null;
   try {
     await assignCourseToStudent({
       studentId,
       courseId,
       notes: notes || undefined,
     });
-
-    revalidatePath("/admin/students");
-    redirect("/admin/students?success=course-assigned");
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to assign course";
-    redirect(`/admin/students?error=${encodeURIComponent(message)}`);
+    errorMessage = error instanceof Error ? error.message : "Failed to assign course";
   }
+
+  revalidatePath("/admin/students");
+  if (errorMessage) {
+    redirect(`/admin/students?error=${encodeURIComponent(errorMessage)}`);
+  }
+  redirect("/admin/students?success=course-assigned");
 }
 
 async function bulkAssignCourseAction(formData: FormData) {
@@ -81,19 +84,24 @@ async function bulkAssignCourseAction(formData: FormData) {
     return;
   }
 
+  let assignedCount = 0;
+  let errorMessage: string | null = null;
   try {
     const result = await assignCourseToStudentsBulk({
       studentIds,
       courseId,
       notes: notes || undefined,
     });
-
-    revalidatePath("/admin/students");
-    redirect(`/admin/students?success=bulk-assigned-${result.assigned}`);
+    assignedCount = result.assigned;
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to bulk assign courses";
-    redirect(`/admin/students?error=${encodeURIComponent(message)}`);
+    errorMessage = error instanceof Error ? error.message : "Failed to bulk assign courses";
   }
+
+  revalidatePath("/admin/students");
+  if (errorMessage) {
+    redirect(`/admin/students?error=${encodeURIComponent(errorMessage)}`);
+  }
+  redirect(`/admin/students?success=bulk-assigned-${assignedCount}`);
 }
 
 export default async function AdminStudentsPage(props: any) {

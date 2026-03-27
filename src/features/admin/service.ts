@@ -985,7 +985,9 @@ export async function listStudentAssignedCourseIds(
     if (!assignmentMap[enrollment.userId]) {
       assignmentMap[enrollment.userId] = [];
     }
-    assignmentMap[enrollment.userId].push(enrollment.courseId);
+    if (!assignmentMap[enrollment.userId].includes(enrollment.courseId)) {
+      assignmentMap[enrollment.userId].push(enrollment.courseId);
+    }
   }
 
   return assignmentMap;
@@ -995,10 +997,20 @@ export async function listStudents(admin?: AdminUserWithTenant) {
   const resolvedAdmin = await resolveAdmin(admin);
   const tenantWhere = buildUserTenantWhere(resolvedAdmin);
 
-  return prisma.user.findMany({
+  const students = await prisma.user.findMany({
     where: { role: 'STUDENT', ...tenantWhere },
     orderBy: { createdAt: 'desc' },
     take: 100,
+  });
+
+  const seen = new Set<string>();
+  return students.filter((student) => {
+    const key = student.email ? student.email.toLowerCase() : student.id;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
   });
 }
 
