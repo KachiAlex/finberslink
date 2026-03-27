@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import Link from "next/link";
 import { BookOpenCheck, Layers3, Palette, Users2 } from "lucide-react";
 
 type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
@@ -7,6 +8,7 @@ type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 const CourseLevelValues = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const;
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import {
@@ -19,6 +21,7 @@ import {
 } from "@/features/admin/service";
 
 import { AdminShell } from "../_components/admin-shell";
+import { CourseActionButtons } from "../_components/course-action-buttons";
 import { CourseAdminActionButton } from "./_components/course-admin-actions";
 import { CreateCourseSheet } from "./_components/create-course-sheet";
 
@@ -27,6 +30,19 @@ type ArchivedCourse = Awaited<ReturnType<typeof listArchivedCourses>>[number];
 type PendingEditCourse = Awaited<ReturnType<typeof listCoursesWithPendingEdits>>[number];
 type CourseSnapshot = Awaited<ReturnType<typeof getCourseManagementSnapshot>>;
 type SnapshotCourse = CourseSnapshot["recentCourses"][number];
+type CourseApprovalStatus = "PENDING" | "APPROVED" | "CHANGES";
+type SnapshotCourseWithStatus = SnapshotCourse & { approvalStatus?: CourseApprovalStatus | null };
+
+const COURSE_STATUS_OPTIONS: readonly CourseApprovalStatus[] = ["PENDING", "APPROVED", "CHANGES"] as const;
+const DEFAULT_COURSE_STATUS: CourseApprovalStatus = "PENDING";
+
+const getCourseStatus = (course: SnapshotCourseWithStatus): CourseApprovalStatus => {
+  const rawStatus = course.approvalStatus?.toUpperCase() as CourseApprovalStatus | undefined;
+  if (rawStatus && COURSE_STATUS_OPTIONS.includes(rawStatus)) {
+    return rawStatus;
+  }
+  return DEFAULT_COURSE_STATUS;
+};
 
 const formatShortDate = (date: Date | string) =>
   new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(date));
@@ -64,7 +80,12 @@ async function createCourseAction(formData: FormData) {
   revalidatePath("/admin/courses");
 }
 
-export default async function AdminCoursesPage() {
+export default async function AdminCoursesPage({
+  searchParams: searchParamsPromise,
+}: {
+  searchParams?: Promise<{ status?: string; courseStatus?: string }>;
+}) {
+  const searchParams = await searchParamsPromise;
   const [admin, courses, pendingEditCourses, archivedCourses, snapshot] = await Promise.all([
     requireAdminUser(),
     listAdminCourses(),
@@ -72,6 +93,19 @@ export default async function AdminCoursesPage() {
     listArchivedCourses(),
     getCourseManagementSnapshot(),
   ]);
+
+  const requestedStatus = (searchParams?.status ?? searchParams?.courseStatus)?.toUpperCase() as
+    | CourseApprovalStatus
+    | undefined;
+  const submissionStatusFilter =
+    requestedStatus && COURSE_STATUS_OPTIONS.includes(requestedStatus) ? requestedStatus : undefined;
+
+  const filteredSubmissions =
+    submissionStatusFilter && snapshot.recentCourses.length
+      ? snapshot.recentCourses.filter(
+          (course) => getCourseStatus(course as SnapshotCourseWithStatus) === submissionStatusFilter
+        )
+      : snapshot.recentCourses;
 
   const statCards = [
     {
@@ -128,6 +162,79 @@ export default async function AdminCoursesPage() {
             </div>
             <CreateCourseSheet action={createCourseAction} levels={CourseLevelValues} />
           </div>
+
+          <Card className="border border-slate-200/70 bg-white/95">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold text-slate-900">Course submissions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {COURSE_STATUS_OPTIONS.map((status) => {
+                  const isActive = submissionStatusFilter === status;
+                  const href = status === "PENDING" ? "/admin/courses?status=PENDING" : `/admin/courses?status=${status}`;
+                  return (
+                    <Button
+                      key={status}
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      asChild
+                      className={isActive ? "bg-slate-900 text-white" : "border-slate-200 text-slate-700"}
+                    >
+                      <Link href={href}>{status === "CHANGES" ? "Needs edits" : status}</Link>
+                    </Button>
+                  );
+                })}
+                {submissionStatusFilter ? (
+                  <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-slate-900">
+                    <Link href="/admin/courses">Clear filter</Link>
+                  </Button>
+                ) : null}
+              </div>
+              {(filteredSubmissions.length === 0 && submissionStatusFilter) || snapshot.recentCourses.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                  No tutor submissions match this filter. Encourage tutors to submit their first course.
+                </div>
+              ) : (
+                filteredSubmissions.map((course) => {
+                  const courseWithStatus = course as SnapshotCourseWithStatus;
+                  const status = getCourseStatus(courseWithStatus);
+                  const statusLabel =
+                    status === "APPROVED" ? "Approved" : status === "CHANGES" ? "Needs edits" : "Pending review";
+                  const statusClass =
+                    status === "APPROVED"
+                      ? "bg-emerald-50 text-emerald-600"
+                      : status === "CHANGES"
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-amber-50 text-amber-600";
+
+                  return (
+                    <div
+                      key={course.id}
+                      className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{course.title}</p>
+                        <p className="text-xs text-slate-500">
+                          {course.category} · {course.level}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline" className="text-xs text-slate-600">
+                          {course.instructor
+                            ? `${course.instructor.firstName} ${course.instructor.lastName}`
+                            : "Unknown tutor"}
+                        </Badge>
+                        <Badge variant="secondary" className={statusClass}>
+                          {statusLabel}
+                        </Badge>
+                        <CourseActionButtons courseId={course.id} currentStatus={status} />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </CardContent>
+          </Card>
 
           <Card className="border border-slate-200/70 bg-white/95">
             <CardHeader>

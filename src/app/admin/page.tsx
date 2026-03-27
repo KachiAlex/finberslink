@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   Activity,
   AlertTriangle,
-  ArrowRight,
   BookOpen,
   Briefcase,
   ClipboardCheck,
@@ -17,29 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { GlassCard } from "@/components/ui/glass-card";
 import { StatCard } from "@/components/ui/stat-card";
 import { getTenantAdminDashboard } from "@/features/admin/service";
 
 import { AdminShell } from "./_components/admin-shell";
-import { CourseActionButtons } from "./_components/course-action-buttons";
 
 type TenantDashboard = Awaited<ReturnType<typeof getTenantAdminDashboard>>;
-type CourseSnapshot = TenantDashboard["courseSnapshot"];
-type SnapshotCourse = CourseSnapshot["recentCourses"][number];
-type CourseApprovalStatus = "PENDING" | "APPROVED" | "CHANGES";
-type SnapshotCourseWithStatus = SnapshotCourse & { approvalStatus?: CourseApprovalStatus | null };
-
-const COURSE_STATUS_OPTIONS: readonly CourseApprovalStatus[] = ["PENDING", "APPROVED", "CHANGES"] as const;
-const DEFAULT_COURSE_STATUS: CourseApprovalStatus = "PENDING";
-
-const getCourseStatus = (course: SnapshotCourseWithStatus): CourseApprovalStatus => {
-  const rawStatus = course.approvalStatus?.toUpperCase() as CourseApprovalStatus | undefined;
-  if (rawStatus && COURSE_STATUS_OPTIONS.includes(rawStatus)) {
-    return rawStatus;
-  }
-  return DEFAULT_COURSE_STATUS;
-};
 
 function DashboardError({ label, error }: { label: string; error?: unknown }) {
   if (!error) return null;
@@ -60,11 +42,10 @@ const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(date));
 
 export default async function AdminOverviewPage({
-  searchParams: searchParamsPromise,
+  searchParams: _searchParamsPromise,
 }: {
   searchParams?: Promise<{ courseStatus?: string }>;
 }) {
-  const searchParams = await searchParamsPromise;
   let dashboard;
   let dashboardError: unknown = null;
   try {
@@ -84,17 +65,6 @@ export default async function AdminOverviewPage({
     };
   }
   const overview = dashboard.overview;
-  const courseSnapshot = dashboard.courseSnapshot;
-
-  const requestedStatus = searchParams?.courseStatus?.toUpperCase() as CourseApprovalStatus | undefined;
-  const courseStatusFilter = requestedStatus && COURSE_STATUS_OPTIONS.includes(requestedStatus) ? requestedStatus : undefined;
-
-  const filteredCourses =
-    courseStatusFilter && courseSnapshot.recentCourses.length
-      ? courseSnapshot.recentCourses.filter(
-          (course) => getCourseStatus(course as SnapshotCourseWithStatus) === courseStatusFilter
-        )
-      : courseSnapshot.recentCourses;
 
   const primaryStatConfig = [
     {
@@ -220,85 +190,18 @@ export default async function AdminOverviewPage({
 
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="border-slate-200 shadow-sm lg:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Course submissions</CardTitle>
-                <CardDescription>Review and publish courses submitted by tutors.</CardDescription>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" asChild>
-                  <Link href="/admin/courses">
-                    Manage courses <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
+            <CardHeader className="space-y-1">
+              <CardTitle>Courses</CardTitle>
+              <CardDescription>Review submissions, publish courses, and manage catalog operations.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <DashboardError label="Courses unavailable" error={dashboardError} />
-              <div className="flex flex-wrap gap-2">
-                {COURSE_STATUS_OPTIONS.map((status) => {
-                  const isActive = courseStatusFilter === status;
-                  const href = status === "PENDING" ? "/admin?courseStatus=PENDING" : `/admin?courseStatus=${status}`;
-                  return (
-                    <Button
-                      key={status}
-                      variant={isActive ? "default" : "outline"}
-                      size="sm"
-                      asChild
-                      className={isActive ? "bg-slate-900 text-white" : "border-slate-200 text-slate-700"}
-                    >
-                      <Link href={href}>{status === "CHANGES" ? "Needs edits" : status}</Link>
-                    </Button>
-                  );
-                })}
-                {courseStatusFilter ? (
-                  <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-slate-900">
-                    <Link href="/admin">Clear filter</Link>
-                  </Button>
-                ) : null}
+              <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                Course approval actions now live in the Courses tab for a cleaner dashboard overview.
               </div>
-              {(filteredCourses.length === 0 && courseStatusFilter) || courseSnapshot.recentCourses.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                  No tutor submissions match this filter. Encourage tutors to submit their first course.
-                </div>
-              ) : (
-                filteredCourses.map((course) => {
-                  const courseWithStatus = course as SnapshotCourseWithStatus;
-                  const status = getCourseStatus(courseWithStatus);
-                  const statusLabel =
-                    status === "APPROVED" ? "Approved" : status === "CHANGES" ? "Needs edits" : "Pending review";
-                  const statusClass =
-                    status === "APPROVED"
-                      ? "bg-emerald-50 text-emerald-600"
-                      : status === "CHANGES"
-                      ? "bg-amber-50 text-amber-700"
-                      : "bg-amber-50 text-amber-600";
-                  return (
-                    <div
-                      key={course.id}
-                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{course.title}</p>
-                        <p className="text-xs text-slate-500">
-                          {course.category} · {course.level}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs text-slate-600">
-                          {course.instructor
-                            ? `${course.instructor.firstName} ${course.instructor.lastName}`
-                            : "Unknown tutor"}
-                        </Badge>
-                        <Badge variant="secondary" className={statusClass}>
-                          {statusLabel}
-                        </Badge>
-                        <CourseActionButtons courseId={course.id} currentStatus={status} />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+              <Button className="w-full sm:w-auto" asChild>
+                <Link href="/admin/courses">Open courses manager</Link>
+              </Button>
             </CardContent>
           </Card>
 
