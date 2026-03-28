@@ -158,7 +158,7 @@ export async function getForumThreadById(id: string) {
     : null;
 
   // Load mentions separately (no nested include)
-  const mentionRows = await prisma.forumMention.findMany({
+  const mentionRows = await prisma.threadMention.findMany({
     where: { threadId: thread.id },
     select: {
       id: true,
