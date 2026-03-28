@@ -274,8 +274,18 @@ export async function getLearnerCourseDetail(
     },
     select: {
       id: true,
+      title: true,
+      tagline: true,
+      description: true,
+      level: true,
+      category: true,
+      coverImage: true,
+      outcomes: true,
+      skills: true,
+      certificateAvailable: true,
       approvalStatus: true,
       archivedAt: true,
+      instructorId: true,
     },
   });
 
@@ -300,45 +310,73 @@ export async function getLearnerCourseDetail(
     }
   }
 
-  const course = await prisma.course.findUnique({
-    where: { id: matchedCourse.id },
-    include: courseDetailInclude,
-  });
+  const [instructor, lessons] = await Promise.all([
+    matchedCourse.instructorId
+      ? prisma.user.findUnique({
+          where: { id: matchedCourse.instructorId },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            profile: {
+              select: {
+                headline: true,
+              },
+            },
+          },
+        })
+      : Promise.resolve(null),
+    prisma.lesson.findMany({
+      where: { courseId: matchedCourse.id },
+      orderBy: { order: "asc" },
+      select: {
+        id: true,
+        slug: true,
+        order: true,
+        title: true,
+        durationMinutes: true,
+        format: true,
+        summary: true,
+        content: true,
+        videoUrl: true,
+        resources: {
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            url: true,
+          },
+        },
+      },
+    }),
+  ]);
 
-  if (!course) {
-    console.error("[course-detail] matched course id no longer exists", {
-      userId,
-      requestedSlug: slug,
-      courseId: matchedCourse.id,
-    });
-    return null;
-  }
-
-  const lessonsCompleted = 0; // Placeholder until learner progress tracking lands
+  const lessonsCompleted = 0;
 
   const courseDetail: CourseDetail = {
-    id: course.id,
-    title: course.title,
-    tagline: course.tagline,
-    level: prismaLevelToSummary(course.level as PrismaCourseLevel),
-    category: course.category,
-    coverImage: course.coverImage,
-    progressPercentage: lessonsCompleted && course.lessons.length
-      ? Math.round((lessonsCompleted / course.lessons.length) * 100)
+    id: matchedCourse.id,
+    title: matchedCourse.title,
+    tagline: matchedCourse.tagline,
+    level: prismaLevelToSummary(matchedCourse.level as PrismaCourseLevel),
+    category: matchedCourse.category,
+    coverImage: matchedCourse.coverImage,
+    progressPercentage: lessonsCompleted && lessons.length
+      ? Math.round((lessonsCompleted / lessons.length) * 100)
       : 0,
     lessonsCompleted,
-    lessonsCount: course.lessons.length,
+    lessonsCount: lessons.length,
     instructor: {
-      id: course.instructor?.id ?? "unknown",
-      name: course.instructor ? `${course.instructor.firstName} ${course.instructor.lastName}`.trim() : "Finbers Instructor",
-      title: course.instructor?.profile?.headline ?? "Lead instructor",
-      avatarUrl: course.instructor?.avatarUrl ?? FALLBACK_AVATAR,
+      id: instructor?.id ?? "unknown",
+      name: instructor ? `${instructor.firstName} ${instructor.lastName}`.trim() : "Finbers Instructor",
+      title: instructor?.profile?.headline ?? "Lead instructor",
+      avatarUrl: instructor?.avatarUrl ?? FALLBACK_AVATAR,
     },
-    description: course.description,
-    outcomes: course.outcomes,
-    skills: course.skills,
-    certificateAvailable: course.certificateAvailable,
-    lessons: course.lessons.map((lesson) => ({
+    description: matchedCourse.description,
+    outcomes: matchedCourse.outcomes,
+    skills: matchedCourse.skills,
+    certificateAvailable: matchedCourse.certificateAvailable,
+    lessons: lessons.map((lesson) => ({
       id: lesson.id,
       title: lesson.title,
       durationMinutes: lesson.durationMinutes,
@@ -368,7 +406,19 @@ export async function getLearnerLesson(
     where: {
       OR: [{ id: courseSlug }, { slug: courseSlug }],
     },
-    select: { id: true },
+    select: {
+      id: true,
+      title: true,
+      tagline: true,
+      description: true,
+      level: true,
+      category: true,
+      coverImage: true,
+      outcomes: true,
+      skills: true,
+      certificateAvailable: true,
+      instructorId: true,
+    },
   });
 
   if (!matchedCourse) {
@@ -395,50 +445,57 @@ export async function getLearnerLesson(
     return null;
   }
 
-  const courseRecord = await prisma.course.findUnique({
-    where: { id: enrollment.courseId },
-    include: {
-      instructor: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          avatarUrl: true,
-          profile: { select: { headline: true } },
-        },
-      },
-      lessons: {
-        orderBy: { order: "asc" },
-        select: {
-          id: true,
-          slug: true,
-          order: true,
-          title: true,
-          durationMinutes: true,
-          format: true,
-          summary: true,
-          content: true,
-          videoUrl: true,
-          resources: {
-            select: {
-              id: true,
-              title: true,
-              type: true,
-              url: true,
-            },
+  const [instructor, lessonsRecords] = await Promise.all([
+    matchedCourse.instructorId
+      ? prisma.user.findUnique({
+          where: { id: matchedCourse.instructorId },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            profile: { select: { headline: true } },
+          },
+        })
+      : Promise.resolve(null),
+    prisma.lesson.findMany({
+      where: { courseId: matchedCourse.id },
+      orderBy: { order: "asc" },
+      select: {
+        id: true,
+        slug: true,
+        order: true,
+        title: true,
+        durationMinutes: true,
+        format: true,
+        summary: true,
+        content: true,
+        videoUrl: true,
+        resources: {
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            url: true,
           },
         },
       },
-    },
-  });
+    }),
+  ]);
 
-  if (!courseRecord) {
-    console.error("[course-lesson] enrollment references missing course", {
+  if (!lessonsRecords || lessonsRecords.length === 0) {
+    console.error("[course-lesson] no lessons found for course", {
       userId: _userId,
-      courseId: enrollment.courseId,
+      courseId: matchedCourse.id,
     });
     return null;
   }
+  
+  const courseRecord = {
+    ...matchedCourse,
+    instructor,
+    lessons: lessonsRecords,
+  };
 
   const rawLesson = courseRecord.lessons.find((lesson) => lesson.id === lessonSlug || lesson.slug === lessonSlug);
 
