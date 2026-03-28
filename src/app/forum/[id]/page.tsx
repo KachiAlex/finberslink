@@ -72,8 +72,8 @@ export default async function ForumThreadPage({
             {(thread as any).mentions?.length ? (
               <div className="mt-3 flex flex-wrap gap-2">
                 {(thread as any).mentions.map((m: any) => (
-                  <Badge key={m.user.id} variant="secondary" className="bg-indigo-50 text-indigo-700">
-                    @{m.user.email?.split("@")?.[0] ?? m.user.firstName}
+                  <Badge key={m.id} variant="secondary" className="bg-indigo-50 text-indigo-700">
+                    @{m.user?.email?.split("@")?.[0] ?? m.user?.firstName ?? "unknown"}
                   </Badge>
                 ))}
               </div>

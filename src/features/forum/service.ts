@@ -158,21 +158,32 @@ export async function getForumThreadById(id: string) {
     : null;
 
   // Load mentions separately (no nested include)
-  const mentions = await prisma.forumMention.findMany({
+  const mentionRows = await prisma.forumMention.findMany({
     where: { threadId: thread.id },
     select: {
       id: true,
       userId: true,
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
     },
   });
+
+  const mentionUsers =
+    mentionRows.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: mentionRows.map((m) => m.userId) } },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        })
+      : [];
+
+  const mentionUserMap = new Map(mentionUsers.map((u) => [u.id, u]));
+  const mentions = mentionRows.map((mention) => ({
+    ...mention,
+    user: mentionUserMap.get(mention.userId) ?? null,
+  }));
 
   const postCount = await prisma.forumPost.count({
     where: { threadId: thread.id },
@@ -310,20 +321,15 @@ export async function createForumPost(input: CreateForumPostInput) {
       lessonId: input.lessonId,
       parentId: input.parentId,
     },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      lesson: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
+    select: {
+      id: true,
+      content: true,
+      threadId: true,
+      authorId: true,
+      lessonId: true,
+      parentId: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
 
@@ -345,25 +351,67 @@ export async function createForumPost(input: CreateForumPostInput) {
       : null;
 
   const [post] = await prisma.$transaction([createPost, updateThreadActivity, ...(mentionCreate ? [mentionCreate] : [])]);
-  return post as Awaited<typeof createPost>;
+
+  const [author, lesson] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: post.authorId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+      },
+    }),
+    post.lessonId
+      ? prisma.lesson.findUnique({
+          where: { id: post.lessonId },
+          select: {
+            id: true,
+            title: true,
+          },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  return {
+    ...post,
+    author,
+    lesson,
+  };
 }
 
 export async function getUnreadThreadCount(userId: string, courseId?: string) {
   const threads = await prisma.forumThread.findMany({
     where: courseId ? { courseId } : undefined,
-    include: {
-      reads: {
-        where: { userId },
-        select: { lastReadAt: true },
-      },
+    select: {
+      id: true,
+      updatedAt: true,
     },
   });
 
+  const reads = await prisma.threadRead.findMany({
+    where: {
+      userId,
+      ...(courseId
+        ? {
+            thread: {
+              courseId,
+            },
+          }
+        : {}),
+    },
+    select: {
+      threadId: true,
+      lastReadAt: true,
+    },
+  });
+
+  const readMap = new Map(reads.map((read) => [read.threadId, read.lastReadAt]));
+
   return threads.filter(
-    (thread) =>
-      !thread.reads.length ||
-      !thread.reads[0]?.lastReadAt ||
-      new Date(thread.reads[0].lastReadAt) < new Date(thread.updatedAt)
+    (thread) => {
+      const lastReadAt = readMap.get(thread.id);
+      return !lastReadAt || new Date(lastReadAt) < new Date(thread.updatedAt);
+    }
   ).length;
 }
 
