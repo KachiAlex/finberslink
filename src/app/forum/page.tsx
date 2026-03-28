@@ -39,16 +39,11 @@ export default async function ForumPage() {
                     <Badge variant="outline">{thread._count.posts} posts</Badge>
                   </div>
                   <CardDescription>
-                    By {thread.author.firstName} {thread.author.lastName} ·{" "}
-                    {thread.course.title} · {thread.createdAt.toLocaleDateString()}
+                    By {thread.author?.firstName ?? "Unknown"} {thread.author?.lastName ?? "User"} ·{" "}
+                    {thread.course?.title ?? "Course"} · {thread.createdAt.toLocaleDateString()}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {thread.posts.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-sm text-slate-600 line-clamp-2">{thread.posts[0].content}</p>
-                    </div>
-                  )}
                   <Button variant="outline" size="sm" asChild>
                     <Link href={`/forum/${thread.id}`}>View thread</Link>
                   </Button>

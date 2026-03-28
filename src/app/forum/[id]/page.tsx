@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getForumThreadById, createForumPost } from "@/features/forum/service";
+import { getForumThreadById, createForumPost, listThreadPosts } from "@/features/forum/service";
 import { getSessionFromCookies, requireSession } from "@/lib/auth/session";
 import ReplyForm from "./_components/reply-form";
 
@@ -52,6 +52,7 @@ export default async function ForumThreadPage({
   if (!thread) {
     notFound();
   }
+  const posts = await listThreadPosts(id);
 
   const session = await getSessionFromCookies();
 
@@ -62,10 +63,10 @@ export default async function ForumThreadPage({
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl font-semibold text-slate-900">{(thread as any).title}</CardTitle>
-              <Badge variant="outline">{(thread as any).course.title}</Badge>
+              <Badge variant="outline">{(thread as any).course?.title ?? "Course"}</Badge>
             </div>
             <CardDescription>
-              By {(thread as any).author.firstName} {(thread as any).author.lastName} ·{" "}
+              By {(thread as any).author?.firstName ?? "Unknown"} {(thread as any).author?.lastName ?? "User"} ·{" "}
               {(thread as any).createdAt.toLocaleDateString()}
             </CardDescription>
             {(thread as any).mentions?.length ? (
@@ -81,17 +82,17 @@ export default async function ForumThreadPage({
         </Card>
 
         <div className="space-y-6">
-          {(thread as any).posts.map((post: any) => (
+          {posts.map((post: any) => (
             <Card key={post.id} className="border border-slate-200/70 bg-white/95">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600">
-                      {post.author.firstName[0]}{post.author.lastName[0]}
+                      {(post.author?.firstName?.[0] ?? "U")}{(post.author?.lastName?.[0] ?? "N")}
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-slate-900">
-                        {post.author.firstName} {post.author.lastName}
+                        {post.author?.firstName ?? "Unknown"} {post.author?.lastName ?? "User"}
                       </p>
                       <p className="text-xs text-slate-500">{post.createdAt.toLocaleDateString()}</p>
                     </div>
