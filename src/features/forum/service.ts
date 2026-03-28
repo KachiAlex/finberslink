@@ -17,102 +17,167 @@ export async function createForumThread(input: {
   courseId: string;
   authorId: string;
 }) {
-  return prisma.forumThread.create({
+  const thread = await prisma.forumThread.create({
     data: {
       title: input.title,
       courseId: input.courseId,
       authorId: input.authorId,
       lastActivityAt: new Date(),
     },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      course: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-        },
-      },
-      _count: {
-        select: { posts: true },
-      },
+    select: {
+      id: true,
+      title: true,
+      courseId: true,
+      authorId: true,
+      lastActivityAt: true,
+      createdAt: true,
     },
   });
+
+  const [author, course, postCount] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: thread.authorId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+      },
+    }),
+    prisma.course.findUnique({
+      where: { id: thread.courseId },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+      },
+    }),
+    prisma.forumPost.count({
+      where: { threadId: thread.id },
+    }),
+  ]);
+
+  return {
+    ...thread,
+    author,
+    course,
+    _count: { posts: postCount },
+  };
 }
 
 export async function listForumThreads(filters: ThreadFilters = {}) {
   const { courseId, limit = 20, cursor } = filters;
-  return prisma.forumThread.findMany({
+  
+  const threads = await prisma.forumThread.findMany({
     where: courseId ? { courseId } : undefined,
     orderBy: { lastActivityAt: "desc" },
     take: limit,
     ...(cursor && { skip: 1, cursor: { id: cursor } }),
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      course: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
-      _count: {
-        select: {
-          posts: true,
-        },
-      },
+    select: {
+      id: true,
+      title: true,
+      courseId: true,
+      authorId: true,
+      lastActivityAt: true,
+      createdAt: true,
     },
   });
+
+  const [authors, courses, postCounts] = await Promise.all([
+    prisma.user.findMany({
+      where: { id: { in: threads.map(t => t.authorId) } },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+      },
+    }),
+    prisma.course.findMany({
+      where: { id: { in: threads.map(t => t.courseId) } },
+      select: {
+        id: true,
+        title: true,
+      },
+    }),
+    prisma.forumPost.groupBy({
+      by: ["threadId"],
+      where: { threadId: { in: threads.map(t => t.id) } },
+      _count: true,
+    }),
+  ]);
+
+  const authorMap = new Map(authors.map(a => [a.id, a]));
+  const courseMap = new Map(courses.map(c => [c.id, c]));
+  const postCountMap = new Map(postCounts.map(pc => [pc.threadId, pc._count]));
+
+  return threads.map(thread => ({
+    ...thread,
+    author: authorMap.get(thread.authorId),
+    course: courseMap.get(thread.courseId),
+    _count: { posts: postCountMap.get(thread.id) ?? 0 },
+  }));
 }
 
 export async function getForumThreadById(id: string) {
-  return prisma.forumThread.findUnique({
+  const thread = await prisma.forumThread.findUnique({
     where: { id },
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
+    select: {
+      id: true,
+      title: true,
+      courseId: true,
+      authorId: true,
+      lastActivityAt: true,
+      createdAt: true,
+    },
+  });
+
+  if (!thread) {
+    return null;
+  }
+
+  const [author, course, mentions, postCount] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: thread.authorId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
       },
-      course: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-        },
+    }),
+    prisma.course.findUnique({
+      where: { id: thread.courseId },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
       },
-      mentions: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
+    }),
+    prisma.forumMention.findMany({
+      where: { threadId: thread.id },
+      select: {
+        id: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
           },
         },
       },
-      _count: {
-        select: {
-          posts: true,
-        },
-      },
-    },
-  });
+    }),
+    prisma.forumPost.count({
+      where: { threadId: thread.id },
+    }),
+  ]);
+
+  return {
+    ...thread,
+    author,
+    course,
+    mentions,
+    _count: { posts: postCount },
+  };
 }
 
 export async function listThreadPosts(
@@ -120,35 +185,61 @@ export async function listThreadPosts(
   filters: { limit?: number; cursor?: string } = {}
 ) {
   const { limit = 50, cursor } = filters;
-  return prisma.forumPost.findMany({
+  const posts = await prisma.forumPost.findMany({
     where: {
       threadId,
-      parentId: null, // Only top-level posts
+      parentId: null,
     },
     orderBy: { createdAt: "asc" },
     take: limit,
     ...(cursor && { skip: 1, cursor: { id: cursor } }),
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      lesson: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
-      _count: {
-        select: {
-          replies: true,
-        },
-      },
+    select: {
+      id: true,
+      content: true,
+      threadId: true,
+      authorId: true,
+      lessonId: true,
+      parentId: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
+
+  const [authors, lessons, replyCounts] = await Promise.all([
+    prisma.user.findMany({
+      where: { id: { in: posts.map(p => p.authorId) } },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+      },
+    }),
+    posts.filter(p => p.lessonId).length > 0
+      ? prisma.lesson.findMany({
+          where: { id: { in: posts.filter(p => p.lessonId).map(p => p.lessonId!) } },
+          select: {
+            id: true,
+            title: true,
+          },
+        })
+      : Promise.resolve([]),
+    prisma.forumPost.groupBy({
+      by: ["parentId"],
+      where: { parentId: { in: posts.map(p => p.id) } },
+      _count: true,
+    }),
+  ]);
+
+  const authorMap = new Map(authors.map(a => [a.id, a]));
+  const lessonMap = new Map((lessons as any[]).map(l => [l.id, l]));
+  const replyCountMap = new Map(replyCounts.map(rc => [rc.parentId, rc._count]));
+
+  return posts.map(post => ({
+    ...post,
+    author: authorMap.get(post.authorId),
+    lesson: post.lessonId ? lessonMap.get(post.lessonId) : null,
+    _count: { replies: replyCountMap.get(post.id) ?? 0 },
+  }));
 }
 
 export async function listPostReplies(
@@ -156,21 +247,38 @@ export async function listPostReplies(
   filters: { limit?: number; cursor?: string } = {}
 ) {
   const { limit = 20, cursor } = filters;
-  return prisma.forumPost.findMany({
+  const replies = await prisma.forumPost.findMany({
     where: { parentId: postId },
     orderBy: { createdAt: "asc" },
     take: limit,
     ...(cursor && { skip: 1, cursor: { id: cursor } }),
-    include: {
-      author: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
+    select: {
+      id: true,
+      content: true,
+      threadId: true,
+      authorId: true,
+      lessonId: true,
+      parentId: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
+
+  const authors = await prisma.user.findMany({
+    where: { id: { in: replies.map(r => r.authorId) } },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+    },
+  });
+
+  const authorMap = new Map(authors.map(a => [a.id, a]));
+
+  return replies.map(reply => ({
+    ...reply,
+    author: authorMap.get(reply.authorId),
+  }));
 }
 
 type CreateForumPostInput = {

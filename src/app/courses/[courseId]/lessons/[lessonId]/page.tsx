@@ -94,8 +94,10 @@ export default async function LessonPage({
               <p className="text-slate-600">{lesson.summary}</p>
               {lesson.content && <p className="text-sm text-slate-500">{lesson.content}</p>}
               <div className="flex flex-wrap gap-3">
-                <Button className="gap-2">
-                  <MessageCircle className="h-4 w-4" /> Join live chat
+                <Button className="gap-2" asChild>
+                  <Link href="/chat">
+                    <MessageCircle className="h-4 w-4" /> Join live chat
+                  </Link>
                 </Button>
                 {nextLesson && (
                   <Button asChild variant="outline">
