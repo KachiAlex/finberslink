@@ -18,6 +18,7 @@ export interface ResumeTemplateProps {
     skills?: string[];
     personaName?: string | null;
     location?: string | null;
+    headshotUrl?: string | null;
     introVideoEmbedUrl?: string | null;
     experiences: Array<
       Pick<
@@ -41,20 +42,33 @@ export function ResumeModernTemplate({ resume }: ResumeTemplateProps) {
       <div className="mx-auto w-full max-w-4xl px-4 py-0 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-8 py-12 rounded-b-2xl shadow-lg">
-          <h1 className="text-4xl font-bold tracking-tight mb-2">
-            {resume.title}
-          </h1>
-          {resume.personaName && (
-            <p className="text-lg text-slate-300 mb-1">{resume.personaName}</p>
-          )}
-          {resume.location && (
-            <p className="text-slate-400">{resume.location}</p>
-          )}
-          {resume.summary ? (
-            <p className="mt-4 text-base leading-relaxed text-slate-100 max-w-2xl">
-              {resume.summary}
-            </p>
-          ) : null}
+          <div className="flex gap-6 items-start">
+            <div className="flex-1">
+              <h1 className="text-4xl font-bold tracking-tight mb-2">
+                {resume.title}
+              </h1>
+              {resume.personaName && (
+                <p className="text-lg text-slate-300 mb-1">{resume.personaName}</p>
+              )}
+              {resume.location && (
+                <p className="text-slate-400">{resume.location}</p>
+              )}
+              {resume.summary ? (
+                <p className="mt-4 text-base leading-relaxed text-slate-100 max-w-2xl">
+                  {resume.summary}
+                </p>
+              ) : null}
+            </div>
+            {resume.headshotUrl && (
+              <div className="flex-shrink-0">
+                <img
+                  src={resume.headshotUrl}
+                  alt="Headshot"
+                  className="h-32 w-32 rounded-lg object-cover border-2 border-white"
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Content Section */}

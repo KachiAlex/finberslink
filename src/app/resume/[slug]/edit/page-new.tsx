@@ -48,6 +48,7 @@ import { ShareLinkCopy } from "./share-link";
 import { NewExperienceForm, NewProjectForm } from "./forms";
 import { ResumeTemplateWrapper } from "@/components/resume/resume-template-wrapper";
 import { ResumeTemplateSelector } from "@/components/resume/resume-template-selector";
+import { HeadshotUpload } from "@/components/resume/headshot-upload";
 
 // ============= Server Actions & Helper Functions =============
 
@@ -173,6 +174,7 @@ async function updateResumeAction(formData: FormData) {
   const slug = String(formData.get("slug") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const summary = String(formData.get("summary") ?? "").trim();
+  const headshotUrl = String(formData.get("headshotUrl") ?? "").trim();
   const introVideoUrl = String(formData.get("introVideoUrl") ?? "").trim();
 
   if (!slug || !title) {
@@ -188,6 +190,7 @@ async function updateResumeAction(formData: FormData) {
   await updateResume(slug, {
     title,
     summary,
+    headshotUrl: headshotUrl || null,
     introVideoUrl: introVideoUrl || null,
   });
 
@@ -648,6 +651,23 @@ export default async function ResumeEditPage({
               </CardContent>
             </Card>
 
+            {/* Headshot / Passport Photo */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Headshot / Passport Photo (optional)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <HeadshotUpload
+                  currentHeadshot={(resume as any).headshotUrl}
+                  onUpload={async (url: string) => {
+                    "use server";
+                    await updateResume((resume as any).slug, { headshotUrl: url || null });
+                    revalidatePath(`/resume/${(resume as any).slug}/edit`);
+                  }}
+                />
+              </CardContent>
+            </Card>
+
             {/* Intro Video */}
             <Card>
               <CardHeader>
@@ -664,6 +684,9 @@ export default async function ResumeEditPage({
                       placeholder="https://youtu.be/..."
                       defaultValue={(resume as any).introVideoUrl ?? ""}
                     />
+                    <p className="mt-2 text-sm text-slate-600">
+                      Video appears in public view but excluded from PDF download (link only).
+                    </p>
                   </div>
                   {(resume as any).introVideoEmbedUrl && (
                     <div className="aspect-video rounded-lg overflow-hidden border">

@@ -48,6 +48,7 @@ import { ShareLinkCopy } from "./share-link";
 import { NewExperienceForm, NewProjectForm } from "./forms";
 import { ResumeTemplateWrapper } from "@/components/resume/resume-template-wrapper";
 import { ResumeTemplateSelector } from "@/components/resume/resume-template-selector";
+import { HeadshotUpload } from "@/components/resume/headshot-upload";
 
 // Add Experience Action
 async function addExperienceAction(formData: FormData) {
@@ -304,6 +305,7 @@ async function updateResumeAction(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const summary = String(formData.get("summary") ?? "").trim();
   const introVideoUrl = String(formData.get("introVideoUrl") ?? "").trim();
+  const headshotUrl = String(formData.get("headshotUrl") ?? "").trim();
 
   if (!slug || !title) {
     return;
@@ -319,6 +321,7 @@ async function updateResumeAction(formData: FormData) {
     title,
     summary,
     introVideoUrl: introVideoUrl || null,
+    headshotUrl: headshotUrl || null,
   });
 
   await invalidateDashboardInsights(user.sub);
@@ -665,6 +668,23 @@ export default async function ResumeEditPage({
               </CardContent>
             </Card>
 
+            {/* Headshot Upload Card */}
+            <Card className="border border-slate-200/70 bg-white/95">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-slate-900">Headshot / Passport Photo (optional)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <HeadshotUpload
+                  currentHeadshot={(resume as any).headshotUrl}
+                  onUpload={async (url: string) => {
+                    "use server";
+                    await updateResume((resume as any).slug, { headshotUrl: url || null });
+                    revalidatePath(`/resume/${(resume as any).slug}/edit`);
+                  }}
+                />
+              </CardContent>
+            </Card>
+
             {/* Intro Video Card */}
             <Card className="border border-slate-200/70 bg-white/95">
               <CardHeader>
@@ -682,7 +702,7 @@ export default async function ResumeEditPage({
                       defaultValue={(resume as any).introVideoUrl ?? ""}
                     />
                     <p className="text-xs text-slate-500">
-                      Supports YouTube, Vimeo, Google Drive, and Cloudinary links.
+                      Supports YouTube, Vimeo, Google Drive, and Cloudinary links. Video appears in public view but excluded from PDF download (link only).
                     </p>
                   </div>
                   {(resume as any).introVideoEmbedUrl ? (

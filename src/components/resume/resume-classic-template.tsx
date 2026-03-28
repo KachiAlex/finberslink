@@ -16,6 +16,7 @@ export interface ResumeTemplateProps {
     skills?: string[];
     personaName?: string | null;
     location?: string | null;
+    headshotUrl?: string | null;
     visibility?: string;
     introVideoEmbedUrl?: string | null;
     experiences: Array<
@@ -40,10 +41,23 @@ export function ResumeClassicTemplate({ resume }: ResumeTemplateProps) {
       <div className="mx-auto w-full max-w-4xl px-8 py-12">
         {/* Header */}
         <div className="border-b-2 border-slate-950 pb-6 mb-8">
-          <h1 className="text-3xl font-bold text-slate-950">{resume.title}</h1>
-          <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-600">
-            {resume.personaName && <span>{resume.personaName}</span>}
-            {resume.location && <span>{resume.location}</span>}
+          <div className="flex gap-6 items-start">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-slate-950">{resume.title}</h1>
+              <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-600">
+                {resume.personaName && <span>{resume.personaName}</span>}
+                {resume.location && <span>{resume.location}</span>}
+              </div>
+            </div>
+            {resume.headshotUrl && (
+              <div className="flex-shrink-0">
+                <img
+                  src={resume.headshotUrl}
+                  alt="Headshot"
+                  className="h-28 w-28 rounded object-cover border border-slate-950"
+                />
+              </div>
+            )}
           </div>
         </div>
 

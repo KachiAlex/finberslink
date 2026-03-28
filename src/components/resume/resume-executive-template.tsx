@@ -16,6 +16,7 @@ export interface ResumeTemplateProps {
     skills?: string[];
     personaName?: string | null;
     location?: string | null;
+    headshotUrl?: string | null;
     visibility?: string;
     introVideoEmbedUrl?: string | null;
     experiences: Array<
@@ -40,24 +41,37 @@ export function ResumeExecutiveTemplate({ resume }: ResumeTemplateProps) {
       <div className="mx-auto w-full max-w-4xl px-8 py-16">
         {/* Executive Header */}
         <header className="mb-12 pb-8 border-b border-slate-300">
-          <h1 className="text-5xl font-bold text-slate-950 tracking-tight mb-1">
-            {resume.title}
-          </h1>
-          
-          <div className="mt-4 flex flex-col gap-1">
-            {resume.personaName && (
-              <p className="text-lg font-semibold text-slate-700">{resume.personaName}</p>
-            )}
-            {resume.location && (
-              <p className="text-slate-600">{resume.location}</p>
+          <div className="flex gap-6 items-start">
+            <div className="flex-1">
+              <h1 className="text-5xl font-bold text-slate-950 tracking-tight mb-1">
+                {resume.title}
+              </h1>
+              
+              <div className="mt-4 flex flex-col gap-1">
+                {resume.personaName && (
+                  <p className="text-lg font-semibold text-slate-700">{resume.personaName}</p>
+                )}
+                {resume.location && (
+                  <p className="text-slate-600">{resume.location}</p>
+                )}
+              </div>
+
+              {resume.summary && (
+                <p className="mt-6 text-slate-700 leading-relaxed max-w-3xl text-base">
+                  {resume.summary}
+                </p>
+              )}
+            </div>
+            {resume.headshotUrl && (
+              <div className="flex-shrink-0">
+                <img
+                  src={resume.headshotUrl}
+                  alt="Headshot"
+                  className="h-32 w-32 rounded-lg object-cover border border-slate-300"
+                />
+              </div>
             )}
           </div>
-
-          {resume.summary && (
-            <p className="mt-6 text-slate-700 leading-relaxed max-w-3xl text-base">
-              {resume.summary}
-            </p>
-          )}
         </header>
 
         <div className="space-y-10">

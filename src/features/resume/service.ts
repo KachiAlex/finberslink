@@ -52,6 +52,7 @@ export interface CreateResumeInput {
   notableAchievements?: string;
   visibility?: ResumeVisibility;
   introVideoUrl?: string | null;
+  headshotUrl?: string | null;
   shareSlug?: string;
   template?: string;
 }
@@ -66,7 +67,7 @@ export async function updateResumeSkillSnapshot(
       skillAnalysisSnapshot: snapshot ?? Prisma.JsonNull,
       updatedAt: new Date(),
     },
-    select: { id: true },
+    select: { id: true, headshotUrl: true },
   });
 }
 
@@ -148,6 +149,10 @@ function buildResumeUpdateInput(data: UpdateResumeInput): Prisma.ResumeUpdateInp
     updateData.introVideoEmbedUrl = normalized.introVideoEmbedUrl;
   }
 
+  if (data.headshotUrl !== undefined) {
+    updateData.headshotUrl = data.headshotUrl;
+  }
+
   // TODO: template field type issue - verify Prisma schema generation
   // if (data.template !== undefined) {
   //   updateData.template = data.template;
@@ -179,6 +184,7 @@ export async function createResume(input: CreateResumeInput) {
       shareSlug,
       introVideoUrl: introVideo.introVideoUrl,
       introVideoEmbedUrl: introVideo.introVideoEmbedUrl,
+      headshotUrl: input.headshotUrl ?? null,
     },
     include: {
       experiences: {
@@ -295,6 +301,7 @@ export async function getResumeByShareSlug(shareSlug: string) {
       location: true,
       visibility: true,
       introVideoEmbedUrl: true,
+      headshotUrl: true,
       template: true,
       experiences: {
         select: {

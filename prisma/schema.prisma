@@ -302,6 +302,7 @@ model Resume {
   introVideoUrl       String?
   introVideoEmbedUrl  String?
   template            String?
+  headshotUrl         String?
   jobApplications     JobApplication[]
   user                User               @relation(fields: [userId], references: [id])
   experiences         ResumeExperience[]

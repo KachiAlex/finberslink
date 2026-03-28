@@ -16,6 +16,7 @@ export interface ResumeTemplateProps {
     skills?: string[];
     personaName?: string | null;
     location?: string | null;
+    headshotUrl?: string | null;
     visibility?: string;
     introVideoEmbedUrl?: string | null;
     experiences: Array<
@@ -40,15 +41,28 @@ export function ResumeMinimalTemplate({ resume }: ResumeTemplateProps) {
       <div className="mx-auto w-full max-w-4xl px-8 py-16">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-5xl font-light text-slate-950 tracking-tight">
-            {resume.title}
-          </h1>
-          <div className="flex items-center gap-4 mt-4 text-sm text-slate-600">
-            {resume.personaName && (
-              <p className="font-medium">{resume.personaName}</p>
-            )}
-            {resume.location && (
-              <p>{resume.location}</p>
+          <div className="flex gap-6 items-start">
+            <div className="flex-1">
+              <h1 className="text-5xl font-light text-slate-950 tracking-tight">
+                {resume.title}
+              </h1>
+              <div className="flex items-center gap-4 mt-4 text-sm text-slate-600">
+                {resume.personaName && (
+                  <p className="font-medium">{resume.personaName}</p>
+                )}
+                {resume.location && (
+                  <p>{resume.location}</p>
+                )}
+              </div>
+            </div>
+            {resume.headshotUrl && (
+              <div className="flex-shrink-0">
+                <img
+                  src={resume.headshotUrl}
+                  alt="Headshot"
+                  className="h-32 w-32 rounded-md object-cover"
+                />
+              </div>
             )}
           </div>
         </div>

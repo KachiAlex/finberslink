@@ -21,6 +21,7 @@ export interface ResumeTemplateWrapperProps {
     skills?: string[];
     personaName?: string | null;
     location?: string | null;
+    headshotUrl?: string | null;
     introVideoEmbedUrl?: string | null;
     experiences: Array<
       Pick<
