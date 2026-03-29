@@ -3,16 +3,16 @@ import { listPostReplies } from "@/features/forum/service";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ postId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { postId } = await params;
+    const { id } = await params;
     const { searchParams } = new URL(request.url);
     
     const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
     const cursor = searchParams.get("cursor") || undefined;
 
-    const replies = await listPostReplies(postId, { 
+    const replies = await listPostReplies(id, { 
       limit,
       cursor: cursor || undefined,
     });
