@@ -65,7 +65,7 @@ export function SiteHeader() {
 
         <div className="flex items-center">
           <Button asChild className="px-5">
-            <Link href="/dashboard">Launch Platform</Link>
+            <Link href="/signin">Sign in</Link>
           </Button>
           <MobileNav
             className="md:hidden"
@@ -119,7 +119,7 @@ function MobileNav({
             </Link>
           ))}
           <Button asChild className="mt-2 w-full" onClick={() => onOpenChange(false)}>
-            <Link href="/dashboard">Launch Platform</Link>
+            <Link href="/signin">Sign in</Link>
           </Button>
         </div>
       </SheetContent>

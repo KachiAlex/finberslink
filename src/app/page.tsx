@@ -153,7 +153,7 @@ export default function Home() {
                   size="lg"
                   className="text-base bg-white text-slate-900 shadow-[0_15px_45px_rgba(56,189,248,0.45)] transition hover:-translate-y-0.5"
                 >
-                  <Link href="/dashboard">Launch platform</Link>
+                  <Link href="/signin">Sign in</Link>
                 </Button>
                 <Button
                   asChild
