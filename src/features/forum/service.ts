@@ -1,3 +1,88 @@
+// --- Modern Forum Additions ---
+
+// THREAD TAGS
+export async function createThreadWithTags({ title, courseId, authorId, tags = [] }: { title: string; courseId: string; authorId: string; tags?: string[] }) {
+  return prisma.forumThread.create({
+    data: { title, courseId, authorId, tags },
+    select: { id: true, title: true, tags: true, courseId: true, authorId: true, createdAt: true, updatedAt: true },
+  });
+}
+
+export async function listThreadsByTag(tag: string, limit = 20) {
+  return prisma.forumThread.findMany({
+    where: { tags: { has: tag } },
+    orderBy: { lastActivityAt: "desc" },
+    take: limit,
+    select: { id: true, title: true, tags: true, courseId: true, authorId: true, createdAt: true, updatedAt: true },
+  });
+}
+
+export async function listThreadsByQuery(q: string, limit = 20) {
+  const threads = await prisma.forumThread.findMany({
+    where: {
+      OR: [
+        { title: { contains: q, mode: 'insensitive' } },
+        { posts: { some: { content: { contains: q, mode: 'insensitive' } } } },
+      ],
+    },
+    orderBy: { lastActivityAt: 'desc' },
+    take: limit,
+    select: { id: true, title: true, tags: true, courseId: true, authorId: true, createdAt: true, updatedAt: true },
+  });
+
+  // Load authors
+  const authorIds = [...new Set(threads.map(t => t.authorId))];
+  const authors = await prisma.user.findMany({ where: { id: { in: authorIds } }, select: { id: true, firstName: true, lastName: true } });
+  const authorMap = new Map(authors.map(a => [a.id, a]));
+
+  return threads.map(thread => ({ ...thread, author: authorMap.get(thread.authorId) || null }));
+}
+
+// THREAD SUBSCRIPTIONS
+export async function subscribeToThread(userId: string, threadId: string) {
+  return prisma.forumThreadSubscription.upsert({
+    where: { threadId_userId: { threadId, userId } },
+    update: {},
+    create: { threadId, userId },
+  });
+}
+
+export async function unsubscribeFromThread(userId: string, threadId: string) {
+  return prisma.forumThreadSubscription.deleteMany({
+    where: { threadId, userId },
+  });
+}
+
+export async function listUserThreadSubscriptions(userId: string) {
+  return prisma.forumThreadSubscription.findMany({
+    where: { userId },
+    select: { threadId: true, createdAt: true },
+  });
+}
+
+// POST REACTIONS
+export async function addPostReaction({ postId, userId, type }: { postId: string; userId: string; type: string }) {
+  return prisma.forumPostReaction.upsert({
+    where: { postId_userId_type: { postId, userId, type } },
+    update: {},
+    create: { postId, userId, type },
+  });
+}
+
+export async function removePostReaction({ postId, userId, type }: { postId: string; userId: string; type: string }) {
+  return prisma.forumPostReaction.deleteMany({
+    where: { postId, userId, type },
+  });
+}
+
+export async function listPostReactions(postId: string) {
+  return prisma.forumPostReaction.findMany({
+    where: { postId },
+    select: { userId: true, type: true, createdAt: true },
+  });
+}
+
+// --- End Modern Forum Additions ---
 import { prisma } from "@/lib/prisma";
 
 type ThreadFilters = {
@@ -200,11 +285,15 @@ export async function getForumThreadById(id: string) {
 
 export async function listThreadPosts(
   threadId: string,
-  filters: { limit?: number; cursor?: string } = {}
+  filters: { limit?: number; cursor?: string; isAdmin?: boolean } = {}
 ) {
-  const { limit = 50, cursor } = filters;
+  const { limit = 50, cursor, isAdmin = false } = filters;
   const posts = await prisma.forumPost.findMany({
-    where: { threadId, parentId: null },
+    where: {
+      threadId,
+      parentId: null,
+      ...(isAdmin ? {} : { deletedAt: null }),
+    },
     orderBy: { createdAt: "asc" },
     take: limit,
     ...(cursor && { skip: 1, cursor: { id: cursor } }),
@@ -217,6 +306,7 @@ export async function listThreadPosts(
       parentId: true,
       createdAt: true,
       updatedAt: true,
+      deletedAt: true,
     },
   });
 
@@ -243,17 +333,21 @@ export async function listThreadPosts(
 
 export async function listPostReplies(
   postId: string,
-  filters: { limit?: number; cursor?: string } = {}
+  filters: { limit?: number; cursor?: string; isAdmin?: boolean } = {}
 ) {
-  const { limit = 20, cursor } = filters;
+  const { limit = 20, cursor, isAdmin = false } = filters;
   const replies = await prisma.forumPost.findMany({
-    where: { parentId: postId },
+    where: {
+      parentId: postId,
+      ...(isAdmin ? {} : { deletedAt: null }),
+    },
     orderBy: { createdAt: "asc" },
     take: limit,
     ...(cursor && { skip: 1, cursor: { id: cursor } }),
     select: {
       id: true,
       content: true,
+      deletedAt: true,
       threadId: true,
       authorId: true,
       lessonId: true,
@@ -280,6 +374,33 @@ export async function listPostReplies(
     ...reply,
     author: authorMap.get(reply.authorId),
   }));
+}
+
+// Edit history
+export async function recordPostEdit(postId: string, editorId: string, previousContent: string, newContent?: string) {
+  return prisma.forumPostEdit.create({
+    data: {
+      postId,
+      editorId,
+      previousContent,
+      newContent: newContent ?? null,
+    },
+  });
+}
+
+export async function listPostEdits(postId: string) {
+  return prisma.forumPostEdit.findMany({
+    where: { postId },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      editorId: true,
+      previousContent: true,
+      newContent: true,
+      createdAt: true,
+      editor: { select: { id: true, firstName: true, lastName: true } },
+    },
+  });
 }
 
 type CreateForumPostInput = {
@@ -350,7 +471,40 @@ export async function createForumPost(input: CreateForumPostInput) {
         })
       : null;
 
+  // Create notifications for mentioned users
+  const notificationCreate =
+    mentionUserIds.length > 0
+      ? prisma.notification.createMany({
+          data: mentionUserIds
+            .filter((uid) => uid !== input.authorId)
+            .map((uid) => ({
+              userId: uid,
+              type: 'MENTION',
+              payload: JSON.stringify({ threadId: input.threadId, postId: undefined, snippet: input.content.slice(0, 200) }),
+            })),
+          skipDuplicates: false,
+        })
+      : null;
+
   const [post] = await prisma.$transaction([createPost, updateThreadActivity, ...(mentionCreate ? [mentionCreate] : [])]);
+
+  // Attach notifications (run separately so post id is available)
+  if (mentionUserIds.length > 0) {
+    try {
+      await prisma.notification.createMany({
+        data: mentionUserIds
+          .filter((uid) => uid !== input.authorId)
+          .map((uid) => ({
+            userId: uid,
+            type: 'MENTION',
+            payload: JSON.stringify({ threadId: input.threadId, postId: post.id, snippet: input.content.slice(0, 200) }),
+          })),
+        skipDuplicates: false,
+      });
+    } catch (e) {
+      console.error('Failed to create mention notifications', e);
+    }
+  }
 
   const [author, lesson] = await Promise.all([
     prisma.user.findUnique({

@@ -1,124 +1,104 @@
-import { notFound } from "next/navigation";
-import { revalidatePath } from "next/cache";
+"use client";
+import { useState, useEffect } from "react";
+import { ThreadSubscribeButton } from "@/features/forum/components/ThreadSubscribeButton";
+import { PostReactions } from "@/features/forum/components/PostReactions";
+import { PostModerationButtons } from "@/features/forum/components/PostModerationButtons";
+import useSWR from 'swr';
+import { useSWRPosts } from "@/features/forum/hooks/useSWRPosts";
+import { PostReplies } from "@/features/forum/components/PostReplies";
+import { MentionTextarea } from '@/features/forum/components/MentionTextarea';
+import { FixedSizeList as List } from 'react-window';
+import React from 'react';
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getForumThreadById, createForumPost, listThreadPosts } from "@/features/forum/service";
-import { getSessionFromCookies, requireSession } from "@/lib/auth/session";
-import ReplyForm from "./_components/reply-form";
+export default function ForumThreadPage({ params }: { params: { id: string } }) {
+  const { id } = params;
+  const userId = "demo-user-id"; // Replace with actual userId from session/auth
+  const isAdmin = true; // Set to true to simulate admin view
+  const [thread, setThread] = useState<any>(null);
+  const { posts, loading: postsLoading, hasMore, loadMore } = useSWRPosts(id, 10);
+  const [reply, setReply] = useState("");
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+  useEffect(() => {
+    fetch(`/api/forum/threads?id=${id}`)
+      .then(res => res.json())
+      .then(data => setThread(data.thread || data));
+  }, [id]);
 
-async function replyAction(formData: FormData) {
-  "use server";
-
-  const session = await requireSession({ failureMode: "error" });
-
-  const threadId = String(formData.get("threadId") ?? "").trim();
-  const content = String(formData.get("content") ?? "").trim();
-  const mentionsField = String(formData.get("mentions") ?? "").trim();
-
-  if (!threadId || !content) return;
-
-  const mentions =
-    mentionsField.length > 0
-      ? mentionsField.split(",").map((m) => m.trim()).filter(Boolean)
-      : Array.from(
-          new Set(
-            [...content.matchAll(/@([\w-]+)/g)]
-              .map((m) => m[1])
-              .filter(Boolean)
-          )
-        );
-
-  await createForumPost({
-    content,
-    threadId,
-    authorId: session.sub,
-    mentions,
-  });
-
-  revalidatePath(`/forum/${threadId}`);
-}
-
-export default async function ForumThreadPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const thread = await getForumThreadById(id);
-  if (!thread) {
-    notFound();
-  }
-  const posts = await listThreadPosts(id);
-
-  const session = await getSessionFromCookies();
+  if (!thread) return <div className="max-w-2xl mx-auto py-12">Loading...</div>;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
-        <Card className="border border-slate-200/70 bg-white/95">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-semibold text-slate-900">{(thread as any).title}</CardTitle>
-              <Badge variant="outline">{(thread as any).course?.title ?? "Course"}</Badge>
-            </div>
-            <CardDescription>
-              By {(thread as any).author?.firstName ?? "Unknown"} {(thread as any).author?.lastName ?? "User"} ·{" "}
-              {(thread as any).createdAt.toLocaleDateString()}
-            </CardDescription>
-            {(thread as any).mentions?.length ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(thread as any).mentions.map((m: any) => (
-                  <Badge key={m.id} variant="secondary" className="bg-indigo-50 text-indigo-700">
-                    @{m.user?.email?.split("@")?.[0] ?? m.user?.firstName ?? "unknown"}
-                  </Badge>
-                ))}
-              </div>
-            ) : null}
-          </CardHeader>
-        </Card>
-
-        <div className="space-y-6">
-          {posts.map((post: any) => (
-            <Card key={post.id} className="border border-slate-200/70 bg-white/95">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600">
-                      {(post.author?.firstName?.[0] ?? "U")}{(post.author?.lastName?.[0] ?? "N")}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {post.author?.firstName ?? "Unknown"} {post.author?.lastName ?? "User"}
-                      </p>
-                      <p className="text-xs text-slate-500">{post.createdAt.toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  {post.lesson && (
-                    <Badge variant="secondary" className="text-xs">
-                      {post.lesson.title}
-                    </Badge>
-                  )}
-                </div>
-                <div className="prose prose-slate max-w-none">
-                  <p className="text-slate-700 leading-relaxed">{post.content}</p>
-                </div>
-              </CardContent>
-            </Card>
+    <div className="max-w-2xl mx-auto py-12 px-4">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">{thread.title}</h1>
+        <div className="flex gap-2 flex-wrap mb-2">
+          {thread.tags?.map((tag: string) => (
+            <span key={tag} className="bg-gray-200 px-2 py-0.5 rounded text-xs">{tag}</span>
           ))}
         </div>
-
-        {session && (
-          <ReplyForm
-            threadId={(thread as any).id}
-            courseId={(thread as any).course?.id}
-            action={replyAction}
-          />
+        <div className="text-xs text-gray-500 mb-2">
+          By {thread.author?.firstName ?? "Unknown"} {thread.author?.lastName ?? "User"} · {thread.createdAt ? new Date(thread.createdAt).toLocaleDateString() : ""}
+        </div>
+        <ThreadSubscribeButton userId={userId} threadId={thread.id} />
+      </div>
+      <div className="space-y-6 mb-8">
+        {postsLoading && posts.length === 0 ? (
+          <div>Loading posts...</div>
+        ) : (
+          <>
+            <List
+              height={Math.min(800, posts.length * 220)}
+              itemCount={posts.length}
+              itemSize={220}
+              width="100%"
+            >
+              {({ index, style }) => {
+                const post = posts[index];
+                return (
+                  <div style={style} className="px-0">
+                    <div key={post.id} className={`border rounded p-4 ${post.deletedAt ? 'bg-red-50 opacity-70' : 'bg-white'}`}>
+                      {post.deletedAt && isAdmin ? (
+                        <div className="text-xs text-red-700 mb-2">[Deleted post - visible to admin]</div>
+                      ) : null}
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600">
+                          {(post.author?.firstName?.[0] ?? "U")}{(post.author?.lastName?.[0] ?? "N")}
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold">{post.author?.firstName ?? "Unknown"} {post.author?.lastName ?? "User"}</div>
+                          <div className="text-xs text-gray-500">{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""}</div>
+                        </div>
+                      </div>
+                      <div className="prose prose-slate max-w-none mb-2">
+                        <p className="text-slate-700 leading-relaxed">{post.content}</p>
+                      </div>
+                      <PostReactions postId={post.id} userId={userId} />
+                      <PostModerationButtons postId={post.id} userId={userId} isAuthor={post.author?.id === userId} isAdmin={isAdmin} />
+                      {/* Nested replies */}
+                      <PostReplies postId={post.id} userId={userId} />
+                    </div>
+                  </div>
+                );
+              }}
+            </List>
+            {hasMore && (
+              <div className="flex justify-center mt-4">
+                <button onClick={loadMore} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Load more posts</button>
+              </div>
+            )}
+          </>
         )}
       </div>
-    </main>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          // TODO: Call API to post reply, then refresh posts
+          setReply("");
+        }}
+        className="border rounded p-4 bg-white"
+      >
+        <MentionTextarea value={reply} onChange={setReply} placeholder="Write a reply..." />
+        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Reply</button>
+      </form>
+    </div>
   );
 }

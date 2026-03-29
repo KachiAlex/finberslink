@@ -1,58 +1,53 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { listForumThreads } from "@/features/forum/service";
-import Link from "next/link";
+"use client";
+import { useState } from "react";
+import { ThreadCreateForm } from "@/features/forum/components/ThreadCreateForm";
+import { ThreadList } from "@/features/forum/components/ThreadList";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-export default async function ForumPage() {
-  const threads = await listForumThreads();
+export default function ForumPage() {
+  const [selectedTag, setSelectedTag] = useState<string | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedThread, setSelectedThread] = useState<any>(null);
+  const courseId = "demo-course-id"; // Replace with actual courseId from context/session
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
-        <header className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold text-slate-900">Forum</h1>
-            <p className="text-slate-600">Ask questions, share insights, and connect with peers.</p>
-          </div>
-          <Button asChild>
-            <Link href="/forum/new">New thread</Link>
-          </Button>
-        </header>
-
-        {threads.length === 0 ? (
-          <Card className="border border-slate-200/70 bg-white/95">
-            <CardContent className="py-12 text-center">
-              <p className="text-sm text-slate-500">No threads yet. Start the first discussion!</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {threads.map((thread: any) => (
-              <Card key={thread.id} className="border border-slate-200/70 bg-white/95">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold text-slate-900">{thread.title}</CardTitle>
-                    <Badge variant="outline">{thread._count.posts} posts</Badge>
-                  </div>
-                  <CardDescription>
-                    By {thread.author?.firstName ?? "Unknown"} {thread.author?.lastName ?? "User"} ·{" "}
-                    {thread.course?.title ?? "Course"} · {thread.createdAt.toLocaleDateString()}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/forum/${thread.id}`}>View thread</Link>
-                  </Button>
-                </CardContent>
-              </Card>
+    <div className="max-w-3xl mx-auto py-8 px-4">
+      <h1 className="text-2xl font-bold mb-6">Forum</h1>
+      <div className="mb-8">
+        <ThreadCreateForm courseId={courseId} onCreated={() => setSelectedThread(null)} />
+      </div>
+      <div className="mb-4 flex gap-2 items-center">
+        <input
+          type="text"
+          placeholder="Search threads or filter by tag..."
+          value={searchQuery || selectedTag || ''}
+          onChange={e => {
+            setSearchQuery(e.target.value);
+            setSelectedTag(undefined);
+          }}
+          className="border p-2 rounded flex-1"
+        />
+        <input
+          type="text"
+          placeholder="Filter by tag..."
+          value={selectedTag || ''}
+          onChange={e => setSelectedTag(e.target.value || undefined)}
+          className="border p-2 rounded"
+        />
+        <button onClick={() => { setSelectedTag(undefined); setSearchQuery(''); }} className="text-xs underline">Clear</button>
+      </div>
+      <ThreadList tag={selectedTag} onSelect={setSelectedThread} query={searchQuery || undefined} />
+      {selectedThread && (
+        <div className="mt-8 p-4 border rounded bg-gray-50">
+          <h2 className="font-semibold text-lg mb-2">{selectedThread.title}</h2>
+          <div className="text-xs text-gray-500 mb-2 flex gap-2 flex-wrap">
+            {selectedThread.tags?.map((tag: string) => (
+              <span key={tag} className="bg-gray-200 px-2 py-0.5 rounded">{tag}</span>
             ))}
           </div>
-        )}
-      </div>
-    </main>
+          {/* Placeholder for thread details, posts, reactions, etc. */}
+          <button onClick={() => setSelectedThread(null)} className="mt-4 text-xs underline">Back to threads</button>
+        </div>
+      )}
+    </div>
   );
 }

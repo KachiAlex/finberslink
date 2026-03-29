@@ -30,6 +30,9 @@ model User {
   exams                        Exam[]                 @relation("ExamCreatedBy")
   forumPosts                   ForumPost[]
   forumThreads                 ForumThread[]
+  forumPostReactions           ForumPostReaction[]
+  forumThreadSubscriptions     ForumThreadSubscription[]
+  forumPostEdits               ForumPostEdit[]
   jobAlerts                    JobAlert[]
   jobApplications              JobApplication[]
   jobOpportunitiesPosted       JobOpportunity[]       @relation("JobPostedBy")
@@ -246,11 +249,13 @@ model ForumThread {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   lastActivityAt DateTime        @default(now())
+  tags           String[]        @default([])
   posts          ForumPost[]
   author         User            @relation(fields: [authorId], references: [id])
   course         Course          @relation(fields: [courseId], references: [id])
   mentions       ThreadMention[]
   reads          ThreadRead[]
+  subscriptions  ForumThreadSubscription[]
 
   @@index([courseId])
   @@index([createdAt])
@@ -267,16 +272,63 @@ model ForumPost {
   content   String
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+  editedAt  DateTime?
+  deletedAt DateTime?
   author    User        @relation(fields: [authorId], references: [id])
   lesson    Lesson?     @relation(fields: [lessonId], references: [id])
   parent    ForumPost?  @relation("PostReplies", fields: [parentId], references: [id])
   replies   ForumPost[] @relation("PostReplies")
   thread    ForumThread @relation(fields: [threadId], references: [id])
+  reactions ForumPostReaction[]
+  edits     ForumPostEdit[]
 
   @@index([threadId])
   @@index([authorId])
   @@index([parentId])
   @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model ForumPostReaction {
+  id        String     @id @default(cuid())
+  postId    String
+  userId    String
+  type      String     // e.g. "like", "upvote", "laugh", etc.
+  createdAt DateTime   @default(now())
+  post      ForumPost  @relation(fields: [postId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId, type])
+  @@index([userId])
+  @@index([postId])
+}
+
+model ForumPostEdit {
+  id              String    @id @default(cuid())
+  postId          String
+  editorId        String
+  previousContent String
+  newContent      String?
+  createdAt       DateTime  @default(now())
+
+  post   ForumPost @relation(fields: [postId], references: [id])
+  editor User      @relation(fields: [editorId], references: [id])
+
+  @@index([postId])
+  @@index([editorId])
+}
+
+model ForumThreadSubscription {
+  id        String      @id @default(cuid())
+  threadId  String
+  userId    String
+  createdAt DateTime    @default(now())
+  thread    ForumThread @relation(fields: [threadId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+
+  @@unique([threadId, userId])
+  @@index([userId])
+  @@index([threadId])
 }
 
 model Resume {
@@ -855,6 +907,7 @@ enum NotificationType {
   ENROLLMENT_UPDATE
   LESSON_RELEASE
   FORUM_REPLY
+  MENTION
   APPLICATION_STATUS
   SYSTEM
 }

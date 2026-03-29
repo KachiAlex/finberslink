@@ -1,27 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { listForumThreads, createForumThread, getUnreadThreadCount } from "@/features/forum/service";
+import { listForumThreads, createForumThread, getUnreadThreadCount, createThreadWithTags, listThreadsByTag, listThreadsByQuery, createForumPost } from "@/features/forum/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
 
 const CreateThreadSchema = z.object({
   title: z.string().min(1),
   courseId: z.string().min(1),
+  tags: z.array(z.string()).optional(),
+  content: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const courseId = searchParams.get("courseId");
+    const tag = searchParams.get("tag");
     const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
     const cursor = searchParams.get("cursor") || undefined;
 
-    const threads = await listForumThreads({ 
-      courseId: courseId || undefined, 
-      limit,
-      cursor: cursor || undefined,
-    });
-    
+    let threads;
+    if (q) {
+      threads = await listThreadsByQuery(q, limit);
+    } else if (tag) {
+      threads = await listThreadsByTag(tag, limit);
+    } else {
+      threads = await listForumThreads({ 
+        courseId: courseId || undefined, 
+        limit,
+        cursor: cursor || undefined,
+      });
+    }
+
     const unreadCount = searchParams.get("includeUnread") === "true" 
       ? await getUnreadThreadCount(searchParams.get("userId") || "", courseId || undefined)
       : undefined;
@@ -66,10 +76,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const thread = await createForumThread({
-      ...parsed.data,
-      authorId: user.sub,
-    });
+    let thread;
+    if (parsed.data.tags && parsed.data.tags.length > 0) {
+      thread = await createThreadWithTags({
+        ...parsed.data,
+        authorId: user.sub,
+      });
+    } else {
+      thread = await createForumThread({
+        ...parsed.data,
+        authorId: user.sub,
+      });
+    }
+    // If initial content provided, create an initial post and parse mentions
+    if (parsed.data.content) {
+      // extract mention handles like @handle
+      const handles = Array.from(parsed.data.content.matchAll(/@([a-zA-Z0-9_]+)/g)).map(m => m[1]);
+      try {
+        await createForumPost({
+          content: parsed.data.content,
+          threadId: thread.id,
+          authorId: user.sub,
+          mentions: handles,
+        });
+      } catch (e) {
+        console.error('Failed to create initial post for thread', e);
+      }
+    }
 
     return NextResponse.json(
       { message: "Thread created successfully", thread },
