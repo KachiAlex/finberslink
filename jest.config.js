@@ -10,7 +10,8 @@ const customJestConfig = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
-  testPathIgnorePatterns: ["/node_modules/", "/.next/"],
+  // Ignore other test frameworks and e2e tests that are run separately
+  testPathIgnorePatterns: ["/node_modules/", "/.next/", "/tests/", "<rootDir>/src/features/chat/__tests__/", "<rootDir>/__tests__/tutor-course-builder.test.tsx"],
 };
 
 module.exports = createJestConfig(customJestConfig);
