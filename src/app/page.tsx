@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { siteConfig } from "@/config/site";
 
 export const metadata = {
-  title: "Finbers Link | Skill-to-Employment OS",
+  title: "Finbers Link | Career Intelligence Platform",
   description: siteConfig.description,
   openGraph: {
     title: "Finbers Link",
@@ -21,30 +21,40 @@ export const metadata = {
 
 const stats = [
   { label: "Active learners", value: "42k" },
-  { label: "Tutors & mentors", value: "1.2k" },
-  { label: "Jobs & volunteer roles", value: "3.8k" },
+  { label: "Programs and mentors", value: "1.2k" },
+  { label: "Open opportunities", value: "3.8k" },
 ];
 
 const modules = [
   {
-    title: "Learning Management",
+    title: "Integrated LMS",
     description:
-      "Structured programs, blended lessons, and tutor-led cohorts with progress insights.",
+      "Run structured learning paths with lessons, assessments, and completion tracking.",
   },
   {
-    title: "AI Resume Studio",
+    title: "Community Feed and Chat",
     description:
-      "ATS-ready resumes, keyword boosts, and video intros generated in minutes.",
+      "Connect learners, mentors, and teams through posts, discussions, and direct messaging.",
   },
   {
-    title: "Jobs & Volunteer",
+    title: "Smart Job Board",
     description:
-      "Curated opportunity feeds, filters, and application tracking dashboards.",
+      "Match users to roles based on verified skills, profile quality, and job requirements.",
   },
   {
-    title: "Community & Messaging",
+    title: "Electronic Profile Resume",
     description:
-      "Live lesson forums, direct messaging, badges, and instant notifications.",
+      "Build tailored resume versions with measurable skills and employer-ready evidence.",
+  },
+  {
+    title: "AI Skills Gap Identifier",
+    description:
+      "Compare current profile signals against real job demand and highlight missing skills.",
+  },
+  {
+    title: "Labor Market Intelligence",
+    description:
+      "Track regional trends, hiring demand, and occupation shifts to guide better career moves.",
   },
 ];
 
@@ -73,20 +83,20 @@ const communityImages = [
 
 const resumeFlow = [
   {
-    title: "Personal narrative",
-    detail: "Capture goals, industries, and location preferences with smart defaults.",
+    title: "Identify where you are",
+    detail: "Build your electronic profile with your skills, experience, and completed learning.",
   },
   {
-    title: "AI refinement",
-    detail: "OpenAI-powered prompts rewrite summaries, quantify impact, and surface ATS keywords.",
+    title: "Identify skill gaps",
+    detail: "Compare your current profile to real job requirements and market demand data.",
   },
   {
-    title: "Portfolio & media",
-    detail: "Upload video intros, S3-hosted portfolios, and auto-generated public slug pages.",
+    title: "Get a smart route",
+    detail: "Receive clear recommendations on courses, certifications, and profile improvements.",
   },
   {
-    title: "Publish & share",
-    detail: "Secure, branded URLs with PDF download, contact cards, and analytics.",
+    title: "Apply where you qualify",
+    detail: "Target suitable opportunities with tailored resumes and stronger hiring readiness.",
   },
 ];
 
@@ -107,10 +117,10 @@ const testimonials = [
 
 const footerLinks = {
   platform: [
-    { label: "Courses", href: "/courses" },
-    { label: "Jobs", href: "/jobs" },
+    { label: "Learning paths", href: "/courses" },
+    { label: "Matched opportunities", href: "/jobs" },
     { label: "Volunteer", href: "/volunteer" },
-    { label: "News", href: "/news" },
+    { label: "Market insights", href: "/news" },
   ],
   company: [
     { label: "About", href: "/about" },
@@ -120,8 +130,8 @@ const footerLinks = {
   ],
   resources: [
     { label: "Documentation", href: "/docs" },
-    { label: "Implementation guide", href: "/implementation" },
-    { label: "Brand assets", href: "/brand" },
+    { label: "Implementation support", href: "/implementation" },
+    { label: "Brand resources", href: "/brand" },
     { label: "Status", href: "https://status.finbers-link.example.com" },
   ],
 };
@@ -138,14 +148,14 @@ export default function Home() {
           <div className="relative grid gap-10 text-center sm:text-left lg:grid-cols-[3fr_2fr]">
             <div className="space-y-6">
               <Badge variant="outline" className="border-primary/40 text-primary">
-                Skill-to-Employment Digital Ecosystem
+                Career Intelligence Platform
               </Badge>
-              <p className="text-sm uppercase tracking-[0.4em] text-primary/80">Integrated</p>
+              <p className="text-sm uppercase tracking-[0.4em] text-primary/80">Maps for Careers</p>
               <h1 className="text-4xl font-serif italic tracking-tight sm:text-5xl lg:text-6xl">
-                Build skills, resumes, and hiring outcomes with cinematic precision.
+                Build skills, prove readiness, and get hired.
               </h1>
               <p className="text-lg text-slate-200 sm:text-xl">
-                Finbers Link unifies a full LMS, AI resume builder, jobs marketplace, and community workspace for every role in the skilling journey.
+                Finbers Link combines learning, skills analysis, resume tools, and job matching so people and programs know what to improve and where to apply.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
                 <Button
@@ -153,7 +163,7 @@ export default function Home() {
                   size="lg"
                   className="text-base bg-white text-slate-900 shadow-[0_15px_45px_rgba(56,189,248,0.45)] transition hover:-translate-y-0.5"
                 >
-                  <Link href="/signin">Sign in</Link>
+                  <Link href="/signin">Start your career route</Link>
                 </Button>
                 <Button
                   asChild
@@ -161,7 +171,7 @@ export default function Home() {
                   size="lg"
                   className="text-base border-slate-200/60 text-white/90 hover:border-primary/70"
                 >
-                  <Link href="/courses">Browse courses</Link>
+                  <Link href="/jobs">Explore opportunities</Link>
                 </Button>
               </div>
               <div className="grid gap-6 sm:grid-cols-3">
@@ -175,20 +185,20 @@ export default function Home() {
             </div>
             <div className="relative rounded-3xl border border-white/30 bg-gradient-to-br from-blue-500/30 via-slate-900 to-slate-950 p-6 shadow-2xl">
               <div className="flex items-center justify-between text-sm text-slate-200">
-                <span>Resume completion</span>
+                <span>Hiring readiness score</span>
                 <span className="text-white/80">82%</span>
               </div>
               <Progress value={82} className="mt-3 h-3 border border-white/30" />
               <div className="mt-8 space-y-5 rounded-2xl bg-white/10 p-5 shadow-inner">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm uppercase tracking-[0.3em] text-slate-300">Active modules</p>
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-300">Current route plan</p>
                   <span className="text-sm font-semibold text-white">6 / 8</span>
                 </div>
                 <div className="space-y-3">
-                  {["Product Thinking", "AI Resume Studio", "Career Coaching"].map((item) => (
+                  {["Profile completion", "Skills gap analysis", "Targeted applications"].map((item) => (
                     <div key={item} className="flex items-center justify-between rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm text-white/90">
                       <span className="font-semibold">{item}</span>
-                      <span className="text-xs uppercase tracking-[0.3em] text-amber-300">live</span>
+                      <span className="text-xs uppercase tracking-[0.3em] text-amber-300">active</span>
                     </div>
                   ))}
                 </div>
@@ -199,20 +209,20 @@ export default function Home() {
 
         <section className="rounded-[28px] border border-slate-800/40 bg-gradient-to-r from-slate-950 via-slate-900/50 to-slate-900/70 px-6 py-4 text-white shadow-[0_20px_50px_rgba(15,23,42,0.6)]">
           <div className="flex flex-wrap items-center justify-between gap-4 text-sm uppercase tracking-[0.3em] text-slate-300">
-            <span>Fueling modern cohorts</span>
+            <span>Welcome to the future of career navigation</span>
             <div className="flex items-center gap-6 text-base font-semibold text-white">
-              <span>Neutralize siloed stacks</span>
+              <span>Clear steps</span>
               <span className="h-2 w-2 rounded-full bg-primary" />
-              <span>Live syllabus + AI prompts</span>
+              <span>Practical outcomes</span>
             </div>
           </div>
         </section>
 
         <section className="grid gap-4 rounded-3xl border border-slate-200/80 bg-white/95 px-6 py-6 shadow-sm sm:grid-cols-3 sm:px-8">
           {[
-            { label: "See active courses", href: "/courses" },
-            { label: "Browse roles", href: "/jobs" },
-            { label: "Launch resume studio", href: "/resume/builder" },
+            { label: "Start with learning", href: "/courses" },
+            { label: "See matched roles", href: "/jobs" },
+            { label: "Build your profile", href: "/resume/builder" },
           ].map((item) => (
             <Link
               key={item.href}
@@ -227,10 +237,10 @@ export default function Home() {
 
         <section className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
           <div className="space-y-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Modules</p>
-            <h2 className="text-3xl font-semibold text-white">One connected platform, seven career pillars.</h2>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Platform features</p>
+            <h2 className="text-3xl font-semibold text-white">Everything needed from qualification to employment.</h2>
             <p className="text-lg text-white">
-              From onboarding to employment, Finbers Link keeps learners, tutors, admins, and employers aligned with real-time data, RBAC, and secure infrastructure.
+              Finbers Link replaces disconnected tools with one workflow that helps users build evidence, close gaps, and apply to roles they can win.
             </p>
             <div className="grid gap-4 md:grid-cols-2">
               {modules.map((module) => (
@@ -250,34 +260,34 @@ export default function Home() {
           <Card className="border border-slate-200/80 bg-white/95 shadow-xl">
             <CardHeader>
               <CardTitle className="text-2xl font-semibold text-slate-900">
-                Student & admin experience
+                Who Finbers Link is for
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5 text-sm text-slate-600">
               <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
-                <span>Guided onboarding journeys</span>
+                <span>Students and career switchers</span>
                 <Badge variant="secondary" className="text-xs text-slate-600">
-                  Auto
+                  Individual
                 </Badge>
               </div>
               <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
-                <span>Role-based dashboards</span>
+                <span>Training institutions and workforce programs</span>
                 <Badge variant="outline" className="text-xs text-slate-600">
-                  RBAC
+                  Program
                 </Badge>
               </div>
               <div className="rounded-2xl border border-blue-100/90 bg-blue-50/80 p-4">
-                <p className="text-sm font-semibold text-blue-900">AI resume summary snapshot</p>
+                <p className="text-sm font-semibold text-blue-900">Employers and hiring teams</p>
                 <p className="text-xs text-blue-800/80">
-                  &ldquo;Your profile is trending in Product &amp; Impact roles across 4 regions. Boost hiring signals with volunteer leadership stories.&rdquo;
+                  Find candidates with verified learning progress, relevant skills, and role-fit signals.
                 </p>
               </div>
               <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">Notifications</p>
-                  <p className="text-xs text-slate-500">Tutor replies · Offer updates · Certificates</p>
+                  <p className="text-sm font-semibold text-slate-900">Coverage</p>
+                  <p className="text-xs text-slate-500">Governments · Global professionals · Employers</p>
                 </div>
-                <div className="text-right text-2xl font-semibold text-slate-900">12</div>
+                <div className="text-right text-2xl font-semibold text-slate-900">7</div>
               </div>
             </CardContent>
           </Card>
@@ -285,16 +295,16 @@ export default function Home() {
 
         <section className="grid gap-10 rounded-3xl border border-slate-200/80 bg-white/95 px-6 py-10 shadow-xl sm:px-12 lg:grid-cols-[1.1fr_1fr]">
           <div className="space-y-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">Global community</p>
-            <h2 className="text-3xl font-semibold text-slate-900">Learners, tutors, and employers spanning every region.</h2>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">Global career navigation</p>
+            <h2 className="text-3xl font-semibold text-slate-900">Built for real pathways across regions and sectors.</h2>
             <p className="text-lg text-slate-600">
-              Finbers Link celebrates diverse pathways. Cohorts mix live sessions, async projects, and community forums so everyone sees themselves represented in the journey from skill to employment.
+              Whether users are starting out or changing careers, Finbers Link gives practical direction backed by current labor demand and verified learning progress.
             </p>
             <ul className="space-y-3 text-sm text-slate-600">
               {[
-                "Regional cohorts with localized tutors and mentors",
-                "Time-zone aware scheduling plus multilingual announcements",
-                "Employer showcases highlighting inclusive hiring partners",
+                "Students and graduates",
+                "Career switchers and global professionals",
+                "Workforce agencies, governments, and employers",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
@@ -328,11 +338,11 @@ export default function Home() {
         <section className="grid gap-8 rounded-3xl border border-slate-200/80 bg-white/95 px-6 py-10 shadow-xl sm:px-12 lg:grid-cols-2">
           <div className="space-y-6">
             <Badge variant="secondary" className="border-0 bg-secondary text-primary">
-              AI Resume Builder
+              How it works
             </Badge>
-            <h2 className="text-3xl font-semibold text-slate-900">From first draft to recruiter-ready in six guided steps.</h2>
+            <h2 className="text-3xl font-semibold text-slate-900">A clear 4-step route from confusion to confidence.</h2>
             <p className="text-lg text-slate-600">
-              The wizard blends human storytelling with AI copywriting, video intros, and employer-specific keyword prompts. Tutors can review drafts and push updates instantly.
+              Finbers Link removes guesswork by showing what to fix, what to learn, and where to apply next.
             </p>
             <div className="space-y-4">
               {resumeFlow.map((step, idx) => (
@@ -349,7 +359,7 @@ export default function Home() {
             </div>
           </div>
           <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-blue-600/10 via-white to-amber-100 p-8">
-            <p className="text-sm uppercase tracking-[0.4em] text-primary">Live preview</p>
+            <p className="text-sm uppercase tracking-[0.4em] text-primary">Career route snapshot</p>
             <div className="mt-6 space-y-4 rounded-2xl border border-white/70 bg-white/90 p-6 shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
@@ -359,15 +369,15 @@ export default function Home() {
                 <Badge className="bg-amber-500 text-white">Ready</Badge>
               </div>
               <p className="text-sm text-slate-600">
-                &ldquo;Product leader combining impact storytelling and data-informed experimentation across nonprofit and fintech ecosystems.&rdquo;
+                &ldquo;Profile strength is high for associate product roles. Complete two suggested modules to improve fit for mid-level openings.&rdquo;
               </p>
               <div className="space-y-3 rounded-2xl bg-slate-50/70 p-4">
                 <div className="flex items-center justify-between text-sm text-slate-500">
-                  <span>Keywords</span>
-                  <span>8 suggested</span>
+                  <span>Recommended next actions</span>
+                  <span>3 priority</span>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                  {["Impact", "Product Ops", "Human-centered", "Fintech", "Volunteer"].map((pill) => (
+                  {["Data storytelling", "SQL fundamentals", "Product metrics", "Portfolio refresh", "Mock interview"].map((pill) => (
                     <span key={pill} className="rounded-full bg-white px-3 py-1 text-primary shadow">
                       {pill}
                     </span>
@@ -375,8 +385,8 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex items-center justify-between text-sm text-slate-500">
-                <span>Public resume link</span>
-                <code className="rounded-full bg-slate-900 px-3 py-1 text-xs text-white">finbers.link/adaeze-impact</code>
+                <span>Best-fit opportunities</span>
+                <code className="rounded-full bg-slate-900 px-3 py-1 text-xs text-white">18 matched roles</code>
               </div>
             </div>
           </div>
@@ -403,17 +413,17 @@ export default function Home() {
         <section className="rounded-3xl border border-slate-200/80 bg-white/95 px-6 py-10 shadow-xl sm:px-12">
           <div className="grid gap-8 lg:grid-cols-2">
             <div className="space-y-4">
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">Launch-ready</p>
-              <h2 className="text-3xl font-semibold text-slate-900">Secure, scalable, production-ready.</h2>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">Why it matters</p>
+              <h2 className="text-3xl font-semibold text-slate-900">Stop guessing. Start moving with clear career direction.</h2>
               <p className="text-lg text-slate-600">
-                JWT auth, Prisma + PostgreSQL, AWS-ready storage, Socket.io realtime, and OpenAI integrations keep every experience performant and trusted.
+                Too many people take random courses, apply blindly, and miss opportunities they are close to qualifying for. Finbers Link makes the next step clear.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 {[
-                  "RBAC & JWT security",
-                  "Prisma + PostgreSQL",
-                  "AWS S3 media",
-                  "Socket.io realtime",
+                  "Know what to fix",
+                  "Know what to learn",
+                  "Know where to apply",
+                  "Know when you are ready",
                 ].map((item) => (
                   <div key={item} className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 text-sm font-semibold text-slate-700">
                     {item}
@@ -423,22 +433,22 @@ export default function Home() {
             </div>
             <div className="space-y-6 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-amber-400 p-8 text-white">
               <p className="text-sm uppercase tracking-[0.4em] text-white/80">next steps</p>
-              <h3 className="text-2xl font-semibold">Deploy Finbers Link for your organization.</h3>
+              <h3 className="text-2xl font-semibold">Bring Finbers Link to your learners or workforce program.</h3>
               <p className="text-base text-white/80">
-                We deliver migrations, custom branding, and administrator enablement.
+                We support onboarding, implementation, and team enablement for institutions and employers.
               </p>
               <div className="flex flex-col gap-3">
                 <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
-                  <p className="text-sm font-semibold">Admins</p>
-                  <p className="text-xs text-white/80">Approve tutors · Publish news · Moderate forums</p>
+                  <p className="text-sm font-semibold">Programs and institutions</p>
+                  <p className="text-xs text-white/80">Run learning cohorts, track outcomes, and support readiness</p>
                 </div>
                 <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
                   <p className="text-sm font-semibold">Employers</p>
-                  <p className="text-xs text-white/80">Post jobs · Review resumes · Track pipelines</p>
+                  <p className="text-xs text-white/80">Post roles, review fit signals, and hire faster</p>
                 </div>
               </div>
               <Button size="lg" variant="secondary" className="bg-white text-blue-700 hover:bg-white/90">
-                Talk to solutions team
+                Talk to the team
               </Button>
             </div>
           </div>
@@ -454,7 +464,7 @@ export default function Home() {
             <p className="text-xs text-white/50">© {new Date().getFullYear()} Finbers Link. All rights reserved.</p>
           </div>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
               Platform
             </p>
             <ul className="mt-4 space-y-2 text-sm text-white/70">
@@ -468,7 +478,7 @@ export default function Home() {
             </ul>
           </div>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
               Company
             </p>
             <ul className="mt-4 space-y-2 text-sm text-white/70">
@@ -482,7 +492,7 @@ export default function Home() {
             </ul>
           </div>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
               Resources
             </p>
             <ul className="mt-4 space-y-2 text-sm text-white/70">

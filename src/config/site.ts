@@ -1,16 +1,16 @@
 export const siteConfig = {
   name: "Finbers Link",
-  tagline: "Skill-to-Employment Digital Ecosystem",
+  tagline: "From Learning to Employment",
   description:
-    "Integrated LMS, AI resume builder, and opportunity marketplace that connects students, tutors, admins, and employers.",
+    "A career intelligence platform that combines learning, profile building, and job matching to help people and programs move from skills to employment.",
   baseUrl: "https://finbers-link.example.com",
   mainNav: [
-    { title: "Courses", href: "/courses" },
-    { title: "Jobs", href: "/jobs" },
+    { title: "Learning", href: "/courses" },
+    { title: "Opportunities", href: "/jobs" },
     { title: "Volunteer", href: "/volunteer" },
-    { title: "News", href: "/news" },
-    { title: "Forum", href: "/forum" },
-    { title: "Chat", href: "/chat" },
+    { title: "Insights", href: "/news" },
+    { title: "Community", href: "/forum" },
+    { title: "Messages", href: "/chat" },
   ],
   dashboardNav: [
     { title: "Overview", href: "/dashboard" },
