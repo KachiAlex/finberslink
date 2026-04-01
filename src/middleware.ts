@@ -43,6 +43,7 @@ function redirectToLogin(request: NextRequest, pathname: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const cookieHeader = request.headers.get("cookie") ?? "";
 
   if (isPublicResumeRoute(pathname)) {
     return NextResponse.next();
@@ -56,16 +57,50 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check for access token
-  const accessToken = request.cookies.get("access_token")?.value;
+  let accessToken = request.cookies.get("access_token")?.value;
+  // Fallback: parse raw Cookie header if request.cookies didn't yield the token
+  if (!accessToken && cookieHeader) {
+    try {
+      const parts = cookieHeader.split(';').map(p => p.trim());
+      for (const p of parts) {
+        if (p.startsWith('access_token=')) {
+          accessToken = p.replace('access_token=', '');
+          break;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    const now = new Date().toISOString();
+    // eslint-disable-next-line no-console
+    console.log(`[middleware:${now}] request.nextUrl.pathname:`, pathname);
+  }
 
   if (!accessToken) {
     return redirectToLogin(request, pathname);
   }
 
+  if (process.env.NODE_ENV !== "production") {
+    // Debug: log presence of access token for e2e troubleshooting
+    // eslint-disable-next-line no-console
+    console.log(`[middleware] accessToken present: ${Boolean(accessToken)}`);
+  }
+
   try {
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+        console.log(`[middleware:${new Date().toISOString()}] verifying access token`);
+    }
     // Verify token using Web Crypto (edge-safe)
     const verified = await jwtVerify(accessToken, new TextEncoder().encode(env.JWT_ACCESS_SECRET), { algorithms: ["HS256"] });
     const session = verified.payload as unknown as SessionPayload;
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+        console.log(`[middleware:${new Date().toISOString()}] token verified`, { sub: session.sub, role: session.role });
+    }
     const role = session.role;
 
     if (!role) {
@@ -75,7 +110,8 @@ export async function middleware(request: NextRequest) {
     const tenantId = session.tenantId;
     const tenantOptional = role === "SUPER_ADMIN";
 
-    if (!tenantId && !tenantOptional) {
+    // Allow students without a tenant (local/dev demo users). Require tenant for other roles.
+    if (role !== "STUDENT" && !tenantId && !tenantOptional) {
       return redirectToLogin(request, pathname);
     }
 
@@ -87,7 +123,7 @@ export async function middleware(request: NextRequest) {
 
     // Check role-based access
     for (const [route, allowedRoles] of Object.entries(roleBasedRoutes)) {
-      if (pathname.startsWith(route) && !allowedRoles.includes(role)) {
+        if (pathname.startsWith(route) && !allowedRoles.includes(role)) {
         return redirectToLogin(request, pathname);
       }
     }

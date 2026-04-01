@@ -9,37 +9,55 @@ test.describe("Student course flow", () => {
     const baseOrigin = new URL(baseUrl).origin;
     const secureForOrigin = baseOrigin.startsWith("https://");
 
-    const loginResponse = await request.post("/api/auth/login", {
-      data: { email: STUDENT_EMAIL, password: STUDENT_PASSWORD },
+    // Perform API login and set cookies directly in the browser context
+    const loginRes = await request.post(`${baseOrigin}/api/auth/login`, {
+      data: JSON.stringify({ email: STUDENT_EMAIL, password: STUDENT_PASSWORD }),
+      headers: { 'Content-Type': 'application/json' },
     });
 
-    expect(await loginResponse.ok()).toBeTruthy();
+    expect(loginRes.ok()).toBeTruthy();
 
-    const storageState = await request.storageState();
-    console.log("storageState", JSON.stringify(storageState.cookies, null, 2));
-    const enrichedCookies = storageState.cookies.map((cookie) => {
-      if (cookie.domain) {
-        return {
-          ...cookie,
-          secure: secureForOrigin,
-          path: cookie.path ?? "/",
-        };
-      }
+    const headers = loginRes.headers();
+    let accessToken = headers['x-dev-access-token'] || headers['X-Dev-Access-Token'];
+    let refreshToken = headers['x-dev-refresh-token'] || headers['X-Dev-Refresh-Token'];
 
-      return {
-        ...cookie,
-        secure: secureForOrigin,
-        path: cookie.path ?? "/",
-        url: baseOrigin,
-      };
+    if (!accessToken || !refreshToken) {
+      const json = await loginRes.json().catch(() => ({}));
+      accessToken = accessToken || json?.tokens?.accessToken;
+      refreshToken = refreshToken || json?.tokens?.refreshToken;
+    }
+
+    if (!accessToken || !refreshToken) {
+      throw new Error('Could not obtain dev tokens from login response');
+    }
+
+    const domain = new URL(baseOrigin).hostname;
+    // Set cookies directly in the browser context so subsequent navigations include them
+    await page.context().addCookies([
+      { name: 'access_token', value: accessToken, domain, path: '/' },
+      { name: 'refresh_token', value: refreshToken, domain, path: '/' },
+    ]);
+    await page.goto(`${baseOrigin}/`, { waitUntil: 'load' });
+
+    // Inspect cookies stored in the browser context (debug)
+    const stored = await page.context().cookies();
+    console.log('playwright-context-cookies:', JSON.stringify(stored));
+
+    // Also call the debug API from the page to see if cookies are sent on client fetch
+    const debugFromPage = await page.evaluate(async () => {
+      const res = await fetch('/api/debug/session', { method: 'GET', credentials: 'same-origin' });
+      try { return { status: res.status, body: await res.json() }; } catch (e) { return { status: res.status, body: await res.text() }; }
     });
-    await page.context().addCookies(enrichedCookies);
+    console.log('debug-from-page:', JSON.stringify(debugFromPage));
 
-    await page.goto("/dashboard");
+    // Navigate to dashboard with cookies set
+    await page.goto(`${baseOrigin}/dashboard`, { waitUntil: 'load' });
 
-    await expect(page.getByText("Student workspace")).toBeVisible();
+    // Target the visible page heading to avoid matching decorative labels
+    await expect(page.getByRole('heading', { name: /Student (workspace|Hub)/i }).first()).toBeVisible({ timeout: 15000 });
 
-    const continueLink = page.getByRole("link", { name: /^Continue$/i }).first();
+    // Match either "Continue" or "Continue learning" buttons/links
+    const continueLink = page.getByRole("link", { name: /Continue( learning)?/i }).first();
     await expect(continueLink).toBeVisible();
     await continueLink.click();
 

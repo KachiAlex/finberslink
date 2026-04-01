@@ -29,13 +29,17 @@ function handleFailure(mode: FailureMode, redirectTarget?: string): never {
 export async function getSessionFromCookies(): Promise<SessionPayload | null> {
   const store = await cookies();
   const token = store.get("access_token")?.value;
+
   if (!token) {
     return null;
   }
 
   try {
     return verifyToken(token);
-  } catch {
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[session] verifyToken failed for access_token in server session", String(err));
+    }
     return null;
   }
 }
