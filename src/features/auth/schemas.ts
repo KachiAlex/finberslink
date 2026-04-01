@@ -5,7 +5,8 @@ export const RegisterSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email(),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  role: z.enum(['STUDENT', 'TUTOR', 'EMPLOYER']).optional(),
+  // Public self-signup is limited to learner and tutor accounts.
+  role: z.enum(['STUDENT', 'TUTOR']).default('STUDENT'),
 });
 
 export const LoginSchema = z.object({

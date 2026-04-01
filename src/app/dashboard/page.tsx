@@ -17,9 +17,17 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function DashboardPage() {
+  if (process.env.NODE_ENV !== "production") {
+    console.log('[dashboard] entering DashboardPage, calling requireSession');
+  }
+
   const session = await requireSession({
     failureMode: "error",
   });
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log('[dashboard] requireSession returned session for', session?.sub, session?.role);
+  }
 
   // Route to appropriate dashboard based on role
   const getDashboardComponent = (role: Role) => {

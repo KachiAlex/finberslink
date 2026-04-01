@@ -20,41 +20,41 @@ export const metadata = {
 };
 
 const stats = [
-  { label: "Active learners", value: "42k" },
+  { label: "Learners building readiness", value: "42k" },
   { label: "Programs and mentors", value: "1.2k" },
-  { label: "Open opportunities", value: "3.8k" },
+  { label: "Live opportunities", value: "3.8k" },
 ];
 
 const modules = [
   {
-    title: "Integrated LMS",
+    title: "Learning and completion tracking",
     description:
-      "Run structured learning paths with lessons, assessments, and completion tracking.",
+      "Deliver structured learning paths with lessons, assessments, and verified completion records.",
   },
   {
-    title: "Community Feed and Chat",
+    title: "Community and messaging",
     description:
-      "Connect learners, mentors, and teams through posts, discussions, and direct messaging.",
+      "Keep learners, mentors, and teams connected through discussion spaces and direct messaging.",
   },
   {
-    title: "Smart Job Board",
+    title: "Matched job discovery",
     description:
-      "Match users to roles based on verified skills, profile quality, and job requirements.",
+      "Show roles that fit verified skills, profile strength, and employer requirements.",
   },
   {
-    title: "Electronic Profile Resume",
+    title: "Profile and resume builder",
     description:
-      "Build tailored resume versions with measurable skills and employer-ready evidence.",
+      "Create tailored resume versions backed by measurable skills and readiness evidence.",
   },
   {
-    title: "AI Skills Gap Identifier",
+    title: "Skills gap analysis",
     description:
-      "Compare current profile signals against real job demand and highlight missing skills.",
+      "Compare each profile against live job demand and highlight the missing skills to close.",
   },
   {
-    title: "Labor Market Intelligence",
+    title: "Labor market signals",
     description:
-      "Track regional trends, hiring demand, and occupation shifts to guide better career moves.",
+      "Track hiring demand, regional trends, and occupation shifts to guide better decisions.",
   },
 ];
 
@@ -117,10 +117,10 @@ const testimonials = [
 
 const footerLinks = {
   platform: [
-    { label: "Learning paths", href: "/courses" },
-    { label: "Matched opportunities", href: "/jobs" },
-    { label: "Volunteer", href: "/volunteer" },
-    { label: "Market insights", href: "/news" },
+    { label: "Courses", href: "/courses" },
+    { label: "Jobs", href: "/jobs" },
+    { label: "Volunteer opportunities", href: "/volunteer" },
+    { label: "Career insights", href: "/news" },
   ],
   company: [
     { label: "About", href: "/about" },
@@ -129,9 +129,9 @@ const footerLinks = {
     { label: "Contact", href: "/contact" },
   ],
   resources: [
-    { label: "Documentation", href: "/docs" },
+    { label: "Guides", href: "/docs" },
     { label: "Implementation support", href: "/implementation" },
-    { label: "Brand resources", href: "/brand" },
+    { label: "Platform resources", href: "/brand" },
     { label: "Status", href: "https://status.finbers-link.example.com" },
   ],
 };
@@ -150,12 +150,12 @@ export default function Home() {
               <Badge variant="outline" className="border-primary/40 text-primary">
                 Career Intelligence Platform
               </Badge>
-              <p className="text-sm uppercase tracking-[0.4em] text-primary/80">Maps for Careers</p>
+              <p className="text-sm uppercase tracking-[0.4em] text-primary/80">Clear direction from learning to work</p>
               <h1 className="text-4xl font-serif italic tracking-tight sm:text-5xl lg:text-6xl">
                 Build skills, prove readiness, and get hired.
               </h1>
               <p className="text-lg text-slate-200 sm:text-xl">
-                Finbers Link combines learning, skills analysis, resume tools, and job matching so people and programs know what to improve and where to apply.
+                Finbers Link helps students, career switchers, training providers, and employers understand what to improve, what to learn next, and which opportunities fit best.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
                 <Button
@@ -163,7 +163,7 @@ export default function Home() {
                   size="lg"
                   className="text-base bg-white text-slate-900 shadow-[0_15px_45px_rgba(56,189,248,0.45)] transition hover:-translate-y-0.5"
                 >
-                  <Link href="/signin">Start your career route</Link>
+                  <Link href="/signin">Start your career assessment</Link>
                 </Button>
                 <Button
                   asChild
@@ -191,11 +191,11 @@ export default function Home() {
               <Progress value={82} className="mt-3 h-3 border border-white/30" />
               <div className="mt-8 space-y-5 rounded-2xl bg-white/10 p-5 shadow-inner">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm uppercase tracking-[0.3em] text-slate-300">Current route plan</p>
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-300">Current action plan</p>
                   <span className="text-sm font-semibold text-white">6 / 8</span>
                 </div>
                 <div className="space-y-3">
-                  {["Profile completion", "Skills gap analysis", "Targeted applications"].map((item) => (
+                  {["Profile completion", "Skills gap review", "Targeted applications"].map((item) => (
                     <div key={item} className="flex items-center justify-between rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm text-white/90">
                       <span className="font-semibold">{item}</span>
                       <span className="text-xs uppercase tracking-[0.3em] text-amber-300">active</span>
@@ -209,19 +209,19 @@ export default function Home() {
 
         <section className="rounded-[28px] border border-slate-800/40 bg-gradient-to-r from-slate-950 via-slate-900/50 to-slate-900/70 px-6 py-4 text-white shadow-[0_20px_50px_rgba(15,23,42,0.6)]">
           <div className="flex flex-wrap items-center justify-between gap-4 text-sm uppercase tracking-[0.3em] text-slate-300">
-            <span>Welcome to the future of career navigation</span>
+            <span>A clearer path from skills to employment</span>
             <div className="flex items-center gap-6 text-base font-semibold text-white">
               <span>Clear steps</span>
               <span className="h-2 w-2 rounded-full bg-primary" />
-              <span>Practical outcomes</span>
+              <span>Better fit</span>
             </div>
           </div>
         </section>
 
         <section className="grid gap-4 rounded-3xl border border-slate-200/80 bg-white/95 px-6 py-6 shadow-sm sm:grid-cols-3 sm:px-8">
           {[
-            { label: "Start with learning", href: "/courses" },
-            { label: "See matched roles", href: "/jobs" },
+            { label: "Explore courses", href: "/courses" },
+            { label: "View matched jobs", href: "/jobs" },
             { label: "Build your profile", href: "/resume/builder" },
           ].map((item) => (
             <Link
@@ -238,9 +238,9 @@ export default function Home() {
         <section className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
           <div className="space-y-6">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Platform features</p>
-            <h2 className="text-3xl font-semibold text-white">Everything needed from qualification to employment.</h2>
+            <h2 className="text-3xl font-semibold text-white">One platform for skill-building, readiness, and job matching.</h2>
             <p className="text-lg text-white">
-              Finbers Link replaces disconnected tools with one workflow that helps users build evidence, close gaps, and apply to roles they can win.
+              Finbers Link brings learning, profile building, market signals, and job discovery into one workflow so users can move forward with less guesswork.
             </p>
             <div className="grid gap-4 md:grid-cols-2">
               {modules.map((module) => (
@@ -265,7 +265,7 @@ export default function Home() {
             </CardHeader>
             <CardContent className="space-y-5 text-sm text-slate-600">
               <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
-                <span>Students and career switchers</span>
+                <span>Students, graduates, and career switchers</span>
                 <Badge variant="secondary" className="text-xs text-slate-600">
                   Individual
                 </Badge>
@@ -279,12 +279,12 @@ export default function Home() {
               <div className="rounded-2xl border border-blue-100/90 bg-blue-50/80 p-4">
                 <p className="text-sm font-semibold text-blue-900">Employers and hiring teams</p>
                 <p className="text-xs text-blue-800/80">
-                  Find candidates with verified learning progress, relevant skills, and role-fit signals.
+                  Review candidates with verified learning progress, relevant skills, and stronger role-fit signals.
                 </p>
               </div>
               <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">Coverage</p>
+                  <p className="text-sm font-semibold text-slate-900">Additional audiences</p>
                   <p className="text-xs text-slate-500">Governments · Global professionals · Employers</p>
                 </div>
                 <div className="text-right text-2xl font-semibold text-slate-900">7</div>
@@ -295,10 +295,10 @@ export default function Home() {
 
         <section className="grid gap-10 rounded-3xl border border-slate-200/80 bg-white/95 px-6 py-10 shadow-xl sm:px-12 lg:grid-cols-[1.1fr_1fr]">
           <div className="space-y-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">Global career navigation</p>
-            <h2 className="text-3xl font-semibold text-slate-900">Built for real pathways across regions and sectors.</h2>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">Built for different markets</p>
+            <h2 className="text-3xl font-semibold text-slate-900">Useful for local pathways, regional hiring, and global talent mobility.</h2>
             <p className="text-lg text-slate-600">
-              Whether users are starting out or changing careers, Finbers Link gives practical direction backed by current labor demand and verified learning progress.
+              Whether someone is entering the workforce, changing direction, or supporting a training program, Finbers Link provides clearer guidance backed by verified progress and current labor demand.
             </p>
             <ul className="space-y-3 text-sm text-slate-600">
               {[
@@ -340,9 +340,9 @@ export default function Home() {
             <Badge variant="secondary" className="border-0 bg-secondary text-primary">
               How it works
             </Badge>
-            <h2 className="text-3xl font-semibold text-slate-900">A clear 4-step route from confusion to confidence.</h2>
+            <h2 className="text-3xl font-semibold text-slate-900">A practical 4-step route to job readiness.</h2>
             <p className="text-lg text-slate-600">
-              Finbers Link removes guesswork by showing what to fix, what to learn, and where to apply next.
+              Finbers Link reduces guesswork by showing what to fix, what to learn next, and where a user already has a strong chance of success.
             </p>
             <div className="space-y-4">
               {resumeFlow.map((step, idx) => (
@@ -369,7 +369,7 @@ export default function Home() {
                 <Badge className="bg-amber-500 text-white">Ready</Badge>
               </div>
               <p className="text-sm text-slate-600">
-                &ldquo;Profile strength is high for associate product roles. Complete two suggested modules to improve fit for mid-level openings.&rdquo;
+                &ldquo;Profile strength is high for associate product roles. Complete two recommended modules to improve fit for mid-level openings.&rdquo;
               </p>
               <div className="space-y-3 rounded-2xl bg-slate-50/70 p-4">
                 <div className="flex items-center justify-between text-sm text-slate-500">
@@ -416,7 +416,7 @@ export default function Home() {
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">Why it matters</p>
               <h2 className="text-3xl font-semibold text-slate-900">Stop guessing. Start moving with clear career direction.</h2>
               <p className="text-lg text-slate-600">
-                Too many people take random courses, apply blindly, and miss opportunities they are close to qualifying for. Finbers Link makes the next step clear.
+                Too many people take random courses, apply without a strategy, and miss opportunities they are close to qualifying for. Finbers Link makes the next step clearer and more measurable.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 {[
@@ -432,23 +432,23 @@ export default function Home() {
               </div>
             </div>
             <div className="space-y-6 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-amber-400 p-8 text-white">
-              <p className="text-sm uppercase tracking-[0.4em] text-white/80">next steps</p>
-              <h3 className="text-2xl font-semibold">Bring Finbers Link to your learners or workforce program.</h3>
+              <p className="text-sm uppercase tracking-[0.4em] text-white/80">for organizations</p>
+              <h3 className="text-2xl font-semibold">Bring Finbers Link to your learners, job seekers, or workforce program.</h3>
               <p className="text-base text-white/80">
-                We support onboarding, implementation, and team enablement for institutions and employers.
+                We support onboarding, implementation, and team enablement for institutions, workforce programs, and employers.
               </p>
               <div className="flex flex-col gap-3">
                 <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
                   <p className="text-sm font-semibold">Programs and institutions</p>
-                  <p className="text-xs text-white/80">Run learning cohorts, track outcomes, and support readiness</p>
+                  <p className="text-xs text-white/80">Run learning cohorts, track outcomes, and support job readiness</p>
                 </div>
                 <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
                   <p className="text-sm font-semibold">Employers</p>
-                  <p className="text-xs text-white/80">Post roles, review fit signals, and hire faster</p>
+                  <p className="text-xs text-white/80">Post roles, review fit signals, and shorten time to hire</p>
                 </div>
               </div>
-              <Button size="lg" variant="secondary" className="bg-white text-blue-700 hover:bg-white/90">
-                Talk to the team
+              <Button asChild size="lg" variant="secondary" className="bg-white text-blue-700 hover:bg-white/90">
+                <Link href="/contact">Talk to the team</Link>
               </Button>
             </div>
           </div>

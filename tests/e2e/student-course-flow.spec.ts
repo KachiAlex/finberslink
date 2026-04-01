@@ -28,7 +28,15 @@ test.describe("Student course flow", () => {
     }
 
     if (!accessToken || !refreshToken) {
-      throw new Error('Could not obtain dev tokens from login response');
+      const setCookie = headers['set-cookie'] || headers['Set-Cookie'] || '';
+      const accessMatch = setCookie.match(/access_token=([^;]+)/);
+      const refreshMatch = setCookie.match(/refresh_token=([^;]+)/);
+      accessToken = accessToken || accessMatch?.[1];
+      refreshToken = refreshToken || refreshMatch?.[1];
+    }
+
+    if (!accessToken || !refreshToken) {
+      throw new Error(`Could not obtain auth tokens from login response. Headers: ${JSON.stringify(headers)}`);
     }
 
     const domain = new URL(baseOrigin).hostname;

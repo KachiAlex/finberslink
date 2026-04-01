@@ -27,10 +27,16 @@ export default function LoginPage() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // ensure cookies from Set-Cookie are accepted in browser fetch
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
+
+      if (process.env.NODE_ENV !== "production") {
+        console.log('[login] fetch response status', response.status, 'ok', response.ok);
+      }
 
       if (!response.ok) {
         setError(data.error || "Login failed");
@@ -39,6 +45,15 @@ export default function LoginPage() {
       }
 
       const role = data?.user?.role;
+      if (process.env.NODE_ENV !== "production") {
+        try {
+          const dbg = await fetch('/api/debug/session', { credentials: 'include' });
+          const dbgJson = await dbg.json();
+          console.log('[login] debug session after login', dbgJson);
+        } catch (e) {
+          console.error('[login] debug session call failed', e);
+        }
+      }
       if (role === "SUPER_ADMIN") {
         router.push("/superadmin");
       } else if (role === "ADMIN") {

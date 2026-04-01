@@ -1,0 +1,295 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "Finbers Link logo" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - img "Finbers Link logo" [ref=e7]
+        - navigation [ref=e8]:
+          - link "Courses" [ref=e9] [cursor=pointer]:
+            - /url: /courses
+          - link "Jobs" [ref=e10] [cursor=pointer]:
+            - /url: /jobs
+          - link "Volunteer" [ref=e11] [cursor=pointer]:
+            - /url: /volunteer
+          - link "Career Insights" [ref=e12] [cursor=pointer]:
+            - /url: /news
+          - link "Community" [ref=e13] [cursor=pointer]:
+            - /url: /forum
+          - link "Messages" [ref=e14] [cursor=pointer]:
+            - /url: /chat
+        - link "Sign in" [ref=e16] [cursor=pointer]:
+          - /url: /signin
+    - main [ref=e17]:
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]: Career Intelligence Platform
+          - paragraph [ref=e24]: Clear direction from learning to work
+          - heading "Build skills, prove readiness, and get hired." [level=1] [ref=e25]
+          - paragraph [ref=e26]: Finbers Link helps students, career switchers, training providers, and employers understand what to improve, what to learn next, and which opportunities fit best.
+          - generic [ref=e27]:
+            - link "Start your career assessment" [ref=e28] [cursor=pointer]:
+              - /url: /signin
+            - link "Explore opportunities" [ref=e29] [cursor=pointer]:
+              - /url: /jobs
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - term [ref=e32]: Learners building readiness
+              - definition [ref=e33]: 42k
+            - generic [ref=e34]:
+              - term [ref=e35]: Programs and mentors
+              - definition [ref=e36]: 1.2k
+            - generic [ref=e37]:
+              - term [ref=e38]: Live opportunities
+              - definition [ref=e39]: 3.8k
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - generic [ref=e42]: Hiring readiness score
+            - generic [ref=e43]: 82%
+          - progressbar [ref=e44]
+          - generic [ref=e46]:
+            - generic [ref=e47]:
+              - paragraph [ref=e48]: Current action plan
+              - generic [ref=e49]: 6 / 8
+            - generic [ref=e50]:
+              - generic [ref=e51]:
+                - generic [ref=e52]: Profile completion
+                - generic [ref=e53]: active
+              - generic [ref=e54]:
+                - generic [ref=e55]: Skills gap review
+                - generic [ref=e56]: active
+              - generic [ref=e57]:
+                - generic [ref=e58]: Targeted applications
+                - generic [ref=e59]: active
+      - generic [ref=e61]:
+        - generic [ref=e62]: A clearer path from skills to employment
+        - generic [ref=e63]:
+          - generic [ref=e64]: Clear steps
+          - generic [ref=e66]: Better fit
+      - generic [ref=e67]:
+        - link "Explore courses Go" [ref=e68] [cursor=pointer]:
+          - /url: /courses
+          - generic [ref=e69]: Explore courses
+          - generic [ref=e70]: Go
+        - link "View matched jobs Go" [ref=e71] [cursor=pointer]:
+          - /url: /jobs
+          - generic [ref=e72]: View matched jobs
+          - generic [ref=e73]: Go
+        - link "Build your profile Go" [ref=e74] [cursor=pointer]:
+          - /url: /resume/builder
+          - generic [ref=e75]: Build your profile
+          - generic [ref=e76]: Go
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - paragraph [ref=e79]: Platform features
+          - heading "One platform for skill-building, readiness, and job matching." [level=2] [ref=e80]
+          - paragraph [ref=e81]: Finbers Link brings learning, profile building, market signals, and job discovery into one workflow so users can move forward with less guesswork.
+          - generic [ref=e82]:
+            - generic [ref=e83]:
+              - generic [ref=e85]: Learning and completion tracking
+              - paragraph [ref=e87]: Deliver structured learning paths with lessons, assessments, and verified completion records.
+            - generic [ref=e88]:
+              - generic [ref=e90]: Community and messaging
+              - paragraph [ref=e92]: Keep learners, mentors, and teams connected through discussion spaces and direct messaging.
+            - generic [ref=e93]:
+              - generic [ref=e95]: Matched job discovery
+              - paragraph [ref=e97]: Show roles that fit verified skills, profile strength, and employer requirements.
+            - generic [ref=e98]:
+              - generic [ref=e100]: Profile and resume builder
+              - paragraph [ref=e102]: Create tailored resume versions backed by measurable skills and readiness evidence.
+            - generic [ref=e103]:
+              - generic [ref=e105]: Skills gap analysis
+              - paragraph [ref=e107]: Compare each profile against live job demand and highlight the missing skills to close.
+            - generic [ref=e108]:
+              - generic [ref=e110]: Labor market signals
+              - paragraph [ref=e112]: Track hiring demand, regional trends, and occupation shifts to guide better decisions.
+        - generic [ref=e113]:
+          - generic [ref=e115]: Who Finbers Link is for
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - generic [ref=e118]: Students, graduates, and career switchers
+              - generic [ref=e119]: Individual
+            - generic [ref=e120]:
+              - generic [ref=e121]: Training institutions and workforce programs
+              - generic [ref=e122]: Program
+            - generic [ref=e123]:
+              - paragraph [ref=e124]: Employers and hiring teams
+              - paragraph [ref=e125]: Review candidates with verified learning progress, relevant skills, and stronger role-fit signals.
+            - generic [ref=e126]:
+              - generic [ref=e127]:
+                - paragraph [ref=e128]: Additional audiences
+                - paragraph [ref=e129]: Governments · Global professionals · Employers
+              - generic [ref=e130]: "7"
+      - generic [ref=e131]:
+        - generic [ref=e132]:
+          - paragraph [ref=e133]: Built for different markets
+          - heading "Useful for local pathways, regional hiring, and global talent mobility." [level=2] [ref=e134]
+          - paragraph [ref=e135]: Whether someone is entering the workforce, changing direction, or supporting a training program, Finbers Link provides clearer guidance backed by verified progress and current labor demand.
+          - list [ref=e136]:
+            - listitem [ref=e137]:
+              - generic [ref=e139]: Students and graduates
+            - listitem [ref=e140]:
+              - generic [ref=e142]: Career switchers and global professionals
+            - listitem [ref=e143]:
+              - generic [ref=e145]: Workforce agencies, governments, and employers
+        - generic [ref=e146]:
+          - generic [ref=e148]:
+            - img "Kwame, Product Innovator" [ref=e149]
+            - generic [ref=e150]:
+              - paragraph [ref=e151]: Kwame, Product Innovator
+              - paragraph [ref=e152]: Accra, Ghana
+          - generic [ref=e154]:
+            - img "Isabella, AI Tutor" [ref=e155]
+            - generic [ref=e156]:
+              - paragraph [ref=e157]: Isabella, AI Tutor
+              - paragraph [ref=e158]: São Paulo, Brazil
+          - generic [ref=e160]:
+            - img "Lena, Career Coach" [ref=e161]
+            - generic [ref=e162]:
+              - paragraph [ref=e163]: Lena, Career Coach
+              - paragraph [ref=e164]: Berlin, Germany
+          - generic [ref=e166]:
+            - img "Omar, Volunteer Lead" [ref=e167]
+            - generic [ref=e168]:
+              - paragraph [ref=e169]: Omar, Volunteer Lead
+              - paragraph [ref=e170]: Dubai, UAE
+      - generic [ref=e171]:
+        - generic [ref=e172]:
+          - generic [ref=e173]: How it works
+          - heading "A practical 4-step route to job readiness." [level=2] [ref=e174]
+          - paragraph [ref=e175]: Finbers Link reduces guesswork by showing what to fix, what to learn next, and where a user already has a strong chance of success.
+          - generic [ref=e176]:
+            - generic [ref=e177]:
+              - generic [ref=e178]: "1"
+              - generic [ref=e179]:
+                - paragraph [ref=e180]: Identify where you are
+                - paragraph [ref=e181]: Build your electronic profile with your skills, experience, and completed learning.
+            - generic [ref=e182]:
+              - generic [ref=e183]: "2"
+              - generic [ref=e184]:
+                - paragraph [ref=e185]: Identify skill gaps
+                - paragraph [ref=e186]: Compare your current profile to real job requirements and market demand data.
+            - generic [ref=e187]:
+              - generic [ref=e188]: "3"
+              - generic [ref=e189]:
+                - paragraph [ref=e190]: Get a smart route
+                - paragraph [ref=e191]: Receive clear recommendations on courses, certifications, and profile improvements.
+            - generic [ref=e192]:
+              - generic [ref=e193]: "4"
+              - generic [ref=e194]:
+                - paragraph [ref=e195]: Apply where you qualify
+                - paragraph [ref=e196]: Target suitable opportunities with tailored resumes and stronger hiring readiness.
+        - generic [ref=e197]:
+          - paragraph [ref=e198]: Career route snapshot
+          - generic [ref=e199]:
+            - generic [ref=e200]:
+              - generic [ref=e201]:
+                - paragraph [ref=e202]: Adaeze A.
+                - paragraph [ref=e203]: Product Strategist · Lagos
+              - generic [ref=e204]: Ready
+            - paragraph [ref=e205]: “Profile strength is high for associate product roles. Complete two recommended modules to improve fit for mid-level openings.”
+            - generic [ref=e206]:
+              - generic [ref=e207]:
+                - generic [ref=e208]: Recommended next actions
+                - generic [ref=e209]: 3 priority
+              - generic [ref=e210]:
+                - generic [ref=e211]: Data storytelling
+                - generic [ref=e212]: SQL fundamentals
+                - generic [ref=e213]: Product metrics
+                - generic [ref=e214]: Portfolio refresh
+                - generic [ref=e215]: Mock interview
+            - generic [ref=e216]:
+              - generic [ref=e217]: Best-fit opportunities
+              - code [ref=e218]: 18 matched roles
+      - generic [ref=e220]:
+        - generic [ref=e221]:
+          - generic [ref=e222]:
+            - generic [ref=e223]: Amina Yusuf
+            - paragraph [ref=e224]: Program Director, Elevate Africa
+          - paragraph [ref=e226]: “We replaced 4 different tools with Finbers Link—students now see their course progress, resume drafts, and job offers in one hub.”
+        - generic [ref=e227]:
+          - generic [ref=e228]:
+            - generic [ref=e229]: Miguel Hernández
+            - paragraph [ref=e230]: Lead Tutor, FutureLaunch Labs
+          - paragraph [ref=e232]: “The AI resume studio helped our apprentices land interviews twice as fast, while tutors coach directly inside lesson forums.”
+      - generic [ref=e234]:
+        - generic [ref=e235]:
+          - paragraph [ref=e236]: Why it matters
+          - heading "Stop guessing. Start moving with clear career direction." [level=2] [ref=e237]
+          - paragraph [ref=e238]: Too many people take random courses, apply without a strategy, and miss opportunities they are close to qualifying for. Finbers Link makes the next step clearer and more measurable.
+          - generic [ref=e239]:
+            - generic [ref=e240]: Know what to fix
+            - generic [ref=e241]: Know what to learn
+            - generic [ref=e242]: Know where to apply
+            - generic [ref=e243]: Know when you are ready
+        - generic [ref=e244]:
+          - paragraph [ref=e245]: for organizations
+          - heading "Bring Finbers Link to your learners, job seekers, or workforce program." [level=3] [ref=e246]
+          - paragraph [ref=e247]: We support onboarding, implementation, and team enablement for institutions, workforce programs, and employers.
+          - generic [ref=e248]:
+            - generic [ref=e249]:
+              - paragraph [ref=e250]: Programs and institutions
+              - paragraph [ref=e251]: Run learning cohorts, track outcomes, and support job readiness
+            - generic [ref=e252]:
+              - paragraph [ref=e253]: Employers
+              - paragraph [ref=e254]: Post roles, review fit signals, and shorten time to hire
+          - link "Talk to the team" [ref=e255] [cursor=pointer]:
+            - /url: /contact
+    - contentinfo [ref=e256]:
+      - generic [ref=e257]:
+        - generic [ref=e258]:
+          - img "Finbers Link" [ref=e259]
+          - paragraph [ref=e260]: Finbers Link helps people and workforce programs build skills, close readiness gaps, and connect to matched opportunities in one platform.
+          - paragraph [ref=e261]: © 2026 Finbers Link. All rights reserved.
+        - generic [ref=e262]:
+          - paragraph [ref=e263]: Platform
+          - list [ref=e264]:
+            - listitem [ref=e265]:
+              - link "Courses" [ref=e266] [cursor=pointer]:
+                - /url: /courses
+            - listitem [ref=e267]:
+              - link "Jobs" [ref=e268] [cursor=pointer]:
+                - /url: /jobs
+            - listitem [ref=e269]:
+              - link "Volunteer opportunities" [ref=e270] [cursor=pointer]:
+                - /url: /volunteer
+            - listitem [ref=e271]:
+              - link "Career insights" [ref=e272] [cursor=pointer]:
+                - /url: /news
+        - generic [ref=e273]:
+          - paragraph [ref=e274]: Company
+          - list [ref=e275]:
+            - listitem [ref=e276]:
+              - link "About" [ref=e277] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e278]:
+              - link "Pricing" [ref=e279] [cursor=pointer]:
+                - /url: /pricing
+            - listitem [ref=e280]:
+              - link "Security" [ref=e281] [cursor=pointer]:
+                - /url: /security
+            - listitem [ref=e282]:
+              - link "Contact" [ref=e283] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e284]:
+          - paragraph [ref=e285]: Resources
+          - list [ref=e286]:
+            - listitem [ref=e287]:
+              - link "Guides" [ref=e288] [cursor=pointer]:
+                - /url: /docs
+            - listitem [ref=e289]:
+              - link "Implementation support" [ref=e290] [cursor=pointer]:
+                - /url: /implementation
+            - listitem [ref=e291]:
+              - link "Platform resources" [ref=e292] [cursor=pointer]:
+                - /url: /brand
+            - listitem [ref=e293]:
+              - link "Status" [ref=e294] [cursor=pointer]:
+                - /url: https://status.finbers-link.example.com
+  - button "Open Next.js Dev Tools" [ref=e300] [cursor=pointer]:
+    - img [ref=e301]
+  - alert [ref=e304]
+```

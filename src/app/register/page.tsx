@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { siteConfig } from "@/config/site";
 
-type Role = 'STUDENT' | 'TUTOR' | 'EMPLOYER';
-const RoleValues: Role[] = ['STUDENT', 'TUTOR', 'EMPLOYER'];
+type Role = 'STUDENT' | 'TUTOR';
+const RoleValues: Role[] = ['STUDENT', 'TUTOR'];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState<Role>("STUDENT");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -31,12 +31,13 @@ export default function RegisterPage() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           firstName,
           lastName,
           email,
           password,
-          role: role || undefined,
+          role,
         }),
       });
 
@@ -48,7 +49,12 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/dashboard");
+      const createdRole = data?.user?.role;
+      if (createdRole === "TUTOR") {
+        router.push("/tutor");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       setError("An error occurred. Please try again.");
       setLoading(false);
@@ -120,15 +126,14 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">Role (optional)</Label>
+              <Label htmlFor="role">Role</Label>
               <select
                 id="role"
                 value={role}
-                onChange={(e) => setRole(e.target.value)}
+                onChange={(e) => setRole(e.target.value as Role)}
                 disabled={loading}
                 className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-50"
               >
-                <option value="">Select role (defaults to Student)</option>
                 {RoleValues.map((r) => (
                   <option key={r} value={r}>
                     {r.replace("_", " ")}
@@ -137,8 +142,19 @@ export default function RegisterPage() {
               </select>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Create account"}
+              {loading
+                ? role === "TUTOR"
+                  ? "Creating tutor account..."
+                  : "Creating student account..."
+                : "Create account"}
             </Button>
+            {loading ? (
+              <p className="text-center text-sm text-slate-500">
+                {role === "TUTOR"
+                  ? "Signing you in and taking you to the tutor workspace."
+                  : "Signing you in and taking you to your student dashboard."}
+              </p>
+            ) : null}
           </form>
           <p className="mt-4 text-center text-sm text-slate-600">
             Already have an account?{" "}

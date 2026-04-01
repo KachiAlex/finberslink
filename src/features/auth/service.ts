@@ -28,13 +28,15 @@ export async function registerUser(input: RegisterInput, tenantId?: string | nul
     throw new Error("User already exists");
   }
 
+  const requestedRole = input.role === "TUTOR" ? "TUTOR" : "STUDENT";
+
   const passwordHash = await hashPassword(input.password);
   const user = await createUser({
     firstName: input.firstName,
     lastName: input.lastName,
     email: input.email,
     passwordHash,
-    role: (input.role ?? 'STUDENT') as UserRole,
+    role: requestedRole as UserRole,
     tenantId,
   });
 

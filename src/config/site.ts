@@ -1,14 +1,14 @@
 export const siteConfig = {
   name: "Finbers Link",
-  tagline: "From Learning to Employment",
+  tagline: "Build Skills. Prove Readiness. Get Hired.",
   description:
-    "A career intelligence platform that combines learning, profile building, and job matching to help people and programs move from skills to employment.",
+    "Finbers Link helps people and workforce programs build skills, close readiness gaps, and connect to matched opportunities in one platform.",
   baseUrl: "https://finbers-link.example.com",
   mainNav: [
-    { title: "Learning", href: "/courses" },
-    { title: "Opportunities", href: "/jobs" },
+    { title: "Courses", href: "/courses" },
+    { title: "Jobs", href: "/jobs" },
     { title: "Volunteer", href: "/volunteer" },
-    { title: "Insights", href: "/news" },
+    { title: "Career Insights", href: "/news" },
     { title: "Community", href: "/forum" },
     { title: "Messages", href: "/chat" },
   ],

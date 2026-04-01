@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { siteConfig } from "@/config/site";
 import "./globals.css";
 
 const sans = Space_Grotesk({
@@ -13,9 +14,8 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Finbers Link | Skill-to-Employment Digital Ecosystem",
-  description:
-    "Finbers Link unifies learning, AI resume experiences, and opportunity marketplaces for students, tutors, admins, and employers.",
+  title: "Finbers Link | Build Skills, Prove Readiness, and Get Hired",
+  description: siteConfig.description,
   metadataBase: new URL("https://finbers-link.example.com"),
   icons: [{ url: "/favicon.ico" }],
 };

@@ -28,7 +28,13 @@ export async function POST(request: NextRequest) {
     const payload = verifyToken(tokens.accessToken);
 
     const response = NextResponse.json(
-      { message: "User registered successfully", user: { email: parsed.data.email } },
+      {
+        message: "User registered successfully",
+        user: {
+          email: parsed.data.email,
+          role: payload.role,
+        },
+      },
       { status: 201 }
     );
 
