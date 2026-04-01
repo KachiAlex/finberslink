@@ -30,6 +30,18 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# local debug artifacts
+cookies.txt
+dev-server.err.log
+dev-server.out.log
+login_response.txt
+response*.html
+test-results/
+tmp/
+.tmp-prisma-check.js
+scripts/debug-e2e-login.js
+scripts/run-e2e-single.js
+
 # env files (can opt-in for committing if needed)
 .env*
 
