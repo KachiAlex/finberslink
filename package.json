@@ -13,7 +13,6 @@
     "test": "jest",
     "test:jest": "jest --passWithNoTests",
     "test:vitest": "vitest",
-    "test:e2e": "playwright test",
     "test:e2e": "npm run build && playwright test",
     "schema:studio": "npx prisma studio",
     "schema:generate": "npx prisma generate",

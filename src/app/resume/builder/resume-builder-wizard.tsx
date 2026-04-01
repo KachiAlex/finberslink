@@ -401,15 +401,7 @@ export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = 
             </div>
             <div>
               <Label htmlFor="achievements" className="text-xs">Key achievements / highlights</Label>
-              <Textarea
-                id="achievements"
-                rows={4}
-                value={form.notableAchievements}
-                onChange={(event) => handleFieldChange("notableAchievements", event.target.value)}
-                placeholder={"Share your proudest wins. One per line works great for the AI."}
-                className="mt-1"
-              />
-              <div className="mt-3 space-y-3">
+              <div className="mt-2 mb-2 space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <Label htmlFor="ai-job-title" className="text-xs">Role for AI</Label>
@@ -466,6 +458,14 @@ export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = 
                   </p>
                 )}
               </div>
+              <Textarea
+                id="achievements"
+                rows={4}
+                value={form.notableAchievements}
+                onChange={(event) => handleFieldChange("notableAchievements", event.target.value)}
+                placeholder={"Share your proudest wins. One per line works great for the AI."}
+                className="mt-1"
+              />
             </div>
             <Separator className="my-3" />
             <div className="space-y-2">
