@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const atsAnalysis = await analyzeATSMatch(parsed.data);
+    const atsAnalysis = await analyzeATSMatch(parsed.data as any);
     
     return NextResponse.json(atsAnalysis);
   } catch (error) {

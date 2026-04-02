@@ -14,13 +14,13 @@ import type { ForgotPasswordInput, LoginInput, RegisterInput, ResetPasswordInput
 import { siteConfig } from "@/config/site";
 import { signAccessToken, signRefreshToken, verifyToken, type SessionPayload } from "@/lib/auth/jwt";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { sendPasswordResetEmail } from "@/lib/email/sendgrid";
+import { sendPasswordResetEmail } from "@/lib/email";
 
 type UserRole = PrismaRole;
 type UserStatus = PrismaUserStatus;
 
 const RESET_TOKEN_BYTE_LENGTH = 32;
-const RESET_TOKEN_TTL_MINUTES = 60;
+const RESET_TOKEN_TTL_MINUTES = 60 * 24; // 24 hours
 
 export async function registerUser(input: RegisterInput, tenantId?: string | null) {
   const existing = await findUserByEmail(input.email);

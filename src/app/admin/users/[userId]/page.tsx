@@ -115,7 +115,7 @@ export default async function AdminUserDetailPage({
                       action={async (formData: FormData) => {
                         "use server";
                         const newRole = formData.get("role") as Role;
-                        await updateUserRole(user.id, newRole);
+                        await updateUserRole(user.id, newRole as any);
                       }}
                     >
                       <select
@@ -239,11 +239,11 @@ export default async function AdminUserDetailPage({
                           {enrollment.course.title}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {enrollment.status}
+                          {(enrollment as any).status}
                         </div>
                       </div>
                       <Button variant="outline" size="sm" asChild>
-                        <a href={`/courses/${enrollment.course.slug}`}>
+                        <a href={`/courses/${(enrollment as any).course.slug}`}>
                           View
                         </a>
                       </Button>

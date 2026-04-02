@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { bulletPoints, usedFallback } = await generateBulletPoints(parsed.data);
+    const { bulletPoints, usedFallback } = await generateBulletPoints(parsed.data as any);
     
     return NextResponse.json({
       bulletPoints,

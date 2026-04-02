@@ -251,12 +251,12 @@ export async function getUserActivityFeed(userId: string, limit: number = 10) {
     });
 
     activities.push(
-      ...applications.map<UserActivity>((a) => ({
+      ...applications.map((a: any) => ({
         type: "JOB_APPLICATION",
         timestamp: a.submittedAt,
         description: `Applied for ${a.opportunity.title}`,
         jobId: a.opportunity.id,
-      }))
+      }) as UserActivity)
     );
 
     // Sort by timestamp and return top N

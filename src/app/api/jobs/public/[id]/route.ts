@@ -13,9 +13,10 @@ const publicRateLimit = createRateLimit(rateLimitPresets.public);
  */
 export const GET = publicRateLimit(async (request: NextRequest) => {
   try {
-    const rawParams = context?.params;
-    const params = rawParams && typeof rawParams.then === "function" ? await rawParams : rawParams ?? {};
-    const { id } = params as { id?: string };
+    // Extract id from the URL path (works for public route handlers without context)
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split("/").filter(Boolean);
+    const id = pathParts[pathParts.length - 1];
 
     if (!id) {
       return NextResponse.json({ error: "Job ID is required" }, { status: 400 });

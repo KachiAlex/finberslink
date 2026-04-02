@@ -24,7 +24,7 @@ export async function POST(
     ]);
 
     const payload = responseSchema.parse(body);
-    const response = await recordInterviewResponse(sessionId, session.sub, payload);
+    const response = await recordInterviewResponse(sessionId, session.sub, payload as any);
     return NextResponse.json({ response }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -298,7 +298,7 @@ export function SkillAnalysisForm({ slug, action, onApply }: SkillAnalysisFormPr
     <div className="space-y-6">
       {visible && analysis && (
         <SkillAnalysis
-          analysis={analysis}
+          analysis={analysis as any}
           onAccept={handleAccept}
           onReject={handleReject}
           isLoading={isApplying}

@@ -22,7 +22,7 @@ export async function POST(
     ]);
 
     const payload = createQuestionSchema.parse(body);
-    const question = await addInterviewQuestion(sessionId, session.sub, payload);
+    const question = await addInterviewQuestion(sessionId, session.sub, payload as any);
     return NextResponse.json({ question }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {

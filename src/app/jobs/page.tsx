@@ -233,7 +233,7 @@ export default async function JobsPage({
             <div className="sticky top-6">
               <JobFilters
                 currentFilters={filters}
-                availableTags={jobTags.slice(0, 20)}
+                availableTags={jobTags.slice(0, 20) as unknown as { tag: string; count: number }[]}
                 popularCompanies={popularCompanies}
               />
             </div>

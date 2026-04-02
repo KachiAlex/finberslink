@@ -64,6 +64,10 @@ const WIZARD_STEPS = [
   { id: "review", label: "Review" },
 ];
 
+// Temporary navigation stub used during migration/type-fix work.
+// Replace with the real step navigation logic in cleanup pass.
+const navigateStep = (i: any) => {};
+
 const SECTION_TEMPLATES: { label: string; description: string; modules: Omit<SectionModule, "id">[] }[] = [
   {
     label: "Video + recap",

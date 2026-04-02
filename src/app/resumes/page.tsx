@@ -65,7 +65,7 @@ export default async function ResumesPage() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {resumes.map((resume) => (
+            {resumes.map((resume: any) => (
               <div
                 key={resume.id}
                 className="group relative rounded-lg border border-slate-200 bg-white overflow-hidden hover:shadow-lg transition-all"

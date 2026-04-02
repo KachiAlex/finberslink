@@ -71,7 +71,7 @@ export function MessengerApp() {
 
   async function handleSend(content: string, file?: File) {
     if (!selectedThread) return;
-    let attachments = [];
+    let attachments: any[] = [];
     if (file) {
       const formData = new FormData();
       formData.append("file", file);

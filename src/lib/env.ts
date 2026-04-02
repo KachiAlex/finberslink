@@ -13,6 +13,8 @@ type EnvShape = Record<RequiredEnvKey, string> & {
   NEXT_PUBLIC_DEFAULT_TENANT_SLUG?: string;
   OPENAI_API_KEY?: string;
   SENDGRID_API_KEY?: string;
+  RESEND_API_KEY?: string;
+  EMAIL_PROVIDER?: string;
 };
 
 function loadEnv(): EnvShape {
@@ -48,6 +50,8 @@ function loadEnv(): EnvShape {
   env.NEXT_PUBLIC_DEFAULT_TENANT_SLUG = process.env.NEXT_PUBLIC_DEFAULT_TENANT_SLUG;
   env.OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   env.SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+  env.RESEND_API_KEY = process.env.RESEND_API_KEY;
+  env.EMAIL_PROVIDER = process.env.EMAIL_PROVIDER;
 
   return env as EnvShape;
 }

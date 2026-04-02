@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     const body = parsed.data;
 
-    const course = await upsertTutorCourseDraft(body.courseId ?? null, {
+    const course = await upsertTutorCourseDraft(body.courseId ?? null, ({
       tutorId: user.sub,
       coverImage: body.coverImage,
       title: body.title,
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       })),
       finalExam: body.finalExam ? { ...body.finalExam, modules: body.finalExam.modules } : undefined,
       draftStructure: body.draftStructure,
-    });
+    } as any));
 
     return NextResponse.json({ course }, { status: body.courseId ? 200 : 201 });
   } catch (error: any) {

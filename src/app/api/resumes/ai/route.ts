@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
       const validated = GenerateBulletsSchema.parse(body);
 
-      const result = await generateResumeBullets(validated);
+      const result = await generateResumeBullets(validated as any);
 
       return NextResponse.json({ bullets: result.bullets }, { status: 200 });
     } catch (error) {
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
 
       const validated = GenerateSummarySchema.parse(body);
 
-      const summary = await generateResumeSummary(validated);
+      const summary = await generateResumeSummary(validated as any);
 
       return NextResponse.json({ summary }, { status: 200 });
     } catch (error) {
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 
       const validated = OptimizeForATSSchema.parse(body);
 
-      const result = await optimizeResumeForATS(validated);
+      const result = await optimizeResumeForATS(validated as any);
 
       return NextResponse.json(result, { status: 200 });
     } catch (error) {

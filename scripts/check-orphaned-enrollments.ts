@@ -40,7 +40,7 @@ async function main() {
     const userMap = new Map(users.map((user) => [user.id, user]));
     console.table(
       orphaned.map((enrollment) => {
-        const user = userMap.get(enrollment.userId);
+        const user = userMap.get(enrollment.userId) as any;
         return {
           enrollmentId: enrollment.id,
           studentId: enrollment.userId,

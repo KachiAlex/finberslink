@@ -26,8 +26,8 @@ jest.mock("@/lib/auth/jwt", () => ({
 describe("POST /api/auth/register", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (getOrCreateDefaultTenant as jest.Mock).mockResolvedValue({ id: "tenant-1" });
-    (registerUser as jest.Mock).mockResolvedValue({
+    ((getOrCreateDefaultTenant) as any).mockResolvedValue({ id: "tenant-1" });
+    ((registerUser) as any).mockResolvedValue({
       accessToken: "access-token",
       refreshToken: "refresh-token",
     });

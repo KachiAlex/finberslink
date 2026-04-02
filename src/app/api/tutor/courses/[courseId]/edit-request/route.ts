@@ -42,7 +42,7 @@ export async function POST(request: NextRequest, context: any) {
       return NextResponse.json({ error: "Invalid input", details: parsed.error.format() }, { status: 400 });
     }
 
-    const course = await submitCourseEditRequest(courseId, user.sub, parsed.data);
+    const course = await submitCourseEditRequest(courseId, user.sub, parsed.data as any);
     return NextResponse.json({ course }, { status: 200 });
   } catch (error: any) {
     console.error("Course edit request error:", error);

@@ -31,8 +31,8 @@ test.describe("Student course flow", () => {
       const setCookie = headers['set-cookie'] || headers['Set-Cookie'] || '';
       const accessMatch = setCookie.match(/access_token=([^;]+)/);
       const refreshMatch = setCookie.match(/refresh_token=([^;]+)/);
-      accessToken = accessToken || accessMatch?.[1];
-      refreshToken = refreshToken || refreshMatch?.[1];
+      accessToken = accessToken || accessMatch?.[1] || "";
+      refreshToken = refreshToken || refreshMatch?.[1] || "";
     }
 
     if (!accessToken || !refreshToken) {

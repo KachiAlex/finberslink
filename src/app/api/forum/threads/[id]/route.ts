@@ -18,13 +18,10 @@ export async function GET(
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    
+
     const thread = await getForumThreadById(id);
     if (!thread) {
-      return NextResponse.json(
-        { error: "Thread not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Thread not found" }, { status: 404 });
     }
 
     // Mark thread as read if user is authenticated
@@ -41,15 +38,10 @@ export async function GET(
     // Optionally include posts
     let posts;
     if (searchParams.get("includePosts") === "true") {
-      const limit = Math.min(parseInt(searchParams.get("postsLimit") || "50"), 100);
-      const cursor = searchParams.get("postsCursor") || undefined;
-      posts = await listThreadPosts(id, { limit, cursor: cursor || undefined });
+      posts = await listThreadPosts(id);
     }
 
-    return NextResponse.json({ 
-      thread,
-      ...(posts && { posts }),
-    });
+    return NextResponse.json({ thread, ...(posts && { posts }) });
   } catch (error) {
     console.error("Thread fetch error:", error);
     return NextResponse.json(
@@ -85,10 +77,10 @@ export async function POST(
 
     const { id } = await params;
     const post = await createForumPost({
-      ...parsed.data,
+      ...(parsed.data as any),
       threadId: id,
       authorId: user.sub,
-      mentions: parsed.data.mentions,
+      mentions: (parsed.data as any).mentions,
     });
 
     return NextResponse.json(

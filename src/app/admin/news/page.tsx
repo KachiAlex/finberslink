@@ -33,7 +33,7 @@ async function createNewsAction(formData: FormData) {
   // TODO: get authorId from session
   const authorId = "demo_admin";
 
-  await createNewsPost({ ...parsed.data, authorId });
+  await createNewsPost({ ...(parsed.data as any), authorId });
   revalidatePath("/admin/news");
 }
 

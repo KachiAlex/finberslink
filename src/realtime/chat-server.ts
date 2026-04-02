@@ -5,10 +5,10 @@ import { WebSocketServer } from 'ws';
 const server = createServer();
 const wss = new WebSocketServer({ server });
 
-wss.on('connection', (ws) => {
-  ws.on('message', (data) => {
+wss.on('connection', (ws: any) => {
+  ws.on('message', (data: any) => {
     // Broadcast received message to all clients
-    wss.clients.forEach((client) => {
+    wss.clients.forEach((client: any) => {
       if (client !== ws && client.readyState === 1) {
         client.send(data);
       }

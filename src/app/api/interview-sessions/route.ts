@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       targetRole: payload.targetRole,
       resumeId: payload.resumeId,
       jobOpportunityId: payload.jobOpportunityId,
-      initialQuestion: payload.initialQuestion,
+      initialQuestion: payload.initialQuestion as any,
     });
 
     return NextResponse.json({ session: interviewSession }, { status: 201 });

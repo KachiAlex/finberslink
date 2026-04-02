@@ -189,7 +189,7 @@ export async function getDashboardSummary(userId: string) {
     enrollmentsCount,
     completedEnrollmentsCount,
     resumesCount,
-    applicationsCount: jobApplicationsCount + volunteerApplicationsCount,
+    applicationsCount: Number(jobApplicationsCount) + Number(volunteerApplicationsCount),
     jobApplicationsCount,
     volunteerApplicationsCount,
     resumeViewsCount,

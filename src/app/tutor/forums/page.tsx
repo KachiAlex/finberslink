@@ -62,7 +62,7 @@ export default async function TutorForumsPage() {
               <p className="text-sm text-slate-500">No threads yet.</p>
             ) : (
               <div className="space-y-2">
-                {threads.map((thread) => (
+                {threads.map((thread: any) => (
                   <div
                     key={thread.id}
                     className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700"

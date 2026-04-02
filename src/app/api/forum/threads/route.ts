@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const cursor = searchParams.get("cursor") || undefined;
 
     let threads;
+    const q = searchParams.get("q");
     if (q) {
       threads = await listThreadsByQuery(q, limit);
     } else if (tag) {
@@ -79,12 +80,12 @@ export async function POST(request: NextRequest) {
     let thread;
     if (parsed.data.tags && parsed.data.tags.length > 0) {
       thread = await createThreadWithTags({
-        ...parsed.data,
+        ...(parsed.data as any),
         authorId: user.sub,
       });
     } else {
       thread = await createForumThread({
-        ...parsed.data,
+        ...(parsed.data as any),
         authorId: user.sub,
       });
     }

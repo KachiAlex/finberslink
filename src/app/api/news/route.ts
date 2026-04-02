@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     const post = await createNewsPost({
-      ...parsed.data,
+      ...(parsed.data as any),
       authorId: user.sub,
     });
 

@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const course = await createCourse(parsed.data);
+    const course = await createCourse(parsed.data as any);
     return NextResponse.json(
       { message: "Course created successfully", course },
       { status: 201 }

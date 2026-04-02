@@ -21,7 +21,7 @@ export interface JobFilters {
   limit?: number;
 }
 
-type JobWhereInput = NonNullable<Parameters<typeof prisma.jobOpportunity.findMany>[0]>["where"];
+type JobWhereInput = any;
 
 export async function getJobs(filters: JobFilters = {}) {
   const {
@@ -169,11 +169,11 @@ export async function getJobTags() {
     select: { tags: true },
   });
   
-  const allTags = jobs.flatMap(job => job.tags).filter(tag => tag && tag.length > 0);
-  const tagCounts = allTags.reduce<Record<string, number>>((acc, tag) => {
+  const allTags = jobs.flatMap(job => (job.tags ?? [])).filter((tag) => tag && tag.length > 0) as string[];
+  const tagCounts = allTags.reduce<Record<string, number>>((acc: Record<string, number>, tag: string) => {
     acc[tag] = (acc[tag] || 0) + 1;
     return acc;
-  }, {});
+  }, {} as Record<string, number>);
 
   return Object.entries(tagCounts)
     .map(([tag, count]) => ({ tag, count }))

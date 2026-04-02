@@ -7,8 +7,9 @@ import useSWR from 'swr';
 import { useSWRPosts } from "@/features/forum/hooks/useSWRPosts";
 import { PostReplies } from "@/features/forum/components/PostReplies";
 import { MentionTextarea } from '@/features/forum/components/MentionTextarea';
-import { FixedSizeList as List } from 'react-window';
 import React from 'react';
+import RW from 'react-window/dist/react-window.cjs';
+const List = (RW as any).FixedSizeList as any;
 
 export default function ForumThreadPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -51,7 +52,7 @@ export default function ForumThreadPage({ params }: { params: { id: string } }) 
               itemSize={220}
               width="100%"
             >
-              {({ index, style }) => {
+              {({ index, style }: { index: number; style: React.CSSProperties }) => {
                 const post = posts[index];
                 return (
                   <div style={style} className="px-0">

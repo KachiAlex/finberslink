@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     const user = requireAuth(req);
     const { searchParams } = new URL(req.url);
     const chatSpaceId = searchParams.get("chatSpaceId");
-    const type = searchParams.get("type") || undefined;
+    const type = (searchParams.get("type") ?? undefined) as any as import('@prisma/client').ChatThreadType | undefined;
     const limit = searchParams.get("limit") ? Number(searchParams.get("limit")) : undefined;
     const cursor = searchParams.get("cursor") || undefined;
     if (!chatSpaceId) return NextResponse.json({ error: "Missing chatSpaceId" }, { status: 400 });

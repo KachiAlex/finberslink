@@ -563,8 +563,8 @@ export async function getUnreadThreadCount(userId: string, courseId?: string) {
 
   return threads.filter(
     (thread) => {
-      const lastReadAt = readMap.get(thread.id);
-      return !lastReadAt || new Date(lastReadAt) < new Date(thread.updatedAt);
+      const lastReadAt = readMap.get(thread.id as any) as any;
+      return !lastReadAt || new Date(lastReadAt as any) < new Date(thread.updatedAt as any);
     }
   ).length;
 }

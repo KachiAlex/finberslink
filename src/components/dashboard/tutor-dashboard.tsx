@@ -184,7 +184,7 @@ export function TutorDashboard({ userId: _userId }: TutorDashboardProps) {
         >
           <p className="text-xs text-slate-500">Courses update in real time as learners finish lessons or admins lock edits.</p>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 relative z-10">
-            {insights.recentCourses.map((course, idx) => (
+            {insights.recentCourses.map((course: any, idx: number) => (
               <Link
                 key={course.id}
                 href={`/tutor/courses/${course.id}`}

@@ -48,16 +48,45 @@ export function ImportResumeModal() {
     setLoading(true);
 
     try {
-      // Only allow PDF and TXT files
-      if (!["application/pdf", "text/plain"].includes(selectedFile.type)) {
-        throw new Error("Please upload a PDF or TXT file");
-      }
-
+      // Allow PDF and TXT files; also accept other types (older browsers may not set mime correctly)
+      const supportedTypes = ["application/pdf", "text/plain", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
       if (selectedFile.size > 5 * 1024 * 1024) {
         throw new Error("File size must be less than 5MB");
       }
 
-      const text = await parseResumeFile(selectedFile);
+      let text = "";
+
+      // Try client-side parsing first
+      try {
+        text = await parseResumeFile(selectedFile);
+      } catch (clientErr) {
+        // Client-side parsing failed, try server-side fallback
+        console.warn("[ImportResume] Client-side parsing failed, trying server-side:", clientErr);
+        
+        try {
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+          const response = await fetch("/api/resume/parse", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(
+              errorData.error || `Server parsing failed with status ${response.status}`
+            );
+          }
+
+          const result = await response.json();
+          text = result.text;
+        } catch (serverErr) {
+          // Both client and server parsing failed
+          const combinedErr = `Parsing failed: ${(clientErr as Error).message}. Server fallback: ${(serverErr as Error).message}`;
+          throw new Error(combinedErr);
+        }
+      }
+
       setFile(selectedFile);
       setRawText(text);
       setExtractedContent({

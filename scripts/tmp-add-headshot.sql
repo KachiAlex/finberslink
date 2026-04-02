@@ -1,0 +1,1 @@
+ALTER TABLE "Resume" ADD COLUMN IF NOT EXISTS "headshotUrl" text;

@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const application = await createJobApplication({
-      ...parsed.data,
+      ...(parsed.data as any),
       userId: user.sub,
     });
 

@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const skillAnalysis = await analyzeSkills(parsed.data);
+    const skillAnalysis = await analyzeSkills(parsed.data as any);
     
     return NextResponse.json(skillAnalysis);
   } catch (error) {

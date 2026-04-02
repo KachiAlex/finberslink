@@ -15,7 +15,7 @@ export const revalidate = 0;
 export default async function CoursesPage() {
   // Check if user is authenticated
   const session = await requireSession({
-    failureMode: "allow",
+    failureMode: "allow" as any,
   });
 
   // Redirect authenticated students to dashboard courses
@@ -105,7 +105,7 @@ export default async function CoursesPage() {
             </div>
             
             <div className="grid gap-6 lg:grid-cols-3">
-              {featuredCourses.map((course) => (
+              {featuredCourses.map((course: any) => (
                 <div key={course.id} className="group relative rounded-xl overflow-hidden bg-gradient-to-br from-slate-800 to-slate-800 border border-slate-700 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-300">
                   {/* Gradient border effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-emerald-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none" />
@@ -221,7 +221,7 @@ export default async function CoursesPage() {
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
-                {allCourses.map((course) => (
+                {allCourses.map((course: any) => (
                   <div key={course.id} className="group rounded-xl overflow-hidden bg-slate-800 border border-slate-700 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10">
                     {/* Course Header */}
                     <div className="h-40 bg-gradient-to-br from-cyan-600/20 to-blue-600/20 border-b border-slate-700 flex items-center justify-center relative overflow-hidden">

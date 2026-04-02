@@ -40,7 +40,7 @@ export async function PATCH(
 
     const payload = updateSessionSchema.parse(body);
 
-    const updated = await updateInterviewSession(sessionId, session.sub, payload);
+    const updated = await updateInterviewSession(sessionId, session.sub, payload as any);
     return NextResponse.json({ session: updated });
   } catch (error) {
     if (error instanceof z.ZodError) {

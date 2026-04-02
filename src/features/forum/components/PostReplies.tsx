@@ -1,7 +1,8 @@
 import { usePostReplies } from '../hooks/usePostReplies';
 import { PostReactions } from './PostReactions';
-import { FixedSizeList as List } from 'react-window';
 import React from 'react';
+import RW from 'react-window/dist/react-window.cjs';
+const List = (RW as any).FixedSizeList as any;
 
 export function PostReplies({ postId, userId }: { postId: string; userId: string }) {
   const { replies, loading, error } = usePostReplies(postId);

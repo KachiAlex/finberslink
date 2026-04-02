@@ -45,7 +45,7 @@ const instructorSelect = {
       },
     },
   },
-} satisfies Prisma.UserArgs;
+} as const;
 
 const courseSummaryInclude = {
   instructor: instructorSelect,
@@ -55,7 +55,7 @@ const courseSummaryInclude = {
       enrollments: true,
     },
   },
-} satisfies Prisma.CourseInclude;
+} as const;
 
 const courseDetailInclude = {
   instructor: {
@@ -93,7 +93,7 @@ const courseDetailInclude = {
       },
     },
   },
-} satisfies Prisma.CourseInclude;
+} as const;
 
 type CourseSummaryRecord = Prisma.CourseGetPayload<{ include: typeof courseSummaryInclude }>;
 

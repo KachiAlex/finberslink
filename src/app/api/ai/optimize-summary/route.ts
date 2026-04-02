@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { summary: optimizedSummary, usedFallback } = await optimizeResumeSummary(parsed.data);
+    const { summary: optimizedSummary, usedFallback } = await optimizeResumeSummary(parsed.data as any);
     
     return NextResponse.json({
       optimizedSummary,

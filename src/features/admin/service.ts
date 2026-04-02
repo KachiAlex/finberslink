@@ -251,7 +251,7 @@ export async function getSystemSnapshot(admin?: AdminUserWithTenant) {
   ]);
 
   const auditTrail = [
-    ...recentJobs.map((job) => ({
+    ...recentJobs.map((job: any) => ({
       id: `job-${job.id}`,
       type: 'job' as const,
       label: job.title,
@@ -259,7 +259,7 @@ export async function getSystemSnapshot(admin?: AdminUserWithTenant) {
       timestamp: job.updatedAt,
       status: job.isActive ? 'Live' : 'Draft',
     })),
-    ...recentCourses.map((course) => ({
+    ...recentCourses.map((course: any) => ({
       id: `course-${course.id}`,
       type: 'course' as const,
       label: course.title,
@@ -267,7 +267,7 @@ export async function getSystemSnapshot(admin?: AdminUserWithTenant) {
       timestamp: course.updatedAt,
       status: 'Updated',
     })),
-    ...recentUserUpdates.map((user) => ({
+    ...recentUserUpdates.map((user: any) => ({
       id: `user-${user.id}`,
       type: 'user' as const,
       label: `${user.firstName} ${user.lastName}`,
@@ -295,7 +295,7 @@ export async function getSystemSnapshot(admin?: AdminUserWithTenant) {
     stats: {
       totalUsers,
       admins: adminUsers.length,
-      superAdmins: adminUsers.filter((user) => user.role === 'SUPER_ADMIN').length,
+      superAdmins: adminUsers.filter((user: any) => user.role === 'SUPER_ADMIN').length,
       invitedUsers,
       suspendedUsers,
     },
@@ -377,7 +377,7 @@ export async function getCourseManagementSnapshot(admin?: AdminUserWithTenant) {
       adminDrafts,
     },
     levelMap,
-    recentCourses: recentCourses.map(course => ({
+    recentCourses: recentCourses.map((course: any) => ({
       id: course.id,
       title: course.title,
       level: course.level,
@@ -737,9 +737,10 @@ export async function listAssignableCourses(admin?: AdminUserWithTenant) {
 
 async function isCourseAssignmentTableAvailable() {
   try {
-    const rows = await prisma.$queryRawUnsafe<Array<{ table_name: string | null }>>(
+    const rowsRaw = await prisma.$queryRawUnsafe(
       `SELECT to_regclass('public."CourseAssignment"') AS table_name`,
     );
+    const rows = rowsRaw as Array<{ table_name: string | null }>;
     return Boolean(rows[0]?.table_name);
   } catch {
     return false;
@@ -747,7 +748,7 @@ async function isCourseAssignmentTableAvailable() {
 }
 
 function isCourseAssignmentMissingError(error: unknown) {
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2021') {
+  if (error instanceof (Prisma as any).PrismaClientKnownRequestError && (error as any).code === 'P2021') {
     return true;
   }
 
@@ -843,7 +844,7 @@ export async function assignCourseToStudent(
     return { enrollment, assignment: null };
   }
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx: any) => {
     const enrollment = await upsertEnrollmentWithoutUnique(tx, input.studentId, input.courseId);
 
     const existingAssignment = await tx.courseAssignment.findFirst({
@@ -938,7 +939,7 @@ export async function unassignCourseFromStudent(
 
   const tableAvailable = await isCourseAssignmentTableAvailable();
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx: any) => {
     const enrollment = await tx.enrollment.findFirst({
       where: {
         userId: input.studentId,
@@ -1037,7 +1038,7 @@ export async function listRecentCourseAssignmentEvents(
       },
     });
 
-    const events = enrollments.map((item) => ({
+    const events = enrollments.map((item: any) => ({
       id: `enrollment-${item.id}`,
       status: item.status === 'WITHDRAWN' ? 'REVOKED' : 'ACCEPTED',
       assignedAt: item.status === 'WITHDRAWN' ? item.updatedAt : item.createdAt,
@@ -1107,7 +1108,7 @@ export async function listRecentCourseAssignmentEvents(
     throw error;
   }
 
-  const assignmentEvents = assignments.map((item) => ({
+  const assignmentEvents = assignments.map((item: any) => ({
     id: item.id,
     status: item.status,
     assignedAt: item.assignedAt,
@@ -1286,7 +1287,7 @@ export async function listStudents(
   });
 
   const seen = new Set<string>();
-  const items = students.filter((student) => {
+  const items = students.filter((student: any) => {
     const key = student.email ? student.email.toLowerCase() : student.id;
     if (seen.has(key)) {
       return false;
