@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createResume, listUserResumes, createResumeExperience } from "@/features/resume/service";
 import { verifyToken } from "@/lib/auth/jwt";
-import { ResumeSchema } from "@/features/resume/schemas";
+import { ResumeCreateSchema } from "@/features/resume/schemas";
 import { upsertStudentProfile } from "@/features/profile/service";
 
 export async function GET(request: NextRequest) {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     const user = verifyToken(accessToken);
       const body = await request.json();
-    const parsed = ResumeSchema.safeParse(body);
+    const parsed = ResumeCreateSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(

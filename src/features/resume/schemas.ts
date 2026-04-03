@@ -28,6 +28,21 @@ export const ResumeSchema = z.object({
     .optional(),
 });
 
+export const EducationEntrySchema = z.object({
+  school: z.string().min(1, "School is required"),
+  degree: z.string().optional(),
+  field: z.string().optional(),
+  description: z.string().max(2000).optional(),
+});
+
+export const ResumeCreateSchema = ResumeSchema.extend({
+  experiences: z.array(ResumeExperienceSchema).optional(),
+  certifications: z.array(z.string()).optional(),
+  education: z.array(EducationEntrySchema).optional(),
+});
+
+export type ResumeCreateInput = z.infer<typeof ResumeCreateSchema>;
+
 export const ResumeExperienceSchema = z.object({
   company: z.string().min(1, "Company is required"),
   role: z.string().min(1, "Role is required"),

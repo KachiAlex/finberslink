@@ -75,6 +75,7 @@ export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createMessage, setCreateMessage] = useState<string | null>(null);
   const [aiStatus, setAiStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [aiMessage, setAiMessage] = useState<string | null>(null);
   const [achievementStatus, setAchievementStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -228,6 +229,7 @@ export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = 
     try {
       // Persist qualifications to profile first (certifications + education)
       try {
+        setCreateMessage("Saving qualifications...");
         const profilePayload: any = {};
         const certs = form.certificationsInput ? splitByLines(form.certificationsInput) : [];
         if (certs.length) profilePayload.certifications = certs;
@@ -240,6 +242,7 @@ export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = 
             body: JSON.stringify(profilePayload),
           });
         }
+        setCreateMessage("Creating resume...");
       } catch (e) {
         console.warn("Failed to persist profile qualifications, continuing:", e);
       }
@@ -258,6 +261,7 @@ export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = 
       const data = await response.json();
       const slug = data?.resume?.slug;
       if (slug) {
+        setCreateMessage(null);
         if (onSuccess) {
           onSuccess();
         } else {
@@ -642,6 +646,11 @@ export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = 
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            {createMessage && (
+              <div className="rounded-md bg-blue-50 border border-blue-100 p-3 text-sm text-blue-700">
+                {createMessage}
+              </div>
+            )}
             <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Summary preview</p>
               <p className="mt-2 text-sm text-slate-700">{form.summary || "No summary yet."}</p>
