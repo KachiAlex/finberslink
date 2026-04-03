@@ -374,6 +374,9 @@ const AnimatedBanner = () => {
           <Button asChild variant="secondary" className="rounded-full text-slate-700 border-slate-300 hover:bg-slate-100">
             <Link href="/dashboard/jobs">Review applications</Link>
           </Button>
+          <Button asChild variant="secondary" className="rounded-full text-slate-700 border-slate-300 hover:bg-slate-100">
+            <Link href="/dashboard/interview">Interview Studio</Link>
+          </Button>
         </div>
       </div>
     </div>
