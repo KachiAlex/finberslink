@@ -50,6 +50,9 @@ const initialForm = {
   summary: "",
   aiJobTitle: "",
   aiIndustry: "",
+  experiences: [] as Array<{ id: string; role: string; company: string; description: string }> ,
+  education: [] as Array<{ id: string; school: string; degree: string; field: string; description?: string }>,
+  certificationsInput: "",
 };
 
 type FormState = typeof initialForm;
@@ -82,6 +85,34 @@ export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = 
   const canGoNext =
     (step === 1 && Boolean(form.title.trim())) ||
     (step === 2 && Boolean(form.summary.trim() || form.notableAchievements.trim()));
+
+  function addExperience() {
+    setForm((prev) => ({
+      ...prev,
+      experiences: [
+        ...prev.experiences,
+        { id: Date.now().toString(), role: "", company: "", description: "" },
+      ],
+    }));
+  }
+
+  function removeExperience(idx: number) {
+    setForm((prev) => ({ ...prev, experiences: prev.experiences.filter((_, i) => i !== idx) }));
+  }
+
+  function addEducation() {
+    setForm((prev) => ({
+      ...prev,
+      education: [
+        ...prev.education,
+        { id: Date.now().toString(), school: "", degree: "", field: "", description: "" },
+      ],
+    }));
+  }
+
+  function removeEducation(idx: number) {
+    setForm((prev) => ({ ...prev, education: prev.education.filter((_, i) => i !== idx) }));
+  }
 
   const videoEmbedUrl = form.introVideoUrl && isVideoUrlValid(form.introVideoUrl) ? toEmbedUrl(form.introVideoUrl) : null;
 
@@ -195,6 +226,24 @@ export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = 
     };
 
     try {
+      // Persist qualifications to profile first (certifications + education)
+      try {
+        const profilePayload: any = {};
+        const certs = form.certificationsInput ? splitByLines(form.certificationsInput) : [];
+        if (certs.length) profilePayload.certifications = certs;
+        if (form.education && form.education.length) profilePayload.education = form.education;
+
+        if (Object.keys(profilePayload).length) {
+          await fetch("/api/profile", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(profilePayload),
+          });
+        }
+      } catch (e) {
+        console.warn("Failed to persist profile qualifications, continuing:", e);
+      }
+
       const response = await fetch("/api/resume", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -320,6 +369,50 @@ export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = 
                 placeholder="https://youtu.be/..."
                 className="mt-1 h-9"
               />
+            {/* Experiences list */}
+            <div className="mt-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold">Experiences</h4>
+                <Button size="sm" type="button" onClick={addExperience}>+ Add Experience</Button>
+              </div>
+              <div className="space-y-3 mt-3">
+                {form.experiences.map((exp, idx) => (
+                  <div key={exp.id} className="p-3 rounded-lg border bg-slate-50">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <Input placeholder="Role" value={exp.role} onChange={(e) => setForm(prev => ({ ...prev, experiences: prev.experiences.map((en,i)=> i===idx ? { ...en, role: e.target.value } : en) }))} />
+                      <Input placeholder="Company" value={exp.company} onChange={(e) => setForm(prev => ({ ...prev, experiences: prev.experiences.map((en,i)=> i===idx ? { ...en, company: e.target.value } : en) }))} />
+                    </div>
+                    <Textarea placeholder="Description" rows={2} className="mt-2" value={exp.description} onChange={(e) => setForm(prev => ({ ...prev, experiences: prev.experiences.map((en,i)=> i===idx ? { ...en, description: e.target.value } : en) }))} />
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" variant="ghost" onClick={() => removeExperience(idx)}>Remove</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Education list */}
+            <div className="mt-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold">Education</h4>
+                <Button size="sm" type="button" onClick={addEducation}>+ Add Education</Button>
+              </div>
+              <div className="space-y-3 mt-3">
+                {form.education.map((edu, idx) => (
+                  <div key={edu.id} className="p-3 rounded-lg border bg-slate-50">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <Input placeholder="School / Institution" value={edu.school} onChange={(e) => setForm(prev => ({ ...prev, education: prev.education.map((en,i)=> i===idx ? { ...en, school: e.target.value } : en) }))} />
+                      <Input placeholder="Degree" value={edu.degree} onChange={(e) => setForm(prev => ({ ...prev, education: prev.education.map((en,i)=> i===idx ? { ...en, degree: e.target.value } : en) }))} />
+                    </div>
+                    <Input placeholder="Field of study" className="mt-2" value={edu.field} onChange={(e) => setForm(prev => ({ ...prev, education: prev.education.map((en,i)=> i===idx ? { ...en, field: e.target.value } : en) }))} />
+                    <Textarea placeholder="Description (optional)" rows={2} className="mt-2" value={edu.description} onChange={(e) => setForm(prev => ({ ...prev, education: prev.education.map((en,i)=> i===idx ? { ...en, description: e.target.value } : en) }))} />
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" variant="ghost" onClick={() => removeEducation(idx)}>Remove</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
               <p className="mt-1 text-xs text-slate-500">
                 YouTube, Vimeo, Google Drive, or Cloudinary. Shows on your resume.
               </p>
@@ -369,6 +462,18 @@ export function ResumeBuilderWizard({ onSuccess }: { onSuccess?: () => void } = 
                   className="mt-1 h-9"
                 />
               </div>
+            </div>
+            {/* Certifications */}
+            <div>
+              <Label htmlFor="certifications" className="text-xs">Certifications</Label>
+              <Textarea
+                id="certifications"
+                rows={3}
+                value={form.certificationsInput}
+                onChange={(e) => handleFieldChange("certificationsInput", e.target.value)}
+                placeholder="List each certificate on a new line"
+                className="mt-1"
+              />
             </div>
           </CardContent>
           <CardFooter className="flex items-center justify-end gap-2 pt-4">
