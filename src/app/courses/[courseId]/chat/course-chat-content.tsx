@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Hash, MessageCircle, MessagesSquare, Send, Video } from "lucide-react";
 
@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/features/chat/components/user-avatar";
 import { useChatMessages, useChatThreads, useSendChatMessage } from "@/features/chat/hooks";
+import useSocket from "@/hooks/useSocket";
+import { useQueryClient } from "@tanstack/react-query";
 
 type CourseChatThread = {
   id: string;
@@ -103,6 +105,43 @@ function CourseChatInner({
 
   const { data: liveMessages = [], isLoading: loadingMessages } = useChatMessages(selectedThread?.id ?? null);
   const { mutateAsync: sendMessage, isPending: isSending } = useSendChatMessage();
+  const queryClient = useQueryClient();
+
+  const socket = useSocket({ token: (() => {
+    if (typeof document === 'undefined') return undefined;
+    const m = document.cookie.match(/access_token=([^;\s]+)/);
+    return m ? decodeURIComponent(m[1]) : undefined;
+  })() });
+  const prevThreadRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const handler = (data: any) => {
+      if (!data || data.type !== 'message') return;
+      const threadId = data.threadId;
+      const message = data.payload;
+      // Update react-query cache for the thread messages
+      queryClient.setQueryData(["chat", "messages", threadId], (old: any) => {
+        const arr = (old as any[]) || [];
+        // Avoid duplicate if message id already present
+        if (arr.some((m: any) => m.id === message.id)) return arr;
+        return [message, ...arr];
+      });
+    };
+    const unsub = socket.onMessage(handler);
+    return unsub;
+  }, [socket, queryClient]);
+
+  useEffect(() => {
+    const cur = selectedThread?.id ?? null;
+    const prev = prevThreadRef.current;
+    if (prev && prev !== cur) {
+      socket.leave(prev);
+    }
+    if (cur) {
+      socket.join(cur);
+    }
+    prevThreadRef.current = cur;
+  }, [selectedThread?.id, socket]);
 
   const messages = useMemo(() => {
     const source = (liveMessages as CourseChatMessage[]).length
@@ -117,8 +156,14 @@ function CourseChatInner({
     if (!content || !selectedThread) return;
 
     try {
-      await sendMessage({ threadId: selectedThread.id, content });
-      setDraft("");
+      // Prefer WS send when connected
+      if (socket.connected) {
+        socket.sendMessage(selectedThread.id, { content });
+        setDraft("");
+      } else {
+        await sendMessage({ threadId: selectedThread.id, content });
+        setDraft("");
+      }
     } catch (error) {
       console.error("Failed to send course chat message", error);
     }
