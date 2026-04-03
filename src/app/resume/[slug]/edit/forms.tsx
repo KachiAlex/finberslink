@@ -28,7 +28,7 @@ export function NewExperienceForm({ slug, action, industryHint, defaultRole }: N
   const [formValues, setFormValues] = useState({
     company: "",
     role: defaultRole ?? "",
-    startDate: "",
+    startDate: new Date().toISOString().slice(0, 7),
     endDate: "",
     rawDescription: "",
     industry: industryHint ?? "",

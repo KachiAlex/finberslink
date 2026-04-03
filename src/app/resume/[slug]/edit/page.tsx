@@ -20,6 +20,7 @@ import {
   updateResumeExperience,
   updateResumeSkillSnapshot,
 } from "@/features/resume/service";
+import { upsertStudentProfile } from "@/features/profile/service";
 import { generateResumePDFUrl } from "@/features/resume/export-service";
 import { ResumeExperienceSchema, ResumeProjectSchema } from "@/features/resume/schemas";
 import {
@@ -50,6 +51,7 @@ import { NewExperienceForm, NewProjectForm } from "./forms";
 import { ResumeTemplateWrapper } from "@/components/resume/resume-template-wrapper";
 import { ResumeTemplateSelector } from "@/components/resume/resume-template-selector";
 import { HeadshotUpload } from "@/components/resume/headshot-upload";
+import { getStudentProfile } from "@/features/profile/service";
 
 // Add Experience Action
 async function addExperienceAction(formData: FormData) {
@@ -58,7 +60,8 @@ async function addExperienceAction(formData: FormData) {
   const slug = String(formData.get("slug") ?? "").trim();
   const company = String(formData.get("company") ?? "").trim();
   const role = String(formData.get("role") ?? "").trim();
-  const startDate = String(formData.get("startDate") ?? "").trim();
+  // Default startDate to current month if user left it blank
+  const startDate = String(formData.get("startDate") ?? "").trim() || new Date().toISOString().slice(0, 7);
   const endDate = String(formData.get("endDate") ?? "").trim();
   const rawDescription = String(formData.get("rawDescription") ?? "").trim();
   const generatedAchievementsRaw = String(formData.get("generatedAchievements") ?? "").trim();
@@ -110,6 +113,41 @@ async function addExperienceAction(formData: FormData) {
   });
 
   await invalidateDashboardInsights(user.sub);
+
+  revalidatePath(`/resume/${slug}/edit`);
+}
+
+// Update profile's education & certifications from the resume editor
+async function updateProfileEducationAction(formData: FormData) {
+  "use server";
+
+  const slug = String(formData.get("slug") ?? "").trim();
+  const certificationsRaw = String(formData.get("certifications") ?? "").trim();
+  const educationRaw = String(formData.get("education") ?? "").trim();
+
+  if (!slug) return;
+
+  const user = await requireUser();
+
+  const certifications = certificationsRaw
+    ? certificationsRaw.split("\n").map((s) => s.trim()).filter(Boolean)
+    : [];
+
+  let education: any = undefined;
+  if (educationRaw) {
+    try {
+      education = JSON.parse(educationRaw);
+    } catch (err) {
+      console.warn("Invalid education JSON provided", err);
+      education = undefined;
+    }
+  }
+
+  await upsertStudentProfile({
+    userId: user.sub,
+    certifications: certifications.length ? certifications : undefined,
+    education: education ?? undefined,
+  });
 
   revalidatePath(`/resume/${slug}/edit`);
 }
@@ -657,6 +695,8 @@ export default async function ResumeEditPage({
     notFound();
   }
 
+  const profile = await getStudentProfile((resume as any).userId);
+
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ??
     process.env.NEXTAUTH_URL ??
@@ -935,6 +975,28 @@ export default async function ResumeEditPage({
                 </div>
               </CardContent>
             </Card>
+
+              {/* Education & Certifications (from Profile) */}
+              <Card className="border border-slate-200/70 bg-white/95">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-slate-900">Education & Certifications</CardTitle>
+                  <CardDescription>Manage qualifications shown on your resume (profile data)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form action={updateProfileEducationAction} className="space-y-4">
+                    <input type="hidden" name="slug" value={(resume as any).slug} />
+                    <div>
+                      <Label className="text-sm font-medium text-slate-700">Certifications (one per line)</Label>
+                      <Textarea name="certifications" rows={3} defaultValue={(profile?.certifications || []).join('\n')} placeholder="Certificate A\nCertificate B" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-slate-700">Education (JSON)</Label>
+                      <Textarea name="education" rows={4} defaultValue={profile?.education ? JSON.stringify(profile.education, null, 2) : ''} placeholder='[{"degree":"BSc","institution":"X","year":2020}]' />
+                    </div>
+                    <Button type="submit">Save Qualifications</Button>
+                  </form>
+                </CardContent>
+              </Card>
 
             {/* Job Targeting Section */}
             <Card className="border border-slate-200/70 bg-white/95">

@@ -668,6 +668,25 @@ export async function createAdminCourse(
 ) {
   const resolvedAdmin = await resolveAdmin(admin);
   const instructorId = resolvedAdmin.id;
+  // Guard: prevent duplicate courses by slug or by title for the same instructor
+  if (input.slug) {
+    const existing = await prisma.course.findFirst({
+      where: { slug: input.slug, instructorId, archivedAt: null },
+      select: { id: true },
+    });
+    if (existing) {
+      throw new Error('Course with this slug already exists');
+    }
+  }
+
+  const existingTitle = await prisma.course.findFirst({
+    where: { title: input.title.trim(), instructorId, archivedAt: null },
+    select: { id: true },
+  });
+
+  if (existingTitle) {
+    throw new Error('You already have a course with this title');
+  }
 
   return prisma.course.create({
     data: {

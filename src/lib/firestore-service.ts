@@ -369,6 +369,12 @@ export async function getCourseById(id: string): Promise<Course | null> {
 }
 
 export async function createCourse(data: Omit<Course, 'id' | 'createdAt' | 'updatedAt'>): Promise<Course> {
+  // Guard against duplicates by slug
+  const existing = await getCourseBySlug(data.slug);
+  if (existing) {
+    throw new Error('Course with this slug already exists');
+  }
+
   const now = new Date();
   const docRef = await db.collection('courses').add({
     ...data,

@@ -13,13 +13,32 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     let body: unknown;
+    const nowLog = new Date().toISOString();
     try {
-      body = await request.json();
-    } catch (parseErr) {
-      const raw = await request.text();
-      const cleaned = raw.replace(/^\uFEFF/, "").trim();
+      const debugPath = path.resolve(process.cwd(), 'tmp', 'auth-debug.log');
+      fs.appendFileSync(debugPath, `${nowLog}\tREGISTER_HEADERS\t${JSON.stringify(Object.fromEntries(request.headers))}\n`);
+    } catch (e) {
+      // ignore debug logging errors
+    }
+    const contentType = (request.headers.get("content-type") || "").toLowerCase();
+    const raw = await request.text();
+    const cleaned = raw.replace(/^\uFEFF/, "").trim();
+
+    if (contentType && !contentType.includes("application/json")) {
       try {
-        body = cleaned ? JSON.parse(cleaned) : {};
+        const now = new Date().toISOString();
+        const logPath = path.resolve(process.cwd(), 'tmp', 'register-non-json.log');
+        fs.mkdirSync(path.dirname(logPath), { recursive: true });
+        fs.appendFileSync(logPath, `${now}\tCONTENT_TYPE=${contentType}\t${raw}\n\n`);
+      } catch (e) {
+        // ignore logging errors
+      }
+      return NextResponse.json({ error: "Expected application/json request" }, { status: 415 });
+    }
+
+    if (cleaned) {
+      try {
+        body = JSON.parse(cleaned);
       } catch (finalErr) {
         const now = new Date().toISOString();
         const logPath = path.resolve(process.cwd(), 'tmp', 'register-raw-body.log');
@@ -31,6 +50,8 @@ export async function POST(request: NextRequest) {
         }
         return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
       }
+    } else {
+      body = {};
     }
     const parsed = RegisterSchema.safeParse(body);
 

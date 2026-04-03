@@ -12,13 +12,33 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     let reqBody: unknown;
+    const nowLog = new Date().toISOString();
     try {
-      reqBody = await request.json();
-    } catch (parseErr) {
-      const raw = await request.text();
-      const cleaned = raw.replace(/^\uFEFF/, "").trim();
+      const debugPath = path.resolve(process.cwd(), 'tmp', 'auth-debug.log');
+      fs.appendFileSync(debugPath, `${nowLog}\tLOGIN_HEADERS\t${JSON.stringify(Object.fromEntries(request.headers))}\n`);
+    } catch (e) {
+      // ignore debug logging errors
+    }
+    const contentType = (request.headers.get("content-type") || "").toLowerCase();
+    const raw = await request.text();
+    const cleaned = raw.replace(/^\uFEFF/, "").trim();
+
+    // If the request is not JSON, log and return a clear 415 error
+    if (contentType && !contentType.includes("application/json")) {
       try {
-        reqBody = cleaned ? JSON.parse(cleaned) : {};
+        const now = new Date().toISOString();
+        const logPath = path.resolve(process.cwd(), 'tmp', 'login-non-json.log');
+        fs.mkdirSync(path.dirname(logPath), { recursive: true });
+        fs.appendFileSync(logPath, `${now}\tCONTENT_TYPE=${contentType}\t${raw}\n\n`);
+      } catch (e) {
+        // ignore logging errors
+      }
+      return NextResponse.json({ error: "Expected application/json request" }, { status: 415 });
+    }
+
+    if (cleaned) {
+      try {
+        reqBody = JSON.parse(cleaned);
       } catch (finalErr) {
         const now = new Date().toISOString();
         const logPath = path.resolve(process.cwd(), 'tmp', 'login-raw-body.log');
@@ -30,6 +50,8 @@ export async function POST(request: NextRequest) {
         }
         return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
       }
+    } else {
+      reqBody = {};
     }
     const parsed = LoginSchema.safeParse(reqBody);
 

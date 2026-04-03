@@ -21,6 +21,8 @@
     "seed": "npx tsx prisma/seed.ts",
     "migrate:users-to-tenant": "npx tsx scripts/migrate-users-to-default-tenant.ts",
     "db:reset-courses": "npx tsx scripts/reset-db-exclude-users.ts"
+    ,"dedupe:courses": "npx tsx scripts/dedupe-duplicate-courses.ts"
+    ,"dedupe:courses:sql": "npx tsx scripts/dedupe-duplicate-courses-sql.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
