@@ -8,6 +8,6 @@ export const revalidate = 0;
 export default async function ChatPage() {
   await requireSession({ failureMode: "redirect" });
 
-  // Temporary fallback route so chat CTA does not 404 in production.
-  redirect("/forum");
+  // Redirect to the main chat interface at /dashboard/chat
+  redirect("/dashboard/chat");
 }

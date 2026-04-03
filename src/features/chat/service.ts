@@ -326,3 +326,302 @@ export async function markChatNotificationsSeen(userId: string, notificationIds:
   });
   return { count: result.count };
 }
+
+// ============================================================================
+// DIRECT MESSAGE FUNCTIONS (1:1 and Group DMs)
+// ============================================================================
+
+export async function getOrCreateDirectConversation(input: {
+  userId: string;
+  targetUserId: string;
+}) {
+  const { userId, targetUserId } = input;
+  if (userId === targetUserId) {
+    throw createStatusError("CANNOT_DM_YOURSELF", 400);
+  }
+
+  // Try to find existing 1:1 conversation
+  const existing = await prisma.directConversation.findFirst({
+    where: {
+      type: "DIRECT",
+      participants: {
+        every: { userId: { in: [userId, targetUserId] } },
+      },
+    },
+    include: {
+      participants: { select: { userId: true } },
+      messages: {
+        orderBy: { sentAt: "desc" },
+        take: 1,
+        include: {
+          sender: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        },
+      },
+    },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  // Create new 1:1 conversation
+  return prisma.directConversation.create({
+    data: {
+      type: "DIRECT",
+      createdById: userId,
+      participants: {
+        create: [{ userId }, { userId: targetUserId }],
+      },
+    },
+    include: {
+      participants: { select: { userId: true } },
+      messages: { take: 0 },
+    },
+  });
+}
+
+export async function createGroupConversation(input: {
+  userId: string;
+  name: string;
+  participantUserIds: string[];
+}) {
+  const { userId, name, participantUserIds } = input;
+
+  if (!participantUserIds.includes(userId)) {
+    throw createStatusError("CREATOR_MUST_BE_PARTICIPANT", 400);
+  }
+
+  if (new Set(participantUserIds).size !== participantUserIds.length) {
+    throw createStatusError("DUPLICATE_PARTICIPANTS", 400);
+  }
+
+  return prisma.directConversation.create({
+    data: {
+      type: "GROUP",
+      name,
+      createdById: userId,
+      participants: {
+        create: participantUserIds.map((id) => ({
+          userId: id,
+          role: id === userId ? "ADMIN" : "MEMBER",
+        })),
+      },
+    },
+    include: {
+      participants: {
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        },
+      },
+      messages: { take: 0 },
+    },
+  });
+}
+
+export async function listUserConversations(input: { userId: string } & Pagination) {
+  const { userId, limit = DEFAULT_THREAD_LIMIT, cursor } = input;
+
+  return prisma.directConversation.findMany({
+    where: {
+      participants: { some: { userId } },
+      archivedAt: null,
+    },
+    orderBy: { lastMessageAt: "desc" },
+    take: limit,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    include: {
+      participants: {
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        },
+      },
+      messages: {
+        orderBy: { sentAt: "desc" },
+        take: 1,
+        include: {
+          sender: { select: { id: true, firstName: true, lastName: true } },
+        },
+      },
+      createdBy: { select: { id: true, firstName: true, lastName: true } },
+      _count: { select: { messages: true } },
+    },
+  });
+}
+
+export async function getConversation(input: { conversationId: string; userId: string }) {
+  const { conversationId, userId } = input;
+
+  const conversation = await prisma.directConversation.findUnique({
+    where: { id: conversationId },
+    include: {
+      participants: {
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        },
+      },
+      createdBy: { select: { id: true, firstName: true, lastName: true } },
+    },
+  });
+
+  if (!conversation) {
+    throw createStatusError("NOT_FOUND", 404);
+  }
+
+  const isParticipant = conversation.participants.some((p) => p.userId === userId);
+  if (!isParticipant) {
+    throw createStatusError("NOT_PARTICIPANT", 403);
+  }
+
+  return conversation;
+}
+
+export async function listConversationMessages(input: {
+  conversationId: string;
+  userId: string;
+} & Pagination) {
+  const { conversationId, userId, limit = DEFAULT_MESSAGE_LIMIT, cursor } = input;
+
+  // Verify user is a participant
+  const conversation = await getConversation({ conversationId, userId });
+
+  const messages = await prisma.directMessage.findMany({
+    where: { conversationId },
+    orderBy: { sentAt: "desc" },
+    take: limit,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    include: {
+      sender: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+        },
+      },
+      reads: {
+        select: {
+          userId: true,
+          readAt: true,
+        },
+      },
+    },
+  });
+
+  return messages;
+}
+
+export async function sendDirectMessage(input: {
+  conversationId: string;
+  senderId: string;
+  content: string;
+  attachments?: PrismaNamespace.InputJsonValue;
+  mentions?: string[];
+}) {
+  const { conversationId, senderId, content, attachments = [], mentions = [] } = input;
+
+  // Verify user is a participant
+  await getConversation({ conversationId, userId: senderId });
+
+  const message = await prisma.$transaction([
+    prisma.directMessage.create({
+      data: {
+        conversationId,
+        senderId,
+        content,
+        attachments: attachments as PrismaNamespace.InputJsonValue,
+        mentions: mentions as PrismaNamespace.InputJsonValue,
+      },
+      include: {
+        sender: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        reads: { select: { userId: true, readAt: true } },
+      },
+    }),
+    prisma.directConversation.update({
+      where: { id: conversationId },
+      data: { lastMessageAt: new Date() },
+    }),
+  ])[0];
+
+  return message;
+}
+
+export async function markDirectMessageRead(input: {
+  messageId: string;
+  userId: string;
+}) {
+  const { messageId, userId } = input;
+
+  const message = await prisma.directMessage.findUnique({
+    where: { id: messageId },
+    select: { conversationId: true },
+  });
+
+  if (!message) {
+    throw createStatusError("NOT_FOUND", 404);
+  }
+
+  // Verify user is a participant
+  await getConversation({ conversationId: message.conversationId, userId });
+
+  return prisma.directMessageRead.upsert({
+    where: { messageId_userId: { messageId, userId } },
+    create: { messageId, userId },
+    update: { readAt: new Date() },
+  });
+}
+
+export async function markConversationMessagesRead(input: {
+  conversationId: string;
+  userId: string;
+}) {
+  const { conversationId, userId } = input;
+
+  // Verify user is a participant
+  await getConversation({ conversationId, userId });
+
+  // Find all unread messages from this user's perspective
+  const unreadMessages = await prisma.directMessage.findMany({
+    where: {
+      conversationId,
+      reads: {
+        none: { userId },
+      },
+    },
+    select: { id: true },
+  });
+
+  if (unreadMessages.length === 0) return { count: 0 };
+
+  const result = await prisma.directMessageRead.createMany({
+    data: unreadMessages.map((msg) => ({
+      messageId: msg.id,
+      userId,
+    })),
+    skipDuplicates: true,
+  });
+
+  return result;
+}
+
+export async function getUnreadConversationCount(userId: string) {
+  const conversations = await prisma.directConversation.findMany({
+    where: {
+      participants: { some: { userId } },
+      archivedAt: null,
+    },
+    select: {
+      id: true,
+      messages: {
+        where: {
+          reads: {
+            none: { userId },
+          },
+        },
+        select: { id: true },
+      },
+    },
+  });
+
+  const unreadCount = conversations.reduce((sum, conv) => sum + conv.messages.length, 0);
+  return { count: unreadCount, byConversation: conversations };
+}

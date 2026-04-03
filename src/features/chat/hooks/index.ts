@@ -142,3 +142,6 @@ export function useMarkNotificationsSeen() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["chat", "notifications"] }),
   });
 }
+
+// Direct message hooks
+export * from "./use-direct-messages";

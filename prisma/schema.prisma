@@ -55,6 +55,10 @@ model User {
   issuedCertificates           CourseCertificate[]    @relation("CertificatesIssuedBy")
   tutorApprovalAsApprover      TutorApproval[]        @relation("ApprovedByAdmin")
   tutorApprovalAsStudent       TutorApproval[]        @relation("TutorUser")
+  directConversationParticipants DirectConversationParticipant[]
+  directConversationsCreated   DirectConversation[]   @relation("ConversationCreator")
+  directMessages               DirectMessage[]
+  directMessageReads           DirectMessageRead[]
 }
 
 model Profile {
@@ -779,6 +783,73 @@ model ChatNotification {
   @@index([userId, seenAt])
 }
 
+model DirectConversation {
+  id              String   @id @default(cuid())
+  type            ConversationType @default(DIRECT)
+  name            String?
+  groupIcon       String?
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  lastMessageAt   DateTime?
+  archivedAt      DateTime?
+  
+  participants    DirectConversationParticipant[]
+  messages        DirectMessage[]
+  createdBy       User     @relation("ConversationCreator", fields: [createdById], references: [id])
+  
+  @@index([createdAt])
+  @@index([lastMessageAt])
+  @@index([createdById])
+}
+
+model DirectConversationParticipant {
+  id              String   @id @default(cuid())
+  conversationId  String
+  userId          String
+  joinedAt        DateTime @default(now())
+  leftAt          DateTime?
+  role            ParticipantRole @default(MEMBER)
+  
+  conversation    DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id])
+  
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model DirectMessage {
+  id              String   @id @default(cuid())
+  conversationId  String
+  senderId        String
+  content         String
+  attachments     Json     @default("[]")
+  mentions        Json     @default("[]")
+  sentAt          DateTime @default(now())
+  editedAt        DateTime?
+  deletedAt       DateTime?
+  
+  conversation    DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender          User     @relation(fields: [senderId], references: [id])
+  reads           DirectMessageRead[]
+  
+  @@index([conversationId, sentAt])
+  @@index([senderId])
+}
+
+model DirectMessageRead {
+  id              String   @id @default(cuid())
+  messageId       String
+  userId          String
+  readAt          DateTime @default(now())
+  
+  message         DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id])
+  
+  @@unique([messageId, userId])
+  @@index([userId])
+}
+
 model DashboardInsight {
   id          String   @id @default(cuid())
   userId      String   @unique
@@ -986,4 +1057,14 @@ enum ChatNotificationType {
   MENTION
   REPLY
   ANNOUNCEMENT
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum ParticipantRole {
+  ADMIN
+  MEMBER
 }
