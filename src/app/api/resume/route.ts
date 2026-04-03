@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createResume, listUserResumes } from "@/features/resume/service";
+import { createResume, listUserResumes, createResumeExperience } from "@/features/resume/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { ResumeSchema } from "@/features/resume/schemas";
+import { upsertStudentProfile } from "@/features/profile/service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = verifyToken(accessToken);
-    const body = await request.json();
+      const body = await request.json();
     const parsed = ResumeSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -52,6 +53,45 @@ export async function POST(request: NextRequest) {
       userId: user.sub,
       ...(parsed.data as any),
     });
+
+    // If experiences were provided in the creation payload, persist them as ResumeExperience
+    try {
+      const experiences = Array.isArray((body as any).experiences) ? (body as any).experiences : [];
+      for (const exp of experiences) {
+        try {
+          const start = exp.startDate ? new Date(String(exp.startDate)) : new Date();
+          const end = exp.endDate ? new Date(String(exp.endDate)) : null;
+          await createResumeExperience({
+            resumeId: resume.id,
+            company: String(exp.company || exp.companyName || "").trim() || "",
+            role: String(exp.role || exp.title || "").trim() || "",
+            startDate: start,
+            endDate: end,
+            description: exp.description ? String(exp.description) : null,
+            achievements: Array.isArray(exp.achievements) ? exp.achievements : [],
+          });
+        } catch (err) {
+          console.warn("Failed to create resume experience", err);
+        }
+      }
+    } catch (err) {
+      console.warn("No experiences to persist", err);
+    }
+
+    // If certifications or education provided, persist them to the user's profile
+    try {
+      const certs = Array.isArray((body as any).certifications) ? (body as any).certifications : undefined;
+      const education = (body as any).education !== undefined ? (body as any).education : undefined;
+      if ((certs && certs.length) || education !== undefined) {
+        await upsertStudentProfile({
+          userId: user.sub,
+          certifications: certs,
+          education: education,
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to persist profile qualifications", err);
+    }
     return NextResponse.json(
       { message: "Resume created successfully", resume },
       { status: 201 }
