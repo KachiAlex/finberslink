@@ -366,6 +366,7 @@ model Resume {
   user                User               @relation(fields: [userId], references: [id])
   experiences         ResumeExperience[]
   projects            ResumeProject[]
+  education           ResumeEducation[]
   interviewSessions  InterviewSession[]
 }
 
