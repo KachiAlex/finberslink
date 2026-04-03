@@ -57,8 +57,10 @@
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
+  "optionalDependencies": {
+    "@next/swc-win32-x64-msvc": "^15.5.14"
+  },
   "devDependencies": {
-    "@next/swc-win32-x64-msvc": "^15.5.14",
     "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
