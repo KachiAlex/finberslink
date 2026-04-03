@@ -8,6 +8,8 @@ type UpdateProfileRequest = {
   headline?: string;
   bio?: string;
   location?: string;
+  certifications?: string[];
+  education?: any;
 };
 
 export async function GET() {
@@ -39,6 +41,8 @@ export async function PATCH(request: NextRequest) {
       headline: body.headline,
       bio: body.bio,
       location: body.location,
+      certifications: Array.isArray(body.certifications) ? body.certifications : undefined,
+      education: body.education !== undefined ? body.education : undefined,
     });
 
     await invalidateDashboardInsights(session.sub);

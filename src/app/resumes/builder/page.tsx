@@ -535,6 +535,25 @@ export default function ResumeBuilderPage() {
                   setData((prev) => ({ ...prev, certifications: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) }))
                 }
               />
+              <div className="flex gap-2 mt-2">
+                <Button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/profile', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ certifications: data.certifications || [] }),
+                      });
+                      if (!res.ok) throw new Error('Failed to save certifications');
+                      setMessage({ type: 'success', text: 'Certifications saved to profile' });
+                    } catch (err) {
+                      setMessage({ type: 'error', text: (err as Error).message || 'Save failed' });
+                    }
+                  }}
+                >
+                  Save Qualifications
+                </Button>
+              </div>
             </div>
           </div>
         </div>
