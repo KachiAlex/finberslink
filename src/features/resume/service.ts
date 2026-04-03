@@ -93,6 +93,14 @@ export interface CreateProjectInput {
   techStack?: string[];
 }
 
+export interface CreateEducationInput {
+  resumeId: string;
+  school: string;
+  degree?: string | null;
+  field?: string | null;
+  summary?: string | null;
+}
+
 async function ensureUniqueResumeSlug(title: string) {
   const base = slugify(title, "resume");
   let candidate = base;
@@ -190,6 +198,9 @@ export async function createResume(input: CreateResumeInput) {
         orderBy: { order: "asc" },
       },
       projects: {
+        orderBy: { order: "asc" },
+      },
+      education: {
         orderBy: { order: "asc" },
       },
     },
@@ -293,6 +304,21 @@ export async function createResumeProject(input: CreateProjectInput) {
   });
 }
 
+export async function createResumeEducation(input: CreateEducationInput) {
+  const order = await prisma.resumeEducation.count({ where: { resumeId: input.resumeId } });
+
+  return prisma.resumeEducation.create({
+    data: {
+      resumeId: input.resumeId,
+      school: input.school,
+      degree: input.degree ?? null,
+      field: input.field ?? null,
+      summary: input.summary ?? null,
+      order,
+    },
+  });
+}
+
 export async function getResumeBySlug(slug: string) {
   return prisma.resume.findUnique({
     where: { slug },
@@ -301,6 +327,9 @@ export async function getResumeBySlug(slug: string) {
         orderBy: { order: "asc" },
       },
       projects: {
+        orderBy: { order: "asc" },
+      },
+      education: {
         orderBy: { order: "asc" },
       },
     },

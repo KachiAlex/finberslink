@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createResume, listUserResumes, createResumeExperience } from "@/features/resume/service";
+import { createResume, listUserResumes, createResumeExperience, createResumeEducation } from "@/features/resume/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { ResumeCreateSchema } from "@/features/resume/schemas";
 import { upsertStudentProfile } from "@/features/profile/service";
@@ -72,6 +72,21 @@ export async function POST(request: NextRequest) {
           });
         } catch (err) {
           console.warn("Failed to create resume experience", err);
+        }
+      }
+      // persist education onto resume
+      const educations = Array.isArray((body as any).education) ? (body as any).education : [];
+      for (const edu of educations) {
+        try {
+          await createResumeEducation({
+            resumeId: resume.id,
+            school: String(edu.school || edu.institution || "").trim() || "",
+            degree: edu.degree ? String(edu.degree) : null,
+            field: edu.field ? String(edu.field) : null,
+            summary: edu.description ? String(edu.description) : null,
+          });
+        } catch (err) {
+          console.warn("Failed to create resume education", err);
         }
       }
     } catch (err) {

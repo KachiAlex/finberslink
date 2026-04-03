@@ -393,6 +393,17 @@ model ResumeProject {
   resume    Resume   @relation(fields: [resumeId], references: [id])
 }
 
+model ResumeEducation {
+  id        String   @id @default(cuid())
+  resumeId  String
+  school    String
+  degree    String?
+  field     String?
+  summary   String?  @map("description")
+  order     Int      @default(0)
+  resume    Resume   @relation(fields: [resumeId], references: [id])
+}
+
 model InterviewSession {
   id               String                  @id @default(cuid())
   userId           String
