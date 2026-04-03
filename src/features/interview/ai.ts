@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { toFile } from "openai/uploads";
 
 import type { InterviewSessionPayload } from "./service";
@@ -34,6 +35,70 @@ export async function transcribeInterviewAudio(options: {
   });
 
   return transcription.text?.trim() ?? "";
+}
+
+const responseFeedbackSchema = z.object({
+  aiFeedback: z.string().min(1),
+  score: z.number().min(1).max(5),
+});
+
+export async function generateResponseFeedback(options: {
+  prompt?: string | null;
+  transcript: string;
+  rubric?: Prisma.InputJsonValue | null;
+  targetRole?: string | null;
+}) {
+  const { prompt, transcript, rubric, targetRole } = options;
+
+  const openai = getOpenAIClient();
+
+  const contextParts = [
+    targetRole ? `Target role: ${targetRole}` : null,
+    prompt ? `Question: ${prompt}` : null,
+    rubric ? `Rubric: ${JSON.stringify(rubric)}` : null,
+  ].filter(Boolean);
+
+  const userContent = `You are an interview grader. Given the following question context and a candidate transcript, produce a concise coaching feedback string and a numeric score from 1 to 5 (5 = excellent).
+
+Context:
+${contextParts.join("\n") || "General"}
+
+Transcript:
+${transcript}
+
+Return a JSON object formatted as:\n{ "aiFeedback": "...", "score": 1 }
+Only return the JSON object and nothing else.`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0.2,
+    messages: [
+      { role: "system", content: "You are a succinct, objective grader who explains strengths and improvements." },
+      { role: "user", content: userContent },
+    ],
+  });
+
+  const raw = response.choices[0]?.message?.content ?? "";
+  const candidateJson = (() => {
+    const match = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    return match ? match[1].trim() : raw.trim();
+  })();
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(candidateJson);
+  } catch (err) {
+    console.error("Response feedback JSON parse failed", err, candidateJson);
+    throw new Error("Response feedback parsing failed");
+  }
+
+  const result = responseFeedbackSchema.safeParse(parsed);
+  if (!result.success) {
+    console.error("Response feedback schema invalid", result.error.flatten());
+    throw new Error("Response feedback schema invalid");
+  }
+
+  return result.data as { aiFeedback: string; score: number };
 }
 
 export async function generateInterviewSessionInsights(session: InterviewSessionPayload) {

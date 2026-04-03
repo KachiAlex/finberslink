@@ -1,4 +1,5 @@
 ﻿import { prisma } from "@/lib/prisma";
+import { getOrCreateDefaultTenant } from "@/features/tenant/service";
 import { ChatNotificationType, ChatRole, ChatThreadType, Prisma, type Prisma as PrismaNamespace } from "@prisma/client";
 
 const DEFAULT_THREAD_LIMIT = 20;
@@ -325,6 +326,170 @@ export async function markChatNotificationsSeen(userId: string, notificationIds:
     data: { seenAt: new Date() },
   });
   return { count: result.count };
+}
+
+async function ensureDefaultCourseThread(input: {
+  chatSpaceId: string;
+  createdById: string;
+  type: ChatThreadType;
+  title: string;
+  lessonId?: string;
+}) {
+  const { chatSpaceId, createdById, type, title, lessonId } = input;
+
+  const existing = await prisma.chatThread.findFirst({
+    where: {
+      chatSpaceId,
+      type,
+      lessonId: lessonId ?? null,
+      ...(lessonId ? {} : { title }),
+    },
+    include: THREAD_CARD_INCLUDE,
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  return createChatThread({
+    chatSpaceId,
+    createdById,
+    type,
+    title,
+    lessonId,
+  });
+}
+
+export async function ensureCourseChatContext(input: {
+  courseIdOrSlug: string;
+  userId: string;
+  lessonIdOrSlug?: string | null;
+}) {
+  const { courseIdOrSlug, userId, lessonIdOrSlug } = input;
+
+  const course = await prisma.course.findFirst({
+    where: {
+      OR: [{ id: courseIdOrSlug }, { slug: courseIdOrSlug }],
+      archivedAt: null,
+    },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      instructor: {
+        select: {
+          id: true,
+          role: true,
+          tenantId: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+      lessons: {
+        orderBy: { order: "asc" },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+        },
+      },
+    },
+  });
+
+  if (!course) {
+    return null;
+  }
+
+  const enrollment = await prisma.enrollment.findFirst({
+    where: {
+      userId,
+      courseId: course.id,
+    },
+    select: { id: true },
+  });
+
+  if (!enrollment) {
+    return null;
+  }
+
+  const lesson = lessonIdOrSlug
+    ? course.lessons.find((item) => item.id === lessonIdOrSlug || item.slug === lessonIdOrSlug) ?? null
+    : null;
+
+  const defaultTenant = await getOrCreateDefaultTenant();
+  const tenantId = course.instructor?.tenantId ?? defaultTenant.id;
+
+  const chatSpace = await ensureChatSpace({
+    tenantId,
+    courseId: course.id,
+    slug: `course-${course.id}-chat`,
+    title: `${course.title} Live Chat`,
+    settings: {
+      scope: "course-live-chat",
+      courseId: course.id,
+    },
+  });
+
+  await upsertChatMembership({
+    chatSpaceId: chatSpace.id,
+    userId,
+    role: ChatRole.STUDENT,
+  });
+
+  const defaultThreadOwnerId = course.instructor?.id ?? userId;
+
+  if (course.instructor?.id) {
+    await upsertChatMembership({
+      chatSpaceId: chatSpace.id,
+      userId: course.instructor.id,
+      role: course.instructor.role === "TUTOR" ? ChatRole.TUTOR : ChatRole.ADMIN,
+    });
+  }
+
+  const generalThread = await ensureDefaultCourseThread({
+    chatSpaceId: chatSpace.id,
+    createdById: defaultThreadOwnerId,
+    type: ChatThreadType.CHANNEL,
+    title: "General",
+  });
+
+  const lessonThread = lesson
+    ? await ensureDefaultCourseThread({
+        chatSpaceId: chatSpace.id,
+        createdById: defaultThreadOwnerId,
+        type: ChatThreadType.LESSON,
+        title: `${lesson.title} Live Chat`,
+        lessonId: lesson.id,
+      })
+    : null;
+
+  const threads = await listChatThreads({
+    chatSpaceId: chatSpace.id,
+    userId,
+    limit: 50,
+  });
+
+  return {
+    course: {
+      id: course.id,
+      slug: course.slug,
+      title: course.title,
+    },
+    lesson: lesson
+      ? {
+          id: lesson.id,
+          slug: lesson.slug,
+          title: lesson.title,
+        }
+      : null,
+    chatSpace: {
+      id: chatSpace.id,
+      title: chatSpace.title,
+      slug: chatSpace.slug,
+    },
+    selectedThreadId: lessonThread?.id ?? generalThread.id,
+    threads,
+  };
 }
 
 // ============================================================================

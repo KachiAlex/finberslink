@@ -212,7 +212,7 @@ export default async function CourseDetailPage(props: any) {
                   </div>
                 </div>
                 <Button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm" asChild>
-                  <Link href="/chat">Message Mentor</Link>
+                  <Link href={`/courses/${course.id}/chat`}>Open Course Chat</Link>
                 </Button>
               </CardContent>
             </Card>

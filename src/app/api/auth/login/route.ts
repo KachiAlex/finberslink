@@ -11,7 +11,26 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    const reqBody = await request.json();
+    let reqBody: unknown;
+    try {
+      reqBody = await request.json();
+    } catch (parseErr) {
+      const raw = await request.text();
+      const cleaned = raw.replace(/^\uFEFF/, "").trim();
+      try {
+        reqBody = cleaned ? JSON.parse(cleaned) : {};
+      } catch (finalErr) {
+        const now = new Date().toISOString();
+        const logPath = path.resolve(process.cwd(), 'tmp', 'login-raw-body.log');
+        try {
+          fs.mkdirSync(path.dirname(logPath), { recursive: true });
+          fs.appendFileSync(logPath, `${now}\t${raw}\n\n`);
+        } catch (e) {
+          // ignore logging errors
+        }
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      }
+    }
     const parsed = LoginSchema.safeParse(reqBody);
 
     if (!parsed.success) {

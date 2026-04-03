@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 
 import { RegisterSchema } from "@/features/auth/schemas";
 import { registerUser } from "@/features/auth/service";
@@ -10,7 +12,26 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch (parseErr) {
+      const raw = await request.text();
+      const cleaned = raw.replace(/^\uFEFF/, "").trim();
+      try {
+        body = cleaned ? JSON.parse(cleaned) : {};
+      } catch (finalErr) {
+        const now = new Date().toISOString();
+        const logPath = path.resolve(process.cwd(), 'tmp', 'register-raw-body.log');
+        try {
+          fs.mkdirSync(path.dirname(logPath), { recursive: true });
+          fs.appendFileSync(logPath, `${now}\t${raw}\n\n`);
+        } catch (e) {
+          // ignore logging errors
+        }
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      }
+    }
     const parsed = RegisterSchema.safeParse(body);
 
     if (!parsed.success) {

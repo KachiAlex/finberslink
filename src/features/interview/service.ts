@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import type { InterviewFlowStep, InterviewSessionStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { generateInterviewSessionInsights } from "./ai";
+import { generateInterviewSessionInsights, generateResponseFeedback } from "./ai";
 
 const sessionInclude = {
   questions: {
@@ -154,13 +154,40 @@ export async function recordInterviewResponse(
 ) {
   await assertQuestionOwnership(input.questionId, sessionId, userId);
 
+  // Try to generate AI grading for this response (non-blocking)
+  let aiFeedback: string | null = input.aiFeedback ?? null;
+  let score: number | null = input.score ?? null;
+
+  try {
+    const [question, sessionMeta] = await Promise.all([
+      prisma.interviewQuestion.findUnique({ where: { id: input.questionId }, select: { prompt: true, rubric: true } }),
+      prisma.interviewSession.findUnique({ where: { id: sessionId }, select: { targetRole: true } }),
+    ]);
+
+    try {
+      const feedback = await generateResponseFeedback({
+        prompt: question?.prompt ?? null,
+        transcript: input.transcript,
+        rubric: (question as any)?.rubric ?? null,
+        targetRole: sessionMeta?.targetRole ?? null,
+      });
+
+      aiFeedback = feedback.aiFeedback;
+      score = feedback.score;
+    } catch (err) {
+      console.error("Per-response AI feedback failed", err);
+    }
+  } catch (err) {
+    console.error("Failed to fetch question/session metadata for AI grading", err);
+  }
+
   const response = await prisma.interviewResponse.create({
     data: {
       questionId: input.questionId,
       transcript: input.transcript,
       audioUrl: input.audioUrl,
-      aiFeedback: input.aiFeedback ?? null,
-      score: input.score ?? null,
+      aiFeedback: aiFeedback ?? null,
+      score: score ?? null,
     },
   });
 
