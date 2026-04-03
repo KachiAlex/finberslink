@@ -31,6 +31,7 @@ interface ResumeData {
     field: string;
     description: string;
   }>;
+  certifications?: string[];
 }
 
 export default function ResumeBuilderPage() {
@@ -40,6 +41,7 @@ export default function ResumeBuilderPage() {
     skills: [],
     experience: [],
     education: [],
+    certifications: [],
   });
 
   const [loading, setLoading] = useState(false);
@@ -422,6 +424,117 @@ export default function ResumeBuilderPage() {
                   </Button>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-white p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Education</h2>
+              <Button
+                size="sm"
+                onClick={() =>
+                  setData((prev) => ({
+                    ...prev,
+                    education: [
+                      ...prev.education,
+                      {
+                        id: Date.now().toString(),
+                        school: "",
+                        degree: "",
+                        field: "",
+                        description: "",
+                      },
+                    ],
+                  }))
+                }
+              >
+                + Add Education
+              </Button>
+            </div>
+            <div className="space-y-4">
+              {data.education.map((edu, idx) => (
+                <div key={edu.id} className="p-4 rounded-lg border border-slate-200 bg-slate-50 space-y-3">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <Input
+                      placeholder="School / Institution"
+                      value={edu.school}
+                      onChange={(event) =>
+                        setData((prev) => ({
+                          ...prev,
+                          education: prev.education.map((entry, i) =>
+                            i === idx ? { ...entry, school: event.target.value } : entry
+                          ),
+                        }))
+                      }
+                    />
+                    <Input
+                      placeholder="Degree"
+                      value={edu.degree}
+                      onChange={(event) =>
+                        setData((prev) => ({
+                          ...prev,
+                          education: prev.education.map((entry, i) =>
+                            i === idx ? { ...entry, degree: event.target.value } : entry
+                          ),
+                        }))
+                      }
+                    />
+                  </div>
+                  <Input
+                    placeholder="Field of study"
+                    value={edu.field}
+                    onChange={(event) =>
+                      setData((prev) => ({
+                        ...prev,
+                        education: prev.education.map((entry, i) =>
+                          i === idx ? { ...entry, field: event.target.value } : entry
+                        ),
+                      }))
+                    }
+                  />
+                  <Textarea
+                    placeholder="Description (optional)"
+                    value={edu.description}
+                    onChange={(event) =>
+                      setData((prev) => ({
+                        ...prev,
+                        education: prev.education.map((entry, i) =>
+                          i === idx ? { ...entry, description: event.target.value } : entry
+                        ),
+                      }))
+                    }
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setData((prev) => ({
+                          ...prev,
+                          education: prev.education.filter((_, i) => i !== idx),
+                        }))
+                      }
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-white p-6">
+            <h2 className="text-lg font-semibold mb-4">Certifications</h2>
+            <div className="space-y-2">
+              <p className="text-sm text-slate-500">List each certificate on a new line. These will be copied into your resume.</p>
+              <Textarea
+                placeholder="Certificate A\nCertificate B"
+                rows={4}
+                value={(data.certifications || []).join('\n')}
+                onChange={(e) =>
+                  setData((prev) => ({ ...prev, certifications: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) }))
+                }
+              />
             </div>
           </div>
         </div>
