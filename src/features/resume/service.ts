@@ -153,10 +153,9 @@ function buildResumeUpdateInput(data: UpdateResumeInput): Prisma.ResumeUpdateInp
     updateData.headshotUrl = data.headshotUrl;
   }
 
-  // TODO: template field type issue - verify Prisma schema generation
-  // if (data.template !== undefined) {
-  //   updateData.template = data.template;
-  // }
+  if (data.template !== undefined) {
+    updateData.template = data.template as any;
+  }
 
   return updateData;
 }
@@ -226,10 +225,29 @@ export async function updateResume(slug: string, data: UpdateResumeInput) {
 
 export async function updateResumeExperience(
   experienceId: string,
-  data: { achievements?: string[]; description?: string }
+  data: {
+    company?: string;
+    role?: string;
+    startDate?: Date;
+    endDate?: Date | null;
+    achievements?: string[];
+    description?: string | null;
+  }
 ) {
   const payload: Prisma.ResumeExperienceUpdateInput = {};
 
+  if (data.company !== undefined) {
+    payload.company = data.company;
+  }
+  if (data.role !== undefined) {
+    payload.role = data.role;
+  }
+  if (data.startDate !== undefined) {
+    payload.startDate = data.startDate;
+  }
+  if (data.endDate !== undefined) {
+    payload.endDate = data.endDate;
+  }
   if (data.achievements !== undefined) {
     payload.achievements = data.achievements;
   }

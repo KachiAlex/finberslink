@@ -20,6 +20,7 @@ import {
   updateResumeExperience,
   updateResumeSkillSnapshot,
 } from "@/features/resume/service";
+import { generateResumePDFUrl } from "@/features/resume/export-service";
 import { ResumeExperienceSchema, ResumeProjectSchema } from "@/features/resume/schemas";
 import {
   analyzeATSMatch,
@@ -303,6 +304,7 @@ async function updateResumeAction(formData: FormData) {
 
   const slug = String(formData.get("slug") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
+  const personaName = String(formData.get("personaName") ?? "").trim();
   const summary = String(formData.get("summary") ?? "").trim();
   const introVideoUrl = String(formData.get("introVideoUrl") ?? "").trim();
   const headshotUrl = String(formData.get("headshotUrl") ?? "").trim();
@@ -319,6 +321,7 @@ async function updateResumeAction(formData: FormData) {
 
   await updateResume(slug, {
     title,
+    personaName: personaName || undefined,
     summary,
     introVideoUrl: introVideoUrl || null,
     headshotUrl: headshotUrl || null,
@@ -326,7 +329,51 @@ async function updateResumeAction(formData: FormData) {
 
   await invalidateDashboardInsights(user.sub);
 
+  // Revalidate both the edit page and the public preview so the live preview reflects changes
   revalidatePath(`/resume/${slug}/edit`);
+  revalidatePath(`/resume/${slug}`);
+}
+
+// Update existing experience (editable fields)
+async function updateExperienceAction(formData: FormData) {
+  "use server";
+
+  const experienceId = String(formData.get("experienceId") ?? "").trim();
+  if (!experienceId) return;
+
+  const slug = String(formData.get("slug") ?? "").trim();
+  const company = String(formData.get("company") ?? "").trim();
+  const role = String(formData.get("role") ?? "").trim();
+  const startDateRaw = String(formData.get("startDate") ?? "").trim();
+  const endDateRaw = String(formData.get("endDate") ?? "").trim();
+  const rawDescription = String(formData.get("rawDescription") ?? "").trim();
+  const achievementsRaw = String(formData.get("achievements") ?? "").trim();
+
+  const achievements = achievementsRaw
+    ? achievementsRaw.split("\n").map((s) => s.trim()).filter(Boolean)
+    : [];
+
+  const parsedStart = startDateRaw ? new Date(startDateRaw) : undefined;
+  const parsedEnd = endDateRaw ? new Date(endDateRaw) : undefined;
+
+  const user = await requireUser();
+  const resume = await getResumeBySlug(slug);
+  if (!resume || resume.userId !== user.sub) {
+    notFound();
+  }
+
+  await updateResumeExperience(experienceId, {
+    company: company || undefined,
+    role: role || undefined,
+    startDate: parsedStart,
+    endDate: parsedEnd ?? null,
+    description: rawDescription || null,
+    achievements: achievements.length ? achievements : undefined,
+  });
+
+  await invalidateDashboardInsights(user.sub);
+  revalidatePath(`/resume/${slug}/edit`);
+  revalidatePath(`/resume/${slug}`);
 }
 
 async function regenerateShareSlugAction(formData: FormData) {
@@ -529,8 +576,16 @@ async function requestPdfExportAction(formData: FormData) {
     notFound();
   }
 
-  // TODO: Integrate PDF export pipeline.
-  console.info("PDF export requested for resume slug:", slug);
+  try {
+    const url = await generateResumePDFUrl(resume.id, { format: "pdf", template: (resume as any).template || "modern" });
+    const base =
+      process.env.NEXT_PUBLIC_APP_URL ??
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    const redirectUrl = url.startsWith("http") ? url : `${base}${url}`;
+    redirect(redirectUrl);
+  } catch (error) {
+    console.error("PDF export requested but failed:", error);
+  }
 }
 
 async function applyGeneratedBulletsAction(input: {
@@ -632,6 +687,10 @@ export default async function ResumeEditPage({
               <CardContent>
                 <form className="space-y-4" action={updateResumeAction}>
                   <input type="hidden" name="slug" value={(resume as any).slug} />
+                  <div className="space-y-2">
+                    <Label htmlFor="personaName">Your Name</Label>
+                    <Input id="personaName" name="personaName" defaultValue={(resume as any).personaName ?? ""} />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="title">Title</Label>
                     <Input id="title" name="title" defaultValue={(resume as any).title} required />
@@ -735,25 +794,74 @@ export default async function ResumeEditPage({
                 {(resume as any).experiences.length > 0 ? (
                   <div className="space-y-4 mb-6">
                     {(resume as any).experiences.map((experience: any) => (
-                      <div key={experience.id} className="border rounded-lg p-4 bg-slate-50">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-semibold">{experience.role}</h4>
-                            <p className="text-sm text-slate-600">{experience.company}</p>
-                            <p className="text-xs text-slate-500">
-                              {new Date(experience.startDate).toLocaleDateString()} - {experience.endDate ? new Date(experience.endDate).toLocaleDateString() : "Present"}
-                            </p>
+                      <details key={experience.id} className="border rounded-lg p-4 bg-slate-50">
+                        <summary className="cursor-pointer mb-3 list-none">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-semibold">{experience.role}</h4>
+                              <p className="text-sm text-slate-600">{experience.company}</p>
+                              <p className="text-xs text-slate-500">
+                                {new Date(experience.startDate).toLocaleDateString()} - {experience.endDate ? new Date(experience.endDate).toLocaleDateString() : "Present"}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-xs text-slate-500">Edit</span>
+                            </div>
                           </div>
+                        </summary>
+
+                        <div className="mb-3">
+                          <ul className="text-sm text-slate-700 space-y-1 mb-3">
+                            {experience.achievements.map((achievement: any, idx: number) => (
+                              <li key={idx} className="flex items-start">
+                                <span className="text-blue-500 mr-2">•</span>
+                                {achievement}
+                              </li>
+                            ))}
+                          </ul>
+
+                          <form action={updateExperienceAction} className="space-y-3">
+                            <input type="hidden" name="slug" value={(resume as any).slug} />
+                            <input type="hidden" name="experienceId" value={experience.id} />
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label htmlFor={`company-${experience.id}`}>Company</Label>
+                                <Input id={`company-${experience.id}`} name="company" defaultValue={experience.company} />
+                              </div>
+                              <div>
+                                <Label htmlFor={`role-${experience.id}`}>Role</Label>
+                                <Input id={`role-${experience.id}`} name="role" defaultValue={experience.role} />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label htmlFor={`start-${experience.id}`}>Start Date</Label>
+                                <Input id={`start-${experience.id}`} name="startDate" type="month" defaultValue={new Date(experience.startDate).toISOString().slice(0,7)} />
+                              </div>
+                              <div>
+                                <Label htmlFor={`end-${experience.id}`}>End Date</Label>
+                                <Input id={`end-${experience.id}`} name="endDate" type="month" defaultValue={experience.endDate ? new Date(experience.endDate).toISOString().slice(0,7) : ""} />
+                              </div>
+                            </div>
+
+                            <div>
+                              <Label htmlFor={`desc-${experience.id}`}>Description</Label>
+                              <Textarea id={`desc-${experience.id}`} name="rawDescription" defaultValue={experience.description ?? ""} rows={3} />
+                            </div>
+
+                            <div>
+                              <Label htmlFor={`achievements-${experience.id}`}>Achievements (one per line)</Label>
+                              <Textarea id={`achievements-${experience.id}`} name="achievements" defaultValue={(experience.achievements || []).join('\n')} rows={3} />
+                            </div>
+
+                            <div className="flex gap-2">
+                              <Button type="submit">Save Experience</Button>
+                            </div>
+                          </form>
                         </div>
-                        <ul className="text-sm text-slate-700 space-y-1">
-                          {experience.achievements.map((achievement: any, idx: number) => (
-                            <li key={idx} className="flex items-start">
-                              <span className="text-blue-500 mr-2">•</span>
-                              {achievement}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                      </details>
                     ))}
                   </div>
                 ) : (
