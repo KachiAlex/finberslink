@@ -35,14 +35,6 @@ export const EducationEntrySchema = z.object({
   description: z.string().max(2000).optional(),
 });
 
-export const ResumeCreateSchema = ResumeSchema.extend({
-  experiences: z.array(ResumeExperienceSchema).optional(),
-  certifications: z.array(z.string()).optional(),
-  education: z.array(EducationEntrySchema).optional(),
-});
-
-export type ResumeCreateInput = z.infer<typeof ResumeCreateSchema>;
-
 export const ResumeExperienceSchema = z.object({
   company: z.string().min(1, "Company is required"),
   role: z.string().min(1, "Role is required"),
@@ -50,6 +42,14 @@ export const ResumeExperienceSchema = z.object({
   endDate: monthInput.optional(),
   rawDescription: z.string().max(2000).optional(),
 });
+
+export const ResumeCreateSchema = ResumeSchema.extend({
+  experiences: z.array(ResumeExperienceSchema).optional(),
+  certifications: z.array(z.string()).optional(),
+  education: z.array(EducationEntrySchema).optional(),
+});
+
+export type ResumeCreateInput = z.infer<typeof ResumeCreateSchema>;
 
 export const ResumeProjectSchema = z.object({
   name: z.string().min(1, "Project name is required"),

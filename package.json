@@ -23,6 +23,7 @@
     "db:reset-courses": "npx tsx scripts/reset-db-exclude-users.ts"
     ,"dedupe:courses": "npx tsx scripts/dedupe-duplicate-courses.ts"
     ,"dedupe:courses:sql": "npx tsx scripts/dedupe-duplicate-courses-sql.ts"
+    ,"dedupe:courses-pg": "npx tsx scripts/dedupe-duplicate-courses-pg.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
