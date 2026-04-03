@@ -1,8 +1,6 @@
-"use server";
 
 import { requireSession } from "@/lib/auth/session";
 import { DashboardChatContent } from "./chat-content";
-
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
