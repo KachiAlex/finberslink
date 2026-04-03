@@ -5,6 +5,10 @@ type UpsertProfileInput = {
   headline?: string;
   bio?: string;
   location?: string;
+  phone?: string;
+  address?: string;
+  certifications?: string[];
+  education?: any;
 };
 
 function normalizeOptionalText(value?: string, maxLength = 500) {
@@ -23,6 +27,10 @@ export async function getStudentProfile(userId: string) {
       headline: true,
       bio: true,
       location: true,
+      phone: true,
+      address: true,
+      certifications: true,
+      education: true,
       skills: true,
       interests: true,
       updatedAt: true,
@@ -34,6 +42,10 @@ export async function upsertStudentProfile(input: UpsertProfileInput) {
   const headline = normalizeOptionalText(input.headline, 140);
   const bio = normalizeOptionalText(input.bio, 2000);
   const location = normalizeOptionalText(input.location, 140);
+  const phone = normalizeOptionalText(input.phone, 40);
+  const address = normalizeOptionalText(input.address, 500);
+  const certifications = Array.isArray(input.certifications) ? input.certifications : undefined;
+  const education = input.education !== undefined ? input.education : undefined;
 
   return prisma.profile.upsert({
     where: { userId: input.userId },
@@ -41,17 +53,29 @@ export async function upsertStudentProfile(input: UpsertProfileInput) {
       headline,
       bio,
       location,
+      phone,
+      address,
+      certifications,
+      education,
     },
     create: {
       userId: input.userId,
       headline,
       bio,
       location,
+      phone,
+      address,
+      certifications,
+      education,
     },
     select: {
       headline: true,
       bio: true,
       location: true,
+      phone: true,
+      address: true,
+      certifications: true,
+      education: true,
       skills: true,
       interests: true,
       updatedAt: true,

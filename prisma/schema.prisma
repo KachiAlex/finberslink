@@ -63,6 +63,10 @@ model Profile {
   headline  String?
   bio       String?
   location  String?
+  phone     String?
+  address   String?
+  certifications String[] @default([])
+  education Json?
   skills    String[] @default([])
   interests String[] @default([])
   createdAt DateTime @default(now())
@@ -641,6 +645,7 @@ model TenantInvite {
   token       String       @unique
   status      InviteStatus @default(PENDING)
   expiresAt   DateTime
+  meta        Json?
   createdById String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt

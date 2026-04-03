@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   createTenantInvite,
   listAllUsers,
   updateUserRole,
   updateUserStatus,
 } from "@/features/admin/service";
+import { upsertStudentProfile } from "@/features/profile/service";
 import { hashPassword } from "@/lib/auth/password";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -84,6 +86,12 @@ export default async function AdminUsersPage(props: any) {
     const role = (String(formData.get("role") ?? "STUDENT") as TenantUserRole) ?? "STUDENT";
     const firstName = String(formData.get("firstName") ?? "");
     const lastName = String(formData.get("lastName") ?? "");
+    const phone = String(formData.get("phone") ?? "").trim();
+    const address = String(formData.get("address") ?? "").trim();
+    const certificationsRaw = String(formData.get("certifications") ?? "").trim();
+    const certifications = certificationsRaw ? certificationsRaw.split("\n").map(s => s.trim()).filter(Boolean) : [];
+    const educationRaw = String(formData.get("education") ?? "").trim();
+    const education = educationRaw ? JSON.parse(educationRaw) : undefined;
 
     if (!email || !password) return;
 
@@ -105,6 +113,20 @@ export default async function AdminUsersPage(props: any) {
           tenantId: admin.tenantId,
         },
       });
+      // Persist profile details
+      const created = await prisma.user.findUnique({ where: { email } });
+      if (created) {
+        await upsertStudentProfile({
+          userId: created.id,
+          headline: undefined,
+          bio: undefined,
+          location: undefined,
+          phone: phone || undefined,
+          address: address || undefined,
+          certifications: certifications.length ? certifications : undefined,
+          education: education ?? undefined,
+        });
+      }
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
         redirect("/admin/users?error=email-exists");
@@ -124,6 +146,12 @@ export default async function AdminUsersPage(props: any) {
     const email = String(formData.get("inviteEmail") ?? "").toLowerCase();
     const role = String(formData.get("inviteRole") ?? "STUDENT") as TenantUserRole;
     const days = Number(formData.get("expiresIn") ?? "7");
+    const phone = String(formData.get("invitePhone") ?? "").trim();
+    const address = String(formData.get("inviteAddress") ?? "").trim();
+    const certificationsRaw = String(formData.get("inviteCertifications") ?? "").trim();
+    const certifications = certificationsRaw ? certificationsRaw.split("\n").map(s => s.trim()).filter(Boolean) : [];
+    const educationRaw = String(formData.get("inviteEducation") ?? "").trim();
+    const education = educationRaw ? JSON.parse(educationRaw) : undefined;
 
     if (!email) return;
 
@@ -135,6 +163,12 @@ export default async function AdminUsersPage(props: any) {
       role,
       createdById: admin.id,
       expiresAt,
+      meta: {
+        phone: phone || undefined,
+        address: address || undefined,
+        certifications: certifications.length ? certifications : undefined,
+        education: education ?? undefined,
+      },
     });
 
     revalidatePath("/admin/users");
@@ -179,6 +213,24 @@ export default async function AdminUsersPage(props: any) {
                     <Input name="lastName" placeholder="Last name" />
                   </div>
                 </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-slate-700">Phone</Label>
+                    <Input name="phone" placeholder="+1234567890" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-slate-700">Address</Label>
+                    <Input name="address" placeholder="City, Country" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-slate-700">Certifications (one per line)</Label>
+                  <Textarea name="certifications" rows={3} placeholder="Certificate A\nCertificate B" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-slate-700">Education (JSON)</Label>
+                  <Textarea name="education" rows={3} placeholder='[{"degree":"BSc","institution":"X","year":2020}]' />
+                </div>
                 <div className="space-y-1">
                   <Label className="text-sm font-medium text-slate-700">Email</Label>
                   <Input name="email" type="email" placeholder="user@tenant.com" required />
@@ -220,6 +272,24 @@ export default async function AdminUsersPage(props: any) {
                 <div className="space-y-1">
                   <Label className="text-sm font-medium text-slate-700">Email</Label>
                   <Input name="inviteEmail" type="email" placeholder="user@tenant.com" required />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-slate-700">Phone</Label>
+                    <Input name="invitePhone" placeholder="+1234567890" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-slate-700">Address</Label>
+                    <Input name="inviteAddress" placeholder="City, Country" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-slate-700">Certifications (one per line)</Label>
+                  <Textarea name="inviteCertifications" rows={3} placeholder="Certificate A\nCertificate B" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-slate-700">Education (JSON)</Label>
+                  <Textarea name="inviteEducation" rows={3} placeholder='[{"degree":"BSc","institution":"X","year":2020}]' />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1">

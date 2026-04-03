@@ -584,6 +584,7 @@ export async function createTenantInvite(input: {
   role: Extract<Role, 'STUDENT' | 'TUTOR'>;
   createdById: string;
   expiresAt?: Date;
+  meta?: { phone?: string; address?: string; certifications?: string[]; education?: any };
 }) {
   return prisma.tenantInvite.create({
     data: {
@@ -592,6 +593,7 @@ export async function createTenantInvite(input: {
       role: input.role,
       token: generateInviteToken(),
       expiresAt: input.expiresAt ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
+      meta: input.meta ?? undefined,
       createdById: input.createdById,
     },
   });
