@@ -30,6 +30,7 @@ interface ResumeSection {
   title: string;
   visibility: string;
   slug: string;
+  shareSlug?: string | null;
 }
 
 interface ApplicationSection {
@@ -665,7 +666,9 @@ export function DashboardSectionsClient({
                     <Link href={`/resume/${resume.slug}/edit`}>Edit</Link>
                   </Button>
                   <Button asChild size="sm" variant="ghost" className="rounded-full">
-                    <Link href={`/resume/share?slug=${resume.slug}`}>Share</Link>
+                    <Link href={resume.shareSlug ? `/resume/share/${resume.shareSlug}` : `/resume/${resume.slug}/preview`}>
+                      Share
+                    </Link>
                   </Button>
                 </div>
               </div>

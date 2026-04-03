@@ -112,7 +112,7 @@ export default async function DashboardResumesPage() {
                       </Link>
                     </Button>
                     <Button size="sm" variant="outline" className="flex-1" asChild>
-                      <Link href={`/resume/${resume.slug}`} target="_blank" rel="noopener noreferrer">
+                      <Link href={`/resume/${resume.slug}/preview`} target="_blank" rel="noopener noreferrer">
                         <Eye className="mr-1 h-4 w-4" />
                         View
                       </Link>

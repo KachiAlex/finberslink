@@ -610,7 +610,6 @@ export default async function ResumeEditPage({
     ? `/resume/share/${(resume as any).shareSlug}`
     : `/resume/${(resume as any).slug}`;
   const shareUrl = `${baseUrl}${sharePath}`;
-  const previewUrl = `${baseUrl}/resume/${(resume as any).slug}`;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
@@ -931,7 +930,7 @@ export default async function ResumeEditPage({
               {/* Action Buttons */}
               <div className="flex flex-col gap-2 border-t pt-4">
                 <Button asChild variant="secondary" className="w-full">
-                  <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={sharePath} target="_blank" rel="noopener noreferrer">
                     Open Public View
                   </a>
                 </Button>
