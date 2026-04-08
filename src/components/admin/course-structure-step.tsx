@@ -266,7 +266,8 @@ export function CourseStructureStep({ sections, setSections, modules, setModules
                         Add Objective
                       </Button>
                     </div>
-                  </CardContent>
+                  </div>
+                </CardContent>
                 </Card>
 
                 {/* Module Management */}
