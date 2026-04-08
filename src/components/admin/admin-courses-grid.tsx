@@ -429,7 +429,7 @@ export function AdminCoursesGrid() {
       </div>
 
       {/* Edit Modal */}
-      {editingCourse && (
+      {isEditModalOpen && (
         <CourseEditModalEnhanced
           course={editingCourse}
           isOpen={isEditModalOpen}
