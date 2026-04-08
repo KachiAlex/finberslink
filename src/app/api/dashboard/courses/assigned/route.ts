@@ -13,7 +13,17 @@ const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
  */
 export const GET = rateLimitMiddleware(async (request: NextRequest) => {
   try {
-    const session = requireAuth(request);
+    let session;
+    try {
+      session = requireAuth(request);
+    } catch (authError) {
+      console.error("Auth error:", authError);
+      return NextResponse.json(
+        { error: "Unauthorized", details: "Authentication failed" },
+        { status: 401 }
+      );
+    }
+    
     const { searchParams } = new URL(request.url);
     
     const filters = {
@@ -202,8 +212,14 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
     });
   } catch (error) {
     console.error("Failed to fetch assigned courses:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error details:", errorMessage);
     return NextResponse.json(
-      { error: "Failed to fetch assigned courses" },
+      { 
+        error: "Failed to fetch assigned courses",
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
