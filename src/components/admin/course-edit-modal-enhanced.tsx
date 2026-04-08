@@ -507,38 +507,32 @@ function BasicInfoStep({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="category" className="text-black font-medium">Category *</Label>
-              <Select 
-                value={basics.category} 
-                onValueChange={(value) => setBasics(prev => ({ ...prev, category: value }))}
-                onOpenChange={(open) => {
-                  if (open) {
-                    console.log('Category dropdown opened');
-                  }
-                }}
+              <select
+                id="category"
+                value={basics.category}
+                onChange={(e) => setBasics(prev => ({ ...prev, category: e.target.value }))}
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <SelectTrigger className="mt-1 text-black">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">Select category</option>
+                {CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
             </div>
 
             <div>
               <Label htmlFor="level" className="text-black font-medium">Level *</Label>
-              <Select value={basics.level} onValueChange={(value: CourseLevel) => setBasics(prev => ({ ...prev, level: value }))}>
-                <SelectTrigger className="mt-1 text-black">
-                  <SelectValue placeholder="Select level" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LEVELS.map(level => (
-                    <SelectItem key={level} value={level}>{level}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                id="level"
+                value={basics.level}
+                onChange={(e) => setBasics(prev => ({ ...prev, level: e.target.value as CourseLevel }))}
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select level</option>
+                {LEVELS.map(level => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -679,19 +673,16 @@ function CurriculumStep({ lessons, addLesson, updateLesson, removeLesson }: any)
 
                     <div>
                       <Label htmlFor={`lesson-format-${index}`} className="text-black font-medium">Format</Label>
-                      <Select 
-                        value={lesson.format} 
-                        onValueChange={(value: LessonFormat) => updateLesson(index, { format: value })}
+                      <select
+                        id={`lesson-format-${index}`}
+                        value={lesson.format}
+                        onChange={(e) => updateLesson(index, { format: e.target.value as LessonFormat })}
+                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
-                        <SelectTrigger className="mt-1 text-black">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LESSON_FORMATS.map(format => (
-                            <SelectItem key={format} value={format}>{format}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        {LESSON_FORMATS.map(format => (
+                          <option key={format} value={format}>{format}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -797,19 +788,16 @@ function ResourcesStep({ resources, addResource, updateResource, removeResource,
 
                       <div>
                         <Label htmlFor={`resource-type-${index}`} className="text-black font-medium">Type</Label>
-                        <Select 
-                          value={resource.type} 
-                          onValueChange={(value: ResourceType) => updateResource(index, { type: value })}
+                        <select
+                          id={`resource-type-${index}`}
+                          value={resource.type}
+                          onChange={(e) => updateResource(index, { type: e.target.value as ResourceType })}
+                          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <SelectTrigger className="mt-1 text-black">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {RESOURCE_TYPES.map(type => (
-                              <SelectItem key={type} value={type}>{type}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          {RESOURCE_TYPES.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div>
@@ -877,20 +865,17 @@ function SettingsStep({ approvalStatus, setApprovalStatus }: any) {
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="approval-status" className="text-black font-medium">Status</Label>
-            <Select 
-              value={approvalStatus} 
-              onValueChange={(value: CourseApprovalStatus) => setApprovalStatus(value)}
+            <select
+              id="approval-status"
+              value={approvalStatus}
+              onChange={(e) => setApprovalStatus(e.target.value as CourseApprovalStatus)}
+              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <SelectTrigger className="mt-1 text-black">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="DRAFT">Draft</SelectItem>
-                <SelectItem value="PENDING">Pending Review</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="CHANGES">Needs Changes</SelectItem>
-              </SelectContent>
-            </Select>
+              <option value="DRAFT">Draft</option>
+              <option value="PENDING">Pending Review</option>
+              <option value="APPROVED">Approved</option>
+              <option value="CHANGES">Needs Changes</option>
+            </select>
           </div>
 
           <div className="space-y-3">
