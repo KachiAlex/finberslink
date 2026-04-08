@@ -203,7 +203,7 @@ export function DashboardCoursesTab({
         let url = `/api/dashboard/courses/${activeTab}`; // Use real APIs
         // Use quick APIs that always work
         if (activeTab === "learning-pathway") {
-          url = `/api/dashboard/courses/learning-pathway-working`;
+          url = `/api/dashboard/courses/learning-pathway-working-simple`;
         } else if (activeTab === "assigned") {
           url = `/api/dashboard/courses/assigned-quick`;
         } else if (activeTab === "discover") {

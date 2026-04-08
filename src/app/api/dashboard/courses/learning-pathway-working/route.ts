@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { EnrollmentStatus } from "@prisma/client";
 
 export const runtime = "nodejs";
 
@@ -132,7 +133,7 @@ export const GET = async (request: NextRequest) => {
       enrollments = await prisma.enrollment.findMany({
         where: {
           userId: studentUser.id,
-          status: "ACTIVE", // Only show active enrollments
+          status: EnrollmentStatus.ACTIVE, // Use proper enum value
         },
         select: {
           id: true,
