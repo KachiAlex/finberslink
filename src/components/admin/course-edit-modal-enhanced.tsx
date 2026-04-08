@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { SafeImage } from "@/components/ui/safe-image";
 import { CourseStructureStep } from "@/components/admin/course-structure-step";
 import { ExamConfigurationStep } from "@/components/admin/exam-configuration-step";
+import { CertificateConfigurationStep } from "@/components/admin/certificate-configuration-step";
 import { 
   X, 
   Save, 
@@ -69,6 +70,44 @@ interface ExamQuestion {
   options: string[];
   correctAnswer: number;
   points: number;
+}
+
+interface CertificateTemplate {
+  id: string;
+  name: string;
+  description: string;
+  design: {
+    backgroundColor: string;
+    textColor: string;
+    borderColor: string;
+    logoPosition: 'top-left' | 'top-center' | 'top-right';
+    signaturePosition: 'bottom-left' | 'bottom-center' | 'bottom-right';
+  };
+  fields: {
+    courseTitle: boolean;
+    studentName: boolean;
+    completionDate: boolean;
+    instructorName: boolean;
+    certificateId: boolean;
+  };
+}
+
+interface CourseCertificate {
+  id: string;
+  templateId: string;
+  isEnabled: boolean;
+  autoGenerate: boolean;
+  completionCriteria: {
+    requireAllSections: boolean;
+    requireAllExams: boolean;
+    minimumScore: number;
+    minimumProgress: number;
+  };
+  settings: {
+    includeInstructorSignature: boolean;
+    includeCertificateId: boolean;
+    validityPeriod: number; // in months
+  };
 }
 
 interface Course {
@@ -142,8 +181,9 @@ const STEPS = [
   { id: 2, title: "Curriculum", icon: "BookOpen" },
   { id: 3, title: "Resources", icon: "FileText" },
   { id: 4, title: "Exam Configuration", icon: "Target" },
-  { id: 5, title: "Settings", icon: "Users" },
-  { id: 6, title: "Review", icon: "CheckCircle2" },
+  { id: 5, title: "Certificate", icon: "Award" },
+  { id: 6, title: "Settings", icon: "Users" },
+  { id: 7, title: "Review", icon: "CheckCircle2" },
 ];
 
 const ICONS = {
@@ -153,6 +193,7 @@ const ICONS = {
   Users,
   CheckCircle2,
   Target,
+  Award,
 };
 
 export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = ({ 
@@ -213,6 +254,25 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
       
       // Exam state management
       const [exams, setExams] = useState<SectionExam[]>([]);
+      
+      // Certificate state management
+      const [certificate, setCertificate] = useState<CourseCertificate>({
+        id: `cert_${Date.now()}`,
+        templateId: 'default',
+        isEnabled: false,
+        autoGenerate: true,
+        completionCriteria: {
+          requireAllSections: true,
+          requireAllExams: true,
+          minimumScore: 70,
+          minimumProgress: 100
+        },
+        settings: {
+          includeInstructorSignature: true,
+          includeCertificateId: true,
+          validityPeriod: 12
+        }
+      });
     }
   }, [course]);
 
@@ -264,11 +324,12 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
         lessons,
         resources,
         approvalStatus,
-        // Include sections, modules, and exams
+        // Include sections, modules, exams, and certificate
         draftStructure: {
           sections,
           modules
         },
+        certificate,
         // Only include ID if editing existing course
         ...(course && { id: course.id }),
       };
@@ -471,13 +532,20 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
               setSections={setSections}
             />
           )}
-          {currentStep === 4 && (
+          {currentStep === 5 && (
+            <CertificateConfigurationStep 
+              certificate={certificate}
+              setCertificate={setCertificate}
+              sections={sections}
+            />
+          )}
+          {currentStep === 6 && (
             <SettingsStep 
               approvalStatus={approvalStatus}
               setApprovalStatus={setApprovalStatus}
             />
           )}
-          {currentStep === 5 && (
+          {currentStep === 7 && (
             <ReviewStep 
               basics={basics}
               outcomesInput={outcomesInput}

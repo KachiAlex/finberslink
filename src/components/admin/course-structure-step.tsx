@@ -268,6 +268,7 @@ export function CourseStructureStep({ sections, setSections, modules, setModules
                     </div>
                 </CardContent>
               </Card>
+            </>
 
               {/* Module Management */}
               <Card>
