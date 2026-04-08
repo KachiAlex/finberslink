@@ -189,75 +189,75 @@ export function CourseStructureStep({ sections, setSections, modules, setModules
 
         {/* Middle Panel - Section/Module Details */}
         <div className="space-y-4">
-          {selectedSection ? (
-            <>
-              <h3 className="text-lg font-semibold text-black mb-4">
-                Edit Section: {selectedSection.title}
-              </h3>
-              
-              {/* Section Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base text-black">Section Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Section Title</label>
-                    <Input
-                      value={selectedSection.title}
-                      onChange={(e) => {
-                        const updated = sections.map(section =>
-                          section.id === selectedSection.id
-                            ? { ...section, title: e.target.value }
-                            : section
-                        );
-                        setSections(updated);
-                        setSelectedSection({ ...selectedSection, title: e.target.value });
-                      }}
-                      className="w-full"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Description</label>
-                    <Textarea
-                      value={selectedSection.description}
-                      onChange={(e) => {
-                        const updated = sections.map(section =>
-                          section.id === selectedSection.id
-                            ? { ...section, description: e.target.value }
-                            : section
-                        );
-                        setSections(updated);
-                        setSelectedSection({ ...selectedSection, description: e.target.value });
-                      }}
-                      rows={3}
-                      className="w-full"
-                    />
-                  </div>
+          <>
+            {selectedSection ? (
+                <h3 className="text-lg font-semibold text-black mb-4">
+                  Edit Section: {selectedSection.title}
+                </h3>
+                
+                {/* Section Details */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base text-black">Section Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-black mb-2">Section Title</label>
+                      <Input
+                        value={selectedSection.title}
+                        onChange={(e) => {
+                          const updated = sections.map(section =>
+                            section.id === selectedSection.id
+                              ? { ...section, title: e.target.value }
+                              : section
+                          );
+                          setSections(updated);
+                          setSelectedSection({ ...selectedSection, title: e.target.value });
+                        }}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-black mb-2">Description</label>
+                      <Textarea
+                        value={selectedSection.description}
+                        onChange={(e) => {
+                          const updated = sections.map(section =>
+                            section.id === selectedSection.id
+                              ? { ...section, description: e.target.value }
+                              : section
+                          );
+                          setSections(updated);
+                          setSelectedSection({ ...selectedSection, description: e.target.value });
+                        }}
+                        rows={3}
+                        className="w-full"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Learning Objectives</label>
-                    <div className="space-y-2">
-                      {selectedSection.objectives.map((objective, index) => (
-                        <div key={index} className="flex gap-2">
-                          <Input
-                            value={objective}
-                            onChange={(e) => updateObjective(index, e.target.value)}
-                            placeholder={`Objective ${index + 1}`}
-                            className="flex-1"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeObjective(index)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button
+                    <div>
+                      <label className="block text-sm font-medium text-black mb-2">Learning Objectives</label>
+                      <div className="space-y-2">
+                        {selectedSection.objectives.map((objective, index) => (
+                          <div key={index} className="flex gap-2">
+                            <Input
+                              value={objective}
+                              onChange={(e) => updateObjective(index, e.target.value)}
+                              placeholder={`Objective ${index + 1}`}
+                              className="flex-1"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeObjective(index)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
                         onClick={addObjective}
                         variant="outline"
                         className="w-full"
@@ -266,73 +266,72 @@ export function CourseStructureStep({ sections, setSections, modules, setModules
                         Add Objective
                       </Button>
                     </div>
-                </CardContent>
-              </Card>
-            </>
+                  </CardContent>
+                </Card>
 
-              {/* Module Management */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base text-black">Modules in this Section</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Input
-                      value={newModuleTitle}
-                      onChange={(e) => setNewModuleTitle(e.target.value)}
-                      placeholder="New module title"
-                      className="flex-1"
-                    />
-                    <Button 
-                      onClick={() => addModule(selectedSection.id)}
-                      className="bg-green-600 text-white hover:bg-green-700"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Module
-                    </Button>
-                  </div>
+                {/* Module Management */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base text-black">Modules in this Section</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Input
+                        value={newModuleTitle}
+                        onChange={(e) => setNewModuleTitle(e.target.value)}
+                        placeholder="New module title"
+                        className="flex-1"
+                      />
+                      <Button 
+                        onClick={() => addModule(selectedSection.id)}
+                        className="bg-green-600 text-white hover:bg-green-700"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Module
+                      </Button>
+                      </div>
 
-                  {/* Modules List */}
-                  <div className="space-y-2">
-                    {selectedSection.modules.map((module, index) => (
-                      <Card key={module.id} className="bg-gray-50">
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="font-medium text-black">{module.title}</h5>
-                            <div className="flex gap-1">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => setSelectedModule(module)}
-                                className="text-blue-600 hover:text-blue-700"
-                              >
-                                <FileText className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => removeModule(module.id)}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          <p className="text-xs text-gray-600 mt-1">
-                            Duration: {module.duration} minutes
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">Select a section to edit its details</p>
-            </div>
-          )}
+                      {/* Modules List */}
+                      <div className="space-y-2">
+                        {selectedSection.modules.map((module, index) => (
+                          <Card key={module.id} className="bg-gray-50">
+                            <CardContent className="p-3">
+                              <div className="flex items-center justify-between">
+                                <h5 className="font-medium text-black">{module.title}</h5>
+                                <div className="flex gap-1">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => setSelectedModule(module)}
+                                    className="text-blue-600 hover:text-blue-700"
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => removeModule(module.id)}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-600 mt-1">
+                                Duration: {module.duration} minutes
+                              </p>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Select a section to edit its details</p>
+                </div>
+              )}
         </div>
 
         {/* Right Panel - Module Editor or Exam Config */}
