@@ -35,7 +35,7 @@ import {
 import type { CourseApprovalStatus, CourseLevel, LessonFormat, ResourceType } from "@prisma/client";
 
 // Enhanced Types for Progressive Course Structure
-interface CourseSection {
+export interface CourseSection {
   id: string;
   title: string;
   description: string;
@@ -45,7 +45,7 @@ interface CourseSection {
   order: number;
 }
 
-interface CourseModule {
+export interface CourseModule {
   id: string;
   title: string;
   content: string;
@@ -54,7 +54,7 @@ interface CourseModule {
   order: number;
 }
 
-interface SectionExam {
+export interface SectionExam {
   id: string;
   title: string;
   cbtFile?: string;
