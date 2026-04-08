@@ -1,0 +1,1140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                           String                 @id @default(cuid())
+  email                        String                 @unique
+  passwordHash                 String
+  firstName                    String
+  lastName                     String
+  avatarUrl                    String?
+  role                         Role                   @default(STUDENT)
+  status                       UserStatus             @default(ACTIVE)
+  createdAt                    DateTime               @default(now())
+  updatedAt                    DateTime               @updatedAt
+  tenantId                     String?
+  chatMemberships              ChatMembership[]
+  chatMessages                 ChatMessage[]
+  chatNotifications            ChatNotification[]
+  chatReadReceipts             ChatReadReceipt[]
+  chatThreads                  ChatThread[]           @relation("ThreadCreator")
+  postedCompanies              Company[]              @relation("CompanyPostedBy")
+  coursesTaught                Course[]               @relation("CourseInstructor")
+  enrollments                  Enrollment[]
+  exams                        Exam[]                 @relation("ExamCreatedBy")
+  forumPosts                   ForumPost[]
+  forumThreads                 ForumThread[]
+  forumPostReactions           ForumPostReaction[]
+  forumThreadSubscriptions     ForumThreadSubscription[]
+  forumPostEdits               ForumPostEdit[]
+  jobAlerts                    JobAlert[]
+  jobApplications              JobApplication[]
+  jobOpportunitiesPosted       JobOpportunity[]       @relation("JobPostedBy")
+  jobSaves                     JobSave[]
+  newsPosts                    News[]
+  notifications                Notification[]
+  profile                      Profile?
+  resumes                      Resume[]
+  createdInvites               TenantInvite[]         @relation("InviteCreator")
+  threadMentions               ThreadMention[]
+  threadReads                  ThreadRead[]
+  dashboardInsight             DashboardInsight?
+  tenant                       Tenant?                @relation(fields: [tenantId], references: [id])
+  volunteerApps                VolunteerApplication[]
+  volunteerOpportunitiesPosted VolunteerOpportunity[] @relation("VolunteerPostedBy")
+  interviewSessions            InterviewSession[]
+  passwordResetTokens          PasswordResetToken[]
+  courseAssignmentsReceived    CourseAssignment[]     @relation("StudentCourseAssignments")
+  courseAssignmentsCreated     CourseAssignment[]     @relation("AdminCourseAssignments")
+  courseCertificates           CourseCertificate[]    @relation("CertificateStudent")
+  issuedCertificates           CourseCertificate[]    @relation("CertificatesIssuedBy")
+  tutorApprovalAsApprover      TutorApproval[]        @relation("ApprovedByAdmin")
+  tutorApprovalAsStudent       TutorApproval[]        @relation("TutorUser")
+  directConversationParticipants DirectConversationParticipant[]
+  directConversationsCreated   DirectConversation[]   @relation("ConversationCreator")
+  directMessages               DirectMessage[]
+  directMessageReads           DirectMessageRead[]
+  studentAchievements          StudentAchievement[]
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  headline  String?
+  bio       String?
+  location  String?
+  phone     String?
+  address   String?
+  certifications Json? @default("[]")
+  education Json?
+  skills    String[] @default([])
+  interests String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Course {
+  id                   String        @id @default(cuid())
+  slug                 String        @unique
+  title                String
+  tagline              String
+  description          String
+  level                CourseLevel
+  category             String
+  coverImage           String
+  approvalStatus       CourseApprovalStatus @default(DRAFT)
+  publishedAt          DateTime?
+  tutorEditingLocked   Boolean       @default(false)
+  draftStructure       Json?
+  pendingEdit          Json?
+  hasPendingEdit       Boolean       @default(false)
+  archivedAt           DateTime?
+  certificateAvailable Boolean       @default(false)
+  instructorId         String
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  outcomes             String[]      @default([])
+  skills               String[]      @default([])
+  chatSpaces           ChatSpace[]
+  instructor           User          @relation("CourseInstructor", fields: [instructorId], references: [id])
+  enrollments          Enrollment[]
+  exams                Exam[]
+  forumThreads         ForumThread[]
+  lessons              Lesson[]
+  assignments          CourseAssignment[]
+  certificates         CourseCertificate[]
+}
+
+model Lesson {
+  id              String           @id @default(cuid())
+  courseId        String
+  title           String
+  slug            String
+  order           Int
+  durationMinutes Int
+  format          LessonFormat
+  summary         String
+  content         String?
+  videoUrl        String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  chatThreads     ChatThread[]
+  forumPosts      ForumPost[]
+  course          Course           @relation(fields: [courseId], references: [id])
+  lessonProgress  LessonProgress[]
+  resources       LessonResource[]
+
+  @@unique([courseId, slug])
+  @@index([courseId, order])
+}
+
+model LessonResource {
+  id       String       @id @default(cuid())
+  lessonId String
+  title    String
+  type     ResourceType
+  url      String
+  lesson   Lesson       @relation(fields: [lessonId], references: [id])
+}
+
+model Exam {
+  id           String     @id @default(cuid())
+  courseId     String
+  createdById  String
+  type         ExamType
+  status       ExamStatus @default(DRAFT)
+  title        String
+  description  String?
+  sectionId    String?
+  sectionLabel String?
+  passingScore Int?
+  timeLimit    Int?
+  modules      Json       @default("[]")
+  version      Int        @default(1)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  course       Course     @relation(fields: [courseId], references: [id])
+  createdBy    User       @relation("ExamCreatedBy", fields: [createdById], references: [id])
+
+  @@index([courseId, status])
+  @@index([createdById, status])
+}
+
+model Enrollment {
+  id                 String           @id @default(cuid()) @map("id")
+  userId             String           @map("userid")
+  courseId           String           @map("courseid")
+  status             EnrollmentStatus @default(ACTIVE) @map("status")
+  progressPercentage Int              @default(0) @map("progresspercentage")
+  lastAccessedAt     DateTime?        @map("lastaccessedat")
+  completedAt        DateTime?        @map("completedat")
+  totalStudyTime     Int              @default(0) @map("totalstudytime") // Total minutes spent
+  streakDays         Int              @default(0) @map("streakdays") // Learning streak
+  averageScore       Float?           @map("averagescore") // Performance metrics
+  engagementScore    Float            @default(0) @map("engagementscore") // 0-1 engagement score
+  lastStreakDate     DateTime?        @map("laststreakdate") // For streak calculation
+  createdAt          DateTime         @default(now()) @map("createdat")
+  updatedAt          DateTime         @updatedAt @map("updatedat")
+  course             Course           @relation(fields: [courseId], references: [id])
+  user               User             @relation(fields: [userId], references: [id])
+  lessonProgress     LessonProgress[]
+  certificate        CourseCertificate?
+
+  @@unique([userId, courseId])
+  @@index([userId, status])
+  @@index([courseId, progressPercentage])
+  @@index([lastAccessedAt])
+  @@map("enrollment")
+}
+
+model CourseAssignment {
+  id            String                   @id @default(cuid())
+  courseId      String
+  studentId     String
+  assignedById  String
+  status        CourseAssignmentStatus   @default(PENDING)
+  assignedAt    DateTime                 @default(now())
+  acceptedAt    DateTime?
+  declinedAt    DateTime?
+  revokedAt     DateTime?
+  notes         String?
+  course        Course                   @relation(fields: [courseId], references: [id])
+  student       User                     @relation("StudentCourseAssignments", fields: [studentId], references: [id])
+  assignedBy    User                     @relation("AdminCourseAssignments", fields: [assignedById], references: [id])
+
+  @@index([courseId])
+  @@index([studentId])
+  @@map("CourseAssignment")
+}
+
+model CourseCertificate {
+  id           String             @id @default(cuid())
+  enrollmentId String             @unique
+  courseId     String
+  studentId    String
+  issuedById   String?
+  status       CertificateStatus  @default(DRAFT)
+  issuedAt     DateTime?
+  shareCode    String?            @unique
+  metadata     Json?              @default("{}")
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  enrollment   Enrollment         @relation(fields: [enrollmentId], references: [id])
+  course       Course             @relation(fields: [courseId], references: [id])
+  student      User               @relation("CertificateStudent", fields: [studentId], references: [id])
+  issuedBy     User?              @relation("CertificatesIssuedBy", fields: [issuedById], references: [id])
+}
+
+model TutorApproval {
+  id          String    @id @default(cuid())
+  tutorId     String
+  approvedBy  String
+  status      TutorApprovalStatus @default(PENDING)
+  notes       String?
+  approvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  tutor       User      @relation("TutorUser", fields: [tutorId], references: [id])
+  admin       User      @relation("ApprovedByAdmin", fields: [approvedBy], references: [id])
+
+  @@unique([tutorId])
+  @@index([status])
+}
+
+model LessonProgress {
+  id                 String               @id @default(cuid())
+  enrollmentId       String
+  lessonId           String
+  status             LessonProgressStatus @default(NOT_STARTED)
+  completedAt        DateTime?
+  watchTimeSeconds   Int                 @default(0)
+  timeSpentMinutes   Int                 @default(0)
+  lastAccessedAt     DateTime            @default(now())
+  completionScore    Float?
+  engagementMetrics  Json                @default("{}")
+  videoProgress      Float               @default(0) // 0-1 for video completion percentage
+  scrollProgress     Float               @default(0) // 0-1 for content scroll completion
+  enrollment         Enrollment          @relation(fields: [enrollmentId], references: [id])
+  lesson             Lesson              @relation(fields: [lessonId], references: [id])
+
+  @@unique([enrollmentId, lessonId])
+  @@index([enrollmentId, status])
+  @@index([lessonId, status])
+}
+
+model Achievement {
+  id          String            @id @default(cuid())
+  name        String
+  description String
+  icon        String
+  category    AchievementCategory
+  points      Int               @default(0)
+  badgeColor  String            @default("#3B82F6")
+  requirement Json              // Conditions to unlock
+  createdAt   DateTime          @default(now())
+  
+  studentAchievements StudentAchievement[]
+}
+
+model StudentAchievement {
+  id            String        @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime      @default(now())
+  progress      Float         @default(0) // 0-1 progress towards achievement
+  metadata      Json?         @default("{}")
+  
+  user          User          @relation(fields: [userId], references: [id])
+  achievement    Achievement   @relation(fields: [achievementId], references: [id])
+  
+  @@unique([userId, achievementId])
+  @@index([userId, unlockedAt])
+}
+
+model ForumThread {
+  id             String          @id @default(cuid())
+  title          String
+  courseId       String
+  authorId       String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  lastActivityAt DateTime        @default(now())
+  tags           String[]        @default([])
+  posts          ForumPost[]
+  author         User            @relation(fields: [authorId], references: [id])
+  course         Course          @relation(fields: [courseId], references: [id])
+  mentions       ThreadMention[]
+  reads          ThreadRead[]
+  subscriptions  ForumThreadSubscription[]
+
+  @@index([courseId])
+  @@index([createdAt])
+  @@index([lastActivityAt])
+  @@index([authorId])
+}
+
+model ForumPost {
+  id        String      @id @default(cuid())
+  threadId  String
+  authorId  String
+  lessonId  String?
+  parentId  String?
+  content   String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  editedAt  DateTime?
+  deletedAt DateTime?
+  author    User        @relation(fields: [authorId], references: [id])
+  lesson    Lesson?     @relation(fields: [lessonId], references: [id])
+  parent    ForumPost?  @relation("PostReplies", fields: [parentId], references: [id])
+  replies   ForumPost[] @relation("PostReplies")
+  thread    ForumThread @relation(fields: [threadId], references: [id])
+  reactions ForumPostReaction[]
+  edits     ForumPostEdit[]
+
+  @@index([threadId])
+  @@index([authorId])
+  @@index([parentId])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model ForumPostReaction {
+  id        String     @id @default(cuid())
+  postId    String
+  userId    String
+  type      String     // e.g. "like", "upvote", "laugh", etc.
+  createdAt DateTime   @default(now())
+  post      ForumPost  @relation(fields: [postId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId, type])
+  @@index([userId])
+  @@index([postId])
+}
+
+model ForumPostEdit {
+  id              String    @id @default(cuid())
+  postId          String
+  editorId        String
+  previousContent String
+  newContent      String?
+  createdAt       DateTime  @default(now())
+
+  post   ForumPost @relation(fields: [postId], references: [id])
+  editor User      @relation(fields: [editorId], references: [id])
+
+  @@index([postId])
+  @@index([editorId])
+}
+
+model ForumThreadSubscription {
+  id        String      @id @default(cuid())
+  threadId  String
+  userId    String
+  createdAt DateTime    @default(now())
+  thread    ForumThread @relation(fields: [threadId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+
+  @@unique([threadId, userId])
+  @@index([userId])
+  @@index([threadId])
+}
+
+model Resume {
+  id                  String             @id @default(cuid())
+  userId              String
+  title               String
+  summary             String?
+  skills              String[]           @default([])
+  slug                String             @unique
+  shareSlug           String?            @unique
+  visibility          ResumeVisibility   @default(PRIVATE)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  location            String?
+  notableAchievements String?
+  personaName         String?
+  targetIndustry      String?
+  targetRoles         String[]           @default([])
+  topSkills           String[]           @default([])
+  yearsExperience     Int?
+  viewCount           Int                @default(0)
+  skillAnalysisSnapshot Json?
+  introVideoUrl       String?
+  introVideoEmbedUrl  String?
+  template            String?
+  headshotUrl         String?
+  jobApplications     JobApplication[]
+  user                User               @relation(fields: [userId], references: [id])
+  experiences         ResumeExperience[]
+  projects            ResumeProject[]
+  education           ResumeEducation[]
+  interviewSessions  InterviewSession[]
+}
+
+model ResumeExperience {
+  id           String    @id @default(cuid())
+  resumeId     String
+  company      String
+  role         String
+  startDate    DateTime
+  endDate      DateTime?
+  description  String?
+  achievements String[]  @default([])
+  order        Int       @default(0)
+  resume       Resume    @relation(fields: [resumeId], references: [id])
+}
+
+model ResumeProject {
+  id        String   @id @default(cuid())
+  resumeId  String
+  name      String
+  summary   String?
+  link      String?
+  techStack String[] @default([])
+  order     Int      @default(0)
+  resume    Resume   @relation(fields: [resumeId], references: [id])
+}
+
+model ResumeEducation {
+  id        String   @id @default(cuid())
+  resumeId  String
+  school    String
+  degree    String?
+  field     String?
+  summary   String?  @map("description")
+  order     Int      @default(0)
+  resume    Resume   @relation(fields: [resumeId], references: [id])
+}
+
+model InterviewSession {
+  id               String                  @id @default(cuid())
+  userId           String
+  resumeId         String?
+  jobOpportunityId String?
+  targetRole       String
+  status           InterviewSessionStatus  @default(PENDING)
+  currentStep      InterviewFlowStep       @default(QUESTION_PHASE)
+  summary          String?
+  rating           Int?
+  recommendation   String?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  user             User                    @relation(fields: [userId], references: [id])
+  resume           Resume?                 @relation(fields: [resumeId], references: [id])
+  jobOpportunity   JobOpportunity?         @relation(fields: [jobOpportunityId], references: [id])
+  questions        InterviewQuestion[]
+
+  @@index([userId, status])
+}
+
+model InterviewQuestion {
+  id             String               @id @default(cuid())
+  sessionId      String
+  sequence       Int
+  prompt         String
+  rubric         Json?
+  createdAt      DateTime             @default(now())
+  session        InterviewSession     @relation(fields: [sessionId], references: [id])
+  responses      InterviewResponse[]
+
+  @@unique([sessionId, sequence])
+}
+
+model InterviewResponse {
+  id             String             @id @default(cuid())
+  questionId     String
+  audioUrl       String?
+  transcript     String
+  aiFeedback     String?
+  score          Float?
+  submittedAt    DateTime           @default(now())
+  question       InterviewQuestion  @relation(fields: [questionId], references: [id])
+}
+
+model JobOpportunity {
+  id               String           @id @default(cuid())
+  title            String
+  company          String
+  location         String
+  country          String
+  jobType          JobType
+  remoteOption     RemoteOption
+  salaryRange      String?
+  description      String?
+  requirements     String[]         @default([])
+  tags             String[]         @default([])
+  postedById       String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  applicationCount Int              @default(0)
+  deadline         DateTime?
+  featured         Boolean          @default(false)
+  isActive         Boolean          @default(true)
+  slug             String?          @unique
+  viewCount        Int              @default(0)
+  applications     JobApplication[]
+  postedBy         User?            @relation("JobPostedBy", fields: [postedById], references: [id])
+  saves            JobSave[]
+  interviewSessions InterviewSession[]
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+model JobApplication {
+  id               String               @id @default(cuid())
+  userId           String
+  jobOpportunityId String
+  resumeId         String?
+  status           JobApplicationStatus @default(SUBMITTED)
+  submittedAt      DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  coverLetter      String?
+  opportunity      JobOpportunity       @relation(fields: [jobOpportunityId], references: [id])
+  resume           Resume?              @relation(fields: [resumeId], references: [id])
+  user             User                 @relation(fields: [userId], references: [id])
+}
+
+model JobSave {
+  id               String         @id @default(cuid())
+  userId           String
+  jobOpportunityId String
+  createdAt        DateTime       @default(now())
+  jobOpportunity   JobOpportunity @relation(fields: [jobOpportunityId], references: [id])
+  user             User           @relation(fields: [userId], references: [id])
+
+  @@unique([userId, jobOpportunityId])
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  website     String?
+  logo        String?
+  size        String?
+  industry    String?
+  location    String?
+  postedById  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  postedBy    User?    @relation("CompanyPostedBy", fields: [postedById], references: [id])
+}
+
+model JobAlert {
+  id        String   @id @default(cuid())
+  userId    String
+  keywords  String[]
+  location  String?
+  jobType   JobType?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model VolunteerOpportunity {
+  id           String                 @id @default(cuid())
+  title        String
+  organization String
+  location     String
+  country      String
+  description  String?
+  commitment   String?
+  skills       String[]               @default([])
+  isRemote     Boolean                @default(false)
+  postedById   String?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  applications VolunteerApplication[]
+  postedBy     User?                  @relation("VolunteerPostedBy", fields: [postedById], references: [id])
+}
+
+model VolunteerApplication {
+  id                     String                     @id @default(cuid())
+  userId                 String
+  volunteerOpportunityId String
+  status                 VolunteerApplicationStatus @default(SUBMITTED)
+  submittedAt            DateTime                   @default(now())
+  user                   User                       @relation(fields: [userId], references: [id])
+  opportunity            VolunteerOpportunity       @relation(fields: [volunteerOpportunityId], references: [id])
+}
+
+model News {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  content     String
+  summary     String?
+  tags        String[]
+  status      String    @default("DRAFT")
+  authorId    String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  author      User      @relation(fields: [authorId], references: [id])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id])
+}
+
+model ThreadRead {
+  id         String      @id @default(cuid())
+  userId     String
+  threadId   String
+  lastReadAt DateTime    @default(now())
+  createdAt  DateTime    @default(now())
+  thread     ForumThread @relation(fields: [threadId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
+
+  @@unique([userId, threadId])
+  @@index([threadId])
+}
+
+model ThreadMention {
+  id        String      @id @default(cuid())
+  userId    String
+  threadId  String
+  createdAt DateTime    @default(now())
+  thread    ForumThread @relation(fields: [threadId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([threadId])
+}
+
+model Tenant {
+  id               String          @id @default(cuid())
+  name             String
+  slug             String          @unique
+  contactName      String?
+  contactEmail     String?
+  logoUrl          String?
+  planTier         TenantPlanTier  @default(PROFESSIONAL)
+  status           TenantStatus    @default(ACTIVE)
+  seatLimit        Int             @default(100)
+  seatAllocated    Int             @default(0)
+  licenseExpiresAt DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  archivedAt       DateTime?
+  chatSpaces       ChatSpace[]
+  invites          TenantInvite[]
+  settings         TenantSettings?
+  usage            TenantUsage[]
+  users            User[]
+}
+
+model TenantSettings {
+  id             String   @id @default(cuid())
+  tenantId       String   @unique
+  primaryColor   String?  @default("#4f46e5")
+  secondaryColor String?  @default("#2dd4bf")
+  featureFlags   Json     @default("{}")
+  themeOverrides Json?
+  domain         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+model TenantInvite {
+  id          String       @id @default(cuid())
+  tenantId    String
+  email       String
+  role        Role
+  token       String       @unique
+  status      InviteStatus @default(PENDING)
+  expiresAt   DateTime
+  meta        Json?
+  createdById String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   User?        @relation("InviteCreator", fields: [createdById], references: [id])
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, status])
+}
+
+model TenantUsage {
+  id             String   @id @default(cuid())
+  tenantId       String
+  year           Int
+  month          Int
+  activeStudents Int      @default(0)
+  activeTutors   Int      @default(0)
+  activeJobs     Int      @default(0)
+  storageUsedMb  Int      @default(0)
+  applications   Int      @default(0)
+  createdAt      DateTime @default(now())
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, year, month])
+}
+
+model ChatSpace {
+  id          String           @id @default(cuid())
+  tenantId    String
+  courseId    String?
+  slug        String           @unique
+  title       String
+  description String?
+  icon        String?
+  type        ChatSpaceType    @default(COURSE_FORUM)
+  visibility  ChatVisibility   @default(COURSE_ONLY)
+  settings    Json             @default("{}")
+  defaultThreadType ChatThreadType @default(CHANNEL)
+  archivedAt  DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  memberships ChatMembership[]
+  course      Course?          @relation(fields: [courseId], references: [id])
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
+  threads     ChatThread[]
+
+  @@index([tenantId, courseId])
+}
+
+model ChatMembership {
+  id          String    @id @default(cuid())
+  chatSpaceId String
+  userId      String
+  role        ChatRole  @default(STUDENT)
+  mutedUntil  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  chatSpace   ChatSpace @relation(fields: [chatSpaceId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([chatSpaceId, userId])
+}
+
+model ChatThread {
+  id               String             @id @default(cuid())
+  chatSpaceId      String
+  createdById      String
+  type             ChatThreadType     @default(CHANNEL)
+  title            String?
+  lessonId         String?
+  tags             String[]           @default([])
+  pinned           Boolean            @default(false)
+  resolvedAt       DateTime?
+  lastMessageAt    DateTime?
+  archivedAt       DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  messages         ChatMessage[]
+  ChatNotification ChatNotification[]
+  reads            ChatReadReceipt[]
+  chatSpace        ChatSpace          @relation(fields: [chatSpaceId], references: [id])
+  createdBy        User               @relation("ThreadCreator", fields: [createdById], references: [id])
+  lesson           Lesson?            @relation(fields: [lessonId], references: [id])
+
+  @@index([chatSpaceId, type])
+  @@index([lessonId])
+}
+
+model ChatMessage {
+  id            String             @id @default(cuid())
+  threadId      String
+  authorId      String
+  parentId      String?
+  content       String
+  attachments   Json               @default("[]")
+  mentions      Json               @default("[]")
+  sentAt        DateTime           @default(now())
+  editedAt      DateTime?
+  deletedAt     DateTime?
+  author        User               @relation(fields: [authorId], references: [id])
+  parent        ChatMessage?       @relation("MessageReplies", fields: [parentId], references: [id])
+  replies       ChatMessage[]      @relation("MessageReplies")
+  thread        ChatThread         @relation(fields: [threadId], references: [id])
+  notifications ChatNotification[]
+
+  @@index([threadId, sentAt])
+}
+
+model ChatReadReceipt {
+  id         String     @id @default(cuid())
+  threadId   String
+  userId     String
+  lastReadAt DateTime   @default(now())
+  thread     ChatThread @relation(fields: [threadId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@unique([threadId, userId])
+}
+
+model ChatNotification {
+  id        String               @id @default(cuid())
+  userId    String
+  threadId  String
+  messageId String
+  type      ChatNotificationType
+  sentAt    DateTime             @default(now())
+  seenAt    DateTime?
+  message   ChatMessage          @relation(fields: [messageId], references: [id])
+  thread    ChatThread           @relation(fields: [threadId], references: [id])
+  user      User                 @relation(fields: [userId], references: [id])
+
+  @@index([userId, seenAt])
+}
+
+model DirectConversation {
+  id              String   @id @default(cuid())
+  type            ConversationType @default(DIRECT)
+  name            String?
+  groupIcon       String?
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  lastMessageAt   DateTime?
+  archivedAt      DateTime?
+  
+  participants    DirectConversationParticipant[]
+  messages        DirectMessage[]
+  createdBy       User     @relation("ConversationCreator", fields: [createdById], references: [id])
+  
+  @@index([createdAt])
+  @@index([lastMessageAt])
+  @@index([createdById])
+}
+
+model DirectConversationParticipant {
+  id              String   @id @default(cuid())
+  conversationId  String
+  userId          String
+  joinedAt        DateTime @default(now())
+  leftAt          DateTime?
+  role            ParticipantRole @default(MEMBER)
+  
+  conversation    DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id])
+  
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model DirectMessage {
+  id              String   @id @default(cuid())
+  conversationId  String
+  senderId        String
+  content         String
+  attachments     Json     @default("[]")
+  mentions        Json     @default("[]")
+  sentAt          DateTime @default(now())
+  editedAt        DateTime?
+  deletedAt       DateTime?
+  
+  conversation    DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender          User     @relation(fields: [senderId], references: [id])
+  reads           DirectMessageRead[]
+  
+  @@index([conversationId, sentAt])
+  @@index([senderId])
+}
+
+model DirectMessageRead {
+  id              String   @id @default(cuid())
+  messageId       String
+  userId          String
+  readAt          DateTime @default(now())
+  
+  message         DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id])
+  
+  @@unique([messageId, userId])
+  @@index([userId])
+}
+
+model DashboardInsight {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  focus       Json
+  skills      Json?
+  refreshedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  STUDENT
+  TUTOR
+  ADMIN
+  SUPER_ADMIN
+  EMPLOYER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  INVITED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum LessonFormat {
+  VIDEO
+  LIVE
+  TEXT
+  PROJECT
+}
+
+enum ResourceType {
+  PDF
+  SLIDE
+  LINK
+  CODE
+  VIDEO
+  SHEET
+}
+
+enum EnrollmentStatus {
+  PENDING_ACCEPTANCE
+  ACTIVE
+  COMPLETED
+  WITHDRAWN
+}
+
+enum CourseAssignmentStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+}
+
+enum CertificateStatus {
+  DRAFT
+  APPROVED
+  ISSUED
+  REVOKED
+}
+
+enum TutorApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum LessonProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ResumeVisibility {
+  PRIVATE
+  NETWORK
+  PUBLIC
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum RemoteOption {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum JobApplicationStatus {
+  SUBMITTED
+  IN_REVIEW
+  INTERVIEW
+  OFFERED
+  REJECTED
+}
+
+enum InterviewSessionStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum InterviewFlowStep {
+  QUESTION_PHASE
+  FEEDBACK_PHASE
+  RATING_PHASE
+}
+
+enum VolunteerApplicationStatus {
+  SUBMITTED
+  CONFIRMED
+  COMPLETED
+  WITHDRAWN
+}
+
+enum NotificationType {
+  ENROLLMENT_UPDATE
+  LESSON_RELEASE
+  FORUM_REPLY
+  MENTION
+  APPLICATION_STATUS
+  SYSTEM
+}
+
+enum ExamStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  CHANGES
+}
+
+enum ExamType {
+  SECTION
+  FINAL
+}
+
+enum TenantStatus {
+  ACTIVE
+  TRIAL
+  SUSPENDED
+  CANCELLED
+}
+
+enum TenantPlanTier {
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+enum CourseApprovalStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  CHANGES
+}
+
+enum ChatVisibility {
+  COURSE_ONLY
+  TENANT_WIDE
+}
+
+enum ChatSpaceType {
+  COURSE_FORUM
+  COMMUNITY_LOUNGE
+  DIRECT
+}
+
+enum ChatRole {
+  STUDENT
+  TUTOR
+  ADMIN
+  GUEST
+}
+
+enum ChatThreadType {
+  CHANNEL
+  LESSON
+  ANNOUNCEMENT
+  DM
+  FORUM
+  STREAM
+}
+
+enum ChatNotificationType {
+  MENTION
+  REPLY
+  ANNOUNCEMENT
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum ParticipantRole {
+  ADMIN
+  MEMBER
+}
+
+enum AchievementCategory {
+  COMPLETION
+  STREAK
+  ENGAGEMENT
+  PERFORMANCE
+  SOCIAL
+  MILESTONE
+}

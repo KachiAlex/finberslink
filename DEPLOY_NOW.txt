@@ -1,0 +1,4 @@
+Deploy trigger: 2026-04-05 07:34:00 UTC
+This file forces Vercel to recognize the latest changes - 81973565 - Delete button visible fix
+Deploy latest changes - 81973565 - Delete button visible fix
+Resume functionality fixed - database schema updated, admin endpoints removed

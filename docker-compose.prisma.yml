@@ -1,0 +1,14 @@
+services:
+  prisma-runner:
+    image: node:20-bullseye
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+      - ./node_modules:/workspace/node_modules
+    env_file:
+      - .env.remote
+    entrypoint: ["bash", "-lc"]
+    command: ["sleep infinity"]
+
+volumes:
+  prisma_node_modules:

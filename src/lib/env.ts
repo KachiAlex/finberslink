@@ -1,0 +1,59 @@
+const requiredEnv = [
+  "DATABASE_URL",
+  "JWT_ACCESS_SECRET", 
+  "JWT_REFRESH_SECRET"
+] as const;
+
+type RequiredEnvKey = (typeof requiredEnv)[number];
+
+type EnvShape = Record<RequiredEnvKey, string> & {
+  NEXTAUTH_URL?: string;
+  NEXTAUTH_SECRET?: string;
+  NEXT_PUBLIC_DEMO_STUDENT_ID?: string;
+  NEXT_PUBLIC_DEFAULT_TENANT_SLUG?: string;
+  OPENAI_API_KEY?: string;
+  SENDGRID_API_KEY?: string;
+  RESEND_API_KEY?: string;
+  EMAIL_PROVIDER?: string;
+};
+
+function loadEnv(): EnvShape {
+  const env: Partial<EnvShape> = {};
+
+  const isBuildTime =
+    process.env.NEXT_PHASE === "phase-production-build" ||
+    process.env.NEXT_PHASE === "phase-development-server";
+
+  for (const key of requiredEnv) {
+    const value = process.env[key];
+    if (!value) {
+      if (isBuildTime || process.env.NODE_ENV !== "production") {
+        // Generate development secrets if not provided
+        if (key === "JWT_ACCESS_SECRET") {
+          env[key] = "dev-jwt-access-secret-change-in-production";
+        } else if (key === "JWT_REFRESH_SECRET") {
+          env[key] = "dev-jwt-refresh-secret-change-in-production";
+        } else {
+          env[key] = `placeholder_${key}`;
+        }
+      } else {
+        throw new Error(`Missing required environment variable: ${key}`);
+      }
+    } else {
+      env[key] = value;
+    }
+  }
+
+  env.NEXTAUTH_URL = process.env.NEXTAUTH_URL;
+  env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET;
+  env.NEXT_PUBLIC_DEMO_STUDENT_ID = process.env.NEXT_PUBLIC_DEMO_STUDENT_ID;
+  env.NEXT_PUBLIC_DEFAULT_TENANT_SLUG = process.env.NEXT_PUBLIC_DEFAULT_TENANT_SLUG;
+  env.OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+  env.SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+  env.RESEND_API_KEY = process.env.RESEND_API_KEY;
+  env.EMAIL_PROVIDER = process.env.EMAIL_PROVIDER;
+
+  return env as EnvShape;
+}
+
+export const env = loadEnv();

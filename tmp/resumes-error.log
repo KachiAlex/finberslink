@@ -1,0 +1,57 @@
+2026-04-01T06:36:21.169Z	START resumes page render
+2026-04-01T06:36:21.518Z	SESSION ok sub=user_student_demo
+2026-04-01T06:36:27.763Z	DB ok count=1
+2026-04-01T16:30:05.421Z	START resumes page render
+2026-04-01T16:30:07.480Z	SESSION ok sub=user_student_demo
+2026-04-01T16:30:10.199Z	DB ok count=1
+2026-04-04T06:26:24.878Z	START resumes page render
+2026-04-04T06:26:25.101Z	SESSION ok sub=cmmw2lz1h0003w8ep6u34ws2w
+2026-04-04T06:26:25.739Z	DB ERROR: PrismaClientKnownRequestError: 
+Invalid `prisma.resume.findMany()` invocation:
+
+
+The column `Resume.headshotUrl` does not exist in the current database.
+    at Gr.handleRequestError (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:65:8286)
+    at Gr.handleAndLogRequestError (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:65:7581)
+    at Gr.request (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:65:7288)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async a (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:75:6730)
+    at async DashboardResumesPage (webpack-internal:///(rsc)/./src/app/dashboard/resumes/page.tsx:63:23)
+2026-04-04T09:30:20.927Z	START resumes page render
+2026-04-04T09:30:21.294Z	START resumes page render
+2026-04-04T09:30:23.818Z	SESSION ok sub=cmmw2lz1h0003w8ep6u34ws2w
+2026-04-04T09:30:25.122Z	SESSION ok sub=cmmw2lz1h0003w8ep6u34ws2w
+2026-04-04T09:30:32.620Z	DB ERROR: PrismaClientKnownRequestError: 
+Invalid `prisma.resume.findMany()` invocation:
+
+
+The column `Resume.headshotUrl` does not exist in the current database.
+    at Gr.handleRequestError (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:65:8286)
+    at Gr.handleAndLogRequestError (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:65:7581)
+    at Gr.request (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:65:7288)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async a (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:75:6730)
+    at async DashboardResumesPage (webpack-internal:///(rsc)/./src/app/dashboard/resumes/page.tsx:63:23)
+2026-04-04T09:30:32.790Z	DB ERROR: PrismaClientKnownRequestError: 
+Invalid `prisma.resume.findMany()` invocation:
+
+
+The column `Resume.headshotUrl` does not exist in the current database.
+    at Gr.handleRequestError (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:65:8286)
+    at Gr.handleAndLogRequestError (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:65:7581)
+    at Gr.request (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:65:7288)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async a (D:\Finbers-Link\node_modules\@prisma\client\runtime\client.js:75:6730)
+    at async DashboardResumesPage (webpack-internal:///(rsc)/./src/app/dashboard/resumes/page.tsx:63:23)
+2026-04-04T21:19:25.867Z	START resumes page render
+2026-04-04T21:19:26.245Z	SESSION ok sub=cmmw2lz1h0003w8ep6u34ws2w
+2026-04-04T21:19:26.655Z	START resumes page render
+2026-04-04T21:19:26.708Z	SESSION ok sub=cmmw2lz1h0003w8ep6u34ws2w
+2026-04-04T21:19:40.635Z	DB ok count=0
+2026-04-04T21:19:48.140Z	DB ok count=0
+2026-04-04T21:22:03.183Z	START resumes page render
+2026-04-04T21:22:03.250Z	SESSION ok sub=cmmw2lz1h0003w8ep6u34ws2w
+2026-04-04T21:22:12.129Z	DB ok count=0
+2026-04-04T21:26:02.162Z	START resumes page render
+2026-04-04T21:26:03.076Z	SESSION ok sub=cmmw2lz1h0003w8ep6u34ws2w
+2026-04-04T21:26:22.877Z	DB ok count=1

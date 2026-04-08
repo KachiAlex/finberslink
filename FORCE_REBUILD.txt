@@ -1,0 +1,4 @@
+Force rebuild triggered at: 2026-04-05 07:31:00 UTC
+This file forces Vercel to recognize changes and rebuild completely.
+Database schema fix included: Profile.phone and Profile.address columns.
+Admin endpoints removed to fix build errors.
