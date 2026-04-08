@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { SafeImage } from "@/components/ui/safe-image";
 import { CourseStructureStep } from "@/components/admin/course-structure-step";
+import { ExamConfigurationStep } from "@/components/admin/exam-configuration-step";
 import { 
   X, 
   Save, 
@@ -59,6 +60,15 @@ interface SectionExam {
   passScore: number;
   timeLimit: number;
   isEnabled: boolean;
+  questions?: ExamQuestion[];
+}
+
+interface ExamQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  points: number;
 }
 
 interface Course {
@@ -131,8 +141,9 @@ const STEPS = [
   { id: 1, title: "Course Structure", icon: "Layers3" },
   { id: 2, title: "Curriculum", icon: "BookOpen" },
   { id: 3, title: "Resources", icon: "FileText" },
-  { id: 4, title: "Settings", icon: "Users" },
-  { id: 5, title: "Review", icon: "CheckCircle2" },
+  { id: 4, title: "Exam Configuration", icon: "Target" },
+  { id: 5, title: "Settings", icon: "Users" },
+  { id: 6, title: "Review", icon: "CheckCircle2" },
 ];
 
 const ICONS = {
@@ -141,6 +152,7 @@ const ICONS = {
   FileText,
   Users,
   CheckCircle2,
+  Target,
 };
 
 export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = ({ 
@@ -198,6 +210,9 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
       const draftStructure = course.draftStructure || {};
       setSections((draftStructure.sections || []) as CourseSection[]);
       setModules((draftStructure.modules || []) as CourseModule[]);
+      
+      // Exam state management
+      const [exams, setExams] = useState<SectionExam[]>([]);
     }
   }, [course]);
 
@@ -249,7 +264,7 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
         lessons,
         resources,
         approvalStatus,
-        // Include sections and modules
+        // Include sections, modules, and exams
         draftStructure: {
           sections,
           modules
@@ -451,12 +466,18 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
             />
           )}
           {currentStep === 3 && (
+            <ExamConfigurationStep 
+              sections={sections}
+              setSections={setSections}
+            />
+          )}
+          {currentStep === 4 && (
             <SettingsStep 
               approvalStatus={approvalStatus}
               setApprovalStatus={setApprovalStatus}
             />
           )}
-          {currentStep === 4 && (
+          {currentStep === 5 && (
             <ReviewStep 
               basics={basics}
               outcomesInput={outcomesInput}
