@@ -106,6 +106,7 @@ export async function PUT(
             id: lesson.id,
             courseId,
             title: lesson.title,
+            slug: lesson.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || `lesson-${index}`,
             durationMinutes: lesson.durationMinutes,
             format: lesson.format,
             summary: lesson.summary,

@@ -15,7 +15,8 @@ import {
   CheckCircle, 
   Clock, 
   Archive,
-  RefreshCw
+  RefreshCw,
+  Plus
 } from "lucide-react";
 import type { CourseApprovalStatus, CourseLevel } from "@prisma/client";
 
@@ -130,17 +131,29 @@ export function AdminCoursesGrid() {
   };
 
   const handleSaveCourse = async (updatedData: Partial<Course>) => {
-    if (!editingCourse) return false;
-    
     try {
       console.log('Saving course with data:', updatedData);
-      const response = await fetch(`/api/admin/courses/${editingCourse.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedData)
-      });
       
-      const result = await response.json();
+      let response;
+      let result;
+      
+      if (editingCourse) {
+        // Update existing course
+        response = await fetch(`/api/admin/courses/${editingCourse.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedData)
+        });
+      } else {
+        // Create new course
+        response = await fetch('/api/admin/courses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedData)
+        });
+      }
+      
+      result = await response.json();
       console.log('Save response:', result);
       
       if (response.ok && result.success) {
@@ -343,7 +356,19 @@ export function AdminCoursesGrid() {
       <div className="space-y-6">
         {/* Live Courses */}
         <div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Live Catalog ({filteredCourses.length})</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-900">Live Catalog ({filteredCourses.length})</h3>
+            <Button
+              onClick={() => {
+                setEditingCourse(null);
+                setIsEditModalOpen(true);
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Course
+            </Button>
+          </div>
           <div className="space-y-4">
             {filteredCourses.map((course) => (
               <CourseListRow

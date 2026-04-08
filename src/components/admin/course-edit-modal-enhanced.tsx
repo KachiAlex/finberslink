@@ -76,7 +76,7 @@ interface Resource {
 }
 
 interface CourseEditModalEnhancedProps {
-  course: Course;
+  course: Course | null;
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedCourse: Partial<Course>) => void;
@@ -109,46 +109,53 @@ const ICONS = {
   CheckCircle2,
 };
 
-export function CourseEditModalEnhanced({ course, isOpen, onClose, onSave }: CourseEditModalEnhancedProps) {
+export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = ({ 
+  course, 
+  isOpen, 
+  onClose, 
+  onSave 
+}) => {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Form state - simplified like course creation
+  // Form state - handle both create and edit
   const [basics, setBasics] = useState({
-    title: course.title || "",
-    tagline: course.tagline || "",
-    description: course.description || "",
-    category: course.category || CATEGORIES[0], // Default to first category
-    level: course.level || "BEGINNER",
-    coverImage: course.coverImage || "",
+    title: course?.title || "",
+    tagline: course?.tagline || "",
+    description: course?.description || "",
+    category: course?.category || CATEGORIES[0], // Default to first category
+    level: course?.level || "BEGINNER",
+    coverImage: course?.coverImage || "",
   });
   
-  const [outcomesInput, setOutcomesInput] = useState(course.outcomes?.join("\n") || "");
-  const [skillsInput, setSkillsInput] = useState(course.skills?.join("\n") || "");
-  const [lessons, setLessons] = useState<Lesson[]>(course.lessons || []);
-  const [resources, setResources] = useState<Resource[]>(course.resources || []);
-  const [approvalStatus, setApprovalStatus] = useState<CourseApprovalStatus>(course.approvalStatus || "DRAFT");
-  const [coverPreview, setCoverPreview] = useState(course.coverImage || "");
+  const [outcomesInput, setOutcomesInput] = useState(course?.outcomes?.join("\n") || "");
+  const [skillsInput, setSkillsInput] = useState(course?.skills?.join("\n") || "");
+  const [lessons, setLessons] = useState<Lesson[]>(course?.lessons || []);
+  const [resources, setResources] = useState<Resource[]>(course?.resources || []);
+  const [approvalStatus, setApprovalStatus] = useState<CourseApprovalStatus>(course?.approvalStatus || "DRAFT");
+  const [coverPreview, setCoverPreview] = useState(course?.coverImage || "");
   const [coverName, setCoverName] = useState<string | null>(null);
 
   // Update form data when course changes
   useEffect(() => {
-    setBasics({
-      title: course.title || "",
-      tagline: course.tagline || "",
-      description: course.description || "",
-      category: course.category || CATEGORIES[0], // Default to first category
-      level: course.level || "BEGINNER",
-      coverImage: course.coverImage || "",
-    });
-    setOutcomesInput(course.outcomes?.join("\n") || "");
-    setSkillsInput(course.skills?.join("\n") || "");
-    setLessons(course.lessons || []);
-    setResources(course.resources || []);
-    setApprovalStatus(course.approvalStatus || "DRAFT");
-    setCoverPreview(course.coverImage || "");
-    setCoverName(null);
+    if (course) {
+      setBasics({
+        title: course.title || "",
+        tagline: course.tagline || "",
+        description: course.description || "",
+        category: course.category || CATEGORIES[0], // Default to first category
+        level: course.level || "BEGINNER",
+        coverImage: course.coverImage || "",
+      });
+      setOutcomesInput(course.outcomes?.join("\n") || "");
+      setSkillsInput(course.skills?.join("\n") || "");
+      setLessons(course.lessons || []);
+      setResources(course.resources || []);
+      setApprovalStatus(course.approvalStatus || "DRAFT");
+      setCoverPreview(course.coverImage || "");
+      setCoverName(null);
+    }
   }, [course]);
 
   const handleNext = () => {
@@ -199,8 +206,8 @@ export function CourseEditModalEnhanced({ course, isOpen, onClose, onSave }: Cou
         lessons,
         resources,
         approvalStatus,
-        // Ensure we have the course ID
-        id: course.id,
+        // Only include ID if editing existing course
+        ...(course && { id: course.id }),
       };
       
       console.log('Saving course:', updatedCourse);
@@ -209,7 +216,7 @@ export function CourseEditModalEnhanced({ course, isOpen, onClose, onSave }: Cou
       // Only show success if save actually succeeded
       if (result) {
         toast({
-          title: "Course Updated",
+          title: course ? "Course Updated" : "Course Created",
           description: "Course has been successfully updated.",
         });
         onClose();
@@ -312,7 +319,7 @@ export function CourseEditModalEnhanced({ course, isOpen, onClose, onSave }: Cou
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-200 p-6 z-10">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-black">Edit Course</h2>
+            <h2 className="text-2xl font-bold text-black">{course ? 'Edit Course' : 'Create New Course'}</h2>
             <Button
               variant="ghost"
               size="sm"
