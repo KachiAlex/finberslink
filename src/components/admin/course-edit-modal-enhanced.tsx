@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { SafeImage } from "@/components/ui/safe-image";
+import { SectionsStep } from "@/components/admin/course-sections-step";
 import { 
   X, 
   Save, 
@@ -54,6 +55,10 @@ interface Course {
   skills?: string[];
   lessons?: Lesson[];
   resources?: Resource[];
+  draftStructure?: {
+    sections?: any[];
+    modules?: any[];
+  };
 }
 
 interface Lesson {
@@ -95,10 +100,11 @@ const RESOURCE_TYPES = ["PDF", "VIDEO", "IMAGE", "DOCUMENT", "LINK"] as const;
 
 const STEPS = [
   { id: 0, title: "Basic Info", icon: "BookOpen" },
-  { id: 1, title: "Curriculum", icon: "Layers3" },
-  { id: 2, title: "Resources", icon: "FileText" },
-  { id: 3, title: "Settings", icon: "Users" },
-  { id: 4, title: "Review", icon: "CheckCircle2" },
+  { id: 1, title: "Sections", icon: "Layers3" },
+  { id: 2, title: "Curriculum", icon: "BookOpen" },
+  { id: 3, title: "Resources", icon: "FileText" },
+  { id: 4, title: "Settings", icon: "Users" },
+  { id: 5, title: "Review", icon: "CheckCircle2" },
 ];
 
 const ICONS = {
@@ -137,6 +143,10 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
   const [coverPreview, setCoverPreview] = useState(course?.coverImage || "");
   const [coverName, setCoverName] = useState<string | null>(null);
 
+  // Add sections/modules state
+  const [sections, setSections] = useState<any[]>(course?.draftStructure?.sections || []);
+  const [modules, setModules] = useState<any[]>(course?.draftStructure?.modules || []);
+
   // Update form data when course changes
   useEffect(() => {
     if (course) {
@@ -155,6 +165,11 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
       setApprovalStatus(course.approvalStatus || "DRAFT");
       setCoverPreview(course.coverImage || "");
       setCoverName(null);
+      
+      // Load sections/modules from draftStructure
+      const draftStructure = course.draftStructure || {};
+      setSections(draftStructure.sections || []);
+      setModules(draftStructure.modules || []);
     }
   }, [course]);
 
@@ -206,6 +221,11 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
         lessons,
         resources,
         approvalStatus,
+        // Include sections and modules
+        draftStructure: {
+          sections,
+          modules
+        },
         // Only include ID if editing existing course
         ...(course && { id: course.id }),
       };
@@ -214,7 +234,7 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
       const result = await onSave(updatedCourse);
       
       // Only show success if save actually succeeded
-      if (result) {
+      if (result != null) {
         toast({
           title: course ? "Course Updated" : "Course Created",
           description: "Course has been successfully updated.",
@@ -378,6 +398,14 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
             />
           )}
           {currentStep === 1 && (
+            <SectionsStep 
+              sections={sections}
+              setSections={setSections}
+              modules={modules}
+              setModules={setModules}
+            />
+          )}
+          {currentStep === 2 && (
             <CurriculumStep 
               lessons={lessons} 
               addLesson={addLesson}
@@ -385,7 +413,7 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
               removeLesson={removeLesson}
             />
           )}
-          {currentStep === 2 && (
+          {currentStep === 3 && (
             <ResourcesStep 
               resources={resources} 
               addResource={addResource}
