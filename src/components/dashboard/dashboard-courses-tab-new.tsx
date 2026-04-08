@@ -200,15 +200,8 @@ export function DashboardCoursesTab({
       setErrors(prev => ({ ...prev, [activeTab]: null }));
 
       try {
-        let url = `/api/dashboard/courses/${activeTab}`; // Use real APIs
-        // Use quick APIs that always work
-        if (activeTab === "learning-pathway") {
-          url = `/api/dashboard/courses/learning-pathway-working-simple`;
-        } else if (activeTab === "assigned") {
-          url = `/api/dashboard/courses/assigned-quick`;
-        } else if (activeTab === "discover") {
-          url = `/api/dashboard/courses/discover-quick`;
-        }
+        // Use real APIs only - no mock data
+        let url = `/api/dashboard/courses/${activeTab}`;
         const params = new URLSearchParams();
 
         // Add filters based on tab
@@ -244,93 +237,6 @@ export function DashboardCoursesTab({
 
         if (!response.ok) {
           console.error(`Failed to fetch ${activeTab} courses:`, response.status);
-          
-          // Fallback to mock data for discover tab if database fails
-          if (activeTab === "discover") {
-            console.log("Using mock data as fallback for discover tab");
-            const mockCourses = [
-              {
-                id: "mock-1",
-                title: "Web Development Basics",
-                tagline: "Learn the fundamentals of web development",
-                description: "Start your journey with HTML, CSS, and JavaScript",
-                level: "beginner" as const,
-                category: "Web Development",
-                coverImage: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
-                progressPercentage: 0,
-                lessonsCompleted: 0,
-                lessonsCount: 12,
-                rating: 4.8,
-                reviewCount: 156,
-                price: 0,
-                format: "online",
-                enrollmentCount: 2341,
-                instructor: {
-                  id: "instructor-1",
-                  name: "Cynthia Eguzouwa",
-                  avatar: null,
-                },
-                createdAt: new Date().toISOString(),
-                publishedAt: new Date(),
-                duration: 120, // Add missing duration in minutes
-              },
-              {
-                id: "mock-2",
-                title: "Advanced React Development",
-                tagline: "Master React with advanced patterns and best practices",
-                description: "Deep dive into React hooks, context, and performance optimization",
-                level: "advanced" as const,
-                category: "Frontend Development",
-                coverImage: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
-                progressPercentage: 0,
-                lessonsCompleted: 0,
-                lessonsCount: 18,
-                rating: 4.9,
-                reviewCount: 203,
-                price: 89,
-                format: "online",
-                enrollmentCount: 1456,
-                instructor: {
-                  id: "instructor-1",
-                  name: "Cynthia Eguzouwa",
-                  avatar: null,
-                },
-                createdAt: new Date().toISOString(),
-                publishedAt: new Date(),
-                duration: 120, // Add missing duration in minutes
-              },
-              {
-                id: "mock-3",
-                title: "Python for Data Science",
-                tagline: "Learn data science with Python programming",
-                description: "Comprehensive course covering Python programming with focus on data analysis and machine learning",
-                level: "intermediate" as const,
-                category: "Data Science",
-                coverImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
-                progressPercentage: 0,
-                lessonsCompleted: 0,
-                lessonsCount: 24,
-                rating: 4.7,
-                reviewCount: 289,
-                price: 129,
-                format: "online",
-                enrollmentCount: 3621,
-                instructor: {
-                  id: "instructor-1",
-                  name: "Cynthia Eguzouwa",
-                  avatar: null,
-                },
-                createdAt: new Date().toISOString(),
-                publishedAt: new Date(),
-                duration: 120, // Add missing duration in minutes
-              },
-            ];
-            
-            setDiscoverableCourses(mockCourses);
-            setLoadingStates(prev => ({ ...prev, [activeTab]: false }));
-            return;
-          }
-          
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
