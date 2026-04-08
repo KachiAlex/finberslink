@@ -210,7 +210,7 @@ export function LearningPathwayCard({ course }: { course: LearningPathwayCourse 
 }
 
 // Assigned Course Card Component
-export function AssignedCourseCard({ course }: { course: AssignedCourse }) {
+export function AssignedCourseCard({ course }: { course: AssignedCourse | any }) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high": return "bg-red-100 text-red-700 border-red-200";
@@ -220,7 +220,17 @@ export function AssignedCourseCard({ course }: { course: AssignedCourse }) {
     }
   };
 
-  const daysUntilEnd = Math.ceil((course.cohort.endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  // Handle both cohort-based and flat course structures
+  const cohort = course.cohort || {
+    name: "Cohort",
+    startDate: course.assignedAt || new Date(),
+    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default to 30 days from now
+    instructor: course.instructor || { id: "", name: "Instructor", avatar: null },
+    classmates: [],
+    deadlines: [],
+  };
+
+  const daysUntilEnd = Math.ceil((new Date(cohort.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   const isEndingSoon = daysUntilEnd <= 7;
 
   return (
@@ -242,9 +252,9 @@ export function AssignedCourseCard({ course }: { course: AssignedCourse }) {
           
           {/* Cohort Info */}
           <div className="p-3 bg-blue-50 rounded-lg">
-            <div className="font-medium text-blue-900">{course.cohort.name}</div>
+            <div className="font-medium text-blue-900">{cohort.name}</div>
             <div className="text-sm text-blue-700">
-              {new Date(course.cohort.startDate).toLocaleDateString()} - {new Date(course.cohort.endDate).toLocaleDateString()}
+              {new Date(cohort.startDate).toLocaleDateString()} - {new Date(cohort.endDate).toLocaleDateString()}
               {isEndingSoon && (
                 <span className="ml-2 text-red-600 font-medium">
                   ({daysUntilEnd} days left!)
@@ -262,7 +272,7 @@ export function AssignedCourseCard({ course }: { course: AssignedCourse }) {
                 <User className="h-4 w-4 text-slate-600" />
               </div>
               <div>
-                <div className="text-sm font-medium text-slate-900">{course.cohort.instructor.name}</div>
+                <div className="text-sm font-medium text-slate-900">{cohort.instructor.name}</div>
                 <div className="text-xs text-slate-600">Instructor</div>
               </div>
             </div>
@@ -270,14 +280,14 @@ export function AssignedCourseCard({ course }: { course: AssignedCourse }) {
             <div className="flex items-center gap-2 ml-auto">
               <Users className="h-4 w-4 text-slate-600" />
               <span className="text-sm text-slate-600">
-                {course.cohort.classmates.length} classmates
+                {cohort.classmates.length} classmates
               </span>
             </div>
           </div>
 
           {/* Classmate Avatars */}
           <div className="flex items-center gap-1">
-            {course.cohort.classmates.slice(0, 5).map((classmate, index) => (
+            {cohort.classmates.slice(0, 5).map((classmate, index) => (
               <div
                 key={classmate.id}
                 className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-xs"
@@ -286,9 +296,9 @@ export function AssignedCourseCard({ course }: { course: AssignedCourse }) {
                 {classmate.name.charAt(0)}
               </div>
             ))}
-            {course.cohort.classmates.length > 5 && (
+            {cohort.classmates.length > 5 && (
               <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs text-slate-600">
-                +{course.cohort.classmates.length - 5}
+                +{cohort.classmates.length - 5}
               </div>
             )}
           </div>
@@ -304,10 +314,10 @@ export function AssignedCourseCard({ course }: { course: AssignedCourse }) {
         </div>
 
         {/* Upcoming Deadlines */}
-        {course.cohort.deadlines && course.cohort.deadlines.length > 0 && (
+        {cohort.deadlines && cohort.deadlines.length > 0 && (
           <div className="space-y-2">
             <div className="text-sm font-medium text-slate-700">Upcoming Deadlines</div>
-            {course.cohort.deadlines.slice(0, 2).map((deadline, index) => (
+            {cohort.deadlines.slice(0, 2).map((deadline, index) => (
               <div key={index} className="flex items-center gap-2 p-2 bg-red-50 rounded">
                 <Calendar className="h-4 w-4 text-red-600" />
                 <div className="flex-1">
