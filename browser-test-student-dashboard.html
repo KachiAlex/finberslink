@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard Courses Tab - Browser Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8fafc;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .header {
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+        .test-section {
+            margin-bottom: 32px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        .test-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+        .test-item input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+        .test-item label {
+            flex: 1;
+            cursor: pointer;
+        }
+        .test-item.passed {
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+        }
+        .test-item.failed {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .status-good {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-critical {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: width 0.3s ease;
+        }
+        .instructions {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1e40af;
+        }
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .result-card {
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .result-card.success {
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+        }
+        .result-card.warning {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+        }
+        .result-card.error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+        .result-card h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .result-card .number {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button.secondary {
+            background: #6b7280;
+        }
+        button.secondary:hover {
+            background: #4b5563;
+        }
+        .notes {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+        .notes h4 {
+            margin-top: 0;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Student Dashboard Courses Tab - E2E Browser Test</h1>
+            <p>Manual testing checklist for the student dashboard courses tab functionality</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+            <p id="progressText">0% Complete</p>
+        </div>
+
+        <div class="instructions">
+            <h3>How to Use This Test</h3>
+            <ol>
+                <li>Navigate to the student dashboard courses tab in your application</li>
+                <li>Go through each test item below</li>
+                <li>Check the box when the test passes</li>
+                <li>The progress will update automatically</li>
+                <li>Use the "Export Results" button to save your findings</li>
+            </ol>
+        </div>
+
+        <div class="results-summary">
+            <div class="result-card success">
+                <h4>PASSED</h4>
+                <div class="number" id="passedCount">0</div>
+            </div>
+            <div class="result-card warning">
+                <h4>WARNINGS</h4>
+                <div class="number" id="warningCount">0</div>
+            </div>
+            <div class="result-card error">
+                <h4>FAILED</h4>
+                <div class="number" id="failedCount">0</div>
+            </div>
+            <div class="result-card">
+                <h4>TOTAL</h4>
+                <div class="number" id="totalCount">0</div>
+            </div>
+        </div>
+
+        <!-- Tab Switching Functionality -->
+        <div class="test-section">
+            <h2>Tab Switching Functionality</h2>
+            
+            <div class="test-item">
+                <input type="checkbox" id="tab1" onchange="updateProgress()">
+                <label for="tab1">Click "Learning Pathway" tab - should show enrolled courses</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="tab2" onchange="updateProgress()">
+                <label for="tab2">Click "Assigned" tab - should show assigned courses</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="tab3" onchange="updateProgress()">
+                <label for="tab3">Click "Discover" tab - should show course catalog</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="tab4" onchange="updateProgress()">
+                <label for="tab4">Tab switching should be smooth and instant</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="tab5" onchange="updateProgress()">
+                <label for="tab5">Active tab should be visually highlighted</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="tab6" onchange="updateProgress()">
+                <label for="tab6">Tab counts should be accurate</label>
+            </div>
+        </div>
+
+        <!-- Button Functionality -->
+        <div class="test-section">
+            <h2>Button Functionality</h2>
+            
+            <div class="test-item">
+                <input type="checkbox" id="btn1" onchange="updateProgress()">
+                <label for="btn1">Browse Catalog button should navigate to courses page</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="btn2" onchange="updateProgress()">
+                <label for="btn2">Continue Learning button should go to first lesson</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="btn3" onchange="updateProgress()">
+                <label for="btn3">View Course button should go to course detail page</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="btn4" onchange="updateProgress()">
+                <label for="btn4">Start Course button should enroll and navigate</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="btn5" onchange="updateProgress()">
+                <label for="btn5">Enroll button should show enrollment flow</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="btn6" onchange="updateProgress()">
+                <label for="btn6">Filter buttons should apply filters correctly</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="btn7" onchange="updateProgress()">
+                <label for="btn7">Search button should trigger search</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="btn8" onchange="updateProgress()">
+                <label for="btn8">Load More button should load more courses</label>
+            </div>
+        </div>
+
+        <!-- Data Loading & States -->
+        <div class="test-section">
+            <h2>Data Loading & States</h2>
+            
+            <div class="test-item">
+                <input type="checkbox" id="data1" onchange="updateProgress()">
+                <label for="data1">Loading states should show during data fetch</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="data2" onchange="updateProgress()">
+                <label for="data2">Empty states should show when no courses</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="data3" onchange="updateProgress()">
+                <label for="data3">Error states should show on API failures</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="data4" onchange="updateProgress()">
+                <label for="data4">Data should refresh on tab switch</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="data5" onchange="updateProgress()">
+                <label for="data5">Pagination should work correctly</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="data6" onchange="updateProgress()">
+                <label for="data6">Infinite scroll should load more items</label>
+            </div>
+        </div>
+
+        <!-- Filter & Search -->
+        <div class="test-section">
+            <h2>Filter & Search</h2>
+            
+            <div class="test-item">
+                <input type="checkbox" id="filter1" onchange="updateProgress()">
+                <label for="filter1">Search input should filter courses in real-time</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="filter2" onchange="updateProgress()">
+                <label for="filter2">Category filter should work correctly</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="filter3" onchange="updateProgress()">
+                <label for="filter3">Progress filter should show appropriate courses</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="filter4" onchange="updateProgress()">
+                <label for="filter4">Status filter should show active/inactive courses</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="filter5" onchange="updateProgress()">
+                <label for="filter5">Date range filter should sort courses correctly</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="filter6" onchange="updateProgress()">
+                <label for="filter6">Clear filters should reset all filters</label>
+            </div>
+        </div>
+
+        <!-- Course Cards -->
+        <div class="test-section">
+            <h2>Course Cards</h2>
+            
+            <div class="test-item">
+                <input type="checkbox" id="card1" onchange="updateProgress()">
+                <label for="card1">Learning Pathway cards should show progress</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="card2" onchange="updateProgress()">
+                <label for="card2">Assigned cards should show cohort info</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="card3" onchange="updateProgress()">
+                <label for="card3">Discover cards should show course details</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="card4" onchange="updateProgress()">
+                <label for="card4">Card images should load properly</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="card5" onchange="updateProgress()">
+                <label for="card5">Card buttons should be clickable</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="card6" onchange="updateProgress()">
+                <label for="card6">Card hover states should work</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="card7" onchange="updateProgress()">
+                <label for="card7">Card badges should display correctly</label>
+            </div>
+        </div>
+
+        <!-- Responsive Design -->
+        <div class="test-section">
+            <h2>Responsive Design</h2>
+            
+            <div class="test-item">
+                <input type="checkbox" id="resp1" onchange="updateProgress()">
+                <label for="resp1">Mobile layout should stack vertically (test at 375px width)</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="resp2" onchange="updateProgress()">
+                <label for="resp2">Tablet layout should adapt to screen size (test at 768px width)</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="resp3" onchange="updateProgress()">
+                <label for="resp3">Desktop layout should use full width (test at 1920px width)</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="resp4" onchange="updateProgress()">
+                <label for="resp4">Text should be readable on all sizes</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="resp5" onchange="updateProgress()">
+                <label for="resp5">Buttons should be touch-friendly on mobile</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="resp6" onchange="updateProgress()">
+                <label for="resp6">Tabs should scroll horizontally on mobile</label>
+            </div>
+        </div>
+
+        <!-- Performance -->
+        <div class="test-section">
+            <h2>Performance</h2>
+            
+            <div class="test-item">
+                <input type="checkbox" id="perf1" onchange="updateProgress()">
+                <label for="perf1">Page should load within 3 seconds</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="perf2" onchange="updateProgress()">
+                <label for="perf2">Tab switching should be instant</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="perf3" onchange="updateProgress()">
+                <label for="perf3">Search should respond within 500ms</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="perf4" onchange="updateProgress()">
+                <label for="perf4">Filtering should be fast</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="perf5" onchange="updateProgress()">
+                <label for="perf5">Scrolling should be smooth</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="perf6" onchange="updateProgress()">
+                <label for="perf6">No memory leaks on tab switching</label>
+            </div>
+        </div>
+
+        <!-- Accessibility -->
+        <div class="test-section">
+            <h2>Accessibility</h2>
+            
+            <div class="test-item">
+                <input type="checkbox" id="a11y1" onchange="updateProgress()">
+                <label for="a11y1">Tabs should be keyboard navigable</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="a11y2" onchange="updateProgress()">
+                <label for="a11y2">Buttons should have focus indicators</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="a11y3" onchange="updateProgress()">
+                <label for="a11y3">Screen reader should read content</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="a11y4" onchange="updateProgress()">
+                <label for="a11y4">Color contrast should be adequate</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="a11y5" onchange="updateProgress()">
+                <label for="a11y5">Alt text should exist for images</label>
+            </div>
+            
+            <div class="test-item">
+                <input type="checkbox" id="a11y6" onchange="updateProgress()">
+                <label for="a11y6">ARIA labels should be present</label>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="margin-top: 32px; text-align: center;">
+            <button onclick="exportResults()">Export Results</button>
+            <button class="secondary" onclick="resetTest()">Reset Test</button>
+            <button class="secondary" onclick="markAllPassed()">Mark All Passed</button>
+        </div>
+
+        <!-- Notes Section -->
+        <div class="notes">
+            <h4>Testing Notes</h4>
+            <textarea id="notes" style="width: 100%; height: 100px; margin-top: 8px; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;" placeholder="Add your testing notes here..."></textarea>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {
+            passed: 0,
+            failed: 0,
+            warnings: 0,
+            total: 0,
+            timestamp: new Date().toISOString(),
+            notes: ''
+        };
+
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+            
+            testResults.total = checkboxes.length;
+            testResults.passed = checked.length;
+            testResults.failed = 0; // In this manual test, unchecked items are just not tested yet
+            testResults.warnings = 0;
+            
+            const percentage = Math.round((checked.length / checkboxes.length) * 100);
+            
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = percentage + '% Complete';
+            
+            document.getElementById('passedCount').textContent = testResults.passed;
+            document.getElementById('failedCount').textContent = testResults.failed;
+            document.getElementById('warningCount').textContent = testResults.warnings;
+            document.getElementById('totalCount').textContent = testResults.total;
+            
+            // Update checkbox states
+            checkboxes.forEach(checkbox => {
+                const parent = checkbox.closest('.test-item');
+                if (checkbox.checked) {
+                    parent.classList.add('passed');
+                    parent.classList.remove('failed');
+                } else {
+                    parent.classList.remove('passed');
+                    parent.classList.add('failed');
+                }
+            });
+        }
+
+        function exportResults() {
+            testResults.notes = document.getElementById('notes').value;
+            
+            const results = {
+                ...testResults,
+                browser: navigator.userAgent,
+                screenResolution: `${screen.width}x${screen.height}`,
+                testDate: new Date().toLocaleString(),
+                checkedItems: []
+            };
+            
+            // Collect checked items
+            document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+                results.checkedItems.push({
+                    id: checkbox.id,
+                    label: checkbox.nextElementSibling.textContent
+                });
+            });
+            
+            const dataStr = JSON.stringify(results, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `student-dashboard-test-${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        function resetTest() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            document.getElementById('notes').value = '';
+            updateProgress();
+        }
+
+        function markAllPassed() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            updateProgress();
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+        });
+    </script>
+</body>
+</html>
