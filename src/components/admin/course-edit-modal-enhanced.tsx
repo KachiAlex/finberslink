@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { SafeImage } from "@/components/ui/safe-image";
-import { SectionsStep } from "@/components/admin/course-sections-step";
+import { CourseStructureStep } from "@/components/admin/course-structure-step";
 import { 
   X, 
   Save, 
@@ -32,7 +32,35 @@ import {
 } from "lucide-react";
 import type { CourseApprovalStatus, CourseLevel, LessonFormat, ResourceType } from "@prisma/client";
 
-// Types
+// Enhanced Types for Progressive Course Structure
+interface CourseSection {
+  id: string;
+  title: string;
+  description: string;
+  objectives: string[];
+  modules: CourseModule[];
+  exam?: SectionExam;
+  order: number;
+}
+
+interface CourseModule {
+  id: string;
+  title: string;
+  content: string;
+  resources: Resource[];
+  duration: number;
+  order: number;
+}
+
+interface SectionExam {
+  id: string;
+  title: string;
+  cbtFile?: string;
+  passScore: number;
+  timeLimit: number;
+  isEnabled: boolean;
+}
+
 interface Course {
   id: string;
   title: string;
@@ -56,8 +84,8 @@ interface Course {
   lessons?: Lesson[];
   resources?: Resource[];
   draftStructure?: {
-    sections?: any[];
-    modules?: any[];
+    sections?: CourseSection[];
+    modules?: CourseModule[];
   };
 }
 
@@ -100,7 +128,7 @@ const RESOURCE_TYPES = ["PDF", "VIDEO", "IMAGE", "DOCUMENT", "LINK"] as const;
 
 const STEPS = [
   { id: 0, title: "Basic Info", icon: "BookOpen" },
-  { id: 1, title: "Sections", icon: "Layers3" },
+  { id: 1, title: "Course Structure", icon: "Layers3" },
   { id: 2, title: "Curriculum", icon: "BookOpen" },
   { id: 3, title: "Resources", icon: "FileText" },
   { id: 4, title: "Settings", icon: "Users" },
@@ -143,9 +171,9 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
   const [coverPreview, setCoverPreview] = useState(course?.coverImage || "");
   const [coverName, setCoverName] = useState<string | null>(null);
 
-  // Add sections/modules state
-  const [sections, setSections] = useState<any[]>(course?.draftStructure?.sections || []);
-  const [modules, setModules] = useState<any[]>(course?.draftStructure?.modules || []);
+  // Add sections/modules state with proper typing
+  const [sections, setSections] = useState<CourseSection[]>(course?.draftStructure?.sections || []);
+  const [modules, setModules] = useState<CourseModule[]>(course?.draftStructure?.modules || []);
 
   // Update form data when course changes
   useEffect(() => {
@@ -166,10 +194,10 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
       setCoverPreview(course.coverImage || "");
       setCoverName(null);
       
-      // Load sections/modules from draftStructure
+      // Load sections/modules from draftStructure with proper typing
       const draftStructure = course.draftStructure || {};
-      setSections(draftStructure.sections || []);
-      setModules(draftStructure.modules || []);
+      setSections((draftStructure.sections || []) as CourseSection[]);
+      setModules((draftStructure.modules || []) as CourseModule[]);
     }
   }, [course]);
 
@@ -398,7 +426,7 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
             />
           )}
           {currentStep === 1 && (
-            <SectionsStep 
+            <CourseStructureStep 
               sections={sections}
               setSections={setSections}
               modules={modules}
