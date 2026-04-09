@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { NewsStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
@@ -50,7 +51,7 @@ export async function createNewsPost(input: {
       summary: input.summary ?? null,
       tags: input.tags ?? [],
       authorId: input.authorId,
-      status: "DRAFT",
+      status: NewsStatus.DRAFT,
     },
     include: {
       author: { select: AUTHOR_SELECT },
@@ -70,7 +71,7 @@ export async function listNewsPosts(limit = 20) {
 
 export async function listPublishedNewsPosts(limit = 20) {
   return prisma.news.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: NewsStatus.PUBLISHED },
     orderBy: { publishedAt: "desc" },
     take: limit,
     include: {
@@ -116,7 +117,8 @@ export async function updateNewsPost(
     if (!NEWS_STATUSES.includes(input.status)) {
       throw new Error(`Invalid news status: ${input.status}`);
     }
-    data.status = input.status;
+    // coerce to Prisma enum if possible
+    data.status = (input.status as unknown as NewsStatus) ?? input.status;
     if (input.status === "PUBLISHED") {
       data.publishedAt = new Date();
     }

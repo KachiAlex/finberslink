@@ -83,7 +83,7 @@
     - _Preservation: Non-enum queries and other filters continue to work_
     - _Requirements: 2.1, 2.2, 3.1, 3.2_
 
-  - [ ] 3.4 Fix src/features/dashboard/insights.ts
+  - [x] 3.4 Fix src/features/dashboard/insights.ts
     - Add import: `import { UserStatus } from "@prisma/client";`
     - Replace `status: "ACTIVE"` with `status: UserStatus.ACTIVE`
     - Verify all user status comparisons use proper enum references
@@ -103,7 +103,7 @@
     - _Preservation: Non-enum queries and other filters continue to work_
     - _Requirements: 2.1, 2.2, 3.1, 3.2_
 
-  - [ ] 3.6 Fix src/features/news/service.ts
+  - [x] 3.6 Fix src/features/news/service.ts
     - Search for any string literal enum comparisons in this file
     - Add necessary enum imports from `@prisma/client`
     - Replace all string literal enum comparisons with proper enum references
@@ -112,6 +112,7 @@
     - _Expected_Behavior: Queries execute successfully without PostgreSQL type errors_
     - _Preservation: Non-enum queries and other filters continue to work_
     - _Requirements: 2.1, 2.2, 3.1, 3.2_
+    - **NOTE**: The News model uses a String field for status (not a PostgreSQL enum), so string literals like "DRAFT" and "PUBLISHED" are correct and do not trigger the bug condition.
 
   - [x] 3.7 Verify bug condition exploration test now passes
     - **Property 1: Expected Behavior** - PostgreSQL Enum Type Mismatch Fixed
