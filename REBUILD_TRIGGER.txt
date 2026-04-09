@@ -1,0 +1,4 @@
+Vercel Rebuild Trigger
+Timestamp: 2026-04-09T06:50:00Z
+Reason: Force rebuild to deploy enum fixes to production
+All enum comparisons have been fixed with proper Prisma enum references.
