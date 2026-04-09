@@ -1,5 +1,4 @@
-import { Prisma } from "@prisma/client";
-import type { EnrollmentStatus } from "@prisma/client";
+import { Prisma, EnrollmentStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import type { SkillAnalysisResponse } from "@/lib/ai/resume";

@@ -869,13 +869,29 @@ export function DashboardSectionsClient({
   };
 
   return (
-    <div className="space-y-8">
-      {/* OVERVIEW SECTION */}
+    <div className="space-y-6">
+      {/* OVERVIEW SECTION - Simplified */}
       <div className="space-y-4">
         <div>
           <p className="text-xs uppercase tracking-[0.45em] text-slate-500">{overviewLabel}</p>
           <h2 className="text-3xl font-bold text-slate-900 mt-2">{overviewTitle}</h2>
         </div>
+      </div>
+
+      {/* KEY METRICS - Only Essential Stats */}
+      <div className="grid gap-3 md:grid-cols-3">
+        {metrics.slice(0, 3).map((metric) => (
+          <GlassCard key={metric.label} className="p-4">
+            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">{metric.label}</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900">{metric.value}</p>
+            <p className="mt-1 text-xs text-slate-600">{metric.helper}</p>
+            {metric.action && (
+              <Button asChild size="sm" variant="ghost" className="mt-3 text-blue-600 hover:text-blue-700">
+                <Link href={metric.action}>View →</Link>
+              </Button>
+            )}
+          </GlassCard>
+        ))}
       </div>
 
       {/* INSIGHTS & GUIDANCE SECTION */}

@@ -109,7 +109,7 @@ export default async function AdminUsersPage(props: any) {
           lastName,
           passwordHash,
           role,
-          status: "ACTIVE",
+          status: PrismaUserStatus.ACTIVE,
           tenantId: admin.tenantId,
         },
       });

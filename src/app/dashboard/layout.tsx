@@ -77,66 +77,68 @@ export default async function DashboardLayout({
         </div>
       </header>
       <main className="relative mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[260px_1fr] xl:grid-cols-[300px_1fr]">
-          <DashboardSidebar
-            title="Dashboard"
-            subtitle="Your personalized workspace."
-            items={[
-              {
-                label: "Overview",
-                description: "Manage your progress and tasks.",
-                href: "/dashboard",
-                icon: LayoutDashboard,
-              },
-              {
-                label: "Insights & Guidance",
-                description: "Get tips and recommendations.",
-                href: "/dashboard#insights-guidance",
-                icon: Sparkles,
-              },
-              {
-                label: "Courses",
-                description: "Browse courses, view assigned tracks, and enroll.",
-                href: buildDashboardCoursesUrl(),
-                icon: GraduationCap,
-              },
-              {
-                label: "Resumes",
-                description: "View, download, or share your resumes.",
-                href: "/dashboard/resumes",
-                icon: Sparkles,
-              },
-              {
-                label: "Jobs",
-                description: "Find job posts and apply quickly.",
-                href: "/dashboard/jobs",
-                icon: Briefcase,
-              },
-              {
-                label: "Chat",
-                description: "Message with tutors and peers.",
-                href: "/dashboard/chat",
-                icon: MessageCircle,
-              },
-              {
-                label: "Profile",
-                description: "View and edit your personal profile.",
-                href: "/dashboard/profile",
-                icon: User,
-              },
-            ]}
-            footer={
-              <>
-                <p className="font-medium text-slate-900">Need help?</p>
-                <p className="text-sm text-slate-600">Visit the community forum to get answers quickly.</p>
-                <Link href="/forum" className="mt-2 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700">
-                  Go to Forum →
-                </Link>
-              </>
-            }
-          />
+        <div className="grid gap-8 lg:grid-cols-[260px_1fr] xl:grid-cols-[300px_1fr] h-[calc(100vh-120px)]">
+          <div className="sticky top-0 h-fit">
+            <DashboardSidebar
+              title="Dashboard"
+              subtitle="Your personalized workspace."
+              items={[
+                {
+                  label: "Overview",
+                  description: "Manage your progress and tasks.",
+                  href: "/dashboard",
+                  icon: LayoutDashboard,
+                },
+                {
+                  label: "Insights & Guidance",
+                  description: "Get tips and recommendations.",
+                  href: "/dashboard#insights-guidance",
+                  icon: Sparkles,
+                },
+                {
+                  label: "Courses",
+                  description: "Browse courses, view assigned tracks, and enroll.",
+                  href: buildDashboardCoursesUrl(),
+                  icon: GraduationCap,
+                },
+                {
+                  label: "Resumes",
+                  description: "View, download, or share your resumes.",
+                  href: "/dashboard/resumes",
+                  icon: Sparkles,
+                },
+                {
+                  label: "Jobs",
+                  description: "Find job posts and apply quickly.",
+                  href: "/dashboard/jobs",
+                  icon: Briefcase,
+                },
+                {
+                  label: "Chat",
+                  description: "Message with tutors and peers.",
+                  href: "/dashboard/chat",
+                  icon: MessageCircle,
+                },
+                {
+                  label: "Profile",
+                  description: "View and edit your personal profile.",
+                  href: "/dashboard/profile",
+                  icon: User,
+                },
+              ]}
+              footer={
+                <>
+                  <p className="font-medium text-slate-900">Need help?</p>
+                  <p className="text-sm text-slate-600">Visit the community forum to get answers quickly.</p>
+                  <Link href="/forum" className="mt-2 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700">
+                    Go to Forum →
+                  </Link>
+                </>
+              }
+            />
+          </div>
           <CurrentUserProvider userId={session.sub}>
-            <div>{children}</div>
+            <div className="overflow-y-auto pr-4">{children}</div>
           </CurrentUserProvider>
         </div>
       </main>
