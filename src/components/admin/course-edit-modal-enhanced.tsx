@@ -228,6 +228,26 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
   // Add sections/modules state with proper typing
   const [sections, setSections] = useState<CourseSection[]>(course?.draftStructure?.sections || []);
   const [modules, setModules] = useState<CourseModule[]>(course?.draftStructure?.modules || []);
+  
+  // Exam and certificate state management
+  const [exams, setExams] = useState<SectionExam[]>([]);
+  const [certificate, setCertificate] = useState<CourseCertificate>({
+    id: `cert_${Date.now()}`,
+    templateId: 'default',
+    isEnabled: false,
+    autoGenerate: true,
+    completionCriteria: {
+      requireAllSections: true,
+      requireAllExams: true,
+      minimumScore: 70,
+      minimumProgress: 100
+    },
+    settings: {
+      includeInstructorSignature: true,
+      includeCertificateId: true,
+      validityPeriod: 12
+    }
+  });
 
   // Update form data when course changes
   useEffect(() => {
@@ -252,28 +272,6 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
       const draftStructure = course.draftStructure || {};
       setSections((draftStructure.sections || []) as CourseSection[]);
       setModules((draftStructure.modules || []) as CourseModule[]);
-      
-      // Exam state management
-      const [exams, setExams] = useState<SectionExam[]>([]);
-      
-      // Certificate state management
-      const [certificate, setCertificate] = useState<CourseCertificate>({
-        id: `cert_${Date.now()}`,
-        templateId: 'default',
-        isEnabled: false,
-        autoGenerate: true,
-        completionCriteria: {
-          requireAllSections: true,
-          requireAllExams: true,
-          minimumScore: 70,
-          minimumProgress: 100
-        },
-        settings: {
-          includeInstructorSignature: true,
-          includeCertificateId: true,
-          validityPeriod: 12
-        }
-      });
     }
   }, [course]);
 
@@ -527,7 +525,7 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
               handleResourceFileUpload={handleResourceFileUpload}
             />
           )}
-          {currentStep === 3 && (
+          {currentStep === 4 && (
             <ExamConfigurationStep 
               sections={sections}
               setSections={setSections}
