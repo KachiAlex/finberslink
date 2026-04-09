@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAdminOrSuperAdmin, requireAuth, getSessionUser } from '@/lib/auth';
+import { requireAuth, requireRole, getSessionUser } from '@/lib/auth';
 import { z } from 'zod';
 
 // Validation schema for course creation
@@ -40,9 +40,9 @@ const createCourseSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // Require admin authentication
+    // Require admin authentication (tenant admin only)
     const session = requireAuth(request);
-    requireAdminOrSuperAdmin(session);
+    requireRole(session, 'ADMIN');
     const adminUser = await getSessionUser(session);
 
     const body = await request.json();
@@ -137,9 +137,9 @@ export async function POST(request: NextRequest) {
 // GET endpoint for listing courses (already exists in debug, but adding a proper one)
 export async function GET(request: NextRequest) {
   try {
-    // Require admin authentication
+    // Require admin authentication (tenant admin only)
     const session = requireAuth(request);
-    requireAdminOrSuperAdmin(session);
+    requireRole(session, 'ADMIN');
     const adminUser = await getSessionUser(session);
 
     const courses = await prisma.course.findMany({
