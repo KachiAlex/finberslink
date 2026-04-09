@@ -1,59 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { listUserNotifications, markAllNotificationsAsRead } from "@/features/notifications/service";
-import { verifyToken } from "@/lib/auth/jwt";
+import { z } from 'zod';
+import { requireAuth } from '@/lib/auth/guards';
+import { NotificationService } from '@/features/resume/notification-service';
 
+const NotificationsSchema = z.object({
+  limit: z.number().int().positive().max(100).optional().default(50),
+  offset: z.number().int().nonnegative().optional().default(0),
+});
+
+/**
+ * GET /api/notifications
+ * Get notifications for the current user
+ */
 export async function GET(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get("access_token")?.value;
-    if (!accessToken) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const session = requireAuth(request);
 
-    const user = verifyToken(accessToken);
-    const notifications = await listUserNotifications(user.sub);
+    // Parse query parameters
+    const searchParams = request.nextUrl.searchParams;
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
-    return NextResponse.json({ notifications });
-  } catch (error) {
-    console.error("Notifications fetch error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch notifications" },
-      { status: 500 }
+    const validated = NotificationsSchema.parse({ limit, offset });
+
+    // Get notifications
+    const { notifications, unreadCount } = await NotificationService.getNotifications(
+      session.userId,
+      validated.limit,
+      validated.offset
     );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const accessToken = request.cookies.get("access_token")?.value;
-    if (!accessToken) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const user = verifyToken(accessToken);
-    const body = await request.json();
-
-    if (body.action === "markAllRead") {
-      await markAllNotificationsAsRead(user.sub);
-      return NextResponse.json(
-        { message: "All notifications marked as read" },
-        { status: 200 }
-      );
-    }
 
     return NextResponse.json(
-      { error: "Invalid action" },
-      { status: 400 }
+      {
+        notifications,
+        unreadCount,
+        limit: validated.limit,
+        offset: validated.offset,
+      },
+      { status: 200 }
     );
   } catch (error) {
-    console.error("Notifications action error:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid input', issues: error.issues },
+        { status: 400 }
+      );
+    }
+    console.error('Error retrieving notifications:', error);
     return NextResponse.json(
-      { error: "Failed to process notification action" },
+      { error: 'Failed to retrieve notifications' },
       { status: 500 }
     );
   }

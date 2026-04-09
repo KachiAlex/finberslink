@@ -177,14 +177,14 @@ const LESSON_FORMATS = ["VIDEO", "READING", "QUIZ", "ASSIGNMENT", "PROJECT"] as 
 const RESOURCE_TYPES = ["PDF", "VIDEO", "IMAGE", "DOCUMENT", "LINK"] as const;
 
 const STEPS = [
-  { id: 0, title: "Basic Info", icon: "BookOpen" },
-  { id: 1, title: "Course Structure", icon: "Layers3" },
-  { id: 2, title: "Curriculum", icon: "BookOpen" },
-  { id: 3, title: "Resources", icon: "FileText" },
-  { id: 4, title: "Exam Configuration", icon: "Target" },
-  { id: 5, title: "Certificate", icon: "Award" },
-  { id: 6, title: "Settings", icon: "Users" },
-  { id: 7, title: "Review", icon: "CheckCircle2" },
+  { id: 0, title: "Basic Info", icon: BookOpen },
+  { id: 1, title: "Course Structure", icon: Layers3 },
+  { id: 2, title: "Curriculum", icon: BookOpen },
+  { id: 3, title: "Resources", icon: FileText },
+  { id: 4, title: "Exam Configuration", icon: Target },
+  { id: 5, title: "Certificate", icon: Award },
+  { id: 6, title: "Settings", icon: Users },
+  { id: 7, title: "Review", icon: CheckCircle2 },
 ];
 
 const ICONS = {
@@ -464,7 +464,7 @@ export const CourseEditModalEnhanced: React.FC<CourseEditModalEnhancedProps> = (
             <Progress value={progress} className="h-2" />
             <div className="flex justify-between">
               {STEPS.map((step, index) => {
-                const IconComponent = ICONS[step.icon as keyof typeof ICONS];
+                const IconComponent = ICONS[step.icon];
                 const isCompleted = index < currentStep;
                 const isCurrent = index === currentStep;
                 return (

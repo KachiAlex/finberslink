@@ -118,7 +118,7 @@ This implementation plan breaks down the Resume Completion Feature into discrete
   - Implement share link extension functionality
   - _Requirements: 3.3, 3.4, 3.6, 3.7_
 
-- [-] 16. Implement share link management endpoints
+- [x] 16. Implement share link management endpoints
   - Create POST /api/resumes/{resumeId}/share endpoint
   - Create GET /api/resumes/{resumeId}/share-links endpoint
   - Create PATCH /api/share-links/{shareToken}/extend endpoint
@@ -126,7 +126,7 @@ This implementation plan breaks down the Resume Completion Feature into discrete
   - Add request validation and error handling
   - _Requirements: 2.1, 2.8, 3.1, 3.6, 3.7_
 
-- [ ] 17. Implement public resume view endpoint
+- [x] 17. Implement public resume view endpoint
   - Create GET /api/resumes/{resumeId}/view/{shareToken} endpoint (public, no auth)
   - Implement share token validation before rendering
   - Add view recording trigger (async)
@@ -189,7 +189,7 @@ This implementation plan breaks down the Resume Completion Feature into discrete
   - Implement cleanup job for expired archived versions
   - _Requirements: 4.7, 4.8_
 
-- [ ] 25. Implement versioning API endpoints
+- [x] 25. Implement versioning API endpoints
   - Create GET /api/resumes/{resumeId}/versions endpoint
   - Create POST /api/resumes/{resumeId}/versions/{versionId}/restore endpoint
   - Add error handling for version not found and restoration failures
@@ -239,7 +239,7 @@ This implementation plan breaks down the Resume Completion Feature into discrete
   - Add automatic aggregation trigger when records exceed 10,000
   - _Requirements: 6.9_
 
-- [ ] 32. Implement analytics API endpoints
+- [x] 32. Implement analytics API endpoints
   - Create GET /api/resumes/{resumeId}/analytics endpoint
   - Create GET /api/resumes/{resumeId}/analytics/viewers endpoint with pagination
   - Add filtering and sorting options
@@ -298,7 +298,7 @@ This implementation plan breaks down the Resume Completion Feature into discrete
   - Include viewer information and analytics link
   - _Requirements: 10.4, 10.8_
 
-- [ ] 41. Implement notification API endpoints
+- [x] 41. Implement notification API endpoints
   - Create GET /api/notifications endpoint with pagination
   - Create PATCH /api/notifications/{notificationId}/read endpoint
   - Create PATCH /api/notifications/preferences endpoint
