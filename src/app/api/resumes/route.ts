@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getUserResumes } from "@/features/resume/service";
+import { listUserResumes } from "@/features/resume/service";
 import { requireAuth } from "@/lib/auth/guards";
 import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 
@@ -15,7 +15,7 @@ const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
 export const GET = rateLimitMiddleware(async (request: NextRequest) => {
   try {
     const session = requireAuth(request);
-    const resumes = await getUserResumes(session.user.id);
+    const resumes = await listUserResumes(session.user.id);
     
     return NextResponse.json({ resumes }, { status: 200 });
   } catch (error) {
