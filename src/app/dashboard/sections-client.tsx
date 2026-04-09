@@ -10,8 +10,6 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { GlassCardError } from "@/components/ui/glass-card-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { JobBrowserButton } from "@/components/jobs/job-browser-button";
-import { DashboardCoursesTab } from "@/components/dashboard/dashboard-courses-tab";
-import { EnhancedCoursesTab } from "@/components/dashboard/enhanced-courses-tab";
 import { ImportResumeModal } from "@/components/resume/import-resume-modal";
 
 interface EnrollmentSection {
@@ -897,23 +895,6 @@ export function DashboardSectionsClient({
       {/* INSIGHTS & GUIDANCE SECTION */}
       <div id="insights-guidance" className="scroll-mt-28">
         {renderInsightsTab()}
-      </div>
-
-      {/* COURSES SECTION */}
-      <div>
-        <EnhancedCoursesTab 
-          courses={
-            data?.enrollments.map((enrollment) => ({
-              id: enrollment.id,
-              title: enrollment.course.title,
-              slug: enrollment.course.slug,
-              level: enrollment.course.level,
-              tagline: enrollment.course.tagline,
-              progress: enrollment.progressPercentage,
-            })) ?? []
-          } 
-          loading={loading} 
-        />
       </div>
 
       {/* RESUMES SECTION */}

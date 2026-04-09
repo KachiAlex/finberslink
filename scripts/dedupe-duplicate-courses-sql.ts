@@ -36,7 +36,7 @@ async function main() {
       const keep = arr[0];
       const toArchive = arr.slice(1);
 
-      console.log(`Found ${arr.length} duplicates for instructor ${keep.instructorid} title="${keep.title}". Keeping ${keep.id}, archiving ${toArchive.length}`);
+      console.log(`Found ${arr.length} duplicates for instructor ${keep.instructorId} title="${keep.title}". Keeping ${keep.id}, archiving ${toArchive.length}`);
 
       for (const dup of toArchive) {
         const newSlug = `${dup.slug}-duplicate-${dup.id}`.slice(0, 150);

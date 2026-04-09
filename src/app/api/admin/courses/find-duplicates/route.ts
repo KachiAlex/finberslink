@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     const duplicates = [];
     const seen = new Map<string, Course>();
 
-    for (const course of uniqueCourses) {
+    for (const course of uniqueCourses as Course[]) {
       // Create a key based on title and instructor (case-insensitive)
       const key = `${course.title.toLowerCase().trim()}-${course.instructorId}`;
       
@@ -102,8 +102,8 @@ export async function GET(request: NextRequest) {
     const similarTitles = [];
     for (let i = 0; i < uniqueCourses.length; i++) {
       for (let j = i + 1; j < uniqueCourses.length; j++) {
-        const course1 = uniqueCourses[i];
-        const course2 = uniqueCourses[j];
+        const course1 = uniqueCourses[i] as Course;
+        const course2 = uniqueCourses[j] as Course;
         
         // Skip if same instructor (already caught above)
         if (course1.instructorId === course2.instructorId) continue;

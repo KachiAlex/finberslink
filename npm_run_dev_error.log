@@ -1,0 +1,15 @@
+npm warn config optional Use `--omit=optional` to exclude optional dependencies, or
+npm warn config `--include=optional` to include them.
+npm warn config
+npm warn config       Default value does install optional deps unless otherwise omitted.
+⚠ Port 3000 is in use by process 21856, using available port 3001 instead.
+⚠ Invalid next.config.js options detected: 
+⚠     Unrecognized key(s) in object: 'swcMinify'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+⚠ Attempted to load D:\Finbers-Link\node_modules\next\next-swc-fallback\@next\swc-win32-x64-msvc\next-swc.win32-x64-msvc.node, but it was not installed
+⚠ Attempted to load @next/swc-win32-x64-msvc, but it was not installed
+⚠ Attempted to load @next/swc-wasm-nodejs, but it was not installed
+⚠ Attempted to load @next/swc-wasm-web, but it was not installed
+⨯ Failed to load SWC binary for win32/x64, see more info here: https://nextjs.org/docs/messages/failed-loading-swc
+Error: Failed to load SWC binary for win32/x64, see more info here: https://nextjs.org/docs/messages/failed-loading-swc
+    at ignore-listed frames

@@ -9,7 +9,7 @@ export default async function AdminCoursesPage() {
   const admin = await requireAdminUser();
   
   return (
-    <AdminShell>
+    <AdminShell title="Courses">
       <AdminCoursesPageClient />
     </AdminShell>
   );

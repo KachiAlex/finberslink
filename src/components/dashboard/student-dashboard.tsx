@@ -364,12 +364,12 @@ const AnimatedBanner = () => {
 
         <div className="flex flex-wrap gap-3">
           <RippleButton asChild className="bg-slate-800 text-white hover:bg-slate-700 shadow-lg hover:shadow-xl transition-all px-5 py-2.5 rounded-full font-medium text-sm">
-            <Link href="/dashboard/courses" className="gap-2 flex items-center">
-              Continue learning <ArrowRight className="h-4 w-4" />
+            <Link href="/courses" className="gap-2 flex items-center">
+              Browse courses <ArrowRight className="h-4 w-4" />
             </Link>
           </RippleButton>
           <Button asChild variant="secondary" className="rounded-full text-slate-700 border-slate-300 hover:bg-slate-100">
-            <Link href="/dashboard/courses">Explore beginner tracks</Link>
+            <Link href="/courses">Explore beginner tracks</Link>
           </Button>
           <Button asChild variant="secondary" className="rounded-full text-slate-700 border-slate-300 hover:bg-slate-100">
             <Link href="/dashboard/jobs">Review applications</Link>

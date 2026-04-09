@@ -31,9 +31,6 @@ const nextConfig = {
   // Trailing slash
   trailingSlash: false,
 
-  // Swc minification
-  swcMinify: true,
-
   // Experimental features
   experimental: {
     // Optimized package imports
@@ -43,6 +40,9 @@ const nextConfig = {
       'lucide-react',
     ],
   },
+
+  // Turbopack configuration (empty to avoid webpack conflict)
+  turbopack: {},
 
   // Headers for security and performance
   async headers() {
@@ -119,22 +119,10 @@ const nextConfig = {
         splitChunks: {
           chunks: 'all',
           cacheGroups: {
-            default: false,
-            vendors: false,
-            // Vendor chunk
             vendor: {
-              filename: 'chunks/vendor.js',
-              test: /node_modules/,
-              priority: 10,
-              reuseExistingChunk: true,
-              enforce: true,
-            },
-            // Common chunk
-            common: {
-              minChunks: 2,
-              priority: 5,
-              reuseExistingChunk: true,
-              filename: 'chunks/common.js',
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
             },
           },
         },

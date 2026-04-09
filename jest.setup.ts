@@ -106,6 +106,5 @@ if (typeof global.Response === 'undefined') {
 if (typeof (global as any).TextEncoder === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { TextEncoder } = require('util');
-  // @ts-expect-error assign for tests
   global.TextEncoder = TextEncoder;
 }
