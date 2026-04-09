@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, Users, Compass, ArrowRight } from "lucide-react";
@@ -113,6 +113,42 @@ interface DashboardCoursesTabProps {
 }
 
 export function DashboardCoursesTab({ 
+  assigned = [],
+  initialCatalog = [],
+  initialPagination = {},
+  initialFilters = {},
+  loading = false 
+}: DashboardCoursesTabProps) {
+  return (
+    <Suspense fallback={<DashboardCoursesTabSkeleton />}>
+      <DashboardCoursesTabContent
+        assigned={assigned}
+        initialCatalog={initialCatalog}
+        initialPagination={initialPagination}
+        initialFilters={initialFilters}
+        loading={loading}
+      />
+    </Suspense>
+  );
+}
+
+function DashboardCoursesTabSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-slate-200 rounded w-1/3" />
+        <div className="h-12 bg-slate-200 rounded" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-64 bg-slate-200 rounded-lg" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DashboardCoursesTabContent({ 
   assigned = [],
   initialCatalog = [],
   initialPagination = {},
