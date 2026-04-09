@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { EnrollmentStatus } from "@prisma/client";
 
 export const runtime = "nodejs";
 
@@ -82,7 +83,7 @@ export const POST = async (request: NextRequest) => {
       data: {
         userId: targetUserId,
         courseId: courseId,
-        status: "ACTIVE",
+        status: EnrollmentStatus.ACTIVE,
         progressPercentage: 0,
         lastAccessedAt: new Date(),
       },

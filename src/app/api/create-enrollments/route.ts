@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
+import { EnrollmentStatus } from "@prisma/client";
 
 export const runtime = "nodejs";
 
@@ -44,7 +45,7 @@ export const POST = async (request: NextRequest) => {
           data: {
             userId: session.sub,
             courseId: course.id,
-            status: "ACTIVE",
+            status: EnrollmentStatus.ACTIVE,
             progressPercentage: Math.floor(Math.random() * 100), // Random progress 0-100
             lastAccessedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000), // Random last access within 7 days
             totalStudyTime: Math.floor(Math.random() * 1000), // Random study time in minutes

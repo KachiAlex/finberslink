@@ -1,5 +1,6 @@
 import { ProgressTrackingService } from "./progress-tracking-service";
 import { prisma } from "@/lib/prisma";
+import { EnrollmentStatus } from "@prisma/client";
 
 export class ProgressService {
   /**
@@ -18,7 +19,7 @@ export class ProgressService {
       create: {
         userId,
         courseId,
-        status: "ACTIVE",
+        status: EnrollmentStatus.ACTIVE,
       },
       include: {
         course: {

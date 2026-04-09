@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { AuthError, requireAuth } from "@/lib/auth/guards";
 import { invalidateDashboardInsights } from "@/features/dashboard/service";
+import { EnrollmentStatus } from "@prisma/client";
 
 const AssignmentActionSchema = z.object({
   action: z.enum(["accept", "decline"]),
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest, context: any) {
       await prisma.enrollment.update({
         where: { id: enrollment.id },
         data: {
-          status: "ACTIVE",
+          status: EnrollmentStatus.ACTIVE,
         },
       });
     } else {

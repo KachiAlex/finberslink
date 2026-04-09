@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';
+import { UserStatus } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   try {
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
     const tenantMembers = await prisma.user.findMany({
       where: {
         tenantId: user.tenantId,
-        status: "ACTIVE",
+        status: UserStatus.ACTIVE,
         id: { not: currentUser.sub } // Exclude current user
       },
       select: {

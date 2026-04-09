@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
+import { EnrollmentStatus } from "@prisma/client";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,7 @@ export const GET = async (request: NextRequest) => {
     const enrollments = await prisma.enrollment.findMany({
       where: {
         userId: session.sub,
-        status: "ACTIVE",
+        status: EnrollmentStatus.ACTIVE,
       },
       select: {
         id: true,

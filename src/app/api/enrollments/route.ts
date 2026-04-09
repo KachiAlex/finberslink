@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
 import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
+import { EnrollmentStatus } from "@prisma/client";
 
 export const runtime = "nodejs";
 
@@ -68,7 +69,7 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
       data: {
         userId: session.sub,
         courseId: courseId,
-        status: "ACTIVE",
+        status: EnrollmentStatus.ACTIVE,
         progressPercentage: 0,
         lastAccessedAt: new Date(),
       },
