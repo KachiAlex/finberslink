@@ -51,6 +51,13 @@ export function CourseSwitchTabs({
   onTabChange, 
   tabCounts 
 }: CourseSwitchTabsProps) {
+  const handleKeyDown = (e: React.KeyboardEvent, tabId: CourseTab) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onTabChange(tabId);
+    }
+  };
+
   const getTabColor = (color: string, isActive: boolean) => {
     const colors = {
       green: isActive 
@@ -87,10 +94,13 @@ export function CourseSwitchTabs({
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
+              onKeyDown={(e) => handleKeyDown(e, tab.id)}
               className={cn(
-                "relative flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200",
+                "relative flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2",
                 getTabColor(tab.color, isActive)
               )}
+              aria-selected={isActive}
+              role="tab"
             >
               <Icon className={cn("h-5 w-5", getIconColor(tab.color, isActive))} />
               

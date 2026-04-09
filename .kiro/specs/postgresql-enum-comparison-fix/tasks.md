@@ -49,9 +49,9 @@
 
 ## Phase 3: Implementation - Apply the Fix
 
-- [-] 3. Fix PostgreSQL enum comparison errors across all affected files
+- [x] 3. Fix PostgreSQL enum comparison errors across all affected files
 
-  - [ ] 3.1 Fix src/app/api/dashboard/courses/learning-pathway/route.ts
+  - [x] 3.1 Fix src/app/api/dashboard/courses/learning-pathway/route.ts
     - Add import: `import { EnrollmentStatus } from "@prisma/client";`
     - Replace `status: "ACTIVE"` with `status: EnrollmentStatus.ACTIVE`
     - Verify all enrollment status comparisons use proper enum references
@@ -60,7 +60,7 @@
     - _Preservation: Non-enum queries and other filters continue to work_
     - _Requirements: 2.1, 2.2, 3.1, 3.2_
 
-  - [ ] 3.2 Fix src/features/dashboard/service.ts
+  - [x] 3.2 Fix src/features/dashboard/service.ts
     - Add import: `import { EnrollmentStatus } from "@prisma/client";`
     - Replace all `status: "ACTIVE"` with `status: EnrollmentStatus.ACTIVE`
     - Replace all `status: "PENDING_ACCEPTANCE"` with `status: EnrollmentStatus.PENDING_ACCEPTANCE`
@@ -71,7 +71,7 @@
     - _Preservation: Non-enum queries and other filters continue to work_
     - _Requirements: 2.1, 2.2, 3.1, 3.2_
 
-  - [ ] 3.3 Fix src/features/admin/service.ts
+  - [x] 3.3 Fix src/features/admin/service.ts
     - Add imports: `import { EnrollmentStatus, UserStatus, InviteStatus } from "@prisma/client";`
     - Replace all `status: 'ACTIVE'` with appropriate enum reference (EnrollmentStatus.ACTIVE, UserStatus.ACTIVE, etc.)
     - Replace all `status: 'SUSPENDED'` with appropriate enum reference (UserStatus.SUSPENDED, etc.)
@@ -92,7 +92,7 @@
     - _Preservation: Non-enum queries and other filters continue to work_
     - _Requirements: 2.1, 2.2, 3.1, 3.2_
 
-  - [ ] 3.5 Fix src/features/superadmin/dashboard.ts
+  - [x] 3.5 Fix src/features/superadmin/dashboard.ts
     - Add imports: `import { TenantStatus, UserStatus } from "@prisma/client";`
     - Replace all `status: "ACTIVE"` with appropriate enum reference (TenantStatus.ACTIVE, UserStatus.ACTIVE, etc.)
     - Replace all `status: "SUSPENDED"` with appropriate enum reference (TenantStatus.SUSPENDED, UserStatus.SUSPENDED, etc.)

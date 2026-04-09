@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, Users, Compass, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -118,7 +119,13 @@ export function DashboardCoursesTab({
   initialFilters = {},
   loading = false 
 }: DashboardCoursesTabProps) {
-  const [activeTab, setActiveTab] = useState<CourseTab>("learning-pathway");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Initialize tab from URL or default to learning-pathway
+  const urlTab = (searchParams.get("tab") as CourseTab) || "learning-pathway";
+  const [activeTab, setActiveTab] = useState<CourseTab>(urlTab);
+  
   const [filters, setFilters] = useState<CourseFilters>({
     search: initialFilters?.search || "",
     category: initialFilters?.category || "",
@@ -288,6 +295,8 @@ export function DashboardCoursesTab({
   // Handle tab change
   const handleTabChange = (tab: CourseTab) => {
     setActiveTab(tab);
+    // Update URL to persist tab selection
+    router.push(`?tab=${tab}`, { scroll: false });
     // Reset filters when switching tabs (except search)
     setFilters(prev => ({
       ...prev,
