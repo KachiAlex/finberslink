@@ -60,6 +60,9 @@ model User {
   directMessages               DirectMessage[]
   directMessageReads           DirectMessageRead[]
   studentAchievements          StudentAchievement[]
+  sentShareLinks               ResumeShareLink[]      @relation("SentShareLinks")
+  resumeNotifications          ResumeNotification[]   @relation("ResumeNotifications")
+  notificationPreferences      NotificationPreference? @relation("NotificationPreferences")
 }
 
 model Profile {
@@ -416,7 +419,12 @@ model Resume {
   experiences         ResumeExperience[]
   projects            ResumeProject[]
   education           ResumeEducation[]
-  interviewSessions  InterviewSession[]
+  interviewSessions   InterviewSession[]
+  shareLinks          ResumeShareLink[]  @relation("ShareLinks")
+  versions            ResumeVersion[]    @relation("Versions")
+  exports             ResumeExport[]     @relation("Exports")
+  views               ResumeView[]       @relation("Views")
+  notifications       ResumeNotification[] @relation("Notifications")
 }
 
 model ResumeExperience {
@@ -1137,4 +1145,108 @@ enum AchievementCategory {
   PERFORMANCE
   SOCIAL
   MILESTONE
+}
+
+// Resume Completion Feature Models
+
+model ResumeShareLink {
+  id                String    @id @default(cuid())
+  resumeId          String
+  shareToken        String    @unique
+  recipientEmail    String?
+  senderId          String
+  createdAt         DateTime  @default(now())
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  viewCount         Int       @default(0)
+  lastViewedAt      DateTime?
+  resume            Resume    @relation("ShareLinks", fields: [resumeId], references: [id], onDelete: Cascade)
+  sender            User      @relation("SentShareLinks", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  @@index([resumeId])
+  @@index([shareToken])
+  @@index([expiresAt])
+}
+
+model ResumeVersion {
+  id                String    @id @default(cuid())
+  resumeId          String
+  versionNumber     Int
+  data              Json      // Complete resume snapshot
+  changeDescription String?
+  createdAt         DateTime  @default(now())
+  createdBy         String
+  archivedAt        DateTime?
+  resume            Resume    @relation("Versions", fields: [resumeId], references: [id], onDelete: Cascade)
+  
+  @@index([resumeId])
+  @@index([createdAt])
+  @@index([resumeId, createdAt])
+}
+
+model ResumeExport {
+  id                String    @id @default(cuid())
+  resumeId          String
+  template          String    // 'Modern', 'Classic', 'Minimal', 'ATS'
+  fileSize          Int
+  downloadCount     Int       @default(0)
+  userAgent         String?
+  ipAddress         String?
+  createdAt         DateTime  @default(now())
+  resume            Resume    @relation("Exports", fields: [resumeId], references: [id], onDelete: Cascade)
+  
+  @@index([resumeId])
+  @@index([createdAt])
+  @@index([resumeId, createdAt])
+}
+
+model ResumeView {
+  id                String    @id @default(cuid())
+  resumeId          String
+  shareToken        String
+  deviceType        String?   // 'mobile', 'tablet', 'desktop'
+  browser           String?
+  operatingSystem   String?
+  country           String?
+  city              String?
+  viewerEmail       String?
+  timeSpentSeconds  Int?
+  createdAt         DateTime  @default(now())
+  resume            Resume    @relation("Views", fields: [resumeId], references: [id], onDelete: Cascade)
+  
+  @@index([resumeId])
+  @@index([shareToken])
+  @@index([createdAt])
+  @@index([resumeId, createdAt])
+}
+
+model ResumeNotification {
+  id                String    @id @default(cuid())
+  userId            String
+  resumeId          String
+  type              String    // 'view', 'download'
+  viewerEmail       String?
+  viewerName        String?
+  aggregatedCount   Int       @default(1)
+  isRead            Boolean   @default(false)
+  emailSent         Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  user              User      @relation("ResumeNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  resume            Resume    @relation("Notifications", fields: [resumeId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([resumeId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+}
+
+model NotificationPreference {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  viewNotifications Boolean   @default(true)
+  downloadNotifications Boolean @default(true)
+  emailNotifications Boolean   @default(true)
+  aggregateViews    Boolean   @default(true)
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation("NotificationPreferences", fields: [userId], references: [id], onDelete: Cascade)
 }

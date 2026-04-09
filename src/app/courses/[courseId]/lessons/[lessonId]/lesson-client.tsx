@@ -111,7 +111,7 @@ export default function LessonPageClient({
               status={progress.status}
               progress={progress.videoProgress || 0}
               timeSpent={progress.timeSpentMinutes || 0}
-              score={progress.completionScore}
+              score={progress.watchTimeSeconds}
             />
           )}
         </div>

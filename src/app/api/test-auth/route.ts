@@ -16,7 +16,6 @@ export const GET = async (request: NextRequest) => {
       data: {
         userId: session.sub,
         role: session.role,
-        email: session.email,
       }
     });
   } catch (error) {

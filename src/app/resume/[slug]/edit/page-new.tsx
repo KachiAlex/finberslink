@@ -658,12 +658,8 @@ export default async function ResumeEditPage({
               </CardHeader>
               <CardContent>
                 <HeadshotUpload
+                  slug={(resume as any).slug}
                   currentHeadshot={(resume as any).headshotUrl}
-                  onUpload={async (url: string) => {
-                    "use server";
-                    await updateResume((resume as any).slug, { headshotUrl: url || null });
-                    revalidatePath(`/resume/${(resume as any).slug}/edit`);
-                  }}
                 />
               </CardContent>
             </Card>

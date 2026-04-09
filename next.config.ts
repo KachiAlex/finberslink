@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   experimental: {
     forceSwcTransforms: false,
   },
@@ -22,7 +19,6 @@ const nextConfig = {
         hostname: "images.pexels.com",
       },
     ],
-    domains: ['images.unsplash.com', 'picsum.photos'],
   },
   env: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,

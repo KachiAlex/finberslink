@@ -69,57 +69,7 @@ export default async function ResumesPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {resumes.map((resume: any) => (
-              <div
-                key={resume.id}
-                className="group relative rounded-lg border border-slate-200 bg-white overflow-hidden hover:shadow-lg transition-all"
-              >
-                <div className="h-40 bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center">
-                  <div className="text-center">
-                    <Edit2 className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                    <p className="text-xs text-slate-500 font-medium">{resume.title || "Untitled Resume"}</p>
-                  </div>
-                </div>
-
-                <div className="p-4">
-                  <h3 className="font-semibold text-slate-900 line-clamp-1">
-                    {resume.title || "Untitled Resume"}
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Updated {new Date(resume.updatedAt).toLocaleDateString()}
-                  </p>
-
-                  <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      asChild
-                    >
-                      <Link href={`/resume/${resume.slug}/edit`}>
-                        <Edit2 className="h-4 w-4 mr-1" />
-                        Edit
-                      </Link>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      asChild
-                    >
-                      <Link href={`/resume/${resume.slug}/preview`}>
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Link>
-                    </Button>
-                    <ExportButton 
-                      resumeId={resume.id} 
-                      resumeTitle={resume.title || "Untitled Resume"}
-                      variant="outline"
-                      size="sm"
-                    />
-                  </div>
-                </div>
-              </div>
+              <ResumeCard key={resume.id} resume={resume} />
             ))}
           </div>
         )}

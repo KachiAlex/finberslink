@@ -843,7 +843,11 @@ export default async function ResumeEditPage({
                 <CardTitle className="text-lg font-semibold text-slate-900">Intro Video (optional)</CardTitle>
               </CardHeader>
               <CardContent>
-                <form className="space-y-4" action={updateResumeAction}>
+                <form className="space-y-4" onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  updateResumeAction(formData);
+                }}>
                   <input type="hidden" name="slug" value={(resume as any).slug} />
                   <div className="space-y-2">
                     <Label htmlFor="introVideoUrl">Video URL</Label>

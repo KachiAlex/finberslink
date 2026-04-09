@@ -1,9 +1,8 @@
 import type { Prisma } from "@prisma/client";
-import { NewsStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
-import { NEWS_STATUSES } from "./constants";
+import { NEWS_STATUSES, type NewsStatus } from "./constants";
 
 const AUTHOR_SELECT = {
   id: true,

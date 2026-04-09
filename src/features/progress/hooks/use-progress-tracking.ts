@@ -35,8 +35,10 @@ export interface CourseProgressData {
     completedLessons: number;
     inProgressLessons: number;
     notStartedLessons: number;
-    totalWatchTime: number;
+    progressPercentage: number;
+    totalStudyTime: number;
     averageTimePerLesson: number;
+    streakDays: number;
     progressVelocity: number;
     estimatedWeeksToComplete: number | null;
   };
@@ -219,7 +221,7 @@ export function useLessonProgress(courseId: string, lessonId: string) {
     }
   }, [courseId, lessonId, sessionStartTime, mutate, stopTracking]);
 
-  const trackEngagement = useCallback((type: "click" | "scroll" | "pause" | "seek" | "download") => {
+  const trackEngagement = useCallback((type: "click" | "scroll" | "pause" | "seek" | "download" | "play") => {
     const metrics: Record<string, number> = {};
     metrics[`${type}s`] = 1;
 

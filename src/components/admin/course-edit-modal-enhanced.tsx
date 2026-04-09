@@ -30,7 +30,8 @@ import {
   Target,
   Video,
   Image as ImageIcon,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Award
 } from "lucide-react";
 import type { CourseApprovalStatus, CourseLevel, LessonFormat, ResourceType } from "@prisma/client";
 
@@ -72,7 +73,7 @@ interface ExamQuestion {
   points: number;
 }
 
-interface CertificateTemplate {
+export interface CertificateTemplate {
   id: string;
   name: string;
   description: string;
@@ -92,7 +93,7 @@ interface CertificateTemplate {
   };
 }
 
-interface CourseCertificate {
+export interface CourseCertificate {
   id: string;
   templateId: string;
   isEnabled: boolean;

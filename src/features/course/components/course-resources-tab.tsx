@@ -82,7 +82,7 @@ export function CourseResourcesTab({ resources, courseId }: CourseResourcesTabPr
     }
     acc[resource.type].push(resource);
     return acc;
-  }, {} as Record<string, typeof allResources>);
+  }, {} as Record<string, Array<typeof allResources[0]>>);
 
   return (
     <div className="space-y-6">
@@ -114,8 +114,10 @@ export function CourseResourcesTab({ resources, courseId }: CourseResourcesTabPr
       </Card>
 
       {/* Resources by Type */}
-      {Object.entries(groupedResources).map(([type, typeResources]) => (
-        <Card key={type} className="border-gray-200 bg-white">
+      {Object.entries(groupedResources).map(([type, typeResources]) => {
+        const resources = typeResources as Array<typeof allResources[0]>;
+        return (
+          <Card key={type} className="border-gray-200 bg-white">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
               {getResourceIcon(type)}
@@ -127,12 +129,12 @@ export function CourseResourcesTab({ resources, courseId }: CourseResourcesTabPr
                  type.charAt(0).toUpperCase() + type.slice(1) + 's'}
               </h3>
               <Badge className={getTypeBadge(type)}>
-                {typeResources.length}
+                {resources.length}
               </Badge>
             </div>
 
             <div className="space-y-3">
-              {typeResources.map((resource) => (
+              {resources.map((resource) => (
                 <div key={resource.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
@@ -175,7 +177,8 @@ export function CourseResourcesTab({ resources, courseId }: CourseResourcesTabPr
             </div>
           </CardContent>
         </Card>
-      ))}
+        );
+      })}
 
       {/* Additional Resources */}
       <Card className="border-gray-200 bg-white">

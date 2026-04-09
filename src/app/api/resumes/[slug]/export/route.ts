@@ -128,7 +128,7 @@ export async function POST(
         headers.set('Content-Disposition', `attachment; filename="${resume.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_resume.pdf"`);
         headers.set('Content-Length', pdfBuffer.length.toString());
         
-        return new Response(pdfBuffer, {
+        return new Response(new Uint8Array(pdfBuffer), {
           status: 200,
           headers,
         });

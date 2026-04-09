@@ -82,7 +82,7 @@ export function LessonList({ courseId, lessons }: LessonListProps) {
                     <h4 className="text-md font-medium text-slate-800 mb-3">Video Lesson</h4>
                     <UniversalVideo
                       url={lesson.videoUrl}
-                      width="100%"
+                      width={100}
                       height={400}
                       controls={true}
                       className="w-full"
@@ -108,7 +108,7 @@ export function LessonList({ courseId, lessons }: LessonListProps) {
                             <PDFViewer
                               url={resource.url}
                               title={resource.title}
-                              width="100%"
+                              width={100}
                               height={300}
                             />
                           ) : (

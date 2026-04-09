@@ -15,7 +15,7 @@ const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
 export const GET = rateLimitMiddleware(async (request: NextRequest) => {
   try {
     const session = requireAuth(request);
-    const resumes = await listUserResumes(session.user.id);
+    const resumes = await listUserResumes(session.sub);
     
     return NextResponse.json({ resumes }, { status: 200 });
   } catch (error) {

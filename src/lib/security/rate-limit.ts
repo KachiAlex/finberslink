@@ -117,7 +117,7 @@ function defaultKeyGenerator(request: NextRequest): string {
  *   maxRequests: 30,         // 30 requests per minute
  * });
  *
- * export const POST = rateLimit(async (request) => {
+ * export const POST = rateLimit(async (request, context) => {
  *   return NextResponse.json({ ... });
  * });
  * ```
@@ -133,9 +133,9 @@ export function createRateLimit(config: RateLimitConfig) {
   } = config;
 
   return function rateLimitMiddleware(
-    handler: (_request: NextRequest) => Promise<NextResponse>
+    handler: (request: NextRequest, context?: any) => Promise<NextResponse>
   ) {
-    return async (request: NextRequest): Promise<NextResponse> => {
+    return async (request: NextRequest, context?: any): Promise<NextResponse> => {
       const key = keyGenerator(request);
       const { count, resetTime } = rateLimitStore.increment(key, windowMs);
 
@@ -158,7 +158,7 @@ export function createRateLimit(config: RateLimitConfig) {
       // Call handler
       let response: NextResponse;
       try {
-        response = await handler(request);
+        response = await handler(request, context);
       } catch (error) {
         // On error, don't consume rate limit if configured
         if (skipFailedRequests) {

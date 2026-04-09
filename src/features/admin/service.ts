@@ -1,6 +1,6 @@
 // Removed import of randomBytes; using fallback token generator
 import { Prisma } from "@prisma/client";
-import type {
+import {
   CourseApprovalStatus,
   CourseLevel,
   EnrollmentStatus,

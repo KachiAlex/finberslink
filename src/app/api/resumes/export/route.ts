@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import {
-  convertResumTtoPlainText,
+  convertResumeToPlainText,
   exportResumeAsJSON,
   shareResume,
   publishResumeProfile,
+  generateResumePDF,
+  generateATSExport,
+  getExportHistory,
 } from "@/features/resume/export-service";
 import { requireAuth } from "@/lib/auth/guards";
 import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
@@ -15,7 +18,9 @@ export const runtime = "nodejs";
 
 const ExportSchema = z.object({
   resumeId: z.string().min(1),
-  format: z.enum(["json", "plaintext", "pdf"]),
+  format: z.enum(["json", "plaintext", "pdf", "ats"]),
+  template: z.enum(["modern", "classic", "minimal"]).optional().default("modern"),
+  includePhoto: z.boolean().optional().default(false),
 });
 
 const ShareSchema = z.object({
@@ -40,23 +45,34 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
     const body = await request.json();
     const validated = ExportSchema.parse(body);
 
+    // Get user agent and IP for analytics
+    const userAgent = request.headers.get("user-agent") || undefined;
+    const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined;
+
     if (validated.format === "json") {
       const result = await exportResumeAsJSON(validated.resumeId);
       return NextResponse.json(result, { status: 200 });
     } else if (validated.format === "plaintext") {
-      const result = await convertResumTtoPlainText(validated.resumeId);
+      const result = await convertResumeToPlainText(validated.resumeId);
       return NextResponse.json({ text: result }, { status: 200 });
+    } else if (validated.format === "ats") {
+      const result = await generateATSExport(validated.resumeId);
+      return NextResponse.json({ text: result, format: "text/plain" }, { status: 200 });
     } else if (validated.format === "pdf") {
-      // PDF generation would require additional libraries (e.g., jsPDF, puppeteer)
-      // For now, return a structure for implementation
-      return NextResponse.json(
-        {
-          message: "PDF export functionality coming soon",
-          timestamp: new Date().toISOString(),
-          resumeId: validated.resumeId,
-        },
-        { status: 200 }
+      const { buffer, filename, fileSize } = await generateResumePDF(
+        validated.resumeId,
+        validated.template as "modern" | "classic" | "minimal",
+        { includePhoto: validated.includePhoto, userAgent, ipAddress }
       );
+
+      return new NextResponse(buffer, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+          "Content-Length": fileSize.toString(),
+        },
+      });
     }
 
     return NextResponse.json({ error: "Invalid format" }, { status: 400 });
