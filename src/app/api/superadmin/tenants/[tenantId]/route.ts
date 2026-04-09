@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { UserStatus } from "@prisma/client";
+import { UserStatus, TenantStatus } from "@prisma/client";
 
 import {
   archiveTenant,
@@ -161,7 +161,7 @@ export async function POST(
         lastName: payload.lastName ?? undefined,
         passwordHash,
         role: "ADMIN",
-        status: "ACTIVE",
+        status: UserStatus.ACTIVE,
         tenantId,
       },
       create: {
@@ -170,7 +170,7 @@ export async function POST(
         lastName: payload.lastName ?? "",
         passwordHash,
         role: "ADMIN",
-        status: "ACTIVE",
+        status: UserStatus.ACTIVE,
         tenantId,
       },
     });
