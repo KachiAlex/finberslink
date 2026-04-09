@@ -172,7 +172,7 @@ export async function getDashboardSummary(userId: string) {
     resumeViewsCount,
   ] = await Promise.all([
     safeCount("enrollments", () => prisma.enrollment.count({ where: { userId } })),
-    safeCount("completed enrollments", () => prisma.enrollment.count({ where: { userId, status: "COMPLETED" } })),
+    safeCount("completed enrollments", () => prisma.enrollment.count({ where: { userId, status: EnrollmentStatus.COMPLETED } })),
     safeCount("resumes", () => prisma.resume.count({ where: { userId } })),
     safeCount("job applications", () => prisma.jobApplication.count({ where: { userId } })),
     safeCount("volunteer applications", () => prisma.volunteerApplication.count({ where: { userId } })),

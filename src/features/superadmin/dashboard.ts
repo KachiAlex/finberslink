@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import { TenantStatus } from "@prisma/client";
 
 export async function getSuperAdminOverview() {
   try {
     const [totalTenants, activeTenants, suspendedTenants, totalUsers, recentTenants, renewals, usageSnapshots] =
       await Promise.all([
         prisma.tenant.count(),
-      prisma.tenant.count({ where: { status: "ACTIVE" } }),
-      prisma.tenant.count({ where: { status: "SUSPENDED" } }),
+      prisma.tenant.count({ where: { status: TenantStatus.ACTIVE } }),
+      prisma.tenant.count({ where: { status: TenantStatus.SUSPENDED } }),
       prisma.user.count(),
       prisma.tenant.findMany({
         take: 4,

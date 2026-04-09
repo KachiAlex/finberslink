@@ -1,5 +1,6 @@
 import { listStudentEnrollmentsWithCourses } from "@/features/dashboard/service";
 import { prisma } from "@/lib/prisma";
+import { UserStatus, EnrollmentStatus } from "@prisma/client";
 
 export interface DashboardInsight {
   title: string;
@@ -17,7 +18,7 @@ export async function getStudentDashboardInsights(userId: string) {
   try {
     const [enrollments, recentEnrollments] = await Promise.all([
       prisma.enrollment.count({ where: { userId } }),
-      listStudentEnrollmentsWithCourses({ userId, limit: 5, statuses: ["ACTIVE"] }),
+      listStudentEnrollmentsWithCourses({ userId, limit: 5, statuses: [EnrollmentStatus.ACTIVE] }),
     ]);
 
     const totalProgress =
@@ -154,7 +155,7 @@ export async function getAdminDashboardInsights() {
   try {
     const [totalUsers, activeUsers, totalCourses, totalJobs] = await Promise.all([
       prisma.user.count(),
-      prisma.user.count({ where: { status: "ACTIVE" } }),
+      prisma.user.count({ where: { status: UserStatus.ACTIVE } }),
       prisma.course.count({ where: { lessons: { some: {} } } }),
       prisma.jobOpportunity.count({ where: { isActive: true } }),
     ]);

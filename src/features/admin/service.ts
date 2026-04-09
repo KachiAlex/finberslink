@@ -3,12 +3,14 @@ import { Prisma } from "@prisma/client";
 import type {
   CourseApprovalStatus,
   CourseLevel,
+  EnrollmentStatus,
   InviteStatus,
   JobApplicationStatus,
   JobType,
   NotificationType,
   RemoteOption,
   Role,
+  TutorApprovalStatus,
   UserStatus,
 } from "@prisma/client";
 
@@ -214,8 +216,8 @@ export async function getSystemSnapshot(admin?: AdminUserWithTenant) {
       },
     }),
     prisma.user.count(),
-    prisma.user.count({ where: { status: 'INVITED' } }),
-    prisma.user.count({ where: { status: 'SUSPENDED' } }),
+    prisma.user.count({ where: { status: UserStatus.INVITED } }),
+    prisma.user.count({ where: { status: UserStatus.SUSPENDED } }),
     prisma.jobOpportunity.findMany({
       orderBy: { updatedAt: 'desc' },
       take: 5,
@@ -832,7 +834,7 @@ export async function assignCourseToStudent(
     if (existingEnrollment) {
       return db.enrollment.update({
         where: { id: existingEnrollment.id },
-        data: { status: 'ACTIVE' },
+        data: { status: EnrollmentStatus.ACTIVE },
       });
     }
 
@@ -840,7 +842,7 @@ export async function assignCourseToStudent(
       data: {
         userId,
         courseId,
-        status: 'ACTIVE',
+        status: EnrollmentStatus.ACTIVE,
       },
     });
   };
@@ -965,7 +967,7 @@ export async function unassignCourseFromStudent(
       where: {
         userId: input.studentId,
         courseId: input.courseId,
-        status: 'ACTIVE',
+        status: EnrollmentStatus.ACTIVE,
       },
       orderBy: { createdAt: 'desc' },
       select: { id: true },
@@ -1034,7 +1036,7 @@ export async function listRecentCourseAssignmentEvents(
   const enrollmentFallbackEvents = async () => {
     const total = await prisma.enrollment.count({
       where: {
-        status: { in: ['ACTIVE', 'WITHDRAWN'] },
+        status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.WITHDRAWN] },
         course: tenantCourseWhere,
         user: tenantStudentWhere,
       },
@@ -1042,7 +1044,7 @@ export async function listRecentCourseAssignmentEvents(
 
     const enrollments = await prisma.enrollment.findMany({
       where: {
-        status: { in: ['ACTIVE', 'WITHDRAWN'] },
+        status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.WITHDRAWN] },
         course: tenantCourseWhere,
         user: tenantStudentWhere,
       },
@@ -1205,7 +1207,7 @@ export async function listStudentAssignedCourseIds(
   const enrollments = await prisma.enrollment.findMany({
     where: {
       userId: { in: ids },
-      status: 'ACTIVE',
+      status: EnrollmentStatus.ACTIVE,
       user: tenantStudentWhere,
     },
     select: {
@@ -1245,7 +1247,7 @@ export async function listStudentAssignedCourses(
   const enrollments = await prisma.enrollment.findMany({
     where: {
       userId: { in: ids },
-      status: 'ACTIVE',
+      status: EnrollmentStatus.ACTIVE,
       user: tenantStudentWhere,
     },
     orderBy: { createdAt: 'desc' },
@@ -1499,9 +1501,9 @@ export async function getTutorManagementSnapshot(admin?: AdminUserWithTenant) {
 
   const [totalTutors, activeTutors, invitedTutors, suspendedTutors, recentTutorCourses] = await Promise.all([
     prisma.user.count({ where: { role: 'TUTOR', ...tenantWhere } }),
-    prisma.user.count({ where: { role: 'TUTOR', status: 'ACTIVE', ...tenantWhere } }),
-    prisma.user.count({ where: { role: 'TUTOR', status: 'INVITED', ...tenantWhere } }),
-    prisma.user.count({ where: { role: 'TUTOR', status: 'SUSPENDED', ...tenantWhere } }),
+    prisma.user.count({ where: { role: 'TUTOR', status: UserStatus.ACTIVE, ...tenantWhere } }),
+    prisma.user.count({ where: { role: 'TUTOR', status: UserStatus.INVITED, ...tenantWhere } }),
+    prisma.user.count({ where: { role: 'TUTOR', status: UserStatus.SUSPENDED, ...tenantWhere } }),
     prisma.course.findMany({
       where: {
         instructor: {
@@ -1695,11 +1697,11 @@ export async function suspendTutor(tutorId: string, notes?: string, admin?: Admi
     create: {
       tutorId,
       approvedBy: resolvedAdmin.id,
-      status: 'SUSPENDED' as any,
+      status: TutorApprovalStatus.SUSPENDED,
       notes: notes || null,
     },
     update: {
-      status: 'SUSPENDED' as any,
+      status: TutorApprovalStatus.SUSPENDED,
       notes: notes || null,
       approvedBy: resolvedAdmin.id,
     },

@@ -52,7 +52,7 @@
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.469.0",
-    "next": "^15.5.7",
+    "next": "^16.2.3",
     "openai": "^4.20.1",
     "pdfjs-dist": "^5.5.207",
     "playwright": "^1.59.1",
@@ -72,7 +72,7 @@
   "optionalDependencies": {
     "@next/swc-wasm-nodejs": "^16.2.2",
     "@next/swc-wasm-web": "^16.2.2",
-    "@next/swc-win32-x64-msvc": "^15.5.14"
+    "@next/swc-win32-x64-msvc": "^16.2.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
