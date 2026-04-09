@@ -3,12 +3,9 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "env": [
-    {
-      "key": "NODE_ENV",
-      "value": "production"
-    }
-  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
   "build": {
     "env": {
       "NODE_ENV": "production"
