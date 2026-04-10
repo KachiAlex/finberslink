@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { Progress } from "../../components/ui/progress";
+import { requireSession } from "../../lib/auth/session";
 import { 
   Trophy, 
   Flame, 
@@ -16,8 +17,9 @@ import {
   Calendar,
   Activity
 } from "lucide-react";
-import { CourseProgressCard, StreakTracker } from "@/features/progress/components/progress-components";
-import { useCourseProgress } from "@/features/progress/hooks/use-progress-tracking";
+import { CourseProgressCard, StreakTracker } from "../../progress/components/progress-components";
+import { useCourseProgress } from "../../progress/hooks/use-progress-tracking";
+import { getStudentAnalytics } from "../service";
 
 interface StudentAnalyticsDashboardProps {
   userId: string;
