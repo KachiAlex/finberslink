@@ -3,11 +3,13 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { BarChart3, GraduationCap, Lock, Unlock, Users, Sparkles, TrendingUp } from "lucide-react";
-import { StatCard } from "@/components/ui/stat-card";
-import { Badge } from "@/components/ui/badge";
-import { DashboardHero } from "@/components/dashboard/dashboard-hero";
-import { DashboardSection } from "@/components/dashboard/dashboard-section";
-import { Card, CardContent } from "@/components/ui/card";
+import { StatCard } from "../ui/stat-card";
+import { Badge } from "../ui/badge";
+import { DashboardHero } from "./dashboard-hero";
+import { DashboardSection } from "./dashboard-section";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { getTutorDashboardData } from "../../features/dashboard/service";
+import { requireSession } from "../lib/auth/session";
 
 // Floating Particles Component
 const FloatingParticles = () => {
