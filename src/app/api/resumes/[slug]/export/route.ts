@@ -10,7 +10,7 @@ import {
 import { requireAuth } from "@/lib/auth/guards";
 import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 import { prisma } from "../../../../../lib/prisma";
-import { generateResumePDF } from "@/lib/pdf-generator";
+import { generateResumePDF } from "../../../../../lib/pdf-generator";
 
 export const runtime = "nodejs";
 

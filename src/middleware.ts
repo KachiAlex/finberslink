@@ -3,7 +3,7 @@ import { jwtVerify } from "jose";
 import type { Role } from "@prisma/client";
 
 import type { SessionPayload } from "@/lib/auth/jwt";
-import { env } from "@/lib/env";
+import { env } from "./lib/env";
 import { NOT_AUTH_REDIRECT } from "@/lib/auth/constants";
 
 // Routes that require authentication

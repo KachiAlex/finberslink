@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyToken } from "@/lib/auth/jwt";
-import { cloudinary } from "@/lib/cloudinary";
+import { cloudinary } from "../../../../lib/cloudinary";
 
 export async function POST(req: NextRequest) {
   try {
