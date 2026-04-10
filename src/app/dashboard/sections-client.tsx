@@ -6,6 +6,7 @@ import { BookOpen, Briefcase, MapPin, Calendar, Filter, FileText } from "lucide-
 
 import { getDashboardSummary } from "../../features/dashboard/service";
 import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
 import { GlassCard } from "../../components/ui/glass-card";
 import { GlassCardError } from "../../components/ui/glass-card-error";
 import { Skeleton } from "../../components/ui/skeleton";
