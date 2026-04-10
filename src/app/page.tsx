@@ -7,7 +7,7 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Progress } from "../components/ui/progress";
-import { siteConfig } from "@/config/site";
+import { siteConfig } from "../config/site";
 
 export const metadata = {
   title: "Finbers Link | Career Intelligence Platform",
