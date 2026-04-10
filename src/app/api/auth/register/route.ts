@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-import { RegisterSchema } from "@/features/auth/schemas";
-import { registerUser } from "@/features/auth/service";
-import { setAuthCookies } from "@/lib/auth/cookies";
-import { verifyToken } from "@/lib/auth/jwt";
-import { getOrCreateDefaultTenant } from "@/features/tenant/service";
+import { RegisterSchema } from "../../../../features/auth/schemas";
+import { upsertStudentProfile } from "../../../../features/profile/service";
+import { setAuthCookies } from "../../../../lib/auth/cookies";
+import { hashPassword } from "../../../../lib/auth/password";
+import { getOrCreateDefaultTenant } from "../../../../features/tenant/service";
 
 export const runtime = "nodejs";
 

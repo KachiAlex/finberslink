@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-import { loginUser } from "@/features/auth/service";
-import { LoginSchema } from "@/features/auth/schemas";
-import { setAuthCookies } from "@/lib/auth/cookies";
-import { verifyToken } from "@/lib/auth/jwt";
+import { prisma } from "../../../../lib/prisma";
+import { loginUser } from "../../../../features/auth/service";
+import { LoginSchema } from "../../../../features/auth/schemas";
+import { setAuthCookies } from "../../../../lib/auth/cookies";
+import { verifyPassword } from "../../../../lib/auth/password";
+import { verifyToken } from "../../../../lib/auth/jwt";
 
 export const runtime = "nodejs";
 
