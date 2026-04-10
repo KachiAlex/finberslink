@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../lib/prisma";
 
 const SUPER_ADMIN_ROLE = "SUPER_ADMIN";
 

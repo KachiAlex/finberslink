@@ -1,7 +1,7 @@
 import { CourseApprovalStatus, CourseLevel, ExamStatus, ExamType, LessonFormat, Prisma, ResourceType } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
-import { slugify } from "@/lib/slugify";
+import { prisma } from "../../lib/prisma";
+import { slugify } from "../../lib/slugify";
 
 export type PendingForumPost = {
   id: string;

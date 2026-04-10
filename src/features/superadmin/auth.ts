@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-import { verifyToken } from "@/lib/auth/jwt";
+import { verifyToken } from "../../lib/auth/jwt";
 import { requireSuperAdminUser } from "./service";
 
 export async function requireSuperAdminSession() {
