@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Heart, ThumbsUp, Laugh, Surprised, Sad, Angry } from "lucide-react";
+import { Heart, ThumbsUp, Laugh, Smile, Frown, Angry } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatWebSocket } from "../services/websocket-manager";
 
@@ -26,8 +26,8 @@ const REACTION_EMOJIS = {
   love: { emoji: 'heart', icon: Heart, color: 'text-red-500' },
   like: { emoji: 'thumbsup', icon: ThumbsUp, color: 'text-blue-500' },
   laugh: { emoji: 'laugh', icon: Laugh, color: 'text-yellow-500' },
-  wow: { emoji: 'wow', icon: Surprised, color: 'text-purple-500' },
-  sad: { emoji: 'sad', icon: Sad, color: 'text-blue-600' },
+  wow: { emoji: 'wow', icon: Smile, color: 'text-purple-500' },
+  sad: { emoji: 'sad', icon: Frown, color: 'text-blue-600' },
   angry: { emoji: 'angry', icon: Angry, color: 'text-red-600' }
 };
 

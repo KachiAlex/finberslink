@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import {
-  convertResumTtoPlainText,
+  convertResumeToPlainText,
   exportResumeAsJSON,
   shareResume,
   publishResumeProfile,
@@ -114,7 +114,7 @@ export async function POST(
       return NextResponse.json(result, { status: 200 });
     } else if (validated.format === "plaintext") {
       console.log("Exporting as plaintext");
-      const result = await convertResumTtoPlainText(resume.id);
+      const result = await convertResumeToPlainText(resume.id);
       return NextResponse.json({ text: result }, { status: 200 });
     } else if (validated.format === "pdf") {
       console.log("Exporting as PDF");

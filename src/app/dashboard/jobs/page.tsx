@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { requireSession } from "@/lib/auth/session";
 import { BrowseJobsTab } from "./_components/browse-jobs-tab";
 import { MyApplicationsTab } from "./_components/my-applications-tab";
+import { ApplicationDraftsTab } from "./_components/application-drafts-tab";
 
 export const metadata = {
   title: "Finbers Link | Jobs & Applications",
@@ -43,9 +44,10 @@ export default async function DashboardJobsPage({
 
       {/* Tabs */}
       <Tabs defaultValue="browse" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="browse">Browse Jobs</TabsTrigger>
           <TabsTrigger value="applications">My Applications</TabsTrigger>
+          <TabsTrigger value="drafts">Drafts</TabsTrigger>
         </TabsList>
 
         <TabsContent value="browse" className="space-y-6">
@@ -66,6 +68,10 @@ export default async function DashboardJobsPage({
 
         <TabsContent value="applications">
           <MyApplicationsTab userId={session.sub} />
+        </TabsContent>
+
+        <TabsContent value="drafts">
+          <ApplicationDraftsTab userId={session.sub} />
         </TabsContent>
       </Tabs>
     </div>

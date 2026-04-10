@@ -36,6 +36,10 @@ model User {
   jobApplications              JobApplication[]
   jobOpportunitiesPosted       JobOpportunity[]       @relation("JobPostedBy")
   jobSaves                     JobSave[]
+  applicationDrafts            ApplicationDraft[]
+  jobViews                     JobView[]
+  recommendationFeedbacks     RecommendationFeedback[]
+  jobNotifications              JobNotification[]
   newsPosts                    News[]
   notifications                Notification[]
   profile                      Profile?
@@ -415,6 +419,7 @@ model Resume {
   template            String?
   headshotUrl         String?
   jobApplications     JobApplication[]
+  applicationDrafts   ApplicationDraft[]
   user                User               @relation(fields: [userId], references: [id])
   experiences         ResumeExperience[]
   projects            ResumeProject[]
@@ -528,10 +533,21 @@ model JobOpportunity {
   isActive         Boolean          @default(true)
   slug             String?          @unique
   viewCount        Int              @default(0)
+  // Advanced fields
+  experienceLevel   ExperienceLevel?
+  companySize      CompanySize?
+  industry         String?
+  benefits         String[]         @default([])
+  educationLevel   EducationLevel?
+  commuteTime      Int?             // in minutes
+  // Relations
   applications     JobApplication[]
   postedBy         User?            @relation("JobPostedBy", fields: [postedById], references: [id])
   saves            JobSave[]
+  views            JobView[]
   interviewSessions InterviewSession[]
+  drafts           ApplicationDraft[]
+  feedbacks        RecommendationFeedback[]
 }
 
 model PasswordResetToken {
@@ -596,6 +612,72 @@ model JobAlert {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model ApplicationDraft {
+  id               String   @id @default(cuid())
+  userId           String
+  jobOpportunityId String
+  resumeId         String?
+  coverLetter      String?
+  answers          Json?    // For application questions
+  lastSavedAt      DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  jobOpportunity   JobOpportunity @relation(fields: [jobOpportunityId], references: [id])
+  resume           Resume?        @relation(fields: [resumeId], references: [id])
+  user             User           @relation(fields: [userId], references: [id])
+  
+  @@unique([userId, jobOpportunityId])
+  @@index([userId, lastSavedAt])
+}
+
+model JobView {
+  id        String   @id @default(cuid())
+  jobId     String
+  userId    String?
+  timestamp DateTime @default(now())
+  userAgent String?
+  ipAddress String?
+  
+  job       JobOpportunity @relation(fields: [jobId], references: [id])
+  user      User?          @relation(fields: [userId], references: [id])
+  
+  @@index([jobId, timestamp])
+  @@index([userId, timestamp])
+}
+
+model RecommendationFeedback {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String
+  feedback  RecommendationType
+  timestamp DateTime @default(now())
+  
+  user      User            @relation(fields: [userId], references: [id])
+  job       JobOpportunity  @relation(fields: [jobId], references: [id])
+  
+  @@index([userId, feedback])
+  @@index([jobId, feedback])
+  @@index([timestamp])
+}
+
+model JobNotification {
+  id        String              @id @default(cuid())
+  userId    String
+  type      JobNotificationType
+  title     String
+  message   String
+  data      Json?               @default("{}")
+  isRead    Boolean             @default(false)
+  createdAt DateTime            @default(now())
+  
+  user      User                @relation(fields: [userId], references: [id])
+  
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
 }
 
 model VolunteerOpportunity {
@@ -1017,6 +1099,42 @@ enum RemoteOption {
   REMOTE
   HYBRID
   ONSITE
+}
+
+enum ExperienceLevel {
+  ENTRY
+  MID
+  SENIOR
+  EXECUTIVE
+}
+
+enum CompanySize {
+  SMALL
+  MEDIUM
+  LARGE
+  ENTERPRISE
+}
+
+enum EducationLevel {
+  HIGH_SCHOOL
+  ASSOCIATE
+  BACHELOR
+  MASTER
+  PHD
+}
+
+enum RecommendationType {
+  POSITIVE
+  NEGATIVE
+  APPLIED
+}
+
+enum JobNotificationType {
+  APPLICATION_STATUS
+  NEW_MATCHING_JOB
+  JOB_ALERT
+  APPLICATION_REVIEW
+  INTERVIEW_SCHEDULED
 }
 
 enum JobApplicationStatus {

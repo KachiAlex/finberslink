@@ -8,7 +8,7 @@ import { MessageInput } from "./message-input";
 import { cn } from "@/lib/utils";
 import { DirectMessage } from "../hooks/use-direct-messages";
 import { Info, Phone, Video, Users, Hash, Send, Paperclip, Smile } from "lucide-react";
-import { useChatMessages, useDirectMessages } from "../hooks";
+import { useChatMessages, useConversationMessages } from "../hooks";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
@@ -48,7 +48,7 @@ export function ChatArea({
 
   // Fetch messages based on type
   const { data: chatMessages = [], isLoading: loadingChatMessages, fetchNextPage, hasNextPage } = useChatMessages(threadId);
-  const { data: directMessages = [], isLoading: loadingDirectMessages } = useDirectMessages(conversationId);
+  const { data: directMessages = [], isLoading: loadingDirectMessages } = useConversationMessages(conversationId);
   
   const messages = threadId ? chatMessages : directMessages;
   const isLoading = threadId ? loadingChatMessages : loadingDirectMessages;

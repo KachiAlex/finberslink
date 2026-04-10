@@ -19,6 +19,16 @@ export interface JobFilters {
   featured?: boolean;
   page?: number;
   limit?: number;
+  // Advanced filters
+  minSalary?: number;
+  maxSalary?: number;
+  experienceLevel?: 'ENTRY' | 'MID' | 'SENIOR' | 'EXECUTIVE';
+  companySize?: 'SMALL' | 'MEDIUM' | 'LARGE' | 'ENTERPRISE';
+  industry?: string[];
+  postedWithin?: '24H' | '3D' | '1W' | '1M';
+  benefits?: string[];
+  commuteTime?: number; // in minutes
+  educationLevel?: 'HIGH_SCHOOL' | 'ASSOCIATE' | 'BACHELOR' | 'MASTER' | 'PHD';
 }
 
 type JobWhereInput = any;
@@ -48,6 +58,62 @@ export async function getJobs(filters: JobFilters = {}) {
 
   if (featured !== undefined) {
     where.featured = featured;
+  }
+
+  // Advanced filtering
+  if (filters.minSalary || filters.maxSalary) {
+    where.salaryRange = {};
+    if (filters.minSalary) {
+      where.salaryRange.gte = filters.minSalary.toString();
+    }
+    if (filters.maxSalary) {
+      where.salaryRange.lte = filters.maxSalary.toString();
+    }
+  }
+
+  if (filters.experienceLevel) {
+    where.experienceLevel = filters.experienceLevel;
+  }
+
+  if (filters.companySize) {
+    where.companySize = filters.companySize;
+  }
+
+  if (filters.industry && filters.industry.length > 0) {
+    where.industry = { hasSome: filters.industry };
+  }
+
+  if (filters.benefits && filters.benefits.length > 0) {
+    where.benefits = { hasSome: filters.benefits };
+  }
+
+  if (filters.educationLevel) {
+    where.educationLevel = filters.educationLevel;
+  }
+
+  // Posted within filter
+  if (filters.postedWithin) {
+    const now = new Date();
+    let cutoffDate: Date;
+    
+    switch (filters.postedWithin) {
+      case '24H':
+        cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case '3D':
+        cutoffDate = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+        break;
+      case '1W':
+        cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '1M':
+        cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+    
+    where.createdAt = { gte: cutoffDate };
   }
 
   if (search) {
@@ -285,4 +351,98 @@ export async function getJobApplicationsForAdmin(jobId?: string) {
     },
     orderBy: { submittedAt: 'desc' },
   });
+}
+
+// Helper functions for advanced filtering
+export function parseSalaryRange(salaryRange: string): { min?: number; max?: number } | null {
+  if (!salaryRange) return null;
+  
+  // Handle various formats: "50k-80k", "$50,000 - $80,000", "50000-80000"
+  const cleaned = salaryRange.replace(/[^0-9kK-]/g, '');
+  const parts = cleaned.split('-');
+  
+  if (parts.length === 2) {
+    const min = parseSalaryValue(parts[0]);
+    const max = parseSalaryValue(parts[1]);
+    
+    if (min !== null && max !== null) {
+      return { min, max };
+    }
+  }
+  
+  return null;
+}
+
+function parseSalaryValue(value: string): number | null {
+  if (!value) return null;
+  
+  const num = parseInt(value.replace(/[^0-9]/g, ''));
+  if (isNaN(num)) return null;
+  
+  // Handle 'k' suffix (thousands)
+  if (value.toLowerCase().includes('k')) {
+    return num * 1000;
+  }
+  
+  return num;
+}
+
+export function getSalaryRangeFilters(): Array<{ label: string; min: number; max: number }> {
+  return [
+    { label: 'Under $40k', min: 0, max: 40000 },
+    { label: '$40k - $60k', min: 40000, max: 60000 },
+    { label: '$60k - $80k', min: 60000, max: 80000 },
+    { label: '$80k - $100k', min: 80000, max: 100000 },
+    { label: '$100k - $150k', min: 100000, max: 150000 },
+    { label: '$150k - $200k', min: 150000, max: 200000 },
+    { label: 'Over $200k', min: 200000, max: 1000000 },
+  ];
+}
+
+export function getIndustries(): Array<{ value: string; label: string; count: number }> {
+  return [
+    { value: 'technology', label: 'Technology', count: 1250 },
+    { value: 'healthcare', label: 'Healthcare', count: 890 },
+    { value: 'finance', label: 'Finance', count: 756 },
+    { value: 'education', label: 'Education', count: 634 },
+    { value: 'retail', label: 'Retail', count: 512 },
+    { value: 'manufacturing', label: 'Manufacturing', count: 445 },
+    { value: 'consulting', label: 'Consulting', count: 389 },
+    { value: 'marketing', label: 'Marketing', count: 367 },
+    { value: 'nonprofit', label: 'Non-Profit', count: 234 },
+    { value: 'government', label: 'Government', count: 189 },
+  ];
+}
+
+export function getBenefits(): Array<{ value: string; label: string }> {
+  return [
+    { value: 'health_insurance', label: 'Health Insurance' },
+    { value: 'dental_vision', label: 'Dental & Vision' },
+    { value: 'retirement_401k', label: '401(k) Retirement' },
+    { value: 'paid_time_off', label: 'Paid Time Off' },
+    { value: 'remote_work', label: 'Remote Work' },
+    { value: 'flexible_hours', label: 'Flexible Hours' },
+    { value: 'gym_membership', label: 'Gym Membership' },
+    { value: 'professional_development', label: 'Professional Development' },
+    { value: 'parental_leave', label: 'Parental Leave' },
+    { value: 'stock_options', label: 'Stock Options' },
+  ];
+}
+
+export function getCompanySizes(): Array<{ value: string; label: string; description: string }> {
+  return [
+    { value: 'SMALL', label: 'Small', description: '1-50 employees' },
+    { value: 'MEDIUM', label: 'Medium', description: '51-500 employees' },
+    { value: 'LARGE', label: 'Large', description: '501-5000 employees' },
+    { value: 'ENTERPRISE', label: 'Enterprise', description: '5000+ employees' },
+  ];
+}
+
+export function getExperienceLevels(): Array<{ value: string; label: string; years: string }> {
+  return [
+    { value: 'ENTRY', label: 'Entry Level', years: '0-2 years' },
+    { value: 'MID', label: 'Mid Level', years: '3-5 years' },
+    { value: 'SENIOR', label: 'Senior Level', years: '6-10 years' },
+    { value: 'EXECUTIVE', label: 'Executive', years: '10+ years' },
+  ];
 }

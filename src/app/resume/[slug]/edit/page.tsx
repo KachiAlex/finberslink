@@ -22,7 +22,7 @@ import {
 } from "@/features/resume/service";
 import { prisma } from "@/lib/prisma";
 import { upsertStudentProfile } from "@/features/profile/service";
-import { generateResumePDFUrl } from "@/features/resume/export-service";
+import { generateResumePDF } from "@/features/resume/export-service";
 import { ResumeExperienceSchema, ResumeProjectSchema } from "@/features/resume/schemas";
 import {
   analyzeATSMatch,
