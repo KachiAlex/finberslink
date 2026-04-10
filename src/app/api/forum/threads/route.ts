@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-
 import { listForumThreads, createForumThread, getUnreadThreadCount, createThreadWithTags, listThreadsByTag, listThreadsByQuery, createForumPost } from "@/features/forum/service";
 import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
+import { ThreadCreateData } from "@/features/forum/types";
 
 const CreateThreadSchema = z.object({
   title: z.string().min(1),
@@ -18,35 +18,26 @@ export async function GET(request: NextRequest) {
     const tag = searchParams.get("tag");
     const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
     const cursor = searchParams.get("cursor") || undefined;
+    const includeUnread = searchParams.get("includeUnread") === "true";
+    const userId = searchParams.get("userId") || undefined;
 
-    let threads;
+    let result;
     const q = searchParams.get("q");
     if (q) {
-      threads = await listThreadsByQuery(q, limit);
+      result = await listThreadsByQuery(q, limit, cursor);
     } else if (tag) {
-      threads = await listThreadsByTag(tag, limit);
+      result = await listThreadsByTag(tag, limit, cursor);
     } else {
-      threads = await listForumThreads({ 
+      result = await listForumThreads({ 
         courseId: courseId || undefined, 
         limit,
-        cursor: cursor || undefined,
+        cursor,
+        includeUnread,
+        userId,
       });
     }
 
-    const unreadCount = searchParams.get("includeUnread") === "true" 
-      ? await getUnreadThreadCount(searchParams.get("userId") || "", courseId || undefined)
-      : undefined;
-
-    const nextCursor = threads.length === limit ? threads[threads.length - 1]?.id : null;
-
-    return NextResponse.json({ 
-      threads,
-      pagination: {
-        nextCursor,
-        hasMore: threads.length === limit,
-      },
-      ...(unreadCount !== undefined && { unreadCount }),
-    });
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Forum threads fetch error:", error);
     return NextResponse.json(
@@ -78,17 +69,20 @@ export async function POST(request: NextRequest) {
     }
 
     let thread;
+    const threadData: ThreadCreateData & { authorId: string } = {
+      title: parsed.data.title,
+      courseId: parsed.data.courseId,
+      tags: parsed.data.tags,
+      content: parsed.data.content,
+      authorId: user.sub,
+    };
+
     if (parsed.data.tags && parsed.data.tags.length > 0) {
-      thread = await createThreadWithTags({
-        ...(parsed.data as any),
-        authorId: user.sub,
-      });
+      thread = await createThreadWithTags(threadData);
     } else {
-      thread = await createForumThread({
-        ...(parsed.data as any),
-        authorId: user.sub,
-      });
+      thread = await createForumThread(threadData);
     }
+
     // If initial content provided, create an initial post and parse mentions
     if (parsed.data.content) {
       // extract mention handles like @handle

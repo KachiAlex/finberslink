@@ -6,7 +6,11 @@ import { PostModerationButtons } from "@/features/forum/components/PostModeratio
 import useSWR from 'swr';
 import { useSWRPosts } from "@/features/forum/hooks/useSWRPosts";
 import { PostReplies } from "@/features/forum/components/PostReplies";
+import { PostContent } from "@/features/forum/components/PostContent";
 import { MentionTextarea } from '@/features/forum/components/MentionTextarea';
+import { RichTextEditor } from '@/features/forum/components/RichTextEditor';
+import { useRealtimeThread } from '@/features/forum/hooks/useRealtimeForum';
+import { ForumPost } from '@/features/forum/types';
 import React from 'react';
 import RW from 'react-window/dist/react-window.cjs';
 const List = (RW as any).FixedSizeList as any;
@@ -20,6 +24,10 @@ export default function ForumThreadPage({ params }: { params: { id: string } }) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { posts, loading: postsLoading, hasMore, loadMore, mutate } = useSWRPosts(id, 10);
+  const { isConnected } = useRealtimeThread(id, (newPost: ForumPost) => {
+    // When a new post is created, add it to the list
+    mutate();
+  });
 
   useEffect(() => {
     fetch(`/api/forum/threads?id=${id}`)
@@ -89,7 +97,15 @@ export default function ForumThreadPage({ params }: { params: { id: string } }) 
   return (
     <div className="max-w-2xl mx-auto py-12 px-4">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">{thread.title}</h1>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-2xl font-bold">{thread.title}</h1>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} title={isConnected ? 'Live updates active' : 'Connection lost'}></div>
+            <span className="text-xs text-gray-500">
+              {isConnected ? 'Live' : 'Reconnecting...'}
+            </span>
+          </div>
+        </div>
         <div className="flex gap-2 flex-wrap mb-2">
           {thread.tags?.map((tag: string) => (
             <span key={tag} className="bg-gray-200 px-2 py-0.5 rounded text-xs">{tag}</span>
@@ -128,8 +144,8 @@ export default function ForumThreadPage({ params }: { params: { id: string } }) 
                           <div className="text-xs text-gray-500">{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""}</div>
                         </div>
                       </div>
-                      <div className="prose prose-slate max-w-none mb-2">
-                        <p className="text-slate-700 leading-relaxed">{post.content}</p>
+                      <div className="mb-2">
+                        <PostContent content={post.content} />
                       </div>
                       <PostReactions postId={post.id} userId={userId} />
                       <PostModerationButtons postId={post.id} userId={userId} isAuthor={post.author?.id === userId} isAdmin={isAdmin} />
@@ -148,12 +164,14 @@ export default function ForumThreadPage({ params }: { params: { id: string } }) 
           </>
         )}
       </div>
-      <form onSubmit={handleSubmitReply} className="border rounded p-4 bg-white">
+      <form onSubmit={handleSubmitReply} className="border rounded bg-white">
         <div className="mb-3">
-          <MentionTextarea 
+          <RichTextEditor 
             value={reply} 
             onChange={setReply} 
             placeholder="Write a reply... (Use @ to mention users)" 
+            maxLength={2000}
+            showCharCount={true}
           />
         </div>
         
@@ -163,18 +181,30 @@ export default function ForumThreadPage({ params }: { params: { id: string } }) 
           </div>
         )}
         
-        <div className="flex items-center gap-2">
-          <button 
-            type="submit" 
-            disabled={isSubmitting || !reply.trim()}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Posting...' : 'Reply'}
-          </button>
+        <div className="flex items-center justify-between p-4 border-t">
+          <div className="text-xs text-gray-500">
+            <div className="mb-1">Quick tips:</div>
+            <div>• Use @username to mention users</div>
+            <div>• Support for **bold**, *italic*, `code`, and links</div>
+          </div>
           
-          {isSubmitting && (
-            <span className="text-sm text-gray-500">Posting your reply...</span>
-          )}
+          <div className="flex items-center gap-2">
+            <button 
+              type="button"
+              onClick={() => setReply('')}
+              className="text-gray-600 hover:text-gray-800 px-3 py-2 text-sm"
+            >
+              Clear
+            </button>
+            
+            <button 
+              type="submit" 
+              disabled={isSubmitting || !reply.trim()}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Posting...' : 'Reply'}
+            </button>
+          </div>
         </div>
       </form>
     </div>

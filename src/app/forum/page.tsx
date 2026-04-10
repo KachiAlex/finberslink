@@ -3,16 +3,22 @@ import { useState } from "react";
 import Link from "next/link";
 import { ThreadCreateForm } from "@/features/forum/components/ThreadCreateForm";
 import { ThreadList } from "@/features/forum/components/ThreadList";
+import { ForumThread } from "@/features/forum/types";
 
 export default function ForumPage() {
   const [selectedTag, setSelectedTag] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedThread, setSelectedThread] = useState<any>(null);
+  const [selectedThread, setSelectedThread] = useState<ForumThread | null>(null);
   const courseId = "demo-course-id"; // Replace with actual courseId from context/session
 
-  const handleThreadSelect = (thread: any) => {
+  const handleThreadSelect = (thread: ForumThread) => {
     // Navigate to the thread page instead of showing inline details
     window.location.href = `/forum/${thread.id}`;
+  };
+
+  const handleThreadCreated = () => {
+    setSelectedThread(null);
+    // Could trigger a refresh of the thread list here
   };
 
   return (
@@ -29,7 +35,7 @@ export default function ForumPage() {
       
       <div className="mb-8 bg-white p-6 rounded-lg border">
         <h2 className="text-lg font-semibold mb-4">Start a New Discussion</h2>
-        <ThreadCreateForm courseId={courseId} onCreated={() => setSelectedThread(null)} />
+        <ThreadCreateForm courseId={courseId} onCreated={handleThreadCreated} />
       </div>
       
       <div className="mb-6 bg-white p-4 rounded-lg border">
@@ -70,7 +76,8 @@ export default function ForumPage() {
         <ThreadList 
           tag={selectedTag} 
           onSelect={handleThreadSelect} 
-          query={searchQuery || undefined} 
+          query={searchQuery || undefined}
+          courseId={courseId}
         />
       </div>
       

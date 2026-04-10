@@ -1,6 +1,13 @@
 import { useListThreads } from '../hooks/useListThreads';
+import { ForumThread } from '../types';
 
-export function ThreadList({ tag, onSelect, query }: { tag?: string; query?: string; onSelect?: (thread: any) => void }) {
+interface ThreadListProps {
+  tag?: string;
+  query?: string;
+  onSelect?: (thread: ForumThread) => void;
+}
+
+export function ThreadList({ tag, onSelect, query }: ThreadListProps) {
   const { threads, loading, error } = useListThreads({ tag, query });
 
   if (loading) return <div>Loading threads...</div>;
@@ -16,6 +23,11 @@ export function ThreadList({ tag, onSelect, query }: { tag?: string; query?: str
             {thread.tags?.map((tag: string) => (
               <span key={tag} className="bg-gray-200 px-2 py-0.5 rounded">{tag}</span>
             ))}
+          </div>
+          <div className="text-xs text-gray-400 mt-1">
+            By {thread.author?.firstName} {thread.author?.lastName} · 
+            {thread._count?.posts || 0} posts · 
+            {new Date(thread.createdAt).toLocaleDateString()}
           </div>
         </li>
       ))}
