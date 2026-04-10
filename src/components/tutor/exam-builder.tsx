@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Input } from "../../ui/input";
 import { Badge } from "../../ui/badge";
 import { Textarea } from "../../ui/textarea";
+import { Label } from "../../ui/label";
 
 type ExamImportIssue = {
   row: number;

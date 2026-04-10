@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
-import { SafeImage } from "@/components/ui/safe-image";
+import { SafeImage } from "../../ui/safe-image";
 import { approveCourse } from "../../features/admin/service";
 import { MoreHorizontal, Edit, Archive, Users, Eye, BarChart3 } from "lucide-react";
 
