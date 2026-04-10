@@ -7,7 +7,7 @@ import { AIButton } from "@/components/ai/ai-button";
 import { BulletSuggestions } from "@/components/ai/bullet-suggestions";
 import { SkillAnalysis } from "@/components/ai/skill-analysis";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Label } from "../../../../components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import type {
