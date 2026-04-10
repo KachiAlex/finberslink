@@ -24,6 +24,17 @@ import {
 } from "../hooks";
 import { getInterviewSessions } from "../service";
 import { cn } from "../../lib/utils";
+import { QuestionBankSelector } from "./question-bank-selector";
+
+interface QuestionTemplate {
+  id: string;
+  text: string;
+  targetRole: string;
+  category: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  estimatedTime: number;
+  rubric?: string;
+}
 
 interface InterviewPrepDashboardProps {
   userName?: string | null;
@@ -74,6 +85,7 @@ const initialFormState = {
   resumeId: "",
   jobOpportunityId: "",
   initialQuestion: "",
+  selectedQuestions: [] as QuestionTemplate[],
 };
 
 type CreateFormState = typeof initialFormState;
@@ -167,6 +179,11 @@ function InterviewPrepContent({ userName }: InterviewPrepContentProps) {
       return;
     }
 
+    if (form.selectedQuestions.length === 0) {
+      setFormError("Please select at least one question");
+      return;
+    }
+
     try {
       await createSession.mutateAsync({
         targetRole: form.targetRole.trim(),
@@ -175,6 +192,7 @@ function InterviewPrepContent({ userName }: InterviewPrepContentProps) {
         initialQuestion: form.initialQuestion.trim()
           ? { prompt: form.initialQuestion.trim() }
           : undefined,
+        questionTemplateIds: form.selectedQuestions.map((q) => q.id),
       });
 
       setForm(initialFormState);
@@ -254,6 +272,15 @@ function InterviewPrepContent({ userName }: InterviewPrepContentProps) {
                   onChange={(event) => handleFieldChange("targetRole", event.target.value)}
                   placeholder="e.g. Product Manager, Robotics"
                   disabled={createSession.isPending}
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <QuestionBankSelector
+                  selectedRole={form.targetRole}
+                  onRoleChange={(role) => handleFieldChange("targetRole", role)}
+                  onQuestionsSelect={(questions) => setForm((prev) => ({ ...prev, selectedQuestions: questions }))}
+                  selectedQuestions={form.selectedQuestions}
                 />
               </div>
 

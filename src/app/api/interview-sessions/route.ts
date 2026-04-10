@@ -14,6 +14,7 @@ const createSessionSchema = z.object({
       rubric: z.any().optional(),
     })
     .optional(),
+  questionTemplateIds: z.array(z.string()).optional(),
 });
 
 export async function GET() {
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
       resumeId: payload.resumeId,
       jobOpportunityId: payload.jobOpportunityId,
       initialQuestion: payload.initialQuestion as any,
+      questionTemplateIds: payload.questionTemplateIds,
     });
 
     return NextResponse.json({ session: interviewSession }, { status: 201 });

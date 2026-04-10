@@ -116,6 +116,7 @@ export interface CreateInterviewSessionBody {
     prompt: string;
     rubric?: unknown;
   };
+  questionTemplateIds?: string[];
 }
 
 export interface UpdateInterviewSessionBody {

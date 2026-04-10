@@ -181,13 +181,13 @@
 - [ ] Write component tests
 
 ### 2.5 Update Session Creation
-- [ ] Update `src/features/interview/components/interview-dashboard.tsx`
-- [ ] Add QuestionBankSelector to CreateSessionModal
-- [ ] Update session creation flow
+- [x] Update `src/features/interview/components/interview-dashboard.tsx`
+- [x] Add QuestionBankSelector to CreateSessionModal
+- [x] Update session creation flow
   - Select role
   - Select questions (template or custom)
   - Confirm and create session
-- [ ] Update API to handle question template selection
+- [x] Update API to handle question template selection
 - [ ] Write tests
 
 ### 2.6 Question Management UI

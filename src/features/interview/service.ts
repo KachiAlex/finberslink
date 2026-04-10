@@ -45,10 +45,43 @@ export interface CreateInterviewSessionInput {
     prompt: string;
     rubric?: Prisma.InputJsonValue;
   };
+  questionTemplateIds?: string[];
 }
 
 export async function createInterviewSession(input: CreateInterviewSessionInput) {
   const sequence = input.initialQuestion ? 1 : undefined;
+
+  // Fetch question templates if provided
+  let templateQuestions: any[] = [];
+  if (input.questionTemplateIds && input.questionTemplateIds.length > 0) {
+    templateQuestions = await prisma.questionTemplate.findMany({
+      where: { id: { in: input.questionTemplateIds } },
+      select: { id: true, text: true, rubric: true },
+    });
+  }
+
+  // Build questions data
+  const questionsData = [];
+  
+  // Add initial question if provided
+  if (input.initialQuestion) {
+    questionsData.push({
+      prompt: input.initialQuestion.prompt,
+      rubric: input.initialQuestion.rubric ?? Prisma.JsonNull,
+      sequence: 1,
+      templateId: undefined,
+    });
+  }
+
+  // Add template questions
+  templateQuestions.forEach((template, index) => {
+    questionsData.push({
+      prompt: template.text,
+      rubric: template.rubric ?? Prisma.JsonNull,
+      sequence: (input.initialQuestion ? 1 : 0) + index + 1,
+      templateId: template.id,
+    });
+  });
 
   return prisma.interviewSession.create({
     data: {
@@ -58,13 +91,9 @@ export async function createInterviewSession(input: CreateInterviewSessionInput)
       targetRole: input.targetRole,
       status: input.status ?? "ACTIVE",
       currentStep: input.currentStep ?? "QUESTION_PHASE",
-      questions: input.initialQuestion
+      questions: questionsData.length > 0
         ? {
-            create: {
-              prompt: input.initialQuestion.prompt,
-              rubric: input.initialQuestion.rubric ?? Prisma.JsonNull,
-              sequence: sequence!,
-            },
+            create: questionsData,
           }
         : undefined,
     },
