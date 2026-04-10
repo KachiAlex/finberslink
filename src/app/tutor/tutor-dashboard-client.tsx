@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "../../components/ui/button";
 import { BarChart3, BookOpen, PenSquare, Users, Plus } from "lucide-react";
 import Link from "next/link";
-import { useCreateCourseModal } from "@/components/course/create-course-modal";
+import { useCreateCourseModal } from "../../components/course/create-course-modal";
 
 interface TutorDashboardClientProps {
   coursesCount: number;

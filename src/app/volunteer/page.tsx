@@ -1,9 +1,9 @@
 import { MapPin, Earth, Users, Heart } from "lucide-react";
 
-import { SiteHeader } from "@/components/layout/site-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SiteHeader } from "../../components/layout/site-header";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { listVolunteerOpportunities } from "@/features/volunteer/service";
 
 export const dynamic = "force-dynamic";

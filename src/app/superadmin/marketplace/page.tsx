@@ -1,8 +1,8 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 
-import { GlassCard } from "@/components/ui/glass-card";
-import { Button } from "@/components/ui/button";
-import { requireSuperAdminSession } from "@/features/superadmin/auth";
+import { GlassCard } from "../../../components/ui/glass-card";
+import { Button } from "../../../components/ui/button";
+import { requireSuperAdminSession } from "../../../features/superadmin/auth";
 import { enableMarketplaceBundle, listMarketplaceBundles } from "@/features/superadmin/marketplace";
 
 export const dynamic = "force-dynamic";

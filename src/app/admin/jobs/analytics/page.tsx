@@ -1,8 +1,8 @@
 import type { JobApplicationStatus } from "@prisma/client";
 import { BarChart3, Briefcase, Users, Clock, CheckCircle } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "../../../../components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card";
 import { getJobs, getJobApplicationsForAdmin } from "@/features/jobs/service";
 import { AdminShell } from "../../_components/admin-shell";
 

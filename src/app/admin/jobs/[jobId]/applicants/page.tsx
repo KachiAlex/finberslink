@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Mail, Phone, MapPin, FileText, CheckCircle, XCircle, Clock } from "lucide-react";
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "../../../../../components/ui/badge";
+import { Button } from "../../../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../components/ui/card";
 import { getJobById, getJobApplicationsForAdmin, updateJobApplicationStatus } from "@/features/jobs/service";
 import { AdminShell } from "../../../_components/admin-shell";
 

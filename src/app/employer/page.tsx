@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireSession } from "@/lib/auth/session";
+import { requireSession } from "../../lib/auth/session";
 import { EmployerDashboard } from "./_components/employer-dashboard";
 
 export const metadata = {

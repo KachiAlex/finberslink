@@ -7,9 +7,9 @@ import Link from "next/link";
 import { CourseApprovalStatus, CourseLevel, LessonFormat, ResourceType } from "@prisma/client";
 import { ArrowLeft, CheckCircle2, Circle, Layers3, Plus, Trash } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
 import { Badge } from "@/components/ui/badge";

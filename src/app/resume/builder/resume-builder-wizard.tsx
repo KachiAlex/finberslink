@@ -4,17 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Loader2, Sparkles, Wand2, Play } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
+import { Badge } from "../../../components/ui/badge";
 import { Textarea } from "../../../components/ui/textarea";
 import { Separator } from "../../../components/ui/separator";
 import { isVideoUrlValid, toEmbedUrl } from "@/lib/video";

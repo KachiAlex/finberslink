@@ -1,9 +1,9 @@
 import { revalidatePath } from "next/cache";
 import { CheckCircle, ShieldCheck, SlidersHorizontal } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/ui/glass-card";
-import { requireSuperAdminSession } from "@/features/superadmin/auth";
+import { Button } from "../../../components/ui/button";
+import { GlassCard } from "../../../components/ui/glass-card";
+import { requireSuperAdminSession } from "../../../features/superadmin/auth";
 import { listFeatureFlags, toggleFeatureFlag } from "@/features/feature-flags";
 
 export const dynamic = "force-dynamic";

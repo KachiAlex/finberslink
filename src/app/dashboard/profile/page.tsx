@@ -1,5 +1,5 @@
 import { prisma } from "../../../lib/prisma";
-import { requireSession } from "@/lib/auth/session";
+import { requireSession } from "../../../lib/auth/session";
 import { ProfileClient } from "./profile-client";
 
 export const dynamic = "force-dynamic";

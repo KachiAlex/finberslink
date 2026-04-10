@@ -1,10 +1,10 @@
 import { ArrowUpRight, Building2, GaugeCircle, Users } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/ui/glass-card";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { GlassCard } from "../../components/ui/glass-card";
 import { StatCard } from "../../../components/ui/stat-card";
-import { getSuperAdminOverview } from "@/features/superadmin/dashboard";
+import { getSuperAdminOverview } from "../../features/superadmin/dashboard";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

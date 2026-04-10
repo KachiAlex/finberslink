@@ -2,10 +2,10 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Sparkles, ShieldCheck } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { superAdminNav } from "@/features/superadmin/nav";
-import { requireSuperAdminUser } from "@/features/superadmin/service";
-import { requireSession } from "@/lib/auth/session";
+import { Button } from "../../components/ui/button";
+import { superAdminNav } from "../../features/superadmin/nav";
+import { requireSuperAdminUser } from "../../features/superadmin/service";
+import { requireSession } from "../../lib/auth/session";
 
 import { SuperAdminNavLink } from "./_components/nav-link";
 

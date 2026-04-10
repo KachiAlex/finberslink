@@ -11,7 +11,7 @@ import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
 import { getJobBySlug, createJobApplication, getUserJobApplications } from "@/features/jobs/service";
 import { listUserResumes } from "@/features/resume/service";
-import { requireSession } from "@/lib/auth/session";
+import { requireSession } from "../../../lib/auth/session";
 import { saveApplicationDraft, getApplicationDraft } from "@/features/jobs/application-drafts";
 
 type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
