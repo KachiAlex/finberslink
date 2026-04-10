@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Role } from "@prisma/client";
 
-import { verifyToken, type SessionPayload } from "@/lib/auth/jwt";
+import { verifyToken, type SessionPayload } from "./jwt";
 
 const NOT_AUTH_REDIRECT = "/login?reason=not-authenticated";
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth/jwt";
+import { verifyToken } from "./auth/jwt";
 
 // Routes that require authentication
 const protectedRoutes = [

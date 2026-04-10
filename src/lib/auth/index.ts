@@ -10,20 +10,20 @@ export {
   verifyToken,
   type SessionPayload,
   type TokenPair,
-} from "@/lib/auth/jwt";
+} from "./jwt";
 
 // Password utilities
-export { hashPassword, verifyPassword } from "@/lib/auth/password";
+export { hashPassword, verifyPassword } from "./password";
 
 // Cookie utilities
-export { setAuthCookies, clearAuthCookies } from "@/lib/auth/cookies";
+export { setAuthCookies, clearAuthCookies } from "./cookies";
 
 // Session utilities
 export {
   getSessionFromCookies,
   requireSession,
   type RequireSessionOptions,
-} from "@/lib/auth/session";
+} from "./session";
 
 // Auth guards for API routes
 export {
@@ -41,7 +41,7 @@ export {
   withAuth,
   withRole,
   withPermission,
-} from "@/lib/auth/guards";
+} from "./guards";
 
 // Constants
-export { NOT_AUTH_REDIRECT, NOT_AUTH_REASON } from "@/lib/auth/constants";
+export { NOT_AUTH_REDIRECT, NOT_AUTH_REASON } from "./constants";

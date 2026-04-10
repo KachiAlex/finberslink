@@ -1,10 +1,11 @@
+import { env } from "../env";
 import OpenAI from "openai";
 
 let cachedClient: OpenAI | null = null;
 
 export function getOpenAIClient() {
   if (!cachedClient) {
-    if (!process.env.OPENAI_API_KEY) {
+    if (!env.OPENAI_API_KEY) {
       throw new Error("Missing OPENAI_API_KEY environment variable");
     }
 

@@ -1,4 +1,4 @@
-import { env } from "@/lib/env";
+import { env } from "../env";
 import { siteConfig } from "@/config/site";
 
 const SENDGRID_ENDPOINT = "https://api.sendgrid.com/v3/mail/send";

@@ -15,7 +15,7 @@ import {
 } from "@/features/admin/service";
 import { upsertStudentProfile } from "@/features/profile/service";
 import { hashPassword } from "@/lib/auth/password";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminUser } from "@/features/admin/service";

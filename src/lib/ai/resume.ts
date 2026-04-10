@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { getOpenAIClient } from "@/lib/ai/client";
+import { getOpenAIClient } from "./client";
 
 export interface ResumeSummaryRequest {
   currentSummary?: string;

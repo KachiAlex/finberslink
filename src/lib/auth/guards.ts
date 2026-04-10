@@ -3,9 +3,9 @@ import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import type { Role } from "@prisma/client";
 
-import { verifyToken, type SessionPayload } from "@/lib/auth/jwt";
-import { canAccessRoute, hasPermission, type Permission } from "@/lib/rbac";
-import { prisma } from "@/lib/prisma";
+import { verifyToken, type SessionPayload } from "./jwt";
+import { canAccessRoute, hasPermission, type Permission } from "../rbac";
+import { prisma } from "../prisma";
 
 /**
  * Auth error for use in guards

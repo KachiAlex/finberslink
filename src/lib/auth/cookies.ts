@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { TokenPair } from "@/lib/auth/jwt";
+import type { TokenPair } from "./jwt";
 
 function resolveSecureCookieFlag() {
   const explicit = process.env.AUTH_COOKIE_SECURE?.toLowerCase();
