@@ -1,39 +1,48 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ThreadSubscribeButton } from "@/features/forum/components/ThreadSubscribeButton";
-import { PostReactions } from "@/features/forum/components/PostReactions";
-import { PostModerationButtons } from "@/features/forum/components/PostModerationButtons";
-import useSWR from 'swr';
-import { useSWRPosts } from "@/features/forum/hooks/useSWRPosts";
-import { PostReplies } from "@/features/forum/components/PostReplies";
-import { PostContent } from "@/features/forum/components/PostContent";
-import { MentionTextarea } from '@/features/forum/components/MentionTextarea';
-import { RichTextEditor } from '@/features/forum/components/RichTextEditor';
-import { useRealtimeThread } from '@/features/forum/hooks/useRealtimeForum';
-import { ForumPost } from '@/features/forum/types';
+import { ThreadSubscribeButton } from "../../../components/forum/ThreadSubscribeButton";
+import { requireSession } from "../../../lib/auth/session";
+import { PostReactions } from "../../../components/forum/PostReactions";
+import { PostModerationButtons } from "../../../components/forum/PostModerationButtons";
+import { Label } from "../../../components/ui/label";
+import { useSWRPosts } from "../../../features/forum/hooks/useSWRPosts";
+import { PostReplies } from "../../../components/forum/PostReplies";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { PostContent } from "../../../components/forum/PostContent";
+import { Textarea } from "../../../components/ui/textarea";
+import { RichTextEditor } from '../../../features/forum/components/RichTextEditor';
+import { useRealtimeThread } from '../../../features/forum/hooks/useRealtimeForum';
+import { Input } from "../../../components/ui/input";
+import { ForumPost } from '../../../features/forum/types';
 import React from 'react';
 import RW from 'react-window/dist/react-window.cjs';
 const List = (RW as any).FixedSizeList as any;
 
-export default function ForumThreadPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function ForumThreadPage({ params }: { params: Promise<{ id: string }> }) {
+  // ... rest of the code remains the same ...
+  const [threadId, setThreadId] = useState<string>("");
   const userId = "demo-user-id"; // Replace with actual userId from session/auth
   const isAdmin = true; // Set to true to simulate admin view
   const [thread, setThread] = useState<any>(null);
   const [reply, setReply] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const { posts, loading: postsLoading, hasMore, loadMore, mutate } = useSWRPosts(id, 10);
-  const { isConnected } = useRealtimeThread(id, (newPost: ForumPost) => {
+  const { posts, loading: postsLoading, hasMore, loadMore, mutate } = useSWRPosts(threadId, 10);
+  const { isConnected } = useRealtimeThread(threadId, (newPost: ForumPost) => {
     // When a new post is created, add it to the list
     mutate();
   });
 
   useEffect(() => {
-    fetch(`/api/forum/threads?id=${id}`)
-      .then(res => res.json())
-      .then(data => setThread(data.thread || data));
-  }, [id]);
+    const loadThreadId = async () => {
+      const resolvedParams = await params;
+      setThreadId(resolvedParams.id);
+      fetch(`/api/forum/threads?id=${resolvedParams.id}`)
+        .then(res => res.json())
+        .then(data => setThread(data.thread || data));
+    };
+    loadThreadId();
+  }, [params]);
 
   const extractMentions = (text: string): string[] => {
     const mentionRegex = /@([a-zA-Z0-9_]+)/g;
@@ -55,14 +64,14 @@ export default function ForumThreadPage({ params }: { params: { id: string } }) 
     try {
       const mentions = extractMentions(reply);
       
-      const response = await fetch('/api/forum/posts', {
+      const response = await fetch(`/api/forum/replies?threadId=${threadId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           content: reply.trim(),
-          threadId: id,
+          threadId: threadId,
           authorId: userId,
           mentions,
         }),

@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 import { Upload, Loader2, AlertCircle, CheckCircle, Zap } from "lucide-react";
-import { parseResumeFile } from "@/lib/resume/parser";
-import { analyzeATSMatch } from "@/lib/ai/resume";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { importResume } from "../../features/resume/service";
+import { requireSession } from "../../lib/auth/session";
+import { Badge } from "../../ui/badge";
+import { Textarea } from "../../ui/textarea";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
 
 interface ATSResult {
   score: number;

@@ -200,11 +200,11 @@
 ## Phase 3: Testing Infrastructure
 
 ### 3.1 Unit Tests for Services
-- [ ] Create `__tests__/features/interview/audio-service.test.ts`
+- [x] Create `__tests__/features/interview/audio-service.test.ts`
   - Test upload, delete, signed URL generation
   - Test error handling
   - Test audio duration extraction
-- [ ] Create `__tests__/features/interview/question-bank-service.test.ts`
+- [x] Create `__tests__/features/interview/question-bank-service.test.ts`
   - Test template queries
   - Test filtering
   - Test creation
@@ -219,7 +219,7 @@
 - [ ] Achieve 80%+ coverage for service layer
 
 ### 3.2 API Integration Tests
-- [ ] Create `__tests__/api/interview-sessions/route.test.ts`
+- [x] Create `__tests__/api/interview-sessions/route.test.ts`
   - Test GET (list sessions)
   - Test POST (create session)
   - Test authentication
@@ -238,7 +238,7 @@
   - Test audio upload
   - Test file validation
   - Test error handling
-- [ ] Create `__tests__/api/interview/question-templates/route.test.ts`
+- [x] Create `__tests__/api/interview/question-templates/route.test.ts`
   - Test GET (list templates)
   - Test POST (create template)
   - Test filtering
@@ -255,7 +255,7 @@
   - Test playback controls
   - Test progress bar
   - Test error handling
-- [ ] Create `__tests__/components/interview/question-bank-selector.test.tsx`
+- [x] Create `__tests__/components/interview/question-bank-selector.test.tsx`
   - Test role selection
   - Test question selection
   - Test reordering
