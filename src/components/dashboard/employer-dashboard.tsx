@@ -10,19 +10,47 @@ import { Card, CardContent } from "@/components/ui/card";
 
 // Floating Particles Component
 const FloatingParticles = () => {
+  const [particles, setParticles] = useState<Array<{
+    width: number;
+    height: number;
+    left: number;
+    top: number;
+    duration: number;
+    delay: number;
+  }> | null>(null);
+
+  useEffect(() => {
+    // Generate particles only on client to avoid hydration mismatch
+    setParticles(
+      Array.from({ length: 12 }).map(() => ({
+        width: Math.random() * 200 + 100,
+        height: Math.random() * 200 + 100,
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        duration: Math.random() * 20 + 15,
+        delay: Math.random() * 5,
+      }))
+    );
+  }, []);
+
+  // Return empty div during SSR to match server render
+  if (!particles) {
+    return <div className="fixed inset-0 pointer-events-none overflow-hidden" />;
+  }
+
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {Array.from({ length: 12 }).map((_, i) => (
+      {particles.map((particle, i) => (
         <div
           key={i}
           className="absolute animate-pulse rounded-full bg-gradient-to-r from-green-400/20 to-emerald-400/20 blur-xl"
           style={{
-            width: `${Math.random() * 200 + 100}px`,
-            height: `${Math.random() * 200 + 100}px`,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animation: `float ${Math.random() * 20 + 15}s ease-in-out infinite`,
-            animationDelay: `${Math.random() * 5}s`,
+            width: `${particle.width}px`,
+            height: `${particle.height}px`,
+            left: `${particle.left}%`,
+            top: `${particle.top}%`,
+            animation: `float ${particle.duration}s ease-in-out infinite`,
+            animationDelay: `${particle.delay}s`,
           }}
         />
       ))}
