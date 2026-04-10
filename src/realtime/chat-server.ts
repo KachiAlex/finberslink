@@ -2,7 +2,7 @@
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { verifyToken } from '@/lib/auth/jwt';
-import { prisma } from '@/lib/prisma';
+import { prisma } from "../lib/prisma";
 
 interface AuthenticatedWebSocket extends WebSocket {
   userId: string;

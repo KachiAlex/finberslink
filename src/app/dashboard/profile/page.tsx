@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../../lib/prisma";
 import { requireSession } from "@/lib/auth/session";
 import { ProfileClient } from "./profile-client";
 

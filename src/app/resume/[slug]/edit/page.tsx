@@ -20,7 +20,7 @@ import {
   updateResumeExperience,
   updateResumeSkillSnapshot,
 } from "@/features/resume/service";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../../lib/prisma";
 import { upsertStudentProfile } from "@/features/profile/service";
 import { generateResumePDF } from "@/features/resume/export-service";
 import { ResumeExperienceSchema, ResumeProjectSchema } from "@/features/resume/schemas";

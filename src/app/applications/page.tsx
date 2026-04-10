@@ -3,7 +3,7 @@ import { Eye, Trash2, Calendar, Building2, MapPin, ExternalLink, AlertCircle } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getSessionFromCookies } from "@/lib/auth/session";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../lib/prisma";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
