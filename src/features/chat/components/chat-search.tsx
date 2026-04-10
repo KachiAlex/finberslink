@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Search, MessageCircle, Users, Hash, Clock, Filter } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
+import { Avatar } from "../../components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { ScrollArea } from "../../components/ui/scroll-area";
+import { searchChatMessages } from "../service";
+import { useChatMessages } from "../hooks";
 
 interface ChatSearchProps {
   query: string;
