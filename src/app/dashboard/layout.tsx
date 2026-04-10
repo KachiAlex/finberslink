@@ -6,11 +6,11 @@ import { GraduationCap, LayoutDashboard, MessageCircle, Sparkles, Briefcase, Use
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
 import { getUnreadCount } from "@/features/notifications/service";
-import { NotificationsBell } from "@/components/notifications/notifications-bell";
-import { ChatAvatar } from "@/components/chat/chat-avatar";
+import { NotificationsBell } from "../../components/notifications/notifications-bell";
+import { ChatAvatar } from "../../components/chat/chat-avatar";
 import { requireSession } from "../../lib/auth/session";
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
-import { CurrentUserProvider } from "@/components/current-user-provider";
+import { DashboardSidebar } from "../../components/dashboard/dashboard-sidebar";
+import { CurrentUserProvider } from "../../components/current-user-provider";
 import { buildDashboardCoursesUrl } from "../../lib/dashboard-courses-url";
 import { prisma } from "../../lib/prisma";
 

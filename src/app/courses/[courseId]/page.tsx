@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 
-import { SiteHeader } from "@/components/layout/site-header";
+import { SiteHeader } from "../../../components/layout/site-header";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { CourseHero } from "@/features/lms/components/course-hero";
 import { LessonList } from "@/features/lms/components/lesson-list";
 import { ResourceLibrary } from "@/components/course/resource-library";

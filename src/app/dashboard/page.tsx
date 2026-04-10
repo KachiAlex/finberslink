@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
-import { requireSession } from "@/lib/auth/session";
+import { requireSession } from "../../lib/auth/session";
 import type { Role } from "@prisma/client";
 
 // Import role-specific dashboard components
-import { StudentDashboard } from "@/components/dashboard/student-dashboard";
-import { TutorDashboard } from "@/components/dashboard/tutor-dashboard";
-import { EmployerDashboard } from "@/components/dashboard/employer-dashboard";
-import { AdminDashboard } from "@/components/dashboard/admin-dashboard";
+import { StudentDashboard } from "../../components/dashboard/student-dashboard";
+import { TutorDashboard } from "../../components/dashboard/tutor-dashboard";
+import { EmployerDashboard } from "../../components/dashboard/employer-dashboard";
+import { AdminDashboard } from "../../components/dashboard/admin-dashboard";
 
 export const metadata = {
   title: "Finbers Link | Dashboard",
