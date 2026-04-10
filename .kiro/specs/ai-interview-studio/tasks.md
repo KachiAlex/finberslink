@@ -121,38 +121,38 @@
 ## Phase 2: Question Bank
 
 ### 2.1 Question Bank Service
-- [ ] Create `src/features/interview/question-bank-service.ts`
-- [ ] Implement `getQuestionsByRole()` function
+- [x] Create `src/features/interview/question-bank-service.ts`
+- [x] Implement `getQuestionsByRole()` function
   - Query templates by target role
   - Return 5-7 questions covering key competencies
   - Order by difficulty progression
-- [ ] Implement `getQuestionTemplates()` function
+- [x] Implement `getQuestionTemplates()` function
   - Support filtering by role, category, difficulty
   - Return paginated results
-- [ ] Implement `createQuestionTemplate()` function
+- [x] Implement `createQuestionTemplate()` function
   - Validate input
   - Create template in database
   - Return created template
-- [ ] Implement `seedDefaultQuestions()` function
+- [x] Implement `seedDefaultQuestions()` function
   - Create templates for 10+ common roles
   - Include behavioral, technical, situational questions
   - Set appropriate difficulty levels
-- [ ] Add error handling and logging
+- [x] Add error handling and logging
 - [ ] Write unit tests
 
 ### 2.2 Question Bank API Endpoints
-- [ ] Create `src/app/api/interview/question-templates/route.ts`
+- [x] Create `src/app/api/interview/question-templates/route.ts`
   - GET: Return all templates with optional filters
   - POST: Create new template (admin only)
-- [ ] Create `src/app/api/interview/question-templates/by-role/[role]/route.ts`
+- [x] Create `src/app/api/interview/question-templates/by-role/[role]/route.ts`
   - GET: Return default questions for role
-- [ ] Add authentication and authorization
-- [ ] Add input validation with Zod
+- [x] Add authentication and authorization
+- [x] Add input validation with Zod
 - [ ] Write integration tests
 
 ### 2.3 Seed Default Questions
-- [ ] Create seed script with 10+ roles
-- [ ] Include questions for:
+- [x] Create seed script with 10+ roles
+- [x] Include questions for:
   - Software Engineer (behavioral, technical, system design)
   - Product Manager (behavioral, case study, analytics)
   - Data Scientist (technical, statistics, case study)
@@ -163,21 +163,21 @@
   - Operations (behavioral, process improvement, case study)
   - HR (behavioral, conflict resolution, culture)
   - Customer Success (behavioral, problem-solving, communication)
-- [ ] Set difficulty levels (easy, medium, hard)
-- [ ] Set estimated time for each question
-- [ ] Add rubrics for grading
+- [x] Set difficulty levels (easy, medium, hard)
+- [x] Set estimated time for each question
+- [x] Add rubrics for grading
 - [ ] Run seed script to populate database
 
 ### 2.4 QuestionBankSelector Component
-- [ ] Create `src/features/interview/components/question-bank-selector.tsx`
-- [ ] Display role selector dropdown
-- [ ] Show suggested questions for selected role
-- [ ] Allow user to accept/reject suggestions
-- [ ] Allow manual question selection
-- [ ] Show question details (category, difficulty, estimated time)
+- [x] Create `src/features/interview/components/question-bank-selector.tsx`
+- [x] Display role selector dropdown
+- [x] Show suggested questions for selected role
+- [x] Allow user to accept/reject suggestions
+- [x] Allow manual question selection
+- [x] Show question details (category, difficulty, estimated time)
 - [ ] Allow reordering questions
-- [ ] Allow adding custom questions
-- [ ] Add accessibility features
+- [x] Allow adding custom questions
+- [x] Add accessibility features
 - [ ] Write component tests
 
 ### 2.5 Update Session Creation

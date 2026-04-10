@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/ui/glass-card";
-import { GlassCardError } from "@/components/ui/glass-card-error";
-import { Skeleton } from "../../components/ui/skeleton";
+import { getDashboardSummary } from "../../../features/dashboard/service";
+import { GlassCard } from "../../../components/ui/glass-card";
+import { GlassCardError } from "../../../components/ui/glass-card-error";
+import { requireSession } from "../../../lib/auth/session";
+import { Button } from "../../../components/ui/button";
+import { Skeleton } from "../../../components/ui/skeleton";
 
 type DashboardSummary = {
   enrollmentsCount: number;

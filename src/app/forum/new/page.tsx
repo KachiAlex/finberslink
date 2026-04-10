@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
-import { listStudentEnrollmentsWithCourses } from "@/features/dashboard/service";
-import { createForumThread } from "@/features/forum/service";
-import { requireSession } from "../../lib/auth/session";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
+import { listStudentEnrollmentsWithCourses } from "../../../features/dashboard/service";
+import { createForumThread } from "../../../features/forum/service";
+import { requireSession } from "../../../lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

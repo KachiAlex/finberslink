@@ -7,17 +7,16 @@ type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';
 const JobTypeValues = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP'] as const;
 const RemoteOptionValues = ['REMOTE', 'HYBRID', 'ONSITE'] as const;
 
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { StatCard } from "../../components/ui/stat-card";
+import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import { StatCard } from "../../../components/ui/stat-card";
 import {
   createJobPosting,
   getJobManagementSnapshot,
-  listAdminJobs,
-  requireAdminUser,
-  updateJobVisibility,
-} from "@/features/admin/service";
+  listAllJobs,
+  updateJobPostingStatus,
+} from "../../../features/admin/service";
 
 import { AdminShell } from "../_components/admin-shell";
 import { CreateJobSheet } from "./_components/create-job-sheet";

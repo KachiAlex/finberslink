@@ -1,18 +1,20 @@
 import { notFound, redirect } from "next/navigation";
+"use client";
+
 import { ArrowLeft, Upload, FileText, User, Save } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
-import { Badge } from "../../../components/ui/badge";
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
-import { getJobBySlug, createJobApplication, getUserJobApplications } from "@/features/jobs/service";
-import { listUserResumes } from "@/features/resume/service";
-import { requireSession } from "../../../lib/auth/session";
-import { saveApplicationDraft, getApplicationDraft } from "@/features/jobs/application-drafts";
+import { Badge } from "../../../../components/ui/badge";
+import { Button } from "../../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
+import { Input } from "../../../../components/ui/input";
+import { Label } from "../../../../components/ui/label";
+import { Textarea } from "../../../../components/ui/textarea";
+import { getJobBySlug, createJobApplication, getUserJobApplications } from "../../../../features/jobs/service";
+import { listUserResumes } from "../../../../features/resume/service";
+import { requireSession } from "../../../../lib/auth/session";
+import { saveApplicationDraft, getApplicationDraft } from "../../../../features/jobs/application-drafts";
 
 type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
 type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';

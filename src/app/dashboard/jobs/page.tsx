@@ -1,8 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import { requireSession } from "@/lib/auth/session";
+import { requireSession } from "../../../lib/auth/session";
 import { BrowseJobsTab } from "./_components/browse-jobs-tab";
-import { MyApplicationsTab } from "./_components/my-applications-tab";
-import { ApplicationDraftsTab } from "./_components/application-drafts-tab";
+// ApplicationsTab component not yet created
+// ApplicationDraftsTab component not yet created
 
 export const metadata = {
   title: "Finbers Link | Jobs & Applications",
@@ -67,11 +67,15 @@ export default async function DashboardJobsPage({
         </TabsContent>
 
         <TabsContent value="applications">
-          <MyApplicationsTab userId={session.sub} />
+          <div className="text-center py-8">
+            <p className="text-slate-500">Applications tab component coming soon</p>
+          </div>
         </TabsContent>
 
         <TabsContent value="drafts">
-          <ApplicationDraftsTab userId={session.sub} />
+          <div className="text-center py-8">
+            <p className="text-slate-500">Drafts tab component coming soon</p>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

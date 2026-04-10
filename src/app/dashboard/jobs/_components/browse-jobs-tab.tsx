@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { getJobs, saveJob, unsaveJob } from "../../../../features/jobs/service";
 import {
   Search,
   MapPin,
@@ -11,9 +12,9 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Badge } from "../../../../components/ui/badge";
+import { Button } from "../../../../components/ui/button";
+import { Input } from "../../../../components/ui/input";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface JobFilters {

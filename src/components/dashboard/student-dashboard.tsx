@@ -4,10 +4,10 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Briefcase, Clock, CheckCircle, Star, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 
-import { DashboardSectionsClient, type SectionResponse } from "@/app/dashboard/sections-client";
+import { DashboardSectionsClient, type SectionResponse } from "../../app/dashboard/sections-client";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { GradientText, RippleButton } from "../shared/animated-components";
 
 interface StudentDashboardProps {

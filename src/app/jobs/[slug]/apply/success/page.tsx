@@ -2,9 +2,9 @@ import { notFound } from "next/navigation";
 import { CheckCircle, ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
-import { Button } from "../../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
-import { getJobBySlug } from "@/features/jobs/service";
+import { Button } from "../../../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../components/ui/card";
+import { getJobBySlug } from "../../../../../features/jobs/service";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

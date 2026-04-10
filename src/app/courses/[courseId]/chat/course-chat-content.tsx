@@ -4,13 +4,13 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Hash, MessageCircle, MessagesSquare, Send, Video } from "lucide-react";
 
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent } from "../../../components/ui/card";
-import { Input } from "../../../components/ui/input";
-import { Badge } from "../../../components/ui/badge";
-import { UserAvatar } from "@/features/chat/components/user-avatar";
-import { useChatMessages, useChatThreads, useSendChatMessage } from "@/features/chat/hooks";
-import useSocket from "@/hooks/useSocket";
+import { Button } from "../../../../components/ui/button";
+import { Card, CardContent } from "../../../../components/ui/card";
+import { Input } from "../../../../components/ui/input";
+import { Badge } from "../../../../components/ui/badge";
+import { UserAvatar } from "../../../../../features/chat/components/user-avatar";
+import { useChatMessages, useChatThreads, useSendChatMessage } from "../../../../../features/chat/hooks";
+import useSocket from "../../../../../hooks/useSocket";
 import { useQueryClient } from "@tanstack/react-query";
 
 type CourseChatThread = {
