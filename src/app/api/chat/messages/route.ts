@@ -1,7 +1,7 @@
 // REST API for chat messages (Messenger-style scaffold)
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from "../_helpers";
-import { listThreadMessages, sendChatMessage } from "@/features/chat/service";
+import { listThreadMessages, sendChatMessage } from "../../../../features/chat/service";
 
 export async function GET(req: NextRequest) {
   try {

@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../../lib/prisma';
 import { Resume, ResumeExperience, ResumeProject, ResumeEducation } from '@prisma/client';
 
 export type PDFTemplate = 'Modern' | 'Classic' | 'Minimal';

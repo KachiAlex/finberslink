@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth/jwt";
+import { verifyToken } from "../../../../lib/auth/jwt";
 
 export async function GET(req: Request) {
   const cookieHeader = req.headers.get("cookie") || "";

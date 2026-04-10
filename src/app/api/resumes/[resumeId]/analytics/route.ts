@@ -2,15 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/guards';
 import { AnalyticsService } from '@/features/resume/analytics-service';
 import { prisma } from '@/lib/prisma';
+import { createRateLimit } from '@/lib/security/rate-limit';
+
+// Rate limit: 100 analytics queries per hour per user
+const analyticsRateLimit = createRateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 100,
+  message: 'Too many analytics requests. Please try again later.',
+});
 
 /**
  * GET /api/resumes/{resumeId}/analytics
  * Get analytics data for a resume
  */
-export async function GET(
+export const GET = analyticsRateLimit(async (
   request: NextRequest,
   { params }: { params: { resumeId: string } }
-) {
+) => {
   try {
     const session = requireAuth(request);
 
@@ -39,4 +47,4 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});

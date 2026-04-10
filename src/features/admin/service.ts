@@ -15,9 +15,9 @@ import {
   UserStatus,
 } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/auth/session";
-import { createNotificationIfMissing } from "@/features/notifications/service";
+import { prisma } from "../../lib/prisma";
+import { requireSession } from "../../lib/auth/session";
+import { createNotificationIfMissing } from "../notifications/service";
 
 const ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN'];
 const FEATURE_FLAG_BLUEPRINT = [

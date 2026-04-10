@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../../lib/prisma';
 import { UAParser } from 'ua-parser-js';
+import { NotificationService } from './notification-service';
 
 export interface ViewMetadata {
   userAgent?: string;
@@ -72,6 +73,15 @@ export class AnalyticsService {
         },
       });
 
+      // Trigger notification for view (async, non-blocking)
+      NotificationService.createNotification(resumeId, {
+        type: 'view',
+        viewerEmail: metadata.viewerEmail,
+        viewerName: undefined,
+      }).catch(err => {
+        console.error('Failed to create view notification:', err);
+      });
+
       // Check if aggregation is needed
       await this.checkAndAggregate(resumeId);
     } catch (error) {
@@ -84,9 +94,27 @@ export class AnalyticsService {
    */
   static async recordDownload(exportId: string): Promise<void> {
     try {
+      const exportRecord = await prisma.resumeExport.findUnique({
+        where: { id: exportId },
+        select: { resumeId: true },
+      });
+
+      if (!exportRecord) {
+        throw new Error(`Export not found: ${exportId}`);
+      }
+
       await prisma.resumeExport.update({
         where: { id: exportId },
         data: { downloadCount: { increment: 1 } },
+      });
+
+      // Trigger notification for download (async, non-blocking)
+      NotificationService.createNotification(exportRecord.resumeId, {
+        type: 'download',
+        viewerEmail: undefined,
+        viewerName: undefined,
+      }).catch(err => {
+        console.error('Failed to create download notification:', err);
       });
     } catch (error) {
       throw new Error(`Failed to record download: ${error instanceof Error ? error.message : 'Unknown error'}`);

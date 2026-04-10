@@ -1,7 +1,7 @@
 import OpenAI from "openai";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../lib/prisma";
 import type { Prisma } from "@prisma/client";
-import { env } from "@/lib/env";
+import { env } from "../../lib/env";
 
 const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,

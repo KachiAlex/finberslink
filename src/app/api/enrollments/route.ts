@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/guards";
-import { prisma } from "@/lib/prisma";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
+import { requireAuth } from "../../../lib/auth/guards";
+import { prisma } from "../../../lib/prisma";
+import { createRateLimit, rateLimitPresets } from "../../../lib/security/rate-limit";
 import { EnrollmentStatus } from "@prisma/client";
 
 export const runtime = "nodejs";

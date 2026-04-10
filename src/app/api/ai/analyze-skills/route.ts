@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { analyzeSkills } from "@/lib/ai/resume";
-import { verifyToken } from "@/lib/auth/jwt";
+import { analyzeSkills } from "../../../../lib/ai/resume";
+import { verifyToken } from "../../../../lib/auth/jwt";
 import { z } from "zod";
 
 const AnalyzeSkillsSchema = z.object({

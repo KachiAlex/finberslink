@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '@/lib/auth/guards';
 import { SharingService } from '@/features/resume/sharing-service';
 import { prisma } from '@/lib/prisma';
+import { createRateLimit, rateLimitPresets } from '@/lib/security/rate-limit';
 
 const ShareSchema = z.object({
   recipients: z.array(z.string().email()).min(1).max(50),
@@ -10,14 +11,21 @@ const ShareSchema = z.object({
   message: z.string().optional(),
 });
 
+// Rate limit: 50 share creations per hour per user
+const shareRateLimit = createRateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 50,
+  message: 'Too many share requests. Please try again later.',
+});
+
 /**
  * POST /api/resumes/{resumeId}/share
  * Create share links for a resume
  */
-export async function POST(
+export const POST = shareRateLimit(async (
   request: NextRequest,
   { params }: { params: { resumeId: string } }
-) {
+) => {
   try {
     const session = requireAuth(request);
     const body = await request.json();
@@ -67,7 +75,7 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * GET /api/resumes/{resumeId}/share

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useChatMessages } from "../hooks";
 import { Bell, MessageCircle, Users, Hash, X, Check, CheckCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
+import { Avatar } from "../../components/ui/avatar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { ScrollArea } from "../../components/ui/scroll-area";
+import { listChatNotifications } from "../service";
 
 interface Notification {
   id: string;

@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import type { InterviewFlowStep, InterviewSessionStatus } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../lib/prisma";
 import { generateInterviewSessionInsights, generateResponseFeedback } from "./ai";
 
 const sessionInclude = {

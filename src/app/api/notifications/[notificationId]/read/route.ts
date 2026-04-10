@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/guards';
-import { NotificationService } from '@/features/resume/notification-service';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { requireSession } from "@/lib/auth/session";
+import { notificationService } from "@/features/resume/notification-service";
+import { prisma } from "@/lib/prisma";
 
 /**
  * PATCH /api/notifications/{notificationId}/read
@@ -12,33 +12,37 @@ export async function PATCH(
   { params }: { params: { notificationId: string } }
 ) {
   try {
-    const session = requireAuth(request);
+    const session = await requireSession();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // Verify notification belongs to user
+    // Verify the notification belongs to the user
     const notification = await prisma.resumeNotification.findUnique({
       where: { id: params.notificationId },
-      select: { userId: true },
     });
 
     if (!notification) {
-      return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Notification not found" },
+        { status: 404 }
+      );
     }
 
-    if (notification.userId !== session.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    if (notification.userId !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Mark as read
-    await NotificationService.markAsRead(params.notificationId);
+    await notificationService.markAsRead(params.notificationId);
 
-    return NextResponse.json(
-      { success: true },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error marking notification as read:', error);
+    console.error(
+      `[PATCH /api/notifications/${params.notificationId}/read] Error:`,
+      error
+    );
     return NextResponse.json(
-      { error: 'Failed to mark notification as read' },
+      { error: "Failed to mark notification as read" },
       { status: 500 }
     );
   }

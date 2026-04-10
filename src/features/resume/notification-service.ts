@@ -1,16 +1,28 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from "@/lib/prisma";
+import { sendEmail } from "@/lib/email";
 
 export interface NotificationMetadata {
   viewerEmail?: string;
   viewerName?: string;
-  type: 'view' | 'download';
+  deviceType?: string;
+  browser?: string;
+  operatingSystem?: string;
+  country?: string;
+  city?: string;
+}
+
+export interface NotificationPreferences {
+  viewNotifications?: boolean;
+  downloadNotifications?: boolean;
+  emailNotifications?: boolean;
+  aggregateViews?: boolean;
 }
 
 export interface Notification {
   id: string;
   userId: string;
   resumeId: string;
-  type: string;
+  type: "view" | "download";
   viewerEmail?: string;
   viewerName?: string;
   aggregatedCount: number;
@@ -19,29 +31,18 @@ export interface Notification {
   createdAt: Date;
 }
 
-export interface NotificationPreferences {
-  viewNotifications: boolean;
-  downloadNotifications: boolean;
-  emailNotifications: boolean;
-  aggregateViews: boolean;
-}
-
-/**
- * Notification Service
- * Sends notifications for resume activity
- */
 export class NotificationService {
-  private static readonly AGGREGATION_WINDOW_MINUTES = 60;
-
   /**
-   * Create notification for view/download
+   * Create a notification for a view or download event
+   * Implements Property 18: Notification Creation on View
    */
-  static async createNotification(
+  async createNotification(
     resumeId: string,
+    type: "view" | "download",
     metadata: NotificationMetadata
   ): Promise<void> {
     try {
-      // Get resume to find owner
+      // Get the resume to find the owner
       const resume = await prisma.resume.findUnique({
         where: { id: resumeId },
         select: { userId: true },
@@ -51,157 +52,210 @@ export class NotificationService {
         throw new Error(`Resume not found: ${resumeId}`);
       }
 
-      // Get user preferences
+      // Get user's notification preferences
       const preferences = await this.getNotificationPreferences(resume.userId);
 
       // Check if notifications are enabled for this type
-      if (metadata.type === 'view' && !preferences.viewNotifications) {
-        return;
-      }
-      if (metadata.type === 'download' && !preferences.downloadNotifications) {
+      const shouldNotify =
+        type === "view"
+          ? preferences.viewNotifications
+          : preferences.downloadNotifications;
+
+      if (!shouldNotify) {
         return;
       }
 
-      // Check if we should aggregate
-      if (preferences.aggregateViews && metadata.type === 'view') {
-        await this.createOrAggregateNotification(
-          resume.userId,
-          resumeId,
-          metadata
-        );
-      } else {
-        await prisma.resumeNotification.create({
-          data: {
+      // Check if we should aggregate with existing notifications
+      if (preferences.aggregateViews && metadata.viewerEmail) {
+        const existingNotification = await prisma.resumeNotification.findFirst({
+          where: {
             userId: resume.userId,
             resumeId,
-            type: metadata.type,
+            type,
             viewerEmail: metadata.viewerEmail,
-            viewerName: metadata.viewerName,
+            createdAt: {
+              gte: new Date(Date.now() - 60 * 60 * 1000), // Last hour
+            },
           },
         });
+
+        if (existingNotification) {
+          // Update existing notification with aggregated count
+          await prisma.resumeNotification.update({
+            where: { id: existingNotification.id },
+            data: {
+              aggregatedCount: existingNotification.aggregatedCount + 1,
+              createdAt: new Date(), // Update timestamp
+            },
+          });
+          return;
+        }
       }
 
-      // Send email if enabled
-      if (preferences.emailNotifications) {
-        await this.sendNotificationEmail(resume.userId, resumeId, metadata);
-      }
-    } catch (error) {
-      throw new Error(`Failed to create notification: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  /**
-   * Create or aggregate notification
-   */
-  private static async createOrAggregateNotification(
-    userId: string,
-    resumeId: string,
-    metadata: NotificationMetadata
-  ): Promise<void> {
-    try {
-      // Look for recent notification from same viewer
-      const cutoffTime = new Date();
-      cutoffTime.setMinutes(cutoffTime.getMinutes() - this.AGGREGATION_WINDOW_MINUTES);
-
-      const existingNotification = await prisma.resumeNotification.findFirst({
-        where: {
-          userId,
+      // Create new notification
+      const notification = await prisma.resumeNotification.create({
+        data: {
+          userId: resume.userId,
           resumeId,
-          type: metadata.type,
+          type,
           viewerEmail: metadata.viewerEmail,
-          createdAt: { gte: cutoffTime },
+          viewerName: metadata.viewerName,
+          aggregatedCount: 1,
+          isRead: false,
+          emailSent: false,
         },
       });
 
-      if (existingNotification) {
-        // Aggregate with existing notification
-        await prisma.resumeNotification.update({
-          where: { id: existingNotification.id },
-          data: {
-            aggregatedCount: { increment: 1 },
-          },
-        });
-      } else {
-        // Create new notification
-        await prisma.resumeNotification.create({
-          data: {
-            userId,
-            resumeId,
-            type: metadata.type,
-            viewerEmail: metadata.viewerEmail,
-            viewerName: metadata.viewerName,
-          },
-        });
+      // Send email notification if enabled
+      if (preferences.emailNotifications) {
+        await this.sendNotificationEmail(resume.userId, notification);
       }
     } catch (error) {
-      throw new Error(`Failed to create or aggregate notification: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(
+        `[NotificationService] Error creating notification for resume ${resumeId}:`,
+        error
+      );
+      // Don't throw - notifications should not block main flow
     }
   }
 
   /**
-   * Get notifications for user
+   * Send email notification to user
    */
-  static async getNotifications(
+  async sendNotificationEmail(
     userId: string,
-    limit: number = 50,
-    offset: number = 0
-  ): Promise<{ notifications: Notification[]; unreadCount: number }> {
+    notification: Notification
+  ): Promise<void> {
     try {
-      const notifications = await prisma.resumeNotification.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, name: true },
       });
 
-      const unreadCount = await prisma.resumeNotification.count({
-        where: { userId, isRead: false },
+      if (!user || !user.email) {
+        throw new Error(`User not found or has no email: ${userId}`);
+      }
+
+      const resume = await prisma.resume.findUnique({
+        where: { id: notification.resumeId },
+        select: { title: true },
       });
 
-      return { notifications, unreadCount };
+      if (!resume) {
+        throw new Error(`Resume not found: ${notification.resumeId}`);
+      }
+
+      const eventType =
+        notification.type === "view" ? "viewed" : "downloaded";
+      const viewerInfo = notification.viewerName
+        ? `${notification.viewerName} (${notification.viewerEmail})`
+        : notification.viewerEmail || "Someone";
+
+      const subject =
+        notification.aggregatedCount > 1
+          ? `${notification.aggregatedCount} people have ${eventType} your resume "${resume.title}"`
+          : `Your resume "${resume.title}" was ${eventType}`;
+
+      const analyticsLink = `${process.env.NEXT_PUBLIC_APP_URL}/resumes/${notification.resumeId}/analytics`;
+
+      const htmlContent = `
+        <h2>Resume Activity Notification</h2>
+        <p>Hi ${user.name},</p>
+        <p>${viewerInfo} has ${eventType} your resume <strong>"${resume.title}"</strong>.</p>
+        ${
+          notification.aggregatedCount > 1
+            ? `<p>This is the ${notification.aggregatedCount}th view from this person in the last hour.</p>`
+            : ""
+        }
+        <p>
+          <a href="${analyticsLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            View Analytics
+          </a>
+        </p>
+        <p>Best regards,<br>Finbers Link</p>
+      `;
+
+      await sendEmail({
+        to: user.email,
+        subject,
+        html: htmlContent,
+      });
+
+      // Mark email as sent
+      await prisma.resumeNotification.update({
+        where: { id: notification.id },
+        data: { emailSent: true },
+      });
     } catch (error) {
-      throw new Error(`Failed to get notifications: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(
+        `[NotificationService] Error sending notification email for notification ${notification.id}:`,
+        error
+      );
+      // Don't throw - email failures should not block
+    }
+  }
+
+  /**
+   * Get all notifications for a user with pagination
+   */
+  async getNotifications(
+    userId: string,
+    limit: number = 20,
+    offset: number = 0
+  ): Promise<{ notifications: Notification[]; total: number }> {
+    try {
+      const [notifications, total] = await Promise.all([
+        prisma.resumeNotification.findMany({
+          where: { userId },
+          orderBy: { createdAt: "desc" },
+          take: limit,
+          skip: offset,
+        }),
+        prisma.resumeNotification.count({
+          where: { userId },
+        }),
+      ]);
+
+      return { notifications, total };
+    } catch (error) {
+      console.error(
+        `[NotificationService] Error fetching notifications for user ${userId}:`,
+        error
+      );
+      throw error;
     }
   }
 
   /**
    * Mark notification as read
    */
-  static async markAsRead(notificationId: string): Promise<void> {
+  async markAsRead(notificationId: string): Promise<void> {
     try {
       await prisma.resumeNotification.update({
         where: { id: notificationId },
         data: { isRead: true },
       });
     } catch (error) {
-      throw new Error(`Failed to mark notification as read: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(
+        `[NotificationService] Error marking notification ${notificationId} as read:`,
+        error
+      );
+      throw error;
     }
   }
 
   /**
-   * Mark all notifications as read
+   * Get notification preferences for a user
    */
-  static async markAllAsRead(userId: string): Promise<void> {
-    try {
-      await prisma.resumeNotification.updateMany({
-        where: { userId, isRead: false },
-        data: { isRead: true },
-      });
-    } catch (error) {
-      throw new Error(`Failed to mark all notifications as read: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  /**
-   * Get notification preferences
-   */
-  static async getNotificationPreferences(userId: string): Promise<NotificationPreferences> {
+  async getNotificationPreferences(
+    userId: string
+  ): Promise<NotificationPreferences> {
     try {
       let preferences = await prisma.notificationPreference.findUnique({
         where: { userId },
       });
 
-      // Create default preferences if not found
+      // Create default preferences if they don't exist
       if (!preferences) {
         preferences = await prisma.notificationPreference.create({
           data: {
@@ -221,25 +275,55 @@ export class NotificationService {
         aggregateViews: preferences.aggregateViews,
       };
     } catch (error) {
-      throw new Error(`Failed to get notification preferences: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(
+        `[NotificationService] Error fetching preferences for user ${userId}:`,
+        error
+      );
+      // Return defaults on error
+      return {
+        viewNotifications: true,
+        downloadNotifications: true,
+        emailNotifications: true,
+        aggregateViews: true,
+      };
     }
   }
 
   /**
-   * Update notification preferences
+   * Update notification preferences for a user
    */
-  static async updateNotificationPreferences(
+  async updateNotificationPreferences(
     userId: string,
-    preferences: Partial<NotificationPreferences>
+    preferences: NotificationPreferences
   ): Promise<NotificationPreferences> {
     try {
       const updated = await prisma.notificationPreference.upsert({
         where: { userId },
         create: {
           userId,
-          ...preferences,
+          viewNotifications: preferences.viewNotifications ?? true,
+          downloadNotifications: preferences.downloadNotifications ?? true,
+          emailNotifications: preferences.emailNotifications ?? true,
+          aggregateViews: preferences.aggregateViews ?? true,
         },
-        update: preferences,
+        update: {
+          viewNotifications:
+            preferences.viewNotifications !== undefined
+              ? preferences.viewNotifications
+              : undefined,
+          downloadNotifications:
+            preferences.downloadNotifications !== undefined
+              ? preferences.downloadNotifications
+              : undefined,
+          emailNotifications:
+            preferences.emailNotifications !== undefined
+              ? preferences.emailNotifications
+              : undefined,
+          aggregateViews:
+            preferences.aggregateViews !== undefined
+              ? preferences.aggregateViews
+              : undefined,
+        },
       });
 
       return {
@@ -249,101 +333,82 @@ export class NotificationService {
         aggregateViews: updated.aggregateViews,
       };
     } catch (error) {
-      throw new Error(`Failed to update notification preferences: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(
+        `[NotificationService] Error updating preferences for user ${userId}:`,
+        error
+      );
+      throw error;
     }
   }
 
   /**
-   * Send notification email
+   * Get unread notification count for a user
    */
-  private static async sendNotificationEmail(
-    userId: string,
-    resumeId: string,
-    metadata: NotificationMetadata
-  ): Promise<void> {
+  async getUnreadCount(userId: string): Promise<number> {
     try {
-      // Get user email
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { email: true, firstName: true },
-      });
-
-      if (!user) {
-        throw new Error(`User not found: ${userId}`);
-      }
-
-      // Get resume title
-      const resume = await prisma.resume.findUnique({
-        where: { id: resumeId },
-        select: { title: true },
-      });
-
-      if (!resume) {
-        throw new Error(`Resume not found: ${resumeId}`);
-      }
-
-      // TODO: Implement email sending
-      // This would integrate with an email service like SendGrid, Mailgun, etc.
-      // For now, this is a placeholder
-
-      console.log(`Email notification sent to ${user.email} for ${metadata.type} on resume "${resume.title}"`);
-
-      // Mark email as sent
-      const notification = await prisma.resumeNotification.findFirst({
+      return await prisma.resumeNotification.count({
         where: {
           userId,
-          resumeId,
-          type: metadata.type,
-          viewerEmail: metadata.viewerEmail,
+          isRead: false,
         },
-        orderBy: { createdAt: 'desc' },
       });
-
-      if (notification) {
-        await prisma.resumeNotification.update({
-          where: { id: notification.id },
-          data: { emailSent: true },
-        });
-      }
     } catch (error) {
-      console.error('Failed to send notification email:', error);
-      // Don't throw - email sending failure shouldn't block notification creation
+      console.error(
+        `[NotificationService] Error getting unread count for user ${userId}:`,
+        error
+      );
+      return 0;
+    }
+  }
+
+  /**
+   * Mark all notifications as read for a user
+   */
+  async markAllAsRead(userId: string): Promise<void> {
+    try {
+      await prisma.resumeNotification.updateMany({
+        where: {
+          userId,
+          isRead: false,
+        },
+        data: {
+          isRead: true,
+        },
+      });
+    } catch (error) {
+      console.error(
+        `[NotificationService] Error marking all notifications as read for user ${userId}:`,
+        error
+      );
+      throw error;
     }
   }
 
   /**
    * Delete old notifications (cleanup job)
+   * Keep notifications for 30 days
    */
-  static async deleteOldNotifications(daysOld: number = 30): Promise<number> {
+  async deleteOldNotifications(daysToKeep: number = 30): Promise<number> {
     try {
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+      const cutoffDate = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
 
       const result = await prisma.resumeNotification.deleteMany({
         where: {
-          createdAt: { lt: cutoffDate },
-          isRead: true,
+          createdAt: {
+            lt: cutoffDate,
+          },
         },
       });
 
       return result.count;
     } catch (error) {
-      throw new Error(`Failed to delete old notifications: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  /**
-   * Get unread count for user
-   */
-  static async getUnreadCount(userId: string): Promise<number> {
-    try {
-      const count = await prisma.resumeNotification.count({
-        where: { userId, isRead: false },
-      });
-
-      return count;
-    } catch (error) {
-      throw new Error(`Failed to get unread count: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(
+        `[NotificationService] Error deleting old notifications:`,
+        error
+      );
+      throw error;
     }
   }
 }
+
+export const notificationService = new NotificationService();

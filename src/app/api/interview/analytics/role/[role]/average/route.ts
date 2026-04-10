@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { getRoleAverageScore } from '@/features/interview/analytics-service';
+import { authOptions } from '../../../../../../auth/[...nextauth]/route';
+import { getRoleAverageScore } from '../../../../../../features/interview/analytics-service';
 
 export async function GET(
   request: NextRequest,

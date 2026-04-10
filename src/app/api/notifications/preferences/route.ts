@@ -1,14 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { requireAuth } from '@/lib/auth/guards';
-import { NotificationService } from '@/features/resume/notification-service';
-
-const PreferencesSchema = z.object({
-  viewNotifications: z.boolean().optional(),
-  downloadNotifications: z.boolean().optional(),
-  emailNotifications: z.boolean().optional(),
-  aggregateViews: z.boolean().optional(),
-});
+import { NextRequest, NextResponse } from "next/server";
+import { requireSession } from "../../../lib/auth/session";
+import { notificationService } from "../../../features/resume/notification-service";
 
 /**
  * GET /api/notifications/preferences
@@ -16,16 +8,20 @@ const PreferencesSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = requireAuth(request);
+    const session = await requireSession();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // Get preferences
-    const preferences = await NotificationService.getNotificationPreferences(session.userId);
+    const preferences = await notificationService.getNotificationPreferences(
+      session.user.id
+    );
 
-    return NextResponse.json(preferences, { status: 200 });
+    return NextResponse.json({ preferences });
   } catch (error) {
-    console.error('Error retrieving notification preferences:', error);
+    console.error("[GET /api/notifications/preferences] Error:", error);
     return NextResponse.json(
-      { error: 'Failed to retrieve notification preferences' },
+      { error: "Failed to fetch preferences" },
       { status: 500 }
     );
   }
@@ -37,27 +33,23 @@ export async function GET(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
-    const session = requireAuth(request);
-    const body = await request.json();
-    const validated = PreferencesSchema.parse(body);
+    const session = await requireSession();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // Update preferences
-    const preferences = await NotificationService.updateNotificationPreferences(
-      session.userId,
-      validated
+    const body = await request.json();
+
+    const preferences = await notificationService.updateNotificationPreferences(
+      session.user.id,
+      body
     );
 
-    return NextResponse.json(preferences, { status: 200 });
+    return NextResponse.json({ preferences });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', issues: error.issues },
-        { status: 400 }
-      );
-    }
-    console.error('Error updating notification preferences:', error);
+    console.error("[PATCH /api/notifications/preferences] Error:", error);
     return NextResponse.json(
-      { error: 'Failed to update notification preferences' },
+      { error: "Failed to update preferences" },
       { status: 500 }
     );
   }

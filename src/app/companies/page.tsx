@@ -1,11 +1,11 @@
 import { Search, Building, Briefcase, MapPin, Globe } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "../../components/ui/badge";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { getCompanies } from "@/features/jobs/company.service";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { getCompanies } from "../../../features/companies/service";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

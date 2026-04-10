@@ -5,6 +5,7 @@ import { customAlphabet } from "nanoid";
 import { prisma } from "../../lib/prisma";
 import { slugify } from "../../lib/slugify";
 import { isVideoUrlValid, toEmbedUrl } from "../../lib/video";
+import { VersioningService } from "./versioning-service";
 
 const SHARE_SLUG_ALPHABET = "abcdefghijkmnopqrstuvwxyz0123456789";
 const SHARE_SLUG_LENGTH = 10;
@@ -212,6 +213,20 @@ export async function updateResume(slug: string, data: UpdateResumeInput) {
     return getResumeBySlug(slug);
   }
 
+  // Get current resume to create version snapshot
+  const currentResume = await getResumeBySlug(slug);
+  if (!currentResume) {
+    throw new Error(`Resume not found: ${slug}`);
+  }
+
+  // Create version snapshot before updating (async, non-blocking)
+  VersioningService.createVersion(
+    currentResume.id,
+    `Updated resume: ${Object.keys(data).join(', ')}`
+  ).catch(err => {
+    console.error('Failed to create version snapshot:', err);
+  });
+
   const updateData = buildResumeUpdateInput(data);
 
   if (data.shareSlug !== undefined) {
@@ -228,6 +243,11 @@ export async function updateResume(slug: string, data: UpdateResumeInput) {
         orderBy: { order: "asc" },
       },
       projects: {
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+}
         orderBy: { order: "asc" },
       },
     },

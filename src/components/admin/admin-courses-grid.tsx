@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { CourseListRow } from "@/components/admin/course-list-row";
-import { CourseEditModalEnhanced } from "@/components/admin/course-edit-modal-enhanced";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { listAdminCourses } from "../../features/admin/service";
+import { CourseListRow } from "./course-list-row";
+import { CourseEditModalEnhanced } from "./course-edit-modal-enhanced";
 import { 
   Search, 
   Filter, 
@@ -76,8 +77,7 @@ export function AdminCoursesGrid() {
   const fetchCourses = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/admin/courses/debug");
-      const data = await response.json();
+      const data = await listAdminCourses();
       
       if (data.allCourses) {
         // Separate live and archived courses

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { refreshSession } from "@/features/auth/service";
-import { setAuthCookies, clearAuthCookies } from "@/lib/auth/cookies";
+import { refreshSession } from "../../../../features/auth/service";
+import { setAuthCookies, clearAuthCookies } from "../../../../lib/auth/cookies";
 
 export async function POST(request: NextRequest) {
   try {

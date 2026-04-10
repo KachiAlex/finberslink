@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { approveCourseEdit, requireAdminUser } from "@/features/admin/service";
+import { approveCourseEdit, requireAdminUser } from "../../../../../../features/admin/service";
 
 export async function POST(
   request: NextRequest,

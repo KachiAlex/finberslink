@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { verifyToken } from "@/lib/auth/jwt";
+import { verifyToken } from "../../../lib/auth/jwt";
 
 export function requireAuth(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;

@@ -1,7 +1,7 @@
 // Forum Service with Optimized Queries and TypeScript Types
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../lib/prisma";
 import { ForumThread, ForumPost, ForumPostReaction, ForumThreadSubscription, ThreadCreateData, PostCreateData, ThreadListParams, PostListParams, UserMention } from './types';
-import { NotificationService } from '@/features/resume/notification-service';
+import { NotificationService } from '../resume/notification-service';
 
 // Event broadcasting helper
 async function broadcastForumEvent(event: {
@@ -15,7 +15,7 @@ async function broadcastForumEvent(event: {
     // For now, we'll use a simple in-memory approach
     if (process.env.NODE_ENV === 'development') {
       // Import the broadcast function dynamically to avoid circular dependencies
-      const { broadcastForumEvent: broadcast } = await import('@/app/api/forum/realtime/route');
+      const { broadcastForumEvent: broadcast } = await import('../../../app/api/forum/realtime/route');
       broadcast(event);
     }
   } catch (error) {

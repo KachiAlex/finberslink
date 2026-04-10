@@ -1,54 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { requireAuth } from '@/lib/auth/guards';
-import { NotificationService } from '@/features/resume/notification-service';
-
-const NotificationsSchema = z.object({
-  limit: z.number().int().positive().max(100).optional().default(50),
-  offset: z.number().int().nonnegative().optional().default(0),
-});
+import { NextRequest, NextResponse } from "next/server";
+import { requireSession } from "@/lib/auth/session";
+import { notificationService } from "@/features/resume/notification-service";
 
 /**
  * GET /api/notifications
- * Get notifications for the current user
+ * Get all notifications for the current user with pagination
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = requireAuth(request);
-
-    // Parse query parameters
-    const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
-
-    const validated = NotificationsSchema.parse({ limit, offset });
-
-    // Get notifications
-    const { notifications, unreadCount } = await NotificationService.getNotifications(
-      session.userId,
-      validated.limit,
-      validated.offset
-    );
-
-    return NextResponse.json(
-      {
-        notifications,
-        unreadCount,
-        limit: validated.limit,
-        offset: validated.offset,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', issues: error.issues },
-        { status: 400 }
-      );
+    const session = await requireSession();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error('Error retrieving notifications:', error);
+
+    const searchParams = request.nextUrl.searchParams;
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
+    const offset = parseInt(searchParams.get("offset") || "0");
+
+    const { notifications, total } = await notificationService.getNotifications(
+      session.user.id,
+      limit,
+      offset
+    );
+
+    const unreadCount = await notificationService.getUnreadCount(
+      session.user.id
+    );
+
+    return NextResponse.json({
+      notifications,
+      total,
+      unreadCount,
+      limit,
+      offset,
+    });
+  } catch (error) {
+    console.error("[GET /api/notifications] Error:", error);
     return NextResponse.json(
-      { error: 'Failed to retrieve notifications' },
+      { error: "Failed to fetch notifications" },
       { status: 500 }
     );
   }

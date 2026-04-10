@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { useFormState } from "react-dom";
+import { generateResumeSummary } from "../../../lib/ai/resume";
 
-import { AIButton } from "@/components/ai/ai-button";
-import { BulletSuggestions } from "@/components/ai/bullet-suggestions";
-import { SkillAnalysis } from "@/components/ai/skill-analysis";
-import { Input } from "@/components/ui/input";
-import { Label } from "../../../../components/ui/label";
-import { Textarea } from "../../../../components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "../../../components/ui/button";
+import { BulletSuggestions } from "../../../components/ai/bullet-suggestions";
+import { SkillAnalysis } from "../../../components/ai/skill-analysis";
+import { Input } from "../../../components/ui/input";
+import { Badge } from "../../../components/ui/badge";
+import { Textarea } from "../../../components/ui/textarea";
+import { useToast } from "../../../hooks/use-toast";
 import type {
   ATSActionState,
   BulletActionState,

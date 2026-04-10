@@ -41,8 +41,11 @@ const nextConfig = {
     ],
   },
 
-  // Force webpack build for Vercel compatibility
-  webpack5: true,
+  // Turbopack configuration (Next.js 16+)
+  turbopack: {},
+
+  // Allow dev origins for network access
+  allowedDevOrigins: ['10.30.174.76', 'localhost'],
 
   // Headers for security and performance
   async headers() {
@@ -90,13 +93,7 @@ const nextConfig = {
 
   // Redirects
   async redirects() {
-    return [
-      {
-        source: '/dashboard',
-        destination: '/dashboard?tab=learning-pathway',
-        permanent: false,
-      },
-    ];
+    return [];
   },
 
   // Rewrites
@@ -109,32 +106,6 @@ const nextConfig = {
         },
       ],
     };
-  },
-
-  // Webpack configuration
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-            },
-          },
-        },
-      };
-    }
-
-    return config;
-  },
-
-  // Environment variables
-  env: {
-    NEXT_PUBLIC_APP_NAME: 'Finbers Link',
   },
 
   // Logging

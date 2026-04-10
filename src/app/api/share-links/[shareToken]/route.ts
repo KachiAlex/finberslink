@@ -1,12 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
+import { requireSession } from '@/lib/auth/session';
 import { SharingService } from '@/features/resume/sharing-service';
 import { prisma } from '@/lib/prisma';
-import { requireAuth } from '@/lib/auth/guards';
 
-const ExtendSchema = z.object({
-  additionalDays: z.number().int().positive().max(365),
-});
+/**
+ * GET /api/share-links/{shareToken}
+ * Get share link details
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { shareToken: string } }
+) {
+  try {
+    const { shareToken } = params;
+
+    const shareLink = await SharingService.getShareLinkDetails(shareToken);
+
+    if (!shareLink) {
+      return NextResponse.json(
+        { error: 'Share link not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      ...shareLink,
+      remainingTime: SharingService.getRemainingTime(shareLink.expiresAt),
+      status: shareLink.revokedAt ? 'revoked' : new Date() > shareLink.expiresAt ? 'expired' : 'active',
+    });
+  } catch (error) {
+    console.error('Error fetching share link:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch share link' },
+      { status: 500 }
+    );
+  }
+}
 
 /**
  * PATCH /api/share-links/{shareToken}/extend
@@ -17,44 +46,59 @@ export async function PATCH(
   { params }: { params: { shareToken: string } }
 ) {
   try {
-    const session = requireAuth(request);
-    const body = await request.json();
-    const validated = ExtendSchema.parse(body);
-
-    // Get share link
-    const shareLink = await SharingService.getShareLinkDetails(params.shareToken);
-
-    if (!shareLink) {
-      return NextResponse.json({ error: 'Share link not found' }, { status: 404 });
+    const session = await requireSession();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verify user owns the resume
-    const resume = await prisma.resume.findUnique({
-      where: { id: shareLink.resumeId },
-      select: { userId: true },
+    const { shareToken } = params;
+    const body = await request.json();
+
+    // Verify share link belongs to user
+    const shareLink = await prisma.resumeShareLink.findUnique({
+      where: { shareToken },
+      include: { resume: { select: { userId: true } } },
     });
 
-    if (!resume || resume.userId !== session.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    if (!shareLink) {
+      return NextResponse.json(
+        { error: 'Share link not found' },
+        { status: 404 }
+      );
     }
 
-    // Extend expiration
-    const newExpiresAt = await SharingService.extendExpiration(
-      params.shareToken,
-      validated.additionalDays
-    );
-
-    return NextResponse.json(
-      { newExpiresAt },
-      { status: 200 }
-    );
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (shareLink.resume.userId !== session.user.id) {
       return NextResponse.json(
-        { error: 'Invalid input', issues: error.issues },
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
+    }
+
+    // Validate request body
+    const { additionalDays } = body;
+
+    if (!additionalDays || typeof additionalDays !== 'number' || additionalDays <= 0) {
+      return NextResponse.json(
+        { error: 'additionalDays must be a positive number' },
         { status: 400 }
       );
     }
+
+    if (additionalDays > 365) {
+      return NextResponse.json(
+        { error: 'Maximum extension is 365 days' },
+        { status: 400 }
+      );
+    }
+
+    // Extend expiration
+    const newExpiresAt = await SharingService.extendExpiration(shareToken, additionalDays);
+
+    return NextResponse.json({
+      newExpiresAt,
+      remainingTime: SharingService.getRemainingTime(newExpiresAt),
+    });
+  } catch (error) {
     console.error('Error extending share link:', error);
     return NextResponse.json(
       { error: 'Failed to extend share link' },
@@ -72,32 +116,37 @@ export async function DELETE(
   { params }: { params: { shareToken: string } }
 ) {
   try {
-    const session = requireAuth(request);
-
-    // Get share link
-    const shareLink = await SharingService.getShareLinkDetails(params.shareToken);
-
-    if (!shareLink) {
-      return NextResponse.json({ error: 'Share link not found' }, { status: 404 });
+    const session = await requireSession();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verify user owns the resume
-    const resume = await prisma.resume.findUnique({
-      where: { id: shareLink.resumeId },
-      select: { userId: true },
+    const { shareToken } = params;
+
+    // Verify share link belongs to user
+    const shareLink = await prisma.resumeShareLink.findUnique({
+      where: { shareToken },
+      include: { resume: { select: { userId: true } } },
     });
 
-    if (!resume || resume.userId !== session.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    if (!shareLink) {
+      return NextResponse.json(
+        { error: 'Share link not found' },
+        { status: 404 }
+      );
+    }
+
+    if (shareLink.resume.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
     // Revoke share link
-    await SharingService.revokeShareLink(params.shareToken);
+    await SharingService.revokeShareLink(shareToken);
 
-    return NextResponse.json(
-      { success: true },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error revoking share link:', error);
     return NextResponse.json(
