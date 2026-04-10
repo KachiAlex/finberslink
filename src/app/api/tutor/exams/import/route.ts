@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { parseExamImport } from "@/features/tutor/exam-import";
-import { verifyToken } from "@/lib/auth/jwt";
+import { parseExamImport } from "../../../../../features/tutor/exam-import";
+import { verifyToken } from "../../../../../lib/auth/jwt";
 
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024; // 5MB
 
