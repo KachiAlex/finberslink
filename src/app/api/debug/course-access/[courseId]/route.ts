@@ -15,7 +15,7 @@ export async function GET(
     console.log(`=== DEBUG COURSE ACCESS: ${courseId} ===`);
     
     // Get current session
-    const { getSessionFromCookies } = await import("@/lib/auth/session");
+    const { getSessionFromCookies } = await import("../../../../../lib/auth/session");
     const session = await getSessionFromCookies();
     
     if (!session) {
@@ -32,7 +32,7 @@ export async function GET(
     console.log(`Session found: ${JSON.stringify({ userId: session.sub, role: session.role })}`);
     
     // Check course details
-    const { prisma } = await import("@/lib/prisma");
+    const { prisma } = await import("../../../../../lib/prisma");
     const course = await prisma.course.findFirst({
       where: { id: courseId },
       select: {

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { transcribeInterviewAudio } from "@/features/interview/ai";
-import { assertQuestionOwnership } from "@/features/interview/service";
-import { requireSession } from "@/lib/auth/session";
+import { transcribeInterviewAudio } from "../../../../../../features/interview/ai";
+import { assertQuestionOwnership } from "../../../../../../features/interview/service";
+import { requireSession } from "../../../../../../lib/auth/session";
 import { cloudinary } from "../../../../../lib/cloudinary";
 
 const MAX_AUDIO_BYTES = 25 * 1024 * 1024; // 25MB cap for mock responses

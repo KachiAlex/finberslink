@@ -31,7 +31,7 @@ export default async function CourseChatPage({
 
     if (token) {
       console.log("Found access token, verifying...");
-      const { verifyToken } = await import("@/lib/auth/jwt");
+      const { verifyToken } = await import("../../../../lib/auth/jwt");
       session = verifyToken(token);
       userId = session.sub;
       console.log("Session verified for user:", userId);
