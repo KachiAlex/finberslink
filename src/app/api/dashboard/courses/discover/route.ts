@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
+import { EnrollmentStatus } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
     const enrolledCourseIds = await prisma.enrollment.findMany({
       where: {
         userId,
-        status: "ACTIVE",
+        status: EnrollmentStatus.ACTIVE,
       },
       select: { courseId: true },
     });

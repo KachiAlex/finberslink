@@ -2,6 +2,7 @@
 import { Prisma } from "@prisma/client";
 import {
   CourseApprovalStatus,
+  CourseAssignmentStatus,
   CourseLevel,
   EnrollmentStatus,
   InviteStatus,
@@ -875,7 +876,7 @@ export async function assignCourseToStudent(
         studentId: input.studentId,
         courseId: input.courseId,
         status: {
-          in: ['PENDING', 'ACCEPTED'],
+          in: [CourseAssignmentStatus.PENDING, CourseAssignmentStatus.ACCEPTED],
         },
       },
       orderBy: { assignedAt: 'desc' },
@@ -887,7 +888,7 @@ export async function assignCourseToStudent(
           where: { id: existingAssignment.id },
           data: {
             assignedById: resolvedAdmin.id,
-            status: 'ACCEPTED',
+            status: CourseAssignmentStatus.ACCEPTED,
             acceptedAt: new Date(),
             declinedAt: null,
             revokedAt: null,
@@ -899,7 +900,7 @@ export async function assignCourseToStudent(
             courseId: input.courseId,
             studentId: input.studentId,
             assignedById: resolvedAdmin.id,
-            status: 'ACCEPTED',
+            status: CourseAssignmentStatus.ACCEPTED,
             acceptedAt: new Date(),
             notes: input.notes?.trim() || null,
           },
@@ -994,7 +995,7 @@ export async function unassignCourseFromStudent(
         studentId: input.studentId,
         courseId: input.courseId,
         status: {
-          in: ['PENDING', 'ACCEPTED'],
+          in: [CourseAssignmentStatus.PENDING, CourseAssignmentStatus.ACCEPTED],
         },
       },
       orderBy: { assignedAt: 'desc' },

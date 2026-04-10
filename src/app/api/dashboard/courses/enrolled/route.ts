@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { EnrollmentStatus, LessonProgressStatus } from "@prisma/client";
 import { requireAuth } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     const total = await prisma.enrollment.count({
       where: {
         userId,
-        status: "ACTIVE",
+        status: EnrollmentStatus.ACTIVE,
       },
     });
 
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
     const enrollments = await prisma.enrollment.findMany({
       where: {
         userId,
-        status: "ACTIVE",
+        status: EnrollmentStatus.ACTIVE,
       },
       skip,
       take,
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
     const lessonProgress = await prisma.lessonProgress.findMany({
       where: {
         enrollmentId: { in: enrollmentIds },
-        status: "COMPLETED",
+        status: LessonProgressStatus.COMPLETED,
       },
       select: {
         enrollmentId: true,

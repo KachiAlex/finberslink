@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 import { forwardRef } from "react";
 
 interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
