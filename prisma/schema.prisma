@@ -484,6 +484,7 @@ model InterviewSession {
   resume           Resume?                 @relation(fields: [resumeId], references: [id])
   jobOpportunity   JobOpportunity?         @relation(fields: [jobOpportunityId], references: [id])
   questions        InterviewQuestion[]
+  analytics        InterviewAnalytics?     // NEW: Relation to analytics
 
   @@index([userId, status])
 }
@@ -494,22 +495,28 @@ model InterviewQuestion {
   sequence       Int
   prompt         String
   rubric         Json?
+  templateId     String?              // NEW: Link to QuestionTemplate
   createdAt      DateTime             @default(now())
-  session        InterviewSession     @relation(fields: [sessionId], references: [id])
+  session        InterviewSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  template       QuestionTemplate?    @relation(fields: [templateId], references: [id])
   responses      InterviewResponse[]
 
   @@unique([sessionId, sequence])
+  @@index([templateId])
 }
 
 model InterviewResponse {
   id             String             @id @default(cuid())
   questionId     String
-  audioUrl       String?
+  audioUrl       String?            // Deprecated - use AudioFile.signedUrl
   transcript     String
   aiFeedback     String?
   score          Float?
   submittedAt    DateTime           @default(now())
-  question       InterviewQuestion  @relation(fields: [questionId], references: [id])
+  question       InterviewQuestion  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  audioFile      AudioFile?         // NEW: Relation to AudioFile
+  
+  @@index([questionId])
 }
 
 model JobOpportunity {
@@ -1367,4 +1374,55 @@ model NotificationPreference {
   aggregateViews    Boolean   @default(true)
   updatedAt         DateTime  @updatedAt
   user              User      @relation("NotificationPreferences", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+// ============================================================================
+// AI Interview Studio Models
+// ============================================================================
+
+model QuestionTemplate {
+  id              String   @id @default(cuid())
+  prompt          String
+  category        String   // "behavioral", "technical", "situational"
+  difficulty      String   // "easy", "medium", "hard"
+  targetRole      String   // "Software Engineer", "Product Manager", etc.
+  rubric          Json?    // Grading criteria
+  estimatedTime   Int      // Seconds
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  questions       InterviewQuestion[]
+  
+  @@index([targetRole, difficulty])
+  @@index([category])
+}
+
+model InterviewAnalytics {
+  id              String   @id @default(cuid())
+  sessionId       String   @unique
+  session         InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId          String
+  overallScore    Float    // Average of all response scores
+  skillsExtracted Json     // { "communication": 4.2, "problem-solving": 3.8 }
+  completedAt     DateTime
+  createdAt       DateTime @default(now())
+  
+  @@index([userId, completedAt])
+}
+
+model AudioFile {
+  id              String   @id @default(cuid())
+  responseId      String   @unique
+  response        InterviewResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  storageUrl      String   // Firebase Storage URL
+  signedUrl       String   // Signed URL (expires in 24h)
+  fileSize        Int      // Bytes
+  duration        Int      // Seconds
+  uploadedAt      DateTime
+  expiresAt       DateTime // When signed URL expires
+  createdAt       DateTime @default(now())
+  
+  @@index([responseId])
+  @@index([expiresAt])
 }
