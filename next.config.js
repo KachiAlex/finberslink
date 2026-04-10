@@ -42,7 +42,8 @@ const nextConfig = {
   },
 
   // Turbopack configuration (Next.js 16+)
-  turbopack: {},
+  // Disabled due to build hanging issues
+  // turbopack: {},
 
   // Allow dev origins for network access
   allowedDevOrigins: ['10.30.174.76', 'localhost'],
