@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth/jwt";
-import { updateResume } from "@/features/resume/service";
-import { invalidateDashboardInsights } from "@/features/dashboard/service";
+import { verifyToken } from "../../../../lib/auth/jwt";
+import { updateResume } from "../../../../features/resume/service";
+import { invalidateDashboardInsights } from "../../../../features/dashboard/service";
 import { revalidatePath } from "next/cache";
 
 export async function POST(request: NextRequest, { params }: { params: { slug: string } }) {
