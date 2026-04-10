@@ -48,10 +48,19 @@ export function ImportResumeModal() {
     setLoading(true);
 
     try {
-      // Allow PDF and TXT files; also accept other types (older browsers may not set mime correctly)
-      const supportedTypes = ["application/pdf", "text/plain", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+      // Validate file size
       if (selectedFile.size > 5 * 1024 * 1024) {
         throw new Error("File size must be less than 5MB");
+      }
+
+      // Validate file type
+      const supportedTypes = ["application/pdf", "text/plain"];
+      const isSupported = supportedTypes.includes(selectedFile.type) || 
+                         selectedFile.name.endsWith(".pdf") || 
+                         selectedFile.name.endsWith(".txt");
+      
+      if (!isSupported) {
+        throw new Error("Please upload a PDF or TXT file");
       }
 
       let text = "";
@@ -82,9 +91,15 @@ export function ImportResumeModal() {
           text = result.text;
         } catch (serverErr) {
           // Both client and server parsing failed
-          const combinedErr = `Parsing failed: ${(clientErr as Error).message}. Server fallback: ${(serverErr as Error).message}`;
-          throw new Error(combinedErr);
+          const clientMsg = (clientErr as Error).message;
+          const serverMsg = (serverErr as Error).message;
+          throw new Error(`Failed to parse file: ${clientMsg}. ${serverMsg}`);
         }
+      }
+
+      // Validate extracted text
+      if (!text || text.trim().length === 0) {
+        throw new Error("No text content could be extracted from the file");
       }
 
       setFile(selectedFile);
@@ -98,7 +113,9 @@ export function ImportResumeModal() {
         title: selectedFile.name.replace(/\.[^/.]+$/, ""),
       }));
     } catch (err) {
-      setError((err as Error).message || "Failed to parse resume file");
+      const errorMsg = (err as Error).message || "Failed to parse resume file";
+      setError(errorMsg);
+      console.error("[ImportResume] File selection error:", err);
     } finally {
       setLoading(false);
     }

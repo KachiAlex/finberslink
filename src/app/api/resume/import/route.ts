@@ -33,9 +33,25 @@ export async function POST(request: NextRequest) {
 
     const { title, personaName, location, summary, rawContent } = body;
 
-    if (!title || !rawContent) {
+    // Validate required fields
+    if (!title || !title.trim()) {
       return NextResponse.json(
-        { error: "Title and resume content are required" },
+        { error: "Resume title is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!rawContent || !rawContent.trim()) {
+      return NextResponse.json(
+        { error: "Resume content is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate title length
+    if (title.length > 255) {
+      return NextResponse.json(
+        { error: "Resume title must be less than 255 characters" },
         { status: 400 }
       );
     }
@@ -61,12 +77,12 @@ export async function POST(request: NextRequest) {
     const resume = await prisma.resume.create({
       data: {
         userId: session.sub,
-        title,
+        title: title.trim(),
         slug: uniqueSlug,
         shareSlug,
-        personaName: personaName || "",
-        location: location || "",
-        summary: summary || "",
+        personaName: personaName?.trim() || "",
+        location: location?.trim() || "",
+        summary: summary?.trim() || "",
         visibility: "PRIVATE",
         template: "modern",
         skills: extractSkills(rawContent),
@@ -132,6 +148,7 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       console.warn("Import parsing heuristics failed:", err);
+      // Don't fail the entire import if parsing fails - the resume was created successfully
     }
 
     return NextResponse.json({
@@ -144,6 +161,15 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Resume import error:", error);
+    
+    // Return specific error messages
+    if ((error as Error).message.includes("Unauthorized")) {
+      return NextResponse.json(
+        { error: "You must be logged in to import a resume" },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { error: (error as Error).message || "Failed to import resume" },
       { status: 500 }

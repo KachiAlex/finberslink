@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireSession } from "@/lib/auth/session";
-import { getStudentProfile, upsertStudentProfile } from "@/features/profile/service";
-import { invalidateDashboardInsights } from "@/features/dashboard/service";
+import { requireSession } from "../../../lib/auth/session";
+import { getStudentProfile, upsertStudentProfile } from "../../../features/profile/service";
+import { invalidateDashboardInsights } from "../../../features/dashboard/service";
 
 type UpdateProfileRequest = {
   headline?: string;

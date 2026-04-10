@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getTutorCohorts } from "@/features/tutor/service";
-import { verifyToken } from "@/lib/auth/jwt";
+import { getTutorCohorts } from "../../../../features/tutor/service";
+import { verifyToken } from "../../../../lib/auth/jwt";
 
 export async function GET(request: NextRequest) {
   try {
