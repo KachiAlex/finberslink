@@ -8,11 +8,11 @@ import { siteConfig } from "@/config/site";
 import { getUnreadCount } from "@/features/notifications/service";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { ChatAvatar } from "@/components/chat/chat-avatar";
-import { requireSession } from "@/lib/auth/session";
+import { requireSession } from "../../lib/auth/session";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { CurrentUserProvider } from "@/components/current-user-provider";
 import { buildDashboardCoursesUrl } from "@/lib/dashboard-courses-url";
-import { prisma } from "../../../lib/prisma";
+import { prisma } from "../../lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
