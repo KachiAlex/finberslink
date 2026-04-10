@@ -9,6 +9,9 @@ import type { UserAnalytics } from '@/features/interview/analytics-service';
 import { ScoreTrendChart } from './score-trend-chart';
 import { SkillAnalysis } from './skill-analysis';
 import { ComparisonReport } from './comparison-report';
+import { NoAnalyticsEmpty, NoSkillsEmpty, NoTrendsEmpty } from './empty-states';
+import { AnalyticsSkeleton } from './skeleton-loaders';
+import { ErrorAlert } from './error-boundary';
 
 interface AnalyticsDashboardProps {
   userId?: string;
@@ -49,34 +52,21 @@ export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
   }, [userId]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <AnalyticsSkeleton />;
   }
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <ErrorAlert
+        error={error}
+        onRetry={() => window.location.reload()}
+        title="Failed to load analytics"
+      />
     );
   }
 
   if (!analytics) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-          <TrendingUp className="h-10 w-10 text-muted-foreground" />
-          <p className="text-base font-semibold text-slate-800">No analytics yet</p>
-          <p className="max-w-md text-sm text-slate-600">
-            Complete interview sessions to see your performance analytics and skill development.
-          </p>
-        </CardContent>
-      </Card>
-    );
+    return <NoAnalyticsEmpty />;
   }
 
   return (
@@ -117,7 +107,7 @@ export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
       </div>
 
       {/* Score Trends */}
-      {analytics.scoreTrends.length > 0 && (
+      {analytics.scoreTrends.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>Score Trends</CardTitle>
@@ -127,10 +117,12 @@ export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
             <ScoreTrendChart trends={analytics.scoreTrends} />
           </CardContent>
         </Card>
+      ) : (
+        <NoTrendsEmpty />
       )}
 
       {/* Skills Analysis */}
-      {analytics.skillsAnalysis.length > 0 && (
+      {analytics.skillsAnalysis.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>Skills Analysis</CardTitle>
@@ -140,6 +132,8 @@ export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
             <SkillAnalysis skills={analytics.skillsAnalysis} />
           </CardContent>
         </Card>
+      ) : (
+        <NoSkillsEmpty />
       )}
 
       {/* Role Comparison */}

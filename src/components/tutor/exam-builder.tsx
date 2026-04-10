@@ -4,11 +4,11 @@ import type { ChangeEvent } from "react";
 import { useMemo, useRef, useState } from "react";
 import { AlertTriangle, Loader2, Plus, Trash, Upload } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "../../ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import { Input } from "../../ui/input";
+import { Badge } from "../../ui/badge";
+import { Textarea } from "../../ui/textarea";
 
 type ExamImportIssue = {
   row: number;
