@@ -5,9 +5,10 @@ import { Briefcase, Clock, CheckCircle, Star, ArrowRight, Sparkles } from "lucid
 import Link from "next/link";
 
 import { DashboardSectionsClient, type SectionResponse } from "@/app/dashboard/sections-client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { GradientText, RippleButton } from "@/components/shared/animated-components";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { GradientText, RippleButton } from "../shared/animated-components";
 
 interface StudentDashboardProps {
   userId: string;

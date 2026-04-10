@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CoursesTable, TutorCourse } from "@/components/tutor/courses-table";
+import { CoursesTable, TutorCourse } from "../../../components/tutor/courses-table";
 import { Button } from "../../../components/ui/button";
 
 interface CoursesPageClientProps {

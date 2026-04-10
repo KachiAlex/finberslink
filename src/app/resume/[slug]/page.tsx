@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
-import { ResumeTemplateWrapper } from "@/components/resume/resume-template-wrapper";
+import { ResumeTemplateWrapper } from "../../../components/resume/resume-template-wrapper";
 import { getResumeBySlug } from "@/features/resume/service";
-import { getSessionFromCookies } from "@/lib/auth/session";
+import { getSessionFromCookies } from "../../../lib/auth/session";
 
 export default async function ResumePublicPage({ params }: any) {
   const { slug } = params as { slug: string };

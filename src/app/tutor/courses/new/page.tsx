@@ -12,10 +12,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "../../../components/ui/badge";
 import { Progress } from "../../../components/ui/progress";
 import { slugify } from "@/lib/slugify";
-import { TutorExamBuilder, ExamConfig } from "@/components/tutor/exam-builder";
+import { TutorExamBuilder, ExamConfig } from "../../../components/tutor/exam-builder";
 import { isVideoUrlValid, toEmbedUrl, isCloudinaryVideoUrl, isIframeVideoHost } from "@/lib/video";
 
 type SectionModule = {
