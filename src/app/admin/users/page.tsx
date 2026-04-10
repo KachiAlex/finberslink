@@ -1,24 +1,25 @@
 import { ArrowUpDown, Filter, MailPlus, Save, Search, Users } from "lucide-react";
 import { Prisma, UserStatus as PrismaUserStatus, Role as PrismaRole } from "@prisma/client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
+import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
 import {
   createTenantInvite,
   listAllUsers,
   updateUserRole,
   updateUserStatus,
-} from "@/features/admin/service";
-import { upsertStudentProfile } from "@/features/profile/service";
-import { hashPassword } from "@/lib/auth/password";
-import { prisma } from "../../lib/prisma";
+} from "../../../features/admin/service";
+import { upsertStudentProfile } from "../../../features/profile/service";
+import { requireSession } from "../../../lib/auth/session";
+import { prisma } from "../../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdminUser } from "@/features/admin/service";
+import { requireAdminUser } from "../../../features/admin/service";
+import { hashPassword } from "../../../lib/auth/password";
 
 type Role = PrismaRole;
 type UserStatus = PrismaUserStatus;

@@ -1,4 +1,4 @@
-import { revalidatePath } from "next/cache";
+import { requireSession } from "../../../lib/auth/session";
 import type { UserStatus } from "@prisma/client";
 import {
   ShieldCheck,
@@ -7,21 +7,22 @@ import {
   UserPlus2,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "../../../components/ui/badge";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { StatCard } from "../../components/ui/stat-card";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
+import { StatCard } from "../../../components/ui/stat-card";
 import {
   getTutorManagementSnapshot,
   listTutors,
   requireAdminUser,
   updateUserStatus,
-} from "@/features/admin/service";
+} from "../../../features/admin/service";
 
 import { AdminShell } from "../_components/admin-shell";
+import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
