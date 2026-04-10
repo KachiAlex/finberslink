@@ -12,17 +12,17 @@ import {
 } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
+import { Textarea } from "../../../components/ui/textarea";
 import {
   useCreateInterviewSession,
   useInterviewSessions,
   type InterviewSession,
 } from "@/features/interview/hooks";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
 
 interface InterviewPrepDashboardProps {
   userName?: string | null;
