@@ -1,0 +1,7 @@
+{
+  "specType": "feature",
+  "workflowType": "requirements-first",
+  "featureName": "ai-interview-studio",
+  "displayName": "AI Interview Studio - Complete Implementation",
+  "description": "Implement missing features for AI Interview Studio: audio recording/playback, question templates, testing, analytics, and UX polish"
+}
