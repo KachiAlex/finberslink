@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { verifyToken } from "@/lib/auth/jwt";
+import { verifyToken } from "../../../../lib/auth/jwt";
 import { cloudinary } from "../../../../lib/cloudinary";
 
 const RESOURCE_MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB

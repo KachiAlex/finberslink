@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { submitTutorExam } from "@/features/tutor/service";
-import { verifyToken } from "@/lib/auth/jwt";
+import { submitTutorExam } from "../../../../../../features/tutor/service";
+import { verifyToken } from "../../../../../../lib/auth/jwt";
 
 export async function POST(request: NextRequest, context: any) {
   try {
