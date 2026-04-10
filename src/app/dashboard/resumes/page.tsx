@@ -4,11 +4,11 @@ import fs from "fs";
 import path from "path";
 
 import { Button } from "@/components/ui/button";
-import { requireSession } from "../../lib/auth/session";
-import { prisma } from "../../lib/prisma";
-import { CreateResumeButton } from "../../../components/resume/create-resume-button";
-import { ExportButton } from "../../../components/resume/export-button";
-import { ImportResumeModal } from "../../../components/resume/import-resume-modal";
+import { requireSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/prisma";
+import { CreateResumeButton } from "@/components/resume/create-resume-button";
+import { ExportButton } from "@/components/resume/export-button";
+import { ImportResumeModal } from "@/components/resume/import-resume-modal";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
