@@ -41,8 +41,8 @@ const nextConfig = {
     ],
   },
 
-  // Turbopack configuration (empty to avoid webpack conflict)
-  turbopack: {},
+  // Force webpack build for Vercel compatibility
+  webpack5: true,
 
   // Headers for security and performance
   async headers() {
