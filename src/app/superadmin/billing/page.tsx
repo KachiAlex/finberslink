@@ -1,7 +1,7 @@
 import { Badge, CreditCard, Users } from "lucide-react";
 
 import { GlassCard } from "@/components/ui/glass-card";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard } from "../../../components/ui/stat-card";
 import { getSuperAdminBillingOverview } from "@/features/superadmin/billing";
 
 export const dynamic = "force-dynamic";

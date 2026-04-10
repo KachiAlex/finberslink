@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { requireSession } from "@/lib/auth/session";
 import { BrowseJobsTab } from "./_components/browse-jobs-tab";
 import { MyApplicationsTab } from "./_components/my-applications-tab";
