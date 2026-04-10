@@ -346,10 +346,10 @@
 - [ ] Write component tests
 
 ### 4.4 Update Dashboard
-- [ ] Update `src/features/interview/components/interview-dashboard.tsx`
-- [ ] Add AnalyticsDashboard component
-- [ ] Show analytics tab alongside sessions
-- [ ] Update layout to accommodate analytics
+- [x] Update `src/features/interview/components/interview-dashboard.tsx`
+- [x] Add AnalyticsDashboard component
+- [x] Show analytics tab alongside sessions
+- [x] Update layout to accommodate analytics
 - [ ] Write tests
 
 ## Phase 5: UX & Accessibility

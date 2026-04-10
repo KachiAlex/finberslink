@@ -9,6 +9,7 @@ import {
   Mic,
   RefreshCcw,
   Sparkles,
+  BarChart3,
 } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -25,6 +26,7 @@ import {
 import { getInterviewSessions } from "../service";
 import { cn } from "../../lib/utils";
 import { QuestionBankSelector } from "./question-bank-selector";
+import { AnalyticsDashboard } from "./analytics-dashboard";
 
 interface QuestionTemplate {
   id: string;
@@ -92,6 +94,7 @@ type CreateFormState = typeof initialFormState;
 
 function InterviewPrepContent({ userName }: InterviewPrepContentProps) {
   const [createOpen, setCreateOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'sessions' | 'analytics'>('sessions');
   const [form, setForm] = useState<CreateFormState>(initialFormState);
   const [resumes, setResumes] = useState<ResumeOption[]>([]);
   const [jobs, setJobs] = useState<JobOption[]>([]);
@@ -375,45 +378,83 @@ function InterviewPrepContent({ userName }: InterviewPrepContentProps) {
       <section className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Sessions</p>
-            <h2 className="text-2xl font-semibold text-slate-900">Recent interview runs</h2>
+            <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Dashboard</p>
+            <h2 className="text-2xl font-semibold text-slate-900">Interview progress</h2>
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <span className="h-2 w-2 rounded-full bg-emerald-500" /> Auto-synced with AI feedback
           </div>
         </div>
 
-        {sessionsLoading ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {Array.from({ length: 2 }).map((_, idx) => (
-              <Card key={idx} className="animate-pulse border-slate-100 bg-white/80">
-                <CardContent className="space-y-4 py-6">
-                  <div className="h-4 w-1/3 rounded bg-slate-200" />
-                  <div className="h-6 w-1/2 rounded bg-slate-100" />
-                  <div className="h-16 rounded bg-slate-50" />
+        {/* Tab Navigation */}
+        <div className="flex gap-2 border-b border-slate-200">
+          <button
+            onClick={() => setActiveTab('sessions')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+              activeTab === 'sessions'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-slate-600 hover:text-slate-900'
+            )}
+          >
+            <Mic className="inline mr-2 h-4 w-4" />
+            Sessions
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+              activeTab === 'analytics'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-slate-600 hover:text-slate-900'
+            )}
+          >
+            <BarChart3 className="inline mr-2 h-4 w-4" />
+            Analytics
+          </button>
+        </div>
+
+        {/* Sessions Tab */}
+        {activeTab === 'sessions' && (
+          <>
+            {sessionsLoading ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {Array.from({ length: 2 }).map((_, idx) => (
+                  <Card key={idx} className="animate-pulse border-slate-100 bg-white/80">
+                    <CardContent className="space-y-4 py-6">
+                      <div className="h-4 w-1/3 rounded bg-slate-200" />
+                      <div className="h-6 w-1/2 rounded bg-slate-100" />
+                      <div className="h-16 rounded bg-slate-50" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : sortedSessions.length === 0 ? (
+              <Card className="border-dashed border-slate-200 bg-slate-50/80">
+                <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+                  <Mic className="h-10 w-10 text-slate-400" />
+                  <p className="text-base font-semibold text-slate-800">No mock interviews yet</p>
+                  <p className="max-w-md text-sm text-slate-600">
+                    Launch your first session to get AI-powered feedback on delivery, content depth, and role-specific readiness.
+                  </p>
+                  <Button onClick={() => setCreateOpen(true)} className="rounded-full">
+                    Start now
+                  </Button>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        ) : sortedSessions.length === 0 ? (
-          <Card className="border-dashed border-slate-200 bg-slate-50/80">
-            <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-              <Mic className="h-10 w-10 text-slate-400" />
-              <p className="text-base font-semibold text-slate-800">No mock interviews yet</p>
-              <p className="max-w-md text-sm text-slate-600">
-                Launch your first session to get AI-powered feedback on delivery, content depth, and role-specific readiness.
-              </p>
-              <Button onClick={() => setCreateOpen(true)} className="rounded-full">
-                Start now
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {sortedSessions.map((session) => (
-              <SessionCard key={session.id} session={session} />
-            ))}
-          </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {sortedSessions.map((session) => (
+                  <SessionCard key={session.id} session={session} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <AnalyticsDashboard userId={undefined} />
         )}
       </section>
     </div>
