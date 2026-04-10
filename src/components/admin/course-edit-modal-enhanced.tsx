@@ -1,19 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { SafeImage } from "@/components/ui/safe-image";
-import { CourseStructureStep } from "@/components/admin/course-structure-step";
-import { ExamConfigurationStep } from "@/components/admin/exam-configuration-step";
-import { CertificateConfigurationStep } from "@/components/admin/certificate-configuration-step";
+import { updateCourse } from "../../features/admin/service";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
+import { Label } from "../../ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import { Badge } from "../../ui/badge";
+import { Progress } from "../../ui/progress";
+import { SafeImage } from "../../ui/safe-image";
+import { CourseStructureStep } from "./course-structure-step";
+import { ExamConfigurationStep } from "./exam-configuration-step";
+import { CertificateConfigurationStep } from "./certificate-configuration-step";
 import { 
   X, 
   Save, 

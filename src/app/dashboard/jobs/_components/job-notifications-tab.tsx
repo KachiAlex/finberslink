@@ -17,14 +17,14 @@ import {
   Eye,
   CheckCircle
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "../../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
+import { Badge } from "../../../../components/ui/badge";
+import { Input } from "../../../../components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui/select";
+import { Switch } from "../../../../components/ui/switch";
+import { Label } from "../../../../components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
 import { formatDistanceToNow } from "date-fns";
 import { 
   JobNotification, 
@@ -36,6 +36,7 @@ import {
   getUserNotificationPreferences,
   updateUserNotificationPreferences
 } from "@/features/jobs/notifications";
+import { getUserJobAlerts } from "../../../../features/jobs/service";
 
 interface JobNotificationsTabProps {
   userId: string;
