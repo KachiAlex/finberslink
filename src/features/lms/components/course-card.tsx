@@ -1,11 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
+import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent } from "../../../components/ui/card";
+import { Progress } from "../../../components/ui/progress";
+import { cn } from "../../../lib/utils";
 import type { CourseSummary } from "@/types/lms";
 
 const levelCopy: Record<CourseSummary["level"], string> = {

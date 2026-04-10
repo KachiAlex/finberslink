@@ -1,7 +1,7 @@
 import React from "react";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "../../components/ui/progress";
+import { Badge } from "../../components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Trophy, Flame, Clock, Target, TrendingUp, Award } from "lucide-react";
 
 interface CourseProgressCardProps {

@@ -2,11 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, GraduationCap } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
+import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
+import { Card } from "../../../components/ui/card";
+import { Progress } from "../../../components/ui/progress";
+import { cn } from "../../../lib/utils";
 import type { CourseDetail } from "@/types/lms";
 
 const levelCopy: Record<CourseDetail["level"], string> = {
