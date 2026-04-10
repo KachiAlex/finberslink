@@ -9,12 +9,15 @@ import {
   findUserByEmail,
   markPasswordResetTokenUsed,
   updateUserPassword,
-} from "@/features/auth/repository";
-import type { ForgotPasswordInput, LoginInput, RegisterInput, ResetPasswordInput } from "@/features/auth/schemas";
-import { siteConfig } from "@/config/site";
-import { signAccessToken, signRefreshToken, verifyToken, type SessionPayload } from "@/lib/auth/jwt";
-import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { sendPasswordResetEmail } from "@/lib/email";
+} from "./repository";
+import type { ForgotPasswordInput, LoginInput, RegisterInput, ResetPasswordInput } from "./schemas";
+import { siteConfig } from "../../config/site";
+import { getOrCreateDefaultTenant } from "../tenant/service";
+import { setAuthCookies } from "../../lib/auth/cookies";
+import { signAccessToken, signRefreshToken, verifyToken, type SessionPayload } from "../../lib/auth/jwt";
+import { hashPassword, verifyPassword } from "../../lib/auth/password";
+import { sendPasswordResetEmail } from "../../lib/email";
+import { prisma } from "../../lib/prisma";
 
 type UserRole = PrismaRole;
 type UserStatus = PrismaUserStatus;
