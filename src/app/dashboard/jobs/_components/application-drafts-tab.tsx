@@ -19,14 +19,28 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatDistanceToNow } from "date-fns";
-import { 
-  ApplicationDraft, 
-  getUserApplicationDrafts, 
-  deleteApplicationDraft, 
-  submitApplicationFromDraft,
-  getDraftCompletionPercentage,
-  isDraftReadyForSubmission
-} from "@/features/jobs/application-drafts";
+
+interface ApplicationDraft {
+  id: string;
+  userId: string;
+  jobOpportunityId: string;
+  resumeId?: string;
+  coverLetter?: string;
+  answers?: Record<string, string>;
+  lastSavedAt: Date;
+  jobOpportunity?: {
+    id: string;
+    title: string;
+    company: string;
+    location: string;
+    slug: string;
+  };
+  resume?: {
+    id: string;
+    title: string;
+    slug: string;
+  };
+}
 
 interface ApplicationDraftsTabProps {
   userId: string;
@@ -46,8 +60,11 @@ export function ApplicationDraftsTab({ userId }: ApplicationDraftsTabProps) {
   const loadDrafts = async () => {
     setIsLoading(true);
     try {
-      const userDrafts = await getUserApplicationDrafts(userId, 20);
-      setDrafts(userDrafts);
+      const response = await fetch(`/api/jobs/drafts?userId=${userId}&limit=20`);
+      if (response.ok) {
+        const data = await response.json();
+        setDrafts(data.drafts || []);
+      }
     } catch (error) {
       console.error('Failed to load drafts:', error);
       setMessage({ type: 'error', text: 'Failed to load application drafts' });
@@ -59,9 +76,11 @@ export function ApplicationDraftsTab({ userId }: ApplicationDraftsTabProps) {
   const handleDeleteDraft = async (draftId: string, jobOpportunityId: string) => {
     setDeletingDraftId(draftId);
     try {
-      await deleteApplicationDraft(userId, jobOpportunityId);
-      setDrafts(prev => prev.filter(d => d.id !== draftId));
-      setMessage({ type: 'success', text: 'Draft deleted successfully' });
+      const response = await fetch(`/api/jobs/drafts/${draftId}`, { method: 'DELETE' });
+      if (response.ok) {
+        setDrafts(prev => prev.filter(d => d.id !== draftId));
+        setMessage({ type: 'success', text: 'Draft deleted successfully' });
+      }
     } catch (error) {
       console.error('Failed to delete draft:', error);
       setMessage({ type: 'error', text: 'Failed to delete draft' });
@@ -74,7 +93,8 @@ export function ApplicationDraftsTab({ userId }: ApplicationDraftsTabProps) {
   const handleSubmitDraft = async (draft: ApplicationDraft) => {
     setSubmittingDraftId(draft.id);
     try {
-      const result = await submitApplicationFromDraft(userId, draft.jobOpportunityId);
+      const response = await fetch(`/api/jobs/drafts/${draft.id}/submit`, { method: 'POST' });
+      const result = await response.json();
       
       if (result.success) {
         setDrafts(prev => prev.filter(d => d.id !== draft.id));
@@ -91,9 +111,22 @@ export function ApplicationDraftsTab({ userId }: ApplicationDraftsTabProps) {
     }
   };
 
+  const getDraftCompletionPercentage = (draft: ApplicationDraft): number => {
+    let completed = 0;
+    let total = 2; // resume + cover letter
+    
+    if (draft.resumeId) completed++;
+    if (draft.coverLetter) completed++;
+    
+    return Math.round((completed / total) * 100);
+  };
+
+  const isDraftReadyForSubmission = (draft: ApplicationDraft): boolean => {
+    return !!draft.resumeId;
+  };
+
   const getCompletionStatus = (draft: ApplicationDraft) => {
     const percentage = getDraftCompletionPercentage(draft);
-    const isReady = isDraftReadyForSubmission(draft);
     
     if (percentage === 100) {
       return { color: 'text-green-600', bg: 'bg-green-100', label: 'Complete' };
