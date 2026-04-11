@@ -77,11 +77,9 @@
   },
   "optionalDependencies": {
     "@next/swc-wasm-nodejs": "^16.2.2",
-    "@next/swc-wasm-web": "^16.2.2",
-    "@next/swc-win32-x64-msvc": "^16.2.3"
+    "@next/swc-wasm-web": "^16.2.2"
   },
   "devDependencies": {
-    "@next/swc-win32-x64-msvc": "^16.2.3",
     "@playwright/test": "^1.58.2",
     "@swc/core": "^1.15.21",
     "@testing-library/jest-dom": "^6.4.2",
