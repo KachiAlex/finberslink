@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { generateResumeSummary } from "../../../lib/ai/resume";
+import { generateResumeSummary } from "@/lib/ai/resume";
 
 import { Button } from "../../../components/ui/button";
 import { BulletSuggestions } from "../../../components/ai/bullet-suggestions";

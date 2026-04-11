@@ -5,15 +5,15 @@ import { GraduationCap, LayoutDashboard, MessageCircle, Sparkles, Briefcase, Use
 
 import { Badge } from "../../components/ui/badge";
 import { siteConfig } from "../../../config/site";
-import { getCourses } from "../../features/lms/data/course-service";
+import { getCourses } from "@/features/lms/data/course-service";
 import { NotificationsBell } from "../../../components/notifications/notifications-bell";
 import { ChatAvatar } from "../../../components/chat/chat-avatar";
-import { requireSession } from "../../../lib/auth/session";
+import { requireSession } from "@/lib/auth/session";
 import { DashboardSidebar } from "../../../components/dashboard/dashboard-sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { CurrentUserProvider } from "../../../components/current-user-provider";
-import { buildDashboardCoursesUrl } from "../../../lib/dashboard-courses-url";
-import { prisma } from "../../../lib/prisma";
+import { buildDashboardCoursesUrl } from "@/lib/dashboard-courses-url";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

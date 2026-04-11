@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireSession } from "../../lib/auth/session";
+import { requireSession } from "@/lib/auth/session";
 import type { Role } from "@prisma/client";
 
 // Import role-specific dashboard components

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { prisma } from "../../../../../lib/prisma";
-import { AuthError, requireAuth } from "../../../../../../lib/auth/guards";
-import { invalidateDashboardInsights } from "../../../../../../features/dashboard/service";
+import { prisma } from "@/lib/prisma";
+import { AuthError, requireAuth } from "@/lib/auth/guards";
+import { invalidateDashboardInsights } from "@/features/dashboard/service";
 import { EnrollmentStatus } from "@prisma/client";
 
 const AssignmentActionSchema = z.object({

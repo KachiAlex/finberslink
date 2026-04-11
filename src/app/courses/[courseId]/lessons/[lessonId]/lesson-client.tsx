@@ -8,12 +8,12 @@ import { Badge } from "../../../../../components/ui/badge";
 import { Button } from "../../../../../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../components/ui/card";
-import { LessonProgressIndicator } from "../../../../../features/progress/components/progress-components";
+import { LessonProgressIndicator } from "@/features/progress/components/progress-components";
 import { 
   useLessonProgress, 
   useVideoProgress, 
   useScrollProgress 
-} from "../../../../../features/progress/hooks/use-progress-tracking";
+} from "@/features/progress/hooks/use-progress-tracking";
 
 interface LessonPageClientProps {
   course: {

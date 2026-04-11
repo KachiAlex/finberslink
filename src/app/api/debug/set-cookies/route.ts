@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { setAuthCookies } from "../../../../lib/auth/cookies";
+import { setAuthCookies } from "@/lib/auth/cookies";
 
 export const runtime = "nodejs";
 

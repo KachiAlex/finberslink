@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../../../lib/prisma';
+import { prisma } from "@/lib/prisma';
 
 // PATCH /api/forum/posts/[id] - edit post (author or admin)
 export async function PATCH(req: NextRequest, context: any) {

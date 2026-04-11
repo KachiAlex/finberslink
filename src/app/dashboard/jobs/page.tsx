@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import { requireSession } from "../../../lib/auth/session";
+import { requireSession } from "@/lib/auth/session";
 import { BrowseJobsTab } from "./_components/browse-jobs-tab";
 // ApplicationsTab component not yet created
 // ApplicationDraftsTab component not yet created

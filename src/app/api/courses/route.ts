@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { listLearnerCourses } from "../../../features/lms/data/course-service";
-import { requireAuth } from "../../../lib/auth/guards";
-import { createRateLimit, rateLimitPresets } from "../../../lib/security/rate-limit";
-import { prisma } from "../../../lib/prisma";
+import { listLearnerCourses } from "@/features/lms/data/course-service";
+import { requireAuth } from "@/lib/auth/guards";
+import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 

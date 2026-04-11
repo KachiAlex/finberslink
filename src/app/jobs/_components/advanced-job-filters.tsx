@@ -33,7 +33,7 @@ import {
   getBenefits, 
   getCompanySizes, 
   getExperienceLevels 
-} from "../../../features/jobs/service";
+} from "@/features/jobs/service";
 
 interface AdvancedJobFiltersProps {
   currentFilters: JobFilters;

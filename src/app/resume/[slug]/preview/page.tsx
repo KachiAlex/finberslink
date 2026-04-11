@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { ResumeTemplateWrapper } from "../../../../components/resume/resume-template-wrapper";
 import { getResumeBySlug } from "@/features/resume/service";
-import { requireSession } from "../../../../lib/auth/session";
+import { requireSession } from "@/lib/auth/session";
 
 export default async function ResumePreviewPage({ params }: any) {
   const { slug } = params as { slug: string };

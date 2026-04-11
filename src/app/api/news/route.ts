@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { listNewsPosts, createNewsPost } from "../../../features/news/service";
-import { verifyToken } from "../../../lib/auth/jwt";
-import { CreateNewsSchema } from "../../../features/news/schemas";
+import { listNewsPosts, createNewsPost } from "@/features/news/service";
+import { verifyToken } from "@/lib/auth/jwt";
+import { CreateNewsSchema } from "@/features/news/schemas";
 
 export async function GET(request: NextRequest) {
   try {

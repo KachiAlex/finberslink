@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
-import { invalidateDashboardInsights } from "../../../../features/dashboard/service";
-import { createResumeExperience, createResumeEducation } from "../../../../features/resume/service";
-import { upsertStudentProfile } from "../../../../features/profile/service";
+import { prisma } from "@/lib/prisma";
+import { invalidateDashboardInsights } from "@/features/dashboard/service";
+import { createResumeExperience, createResumeEducation } from "@/features/resume/service";
+import { upsertStudentProfile } from "@/features/profile/service";
 
 if (process.env.NODE_ENV === "production") {
   // Prevent accidental exposure in production

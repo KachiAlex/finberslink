@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { upsertStudentProfile } from "../../../features/profile/service";
+import { upsertStudentProfile } from "@/features/profile/service";
 
 import { Label } from "../../../components/ui/label";
 import { Button } from "../../../components/ui/button";

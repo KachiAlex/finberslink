@@ -1,4 +1,4 @@
-import { requireSession } from "../../../lib/auth/session";
+import { requireSession } from "@/lib/auth/session";
 import type { UserStatus } from "@prisma/client";
 import {
   ShieldCheck,
@@ -19,7 +19,7 @@ import {
   listTutors,
   requireAdminUser,
   updateUserStatus,
-} from "../../../features/admin/service";
+} from "@/features/admin/service";
 
 import { AdminShell } from "../_components/admin-shell";
 import { revalidatePath } from "next/cache";

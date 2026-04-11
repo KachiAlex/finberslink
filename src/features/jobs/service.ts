@@ -446,3 +446,11 @@ export function getExperienceLevels(): Array<{ value: string; label: string; yea
     { value: 'EXECUTIVE', label: 'Executive', years: '10+ years' },
   ];
 }
+
+
+export async function getUserSavedJobs(userId: string) {
+  return prisma.jobSave.findMany({
+    where: { userId },
+    include: { jobOpportunity: true },
+  });
+}

@@ -248,11 +248,6 @@ export async function updateResume(slug: string, data: UpdateResumeInput) {
     },
   });
 }
-        orderBy: { order: "asc" },
-      },
-    },
-  });
-}
 
 export async function updateResumeExperience(
   experienceId: string,

@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../../../../../auth/[...nextauth]/route';
-import { getRoleAverageScore } from '../../../../../../features/interview/analytics-service';
+import { requireAuth } from '@/lib/auth/guards';
+import { getRoleAverageScore } from '@/features/interview/analytics-service';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { role: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const session = requireAuth(request);
+    if (!session?.sub) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

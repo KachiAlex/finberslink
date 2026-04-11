@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { requireAuth } from '@/lib/auth/guards';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import {
@@ -22,8 +21,8 @@ const createTemplateSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const session = requireAuth(request);
+    if (!session?.sub) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

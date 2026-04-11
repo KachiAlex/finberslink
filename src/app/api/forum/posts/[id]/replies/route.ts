@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listPostReplies } from "../../../../../../features/forum/service";
+import { listPostReplies } from "@/features/forum/service";
 
 export async function GET(
   request: NextRequest,

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createResume, listUserResumes, createResumeExperience, createResumeEducation } from "../../../features/resume/service";
-import { verifyToken } from "../../../lib/auth/jwt";
-import { ResumeCreateSchema } from "../../../features/resume/schemas";
-import { upsertStudentProfile } from "../../../features/profile/service";
+import { createResume, listUserResumes, createResumeExperience, createResumeEducation } from "@/features/resume/service";
+import { verifyToken } from "@/lib/auth/jwt";
+import { ResumeCreateSchema } from "@/features/resume/schemas";
+import { upsertStudentProfile } from "@/features/profile/service";
 
 export async function GET(request: NextRequest) {
   try {

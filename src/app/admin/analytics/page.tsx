@@ -2,7 +2,7 @@ import { BarChart3, TrendingUp, Users, BookOpen, Briefcase, Activity } from "luc
 
 import { Badge } from "../../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
-import { getAnalyticsOverview } from "../../../features/admin/service";
+import { getAnalyticsOverview } from "@/features/admin/service";
 
 import { AdminShell } from "../_components/admin-shell";
 

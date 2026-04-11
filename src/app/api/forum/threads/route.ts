@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listForumThreads, createForumThread, getUnreadThreadCount, createThreadWithTags, listThreadsByTag, listThreadsByQuery, createForumPost } from "../../../../features/forum/service";
-import { verifyToken } from "../../../../lib/auth/jwt";
+import { listForumThreads, createForumThread, getUnreadThreadCount, createThreadWithTags, listThreadsByTag, listThreadsByQuery, createForumPost } from "@/features/forum/service";
+import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
-import { ThreadCreateData } from "../../../../features/forum/types";
+import { ThreadCreateData } from "@/features/forum/types";
 
 const CreateThreadSchema = z.object({
   title: z.string().min(1),

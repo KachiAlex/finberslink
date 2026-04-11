@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { CourseLevel, LessonFormat, ResourceType } from "@prisma/client";
 import { z } from "zod";
 
-import { verifyToken } from "../../../../lib/auth/jwt";
-import { upsertTutorCourseDraft } from "../../../../features/tutor/service";
+import { verifyToken } from "@/lib/auth/jwt";
+import { upsertTutorCourseDraft } from "@/features/tutor/service";
 
 const LessonResourceSchema = z.object({
   title: z.string().min(1),

@@ -19,17 +19,17 @@ import {
   updateResume,
   updateResumeExperience,
   updateResumeSkillSnapshot,
-} from "../../../../../features/resume/service";
-import { ResumeExperienceSchema, ResumeProjectSchema } from "../../../../../features/resume/schemas";
+} from "@/features/resume/service";
+import { ResumeExperienceSchema, ResumeProjectSchema } from "@/features/resume/schemas";
 import {
   analyzeATSMatch,
   analyzeSkills,
   generateBulletPoints,
   generateCoverLetter,
   optimizeResumeSummary,
-} from "../../../../../lib/ai/resume";
-import { verifyToken } from "../../../../../lib/auth/jwt";
-import { invalidateDashboardInsights } from "../../../../../features/dashboard/service";
+} from "@/lib/ai/resume";
+import { verifyToken } from "@/lib/auth/jwt";
+import { invalidateDashboardInsights } from "@/features/dashboard/service";
 import type {
   ATSActionState,
   BulletActionState,

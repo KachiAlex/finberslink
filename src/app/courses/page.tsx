@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
-import { Badge } from "../components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CourseCard } from "@/features/lms/components/course-card";
 import { listLearnerCourses } from "@/features/lms/data/course-service";
-import { GradientText } from "../components/shared/animated-components";
+import { GradientText } from "@/components/shared/animated-components";
 import { ArrowRight, BookOpen, Search, Filter, Star, Users, Clock, Trophy } from "lucide-react";
 import Link from "next/link";
-import { requireSession } from "../lib/auth/session";
+import { requireSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

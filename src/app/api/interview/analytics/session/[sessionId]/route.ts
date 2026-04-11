@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { requireAuth } from '@/lib/auth/guards';
 import { getSessionAnalytics } from '@/features/interview/analytics-service';
 import { assertSessionOwnership } from '@/features/interview/service';
 
@@ -9,8 +8,8 @@ export async function GET(
   { params }: { params: { sessionId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const session = requireAuth(request);
+    if (!session?.sub) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -21,7 +20,7 @@ export async function GET(
     }
 
     // Verify ownership
-    await assertSessionOwnership(sessionId, session.user.id);
+    await assertSessionOwnership(sessionId, session.sub);
 
     const analytics = await getSessionAnalytics(sessionId);
 

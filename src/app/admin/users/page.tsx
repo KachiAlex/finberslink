@@ -12,14 +12,14 @@ import {
   listAllUsers,
   updateUserRole,
   updateUserStatus,
-} from "../../../features/admin/service";
-import { upsertStudentProfile } from "../../../features/profile/service";
-import { requireSession } from "../../../lib/auth/session";
-import { prisma } from "../../../lib/prisma";
+} from "@/features/admin/service";
+import { upsertStudentProfile } from "@/features/profile/service";
+import { requireSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdminUser } from "../../../features/admin/service";
-import { hashPassword } from "../../../lib/auth/password";
+import { requireAdminUser } from "@/features/admin/service";
+import { hashPassword } from "@/lib/auth/password";
 
 type Role = PrismaRole;
 type UserStatus = PrismaUserStatus;

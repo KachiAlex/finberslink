@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getForumThreadById, createForumPost, listThreadPosts, markThreadAsRead } from "../../../../../../features/forum/service";
-import { verifyToken } from "../../../../../../lib/auth/jwt";
+import { getForumThreadById, createForumPost, listThreadPosts, markThreadAsRead } from "@/features/forum/service";
+import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
 
 const CreatePostSchema = z.object({

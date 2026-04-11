@@ -36,7 +36,7 @@ import {
   getUserNotificationPreferences,
   updateUserNotificationPreferences
 } from "@/features/jobs/notifications";
-import { getUserJobAlerts } from "../../../../features/jobs/service";
+import { getUserJobAlerts } from "@/features/jobs/service";
 
 interface JobNotificationsTabProps {
   userId: string;

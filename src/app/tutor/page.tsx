@@ -1,8 +1,8 @@
 import { Button } from "../../components/ui/button";
 import { BarChart3, BookOpen, PenSquare, Users, Plus } from "lucide-react";
-import { prisma } from "../../lib/prisma";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { requireSession } from "../../lib/auth/session";
+import { requireSession } from "@/lib/auth/session";
 import { TutorDashboardClient } from "./tutor-dashboard-client";
 
 export const dynamic = "force-dynamic";

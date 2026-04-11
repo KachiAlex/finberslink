@@ -4,10 +4,10 @@ import { SiteHeader } from "../../../../components/layout/site-header";
 import { Badge } from "../../../../components/ui/badge";
 import { Button } from "../../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
-import { CourseHero } from "../../../../features/lms/components/course-hero";
-import { LessonList } from "../../../../features/lms/components/lesson-list";
-import { getCourse, getLearnerCourseDetail } from "../../../../features/lms/data/course-service";
-import { requireSession } from "../../../../lib/auth/session";
+import { CourseHero } from "@/features/lms/components/course-hero";
+import { LessonList } from "@/features/lms/components/lesson-list";
+import { getCourse, getLearnerCourseDetail } from "@/features/lms/data/course-service";
+import { requireSession } from "@/lib/auth/session";
 import { Star, Users, Clock, CheckCircle2, BookOpen, MessageCircle, Download, Share2 } from "lucide-react";
 import Link from "next/link";
 

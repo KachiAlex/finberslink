@@ -1,11 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    forceSwcTransforms: false,
-  },
   transpilePackages: ['@prisma/client'],
   typescript: {
     ignoreBuildErrors: true,
+  },
+  webpack: (config, { isServer }) => {
+    return config;
   },
   images: {
     unoptimized: process.env.NODE_ENV === "development",

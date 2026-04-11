@@ -15,11 +15,11 @@ import {
   Phone
 } from "lucide-react";
 
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
-import { Avatar } from "../../components/ui/avatar";
-import { Separator } from "../../components/ui/separator";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Badge } from "../../../components/ui/badge";
+import { Avatar } from "../../../components/ui/avatar";
+import { Separator } from "../../../components/ui/separator";
 
 import { ChatSidebar } from "./chat-sidebar";
 import { getUnifiedChatData } from "../service";
@@ -27,7 +27,7 @@ import { useChatMessages } from "../hooks";
 import { ChatNotifications } from "./chat-notifications";
 import { useChatWebSocket } from "../services/websocket-manager";
 import { useChatSpaces, useDirectConversations } from "../hooks";
-import { useCurrentUserId } from "../../components/current-user-provider";
+import { useCurrentUserId } from "../../../components/current-user-provider";
 
 import { ChatArea } from "./chat-area";
 import { ChatSearch } from "./chat-search";

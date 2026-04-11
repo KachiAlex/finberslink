@@ -6,8 +6,8 @@ import {
   findMatchingJobs,
   getJobAlertById,
   updateJobAlert,
-} from "../../../../features/jobs/alerts.service";
-import { requireAuth } from "../../../../lib/auth/guards";
+} from "@/features/jobs/alerts.service";
+import { requireAuth } from "@/lib/auth/guards";
 import type { JobType } from "@prisma/client";
 
 export const runtime = "nodejs";

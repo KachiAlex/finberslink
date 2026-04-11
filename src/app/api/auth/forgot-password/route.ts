@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requestPasswordReset } from "../../../features/auth/service";
-import { ForgotPasswordSchema } from "../../../features/auth/schemas";
+import { requestPasswordReset } from "@/features/auth/service";
+import { ForgotPasswordSchema } from "@/features/auth/schemas";
 
 export const runtime = "nodejs";
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { EnrollmentStatus, LessonProgressStatus } from "@prisma/client";
-import { requireAuth } from "../../../../../lib/auth/guards";
-import { prisma } from "../../../../../lib/prisma";
+import { requireAuth, AuthError } from "@/lib/auth/guards";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
@@ -124,6 +124,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Error fetching enrolled courses:", error);
     return NextResponse.json(
       { error: "Failed to fetch enrolled courses" },

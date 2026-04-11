@@ -27,7 +27,7 @@ import {
   getPersonalizedJobRecommendations, 
   getSimilarJobs, 
   saveRecommendationFeedback 
-} from "../../../../features/jobs/recommendations";
+} from "@/features/jobs/recommendations";
 import Link from "next/link";
 
 interface JobRecommendationsProps {

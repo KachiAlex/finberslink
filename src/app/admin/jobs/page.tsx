@@ -16,7 +16,7 @@ import {
   getJobManagementSnapshot,
   listAllJobs,
   updateJobPostingStatus,
-} from "../../../features/admin/service";
+} from "@/features/admin/service";
 
 import { AdminShell } from "../_components/admin-shell";
 import { CreateJobSheet } from "./_components/create-job-sheet";

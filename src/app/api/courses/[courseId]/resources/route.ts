@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAuth } from "../../../../../lib/auth/guards";
-import { createRateLimit, rateLimitPresets } from "../../../../../lib/security/rate-limit";
-import { prisma } from "../../../../../lib/prisma";
-import { verifyToken } from "../../../../../lib/auth/jwt";
+import { requireAuth } from "@/lib/auth/guards";
+import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
+import { prisma } from "@/lib/prisma";
+import { verifyToken } from "@/lib/auth/jwt";
 
 export const runtime = "nodejs";
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getJobs, saveJob, unsaveJob } from "../../../../features/jobs/service";
+import { getJobs, saveJob, unsaveJob } from "@/features/jobs/service";
 import {
   Search,
   MapPin,

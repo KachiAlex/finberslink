@@ -7,7 +7,7 @@ import { adminNav } from "@/features/admin/nav";
 import { requireAdminUser } from "@/features/admin/service";
 import { getUnreadCount } from "@/features/notifications/service";
 import { NotificationsBell } from "../../components/notifications/notifications-bell";
-import { requireSession } from "../../lib/auth/session";
+import { requireSession } from "@/lib/auth/session";
 import { Toaster } from "../../components/ui/toaster";
 
 import { AdminNavLink } from "./_components/admin-nav-link";

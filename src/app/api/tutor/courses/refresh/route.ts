@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSession } from "../../../../../lib/auth/session";
-import { listTutorCourses } from "../../../../../features/tutor/service";
+import { requireSession } from "@/lib/auth/session";
+import { listTutorCourses } from "@/features/tutor/service";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

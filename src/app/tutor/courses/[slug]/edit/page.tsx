@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
-import { requireSession } from "../../../../lib/auth/session";
-import { getTutorCourseForEdit } from "../../../../features/tutor/service";
+import { requireSession } from "@/lib/auth/session";
+import { getTutorCourseForEdit } from "@/features/tutor/service";
 
 import { EditCourseClient } from "./edit-course-client";
 

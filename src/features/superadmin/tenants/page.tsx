@@ -18,10 +18,10 @@ import {
   X,
 } from "lucide-react";
 
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
-import { GlassCard } from "../../components/ui/glass-card";
-import { Input } from "../../components/ui/input";
+import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
+import { GlassCard } from "../../../components/ui/glass-card";
+import { Input } from "../../../components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -29,7 +29,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-} from "../../components/ui/sheet";
+} from "../../../components/ui/sheet";
 
 type TenantStatus = "ACTIVE" | "TRIAL" | "SUSPENDED" | "CANCELLED";
 type TenantPlanTier = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";

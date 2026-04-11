@@ -5,8 +5,8 @@ import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { SaveJobButton } from "./save-job-button";
-import { requireSession } from "../../../lib/auth/session";
-import { getJobBySlug, saveJob, unsaveJob, getUserSavedJobs } from "../../../features/jobs/service";
+import { requireSession } from "@/lib/auth/session";
+import { getJobBySlug, saveJob, unsaveJob, getUserSavedJobs } from "@/features/jobs/service";
 
 type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
 type RemoteOption = 'REMOTE' | 'HYBRID' | 'ONSITE';

@@ -4,17 +4,17 @@ import { useState, useMemo } from "react";
 import { useChatThreads } from "../hooks";
 import { Hash, Users, BookOpen, MessageCircle, MoreHorizontal, Pin, Archive } from "lucide-react";
 
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { ScrollArea } from "../../components/ui/scroll-area";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { ScrollArea } from "../../../components/ui/scroll-area";
 import { getChatThreads } from "../service";
-import { Input } from "../../components/ui/input";
+import { Input } from "../../../components/ui/input";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger 
-} from "../../components/ui/dropdown-menu";
+} from "../../../components/ui/dropdown-menu";
 
 import type { ChatSpace, DirectConversation } from "../hooks";
 

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, Loader2, AlertCircle, CheckCircle, Zap } from "lucide-react";
 import { importResume } from "@/features/resume/service";
-import { requireSession } from "@/lib/auth/session";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";

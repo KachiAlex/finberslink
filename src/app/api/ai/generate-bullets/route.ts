@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { generateBulletPoints } from "../../../../lib/ai/resume";
-import { verifyToken } from "../../../../lib/auth/jwt";
+import { generateBulletPoints } from "@/lib/ai/resume";
+import { verifyToken } from "@/lib/auth/jwt";
 import { z } from "zod";
 
 const GenerateBulletsSchema = z.object({

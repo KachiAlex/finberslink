@@ -4,8 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireSession } from "../../../../../lib/auth/session";
-import { prisma } from "../../../../../lib/prisma";
+import { requireSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

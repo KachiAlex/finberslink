@@ -8,12 +8,12 @@ import {
   getTenantById,
   setTenantStatus,
   updateTenant,
-} from "../../../../../features/superadmin/tenant-service";
-import { findUserByEmail } from "../../../../../features/auth/repository";
-import { hashPassword } from "../../../../../lib/auth/password";
-import { prisma } from "../../../../../lib/prisma";
-import { requireSuperAdminUser } from "../../../../../features/superadmin/service";
-import { verifyToken } from "../../../../../lib/auth/jwt";
+} from "@/features/superadmin/tenant-service";
+import { findUserByEmail } from "@/features/auth/repository";
+import { hashPassword } from "@/lib/auth/password";
+import { prisma } from "@/lib/prisma";
+import { requireSuperAdminUser } from "@/features/superadmin/service";
+import { verifyToken } from "@/lib/auth/jwt";
 
 const ParamsSchema = z.object({
   tenantId: z.string().min(1),

@@ -1,85 +1,27 @@
-"use client";
+import React from "react";
 
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
-import { cn } from "../../lib/utils";
+export const Select = ({ children, ...props }: any) => (
+  <div {...props}>{children}</div>
+);
 
-interface SelectProps {
-  value?: string;
-  onValueChange?: (value: string) => void;
-  children?: React.ReactNode;
-  placeholder?: string;
-  className?: string;
-}
+export const SelectTrigger = ({ children, className = "" }: any) => (
+  <button className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${className}`}>
+    {children}
+  </button>
+);
 
-interface SelectTriggerProps {
-  children?: React.ReactNode;
-  className?: string;
-}
+export const SelectValue = ({ placeholder }: any) => (
+  <span className="text-gray-600">{placeholder}</span>
+);
 
-interface SelectContentProps {
-  children?: React.ReactNode;
-}
+export const SelectContent = ({ children }: any) => (
+  <div className="absolute z-50 min-w-[8rem] overflow-hidden rounded-md border border-gray-300 bg-white shadow-md">
+    {children}
+  </div>
+);
 
-interface SelectItemProps {
-  value: string;
-  children: React.ReactNode;
-}
-
-export function Select({ value, onValueChange, children, placeholder, className }: SelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  return (
-    <div className="relative">
-      <SelectTrigger className={className} onClick={() => setIsOpen(!isOpen)}>
-        {value || placeholder}
-        <ChevronDown className="h-4 w-4 ml-auto" />
-      </SelectTrigger>
-      
-      {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function SelectTrigger({ children, className }: SelectTriggerProps) {
-  return (
-    <button
-      type="button"
-      className={cn(
-        "flex h-10 w-full items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-export function SelectContent({ children }: SelectContentProps) {
-  return <div className="py-1">{children}</div>;
-}
-
-export function SelectItem({ value, children }: SelectItemProps) {
-  return (
-    <div
-      className="relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100"
-      onClick={() => {
-        const select = document.querySelector('[data-select]');
-        if (select) {
-          const event = new CustomEvent('selectChange', { detail: value });
-          select.dispatchEvent(event);
-        }
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-export function SelectValue({ placeholder }: { placeholder?: string }) {
-  return <span className="block truncate">{placeholder}</span>;
-}
+export const SelectItem = ({ children, value }: any) => (
+  <div className="px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100">
+    {children}
+  </div>
+);

@@ -19,20 +19,19 @@ import {
   updateResume,
   updateResumeExperience,
   updateResumeSkillSnapshot,
-} from "../../../../features/resume/service";
-import { prisma } from "../../../../lib/prisma";
-import { upsertStudentProfile } from "../../../../features/profile/service";
-import { getResumeBySlug } from "../../../../features/resume/service";
-import { ResumeExperienceSchema, ResumeProjectSchema } from "../../../../features/resume/schemas";
+} from "@/features/resume/service";
+import { prisma } from "@/lib/prisma";
+import { upsertStudentProfile } from "@/features/profile/service";
+import { ResumeExperienceSchema, ResumeProjectSchema } from "@/features/resume/schemas";
 import {
   analyzeATSMatch,
   analyzeSkills,
   generateBulletPoints,
   generateCoverLetter,
   optimizeResumeSummary,
-} from "../../../../lib/ai/resume";
-import { requireSession } from "../../../../lib/auth/session";
-import { invalidateDashboardInsights } from "../../../../features/dashboard/service";
+} from "@/lib/ai/resume";
+import { requireSession } from "@/lib/auth/session";
+import { invalidateDashboardInsights } from "@/features/dashboard/service";
 import type {
   ATSActionState,
   BulletActionState,
@@ -54,7 +53,7 @@ import { LiveTemplateSelector } from "../../../../components/resume/live-templat
 import { ResumeEditForm, SummaryEditForm } from "../../../../components/resume/resume-edit-form";
 import { ExperienceDeleteButton } from "../../../../components/resume/experience-delete-button";
 import { HeadshotUpload } from "../../../../components/resume/headshot-upload";
-import { getStudentProfile } from "../../../../features/profile/service";
+import { getStudentProfile } from "@/features/profile/service";
 
 // Add Experience Action
 async function addExperienceAction(formData: FormData) {

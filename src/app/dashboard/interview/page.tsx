@@ -1,5 +1,5 @@
-import { requireSession } from "../../../lib/auth/session";
-import { InterviewPrepDashboard } from "../../../features/interview/components/interview-dashboard";
+import { requireSession } from "@/lib/auth/session";
+import { InterviewPrepDashboard } from "@/features/interview/components/interview-dashboard";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 

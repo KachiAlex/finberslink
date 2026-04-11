@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { generateAchievementsFromContext } from "../../../../lib/ai/resume";
-import { verifyToken } from "../../../../lib/auth/jwt";
+import { generateAchievementsFromContext } from "@/lib/ai/resume";
+import { verifyToken } from "@/lib/auth/jwt";
 
 const AchievementRequestSchema = z.object({
   jobTitle: z.string().min(2, "Job title is required"),

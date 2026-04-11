@@ -9,10 +9,10 @@ import { cn } from "../../lib/utils";
 import { sendMessage } from "../service";
 import { Info, Phone, Video, Users, Hash, Send, Paperclip, Smile } from "lucide-react";
 import { useChatMessages, useConversationMessages } from "../hooks";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Textarea } from "../../components/ui/textarea";
-import { ScrollArea } from "../../components/ui/scroll-area";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { Textarea } from "../../../components/ui/textarea";
+import { ScrollArea } from "../../../components/ui/scroll-area";
 import { TypingIndicator } from "./typing-indicator";
 import { MessageReactions } from "./message-reactions";
 

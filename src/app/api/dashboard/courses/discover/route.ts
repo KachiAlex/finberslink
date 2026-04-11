@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "../../../../../lib/auth/guards";
-import { prisma } from "../../../../../lib/prisma";
+import { requireAuth, AuthError } from "@/lib/auth/guards";
+import { prisma } from "@/lib/prisma";
 import { EnrollmentStatus } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
@@ -134,6 +134,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Error fetching discover courses:", error);
     return NextResponse.json(
       { error: "Failed to fetch courses" },

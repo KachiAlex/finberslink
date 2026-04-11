@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getStudentEnrollments, getStudentResumes, getStudentApplications } from "../../../features/dashboard/service";
-import { verifyToken } from "../../../lib/auth/jwt";
+import { getStudentEnrollments, getStudentResumes, getStudentApplications } from "@/features/dashboard/service";
+import { verifyToken } from "@/lib/auth/jwt";
 
 export async function GET(request: NextRequest) {
   try {

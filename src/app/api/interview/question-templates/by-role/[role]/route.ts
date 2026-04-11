@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { requireAuth } from '@/lib/auth/guards';
 import { getQuestionsByRole } from '@/features/interview/question-bank-service';
 
 export async function GET(
@@ -8,8 +7,8 @@ export async function GET(
   { params }: { params: { role: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const session = requireAuth(request);
+    if (!session?.sub) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

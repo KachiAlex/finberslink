@@ -1,9 +1,5 @@
-import { cn } from "../../lib/utils";
+import React from "react";
 
-interface SeparatorProps {
-  className?: string;
-}
-
-export function Separator({ className = "" }: SeparatorProps) {
-  return <div className={cn("h-px bg-slate-200/40", className)} />;
-}
+export const Separator = ({ className = "" }: any) => (
+  <div className={`h-px bg-gray-200 ${className}`} />
+);

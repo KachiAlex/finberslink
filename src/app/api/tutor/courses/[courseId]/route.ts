@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "../../../../../lib/auth/jwt";
-import { prisma } from "../../../../../lib/prisma";
+import { verifyToken } from "@/lib/auth/jwt";
+import { prisma } from "@/lib/prisma";
 
 export async function DELETE(request: NextRequest, context: any) {
   try {

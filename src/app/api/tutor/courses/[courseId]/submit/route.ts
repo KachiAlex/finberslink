@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CourseApprovalStatus } from "@prisma/client";
 
-import { submitTutorCourse } from "../../../../../../features/tutor/service";
-import { verifyToken } from "../../../../../../lib/auth/jwt";
-import { prisma } from "../../../../../../lib/prisma";
+import { submitTutorCourse } from "@/features/tutor/service";
+import { verifyToken } from "@/lib/auth/jwt";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest, context: any) {
   try {

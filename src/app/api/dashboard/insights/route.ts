@@ -6,9 +6,9 @@ import {
   getStudentDashboardInsights,
   getTutorDashboardInsights,
   getUserActivityFeed,
-} from "../../../features/dashboard/insights";
-import { requireAuth } from "../../../lib/auth/guards";
-import { createRateLimit, rateLimitPresets } from "../../../lib/security/rate-limit";
+} from "@/features/dashboard/insights";
+import { requireAuth } from "@/lib/auth/guards";
+import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 import type { Role } from "@prisma/client";
 
 export const runtime = "nodejs";

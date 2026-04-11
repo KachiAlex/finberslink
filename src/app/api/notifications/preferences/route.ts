@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSession } from "../../../lib/auth/session";
-import { notificationService } from "../../../features/resume/notification-service";
+import { requireSession } from "@/lib/auth/session";
+import { notificationService } from "@/features/resume/notification-service";
 
 /**
  * GET /api/notifications/preferences

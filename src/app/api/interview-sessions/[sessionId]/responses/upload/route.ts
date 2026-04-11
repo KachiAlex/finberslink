@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireSession } from "../../../../../../lib/auth/session";
-import { prisma } from "../../../../../../lib/prisma";
-import { uploadAudioFile, getAudioDuration } from "../../../../../../features/interview/audio-service";
-import { transcribeInterviewAudio } from "../../../../../../features/interview/ai";
+import { requireSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/prisma";
+import { uploadAudioFile, getAudioDuration } from "@/features/interview/audio-service";
+import { transcribeInterviewAudio } from "@/features/interview/ai";
 
 const uploadSchema = z.object({
   responseId: z.string().min(1, "Response ID is required"),

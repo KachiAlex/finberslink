@@ -2,17 +2,17 @@
 
 import { useState, useEffect, useRef } from "react";
 import { MessageCircle, Reply, MoreHorizontal, ChevronDown, ChevronRight } from "lucide-react";
-import { Badge } from "../../components/ui/badge";
-import { Label } from "../../components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
-import { ScrollArea } from "../../components/ui/scroll-area";
+import { Badge } from "../../../components/ui/badge";
+import { Label } from "../../../components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { ScrollArea } from "../../../components/ui/scroll-area";
 import { listThreadedMessages } from "../service";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger 
-} from "../../components/ui/dropdown-menu";
+} from "../../../components/ui/dropdown-menu";
 import { useChatMessages } from "../hooks";
 import { TypingIndicator } from "./typing-indicator";
 

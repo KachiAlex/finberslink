@@ -17,7 +17,7 @@ import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Progress } from "../../components/ui/progress";
 import { StatCard } from "../../components/ui/stat-card";
-import { getTenantAdminDashboard } from "../../features/admin/service";
+import { getTenantAdminDashboard } from "@/features/admin/service";
 
 import { AdminShell } from "./_components/admin-shell";
 

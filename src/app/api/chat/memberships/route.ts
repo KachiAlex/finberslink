@@ -1,7 +1,7 @@
 // REST API for chat memberships (Messenger-style scaffold)
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from "../_helpers";
-import { upsertChatMembership } from "../../../../features/chat/service";
+import { upsertChatMembership } from "@/features/chat/service";
 
 export async function GET(req: NextRequest) {
   try {

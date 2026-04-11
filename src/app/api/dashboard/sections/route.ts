@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { verifyToken } from "../../../../lib/auth/jwt";
+import { verifyToken } from "@/lib/auth/jwt";
 import {
   getDashboardInsights,
   getDashboardSummary,
@@ -9,11 +9,11 @@ import {
   getStudentResumes,
   listRecommendedJobs,
   listSavedJobIds,
-} from "../../../../features/dashboard/service";
+} from "@/features/dashboard/service";
 import {
   getDashboardSectionsFullCache,
   setDashboardSectionsFullCache,
-} from "../../../../features/dashboard/sections-cache";
+} from "@/features/dashboard/sections-cache";
 
 async function measure<T>(name: string, fn: () => Promise<T>) {
   const start = Date.now();

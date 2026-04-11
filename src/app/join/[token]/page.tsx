@@ -7,8 +7,8 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
-import { getInviteByToken, markInviteStatus } from "../../../features/admin/service";
-import { registerUser } from "../../../features/auth/service";
+import { getInviteByToken, markInviteStatus } from "@/features/admin/service";
+import { registerUser } from "@/features/auth/service";
 
 type JoinPageProps = {
   params: { token: string };

@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { requireAuth } from '@/lib/auth/guards';
 import { getUserAnalytics } from '@/features/interview/analytics-service';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const session = requireAuth(request as any);
+    if (!session?.sub) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const analytics = await getUserAnalytics(session.user.id);
+    const analytics = await getUserAnalytics(session.sub);
 
     return NextResponse.json(analytics);
   } catch (error) {

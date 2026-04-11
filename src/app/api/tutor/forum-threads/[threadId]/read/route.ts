@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { verifyToken } from "../../../../../../lib/auth/jwt";
-import { prisma } from "../../../../../../lib/prisma";
+import { verifyToken } from "@/lib/auth/jwt";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest, context: any) {
   try {
