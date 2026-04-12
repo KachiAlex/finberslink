@@ -1,11 +1,26 @@
-"use client";
+'use client';
 
-import React from "react";
+import { FC } from 'react';
 
-export function SkillAnalysis() {
+interface SkillAnalysisProps {
+  skills?: string[];
+  onAnalyze?: (skills: string[]) => void;
+}
+
+export const SkillAnalysis: FC<SkillAnalysisProps> = ({
+  skills = [],
+  onAnalyze,
+}) => {
   return (
-    <div className="space-y-2">
-      {/* AI-powered skill analysis */}
+    <div className="space-y-4">
+      <div className="text-sm font-medium">Skills Analysis</div>
+      <div className="space-y-2">
+        {skills.map((skill, index) => (
+          <div key={index} className="p-2 border rounded bg-gray-50">
+            {skill}
+          </div>
+        ))}
+      </div>
     </div>
   );
-}
+};

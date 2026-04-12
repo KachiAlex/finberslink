@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { addPostReaction, removePostReaction, listPostReactions } from "@/features/forum/service';
+import { addPostReaction, removePostReaction, listPostReactions } from "@/features/forum/service";
 
 // POST /api/forum/posts/reactions - add reaction
 export async function POST(req: NextRequest) {

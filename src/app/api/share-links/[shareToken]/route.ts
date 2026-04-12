@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireSession } from "@/lib/auth/session';
-import { SharingService } from "@/features/resume/sharing-service';
-import { prisma } from "@/lib/prisma';
+import { requireSession } from "@/lib/auth/session";
+import { SharingService } from "@/features/resume/sharing-service";
+import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/share-links/{shareToken}

@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { listAdminCourses } from "../../features/admin/service";
 import { CourseListRow } from "./course-list-row";
-import { CourseEditModalEnhanced } from "./course-edit-modal-enhanced";
 import { 
   Search, 
   Filter, 
@@ -20,6 +19,9 @@ import {
   Plus
 } from "lucide-react";
 import type { CourseApprovalStatus, CourseLevel } from "@prisma/client";
+
+// Lazy load the modal component to avoid SSR issues with lucide-react icons
+const CourseEditModalEnhanced = lazy(() => import("./course-edit-modal-enhanced").then(mod => ({ default: mod.CourseEditModalEnhanced })));
 
 // Define Course type locally
 interface Course {
@@ -430,15 +432,17 @@ export function AdminCoursesGrid() {
 
       {/* Edit Modal */}
       {isEditModalOpen && (
-        <CourseEditModalEnhanced
-          course={editingCourse}
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditingCourse(null);
-          }}
-          onSave={handleSaveCourse}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <CourseEditModalEnhanced
+            course={editingCourse}
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              setEditingCourse(null);
+            }}
+            onSave={handleSaveCourse}
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -1,23 +1,40 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext } from "react";
+import { createContext, useContext, ReactNode, FC } from 'react';
 
-const CurrentUserContext = createContext<any>(null);
+interface CurrentUser {
+  id: string;
+  email: string;
+  name?: string;
+}
 
-export function CurrentUserProvider({ children, user }: any) {
+interface CurrentUserContextType {
+  user: CurrentUser | null;
+  loading: boolean;
+}
+
+const CurrentUserContext = createContext<CurrentUserContextType | undefined>(undefined);
+
+interface CurrentUserProviderProps {
+  children: ReactNode;
+  user?: CurrentUser | null;
+}
+
+export const CurrentUserProvider: FC<CurrentUserProviderProps> = ({
+  children,
+  user = null,
+}) => {
   return (
-    <CurrentUserContext.Provider value={user}>
+    <CurrentUserContext.Provider value={{ user, loading: false }}>
       {children}
     </CurrentUserContext.Provider>
   );
-}
+};
 
-export function useCurrentUser() {
-  return useContext(CurrentUserContext);
-}
-
-
-export function useCurrentUserId() {
-  const user = useCurrentUser();
-  return user?.id;
-}
+export const useCurrentUserId = (): string | null => {
+  const context = useContext(CurrentUserContext);
+  if (!context) {
+    return null;
+  }
+  return context.user?.id || null;
+};

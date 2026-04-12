@@ -4,8 +4,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  webpack: (config, { isServer }) => {
-    return config;
+  experimental: {
+    turbopack: false,
   },
   images: {
     unoptimized: process.env.NODE_ENV === "development",

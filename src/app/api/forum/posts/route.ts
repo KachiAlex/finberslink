@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createForumPost, listThreadPosts, listPostReplies } from "@/features/forum/service';
+import { createForumPost, listThreadPosts, listPostReplies } from "@/features/forum/service";
 
 // GET /api/forum/posts?threadId=xxx - list top-level posts for a thread
 // GET /api/forum/posts?parentId=xxx - list replies to a post

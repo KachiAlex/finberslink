@@ -1,13 +1,33 @@
-import React from "react";
+import { FC, ReactNode } from 'react';
+import { Card, CardContent } from './card';
 
-export const StatCard = ({ title, value, icon, className = "" }: any) => (
-  <div className={`rounded-lg border border-gray-200 bg-white p-6 shadow-sm ${className}`}>
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm text-gray-600">{title}</p>
-        <p className="text-2xl font-semibold text-gray-900">{value}</p>
-      </div>
-      {icon && <div className="text-gray-400">{icon}</div>}
-    </div>
-  </div>
-);
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon?: ReactNode;
+  description?: string;
+}
+
+export const StatCard: FC<StatCardProps> = ({
+  title,
+  value,
+  icon,
+  description,
+}) => {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-600">{title}</p>
+            <p className="text-2xl font-bold mt-2">{value}</p>
+            {description && (
+              <p className="text-xs text-gray-500 mt-1">{description}</p>
+            )}
+          </div>
+          {icon && <div className="text-gray-400">{icon}</div>}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};

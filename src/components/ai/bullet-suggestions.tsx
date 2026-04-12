@@ -1,11 +1,27 @@
-"use client";
+'use client';
 
-import React from "react";
+import { FC } from 'react';
 
-export function BulletSuggestions() {
+interface BulletSuggestionsProps {
+  suggestions?: string[];
+  onSelect?: (suggestion: string) => void;
+}
+
+export const BulletSuggestions: FC<BulletSuggestionsProps> = ({
+  suggestions = [],
+  onSelect,
+}) => {
   return (
     <div className="space-y-2">
-      {/* AI-generated bullet suggestions */}
+      {suggestions.map((suggestion, index) => (
+        <div
+          key={index}
+          className="p-2 border rounded cursor-pointer hover:bg-gray-100"
+          onClick={() => onSelect?.(suggestion)}
+        >
+          {suggestion}
+        </div>
+      ))}
     </div>
   );
-}
+};

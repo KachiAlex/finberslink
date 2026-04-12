@@ -1,13 +1,23 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
+import { FC } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
-export function ChatAvatar({ user }: any) {
+interface ChatAvatarProps {
+  src?: string;
+  alt?: string;
+  fallback?: string;
+}
+
+export const ChatAvatar: FC<ChatAvatarProps> = ({
+  src,
+  alt = 'User avatar',
+  fallback = 'U',
+}) => {
   return (
     <Avatar>
-      <AvatarImage src={user?.image} alt={user?.name} />
-      <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+      {src && <AvatarImage src={src} alt={alt} />}
+      <AvatarFallback>{fallback}</AvatarFallback>
     </Avatar>
   );
-}
+};
