@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 
 export const Tabs = ({ children, defaultValue }: { children: React.ReactNode; defaultValue?: string }) => (

@@ -1,0 +1,9 @@
+{
+  "specType": "bugfix",
+  "workflowType": "requirements-first",
+  "featureName": "build-errors-594-fix",
+  "createdAt": "2026-04-12",
+  "status": "in-progress",
+  "errorCount": 594,
+  "priority": "critical"
+}
