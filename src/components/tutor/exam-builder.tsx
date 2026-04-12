@@ -1,5 +1,7 @@
 "use client";
 
+"use client";
+
 import type { ChangeEvent } from "react";
 import { useMemo, useRef, useState } from "react";
 import { AlertTriangle, Loader2, Plus, Trash, Upload } from "lucide-react";

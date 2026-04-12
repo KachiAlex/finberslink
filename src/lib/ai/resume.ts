@@ -1,6 +1,6 @@
-export async function generateAchievementsFromContext(context: string) {
+export async function generateAchievementsFromContext(context: { jobTitle: string; industry?: string; contextHighlights?: string[] }) {
   // Placeholder for AI-powered achievement generation
-  return [];
+  return { achievements: [], usedFallback: true };
 }
 
 export async function optimizeResumeSummary(summary: string) {

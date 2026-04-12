@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useEffect } from 'react';
 
 export function MentionTextarea({ value, onChange, placeholder = 'Write a reply...' }: { value: string; onChange: (v: string) => void; placeholder?: string }) {

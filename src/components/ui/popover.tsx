@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 
 export const Popover = ({ children }: { children: React.ReactNode }) => (

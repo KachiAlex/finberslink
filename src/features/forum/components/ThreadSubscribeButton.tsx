@@ -1,3 +1,5 @@
+"use client";
+
 import { useThreadSubscription } from '../hooks/useThreadSubscription';
 import { useState } from 'react';
 

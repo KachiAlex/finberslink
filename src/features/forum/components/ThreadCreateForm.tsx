@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { useCreateThread } from '../hooks/useCreateThread';
 import { MentionTextarea } from './MentionTextarea';

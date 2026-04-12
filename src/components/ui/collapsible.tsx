@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 
 export const Collapsible = ({ children }: { children: React.ReactNode }) => (
