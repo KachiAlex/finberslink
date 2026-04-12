@@ -466,3 +466,33 @@ export async function listUserResumes(userId: string) {
     throw error;
   }
 }
+
+export async function importResume(userId: string, resumeData: any) {
+  try {
+    const title = resumeData.title || "Imported Resume";
+    const slug = await ensureUniqueResumeSlug(title);
+    const shareSlug = await ensureUniqueShareSlug();
+
+    const resume = await prisma.resume.create({
+      data: {
+        userId,
+        title,
+        slug,
+        shareSlug,
+        summary: resumeData.summary,
+        personaName: resumeData.personaName,
+        location: resumeData.location,
+        targetIndustry: resumeData.targetIndustry,
+        targetRoles: resumeData.targetRoles || [],
+        yearsExperience: resumeData.yearsExperience,
+        topSkills: resumeData.topSkills || [],
+        notableAchievements: resumeData.notableAchievements,
+      },
+    });
+
+    return resume;
+  } catch (error) {
+    console.error("Failed to import resume", error);
+    throw error;
+  }
+}

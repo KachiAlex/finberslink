@@ -29,3 +29,30 @@ export async function listLearnerCourses(userId: string) {
     include: { lessons: true, enrollments: true },
   });
 }
+
+export async function getCourseWithProgress(courseId: string, userId: string) {
+  return prisma.course.findUnique({
+    where: { id: courseId },
+    include: { 
+      lessons: true, 
+      enrollments: { where: { userId } },
+    },
+  });
+}
+
+export async function getLearnerCourseDetail(courseId: string, userId: string) {
+  return prisma.course.findUnique({
+    where: { id: courseId },
+    include: { 
+      lessons: true, 
+      enrollments: { where: { userId } },
+    },
+  });
+}
+
+export async function getCourse(courseId: string) {
+  return prisma.course.findUnique({
+    where: { id: courseId },
+    include: { lessons: true, enrollments: true },
+  });
+}

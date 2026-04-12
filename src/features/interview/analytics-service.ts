@@ -37,3 +37,12 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
 export async function getRoleAverageScore(role: string): Promise<number> {
   return 0;
 }
+
+export async function getSessionAnalytics(sessionId: string) {
+  return {
+    sessionId,
+    score: 0,
+    duration: 0,
+    skillsAssessed: [],
+  };
+}
