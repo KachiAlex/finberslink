@@ -93,3 +93,10 @@ export async function listTutorExams(tutorId: string) {
     where: { course: { instructorId: tutorId } },
   });
 }
+
+export enum ExamType {
+  QUIZ = "QUIZ",
+  MIDTERM = "MIDTERM",
+  FINAL = "FINAL",
+  ASSIGNMENT = "ASSIGNMENT",
+}

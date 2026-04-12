@@ -42,6 +42,10 @@ export async function listChatThreads(userId: string) {
   return [];
 }
 
+export async function createChatThread(data: any) {
+  return { id: "", name: data.name, participants: data.participants };
+}
+
 export async function listThreadMessages(threadId: string) {
   return [];
 }
