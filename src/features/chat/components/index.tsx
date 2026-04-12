@@ -6,6 +6,11 @@ export { ChatSwitcher } from "./chat-switcher";
 export { DirectMessagesList } from "./direct-messages-list";
 export { CourseChatsList } from "./course-chats-list";
 export { CommunityForumsList } from "./community-forums-list";
+export { ConversationSidebar } from "./conversation-sidebar";
+export { ChatArea } from "./chat-area";
+export { NewConversationModal } from "./new-conversation-modal";
+export { UnifiedChatHub } from "./unified-chat-hub";
+export { UserAvatar } from "./user-avatar";
 
 export function ChatSpaceList({
   selected,
