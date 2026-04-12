@@ -76,8 +76,9 @@
     "zod": "^3.25.76"
   },
   "optionalDependencies": {
-    "@next/swc-wasm-nodejs": "^16.2.2",
-    "@next/swc-wasm-web": "^16.2.2"
+    "@next/swc-wasm-nodejs": "^16.2.3",
+    "@next/swc-wasm-web": "^16.2.2",
+    "@next/swc-win32-x64-msvc": "^16.2.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

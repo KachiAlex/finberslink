@@ -8,3 +8,8 @@ export async function getNotificationPreferences(userId: string) {
 export async function updateNotificationPreferences(userId: string, preferences: any) {
   return preferences;
 }
+
+export const notificationService = {
+  getNotificationPreferences,
+  updateNotificationPreferences,
+};

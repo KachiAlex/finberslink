@@ -1,7 +1,14 @@
-import React from "react";
+import React from 'react';
 
-export const GlassCardError = ({ children, className = "" }: any) => (
-  <div className={`rounded-lg bg-red-50/30 backdrop-blur-md border border-red-200/20 shadow-lg p-4 ${className}`}>
-    {children}
-  </div>
-);
+export const GlassCardError = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className = '', ...props }, ref) => (
+  <div
+    ref={ref}
+    className={`rounded-lg backdrop-blur-md bg-red-500/30 border border-red-200/50 shadow-lg ${className}`}
+    {...props}
+  />
+));
+
+GlassCardError.displayName = 'GlassCardError';

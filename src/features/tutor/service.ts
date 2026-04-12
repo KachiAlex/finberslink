@@ -69,3 +69,27 @@ export async function submitCourseEditRequest(courseId: string, data: any) {
     data: { courseId, ...data },
   });
 }
+
+export async function getTutorCohorts(tutorId: string) {
+  return prisma.cohort.findMany({
+    where: { instructorId: tutorId },
+  });
+}
+
+export async function getTutorCourseDraft(courseId: string, tutorId: string) {
+  return prisma.courseDraft.findUnique({
+    where: { courseId },
+  });
+}
+
+export async function getTutorForumThreads(tutorId: string) {
+  return prisma.forumThread.findMany({
+    where: { course: { instructorId: tutorId } },
+  });
+}
+
+export async function listTutorExams(tutorId: string) {
+  return prisma.exam.findMany({
+    where: { course: { instructorId: tutorId } },
+  });
+}

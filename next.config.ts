@@ -22,6 +22,11 @@ const nextConfig = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
   },
+  // Force rebuild
+  onDemandEntries: {
+    maxInactiveAge: 1000,
+    pagesBufferLength: 2,
+  },
 };
 
 export default nextConfig;

@@ -1,10 +1,5 @@
 export const siteConfig = {
-  name: 'Finbers Link',
-  description: 'Build Skills, Prove Readiness, and Get Hired',
-  url: process.env.NEXTAUTH_URL || 'http://localhost:3000',
-  ogImage: '/og.png',
-  links: {
-    twitter: 'https://twitter.com/finberslink',
-    github: 'https://github.com/finberslink',
-  },
+  name: 'Finbers',
+  description: 'Resume and career platform',
+  url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
 };

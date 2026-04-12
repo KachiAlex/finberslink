@@ -1,24 +1,8 @@
-import type { ElementType } from "react";
-import {
-  LayoutDashboard,
-  Building2,
-  GaugeCircle,
-  CreditCard,
-  Network,
-  Settings2,
-} from "lucide-react";
-
-export type SuperAdminNavItem = {
-  title: string;
-  href: string;
-  icon: ElementType;
-};
-
-export const superAdminNav: SuperAdminNavItem[] = [
-  { title: "Overview", href: "/superadmin", icon: LayoutDashboard },
-  { title: "Tenants", href: "/superadmin/tenants", icon: Building2 },
-  { title: "Usage", href: "/superadmin/usage", icon: GaugeCircle },
-  { title: "Billing", href: "/superadmin/billing", icon: CreditCard },
-  { title: "Marketplace", href: "/superadmin/marketplace", icon: Network },
-  { title: "Settings", href: "/superadmin/settings", icon: Settings2 },
+export const superAdminNav = [
+  { label: 'Dashboard', href: '/superadmin' },
+  { label: 'Tenants', href: '/superadmin/tenants' },
+  { label: 'Usage', href: '/superadmin/usage' },
+  { label: 'Billing', href: '/superadmin/billing' },
+  { label: 'Settings', href: '/superadmin/settings' },
+  { label: 'Marketplace', href: '/superadmin/marketplace' },
 ];

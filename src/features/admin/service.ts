@@ -109,3 +109,131 @@ export async function unassignCourseFromStudent(courseId: string, studentId: str
     where: { courseId, studentId },
   });
 }
+
+export async function getCompanies() {
+  return prisma.company.findMany();
+}
+
+export async function getTenantAdminDashboard(tenantId: string) {
+  const users = await prisma.user.count({ where: { tenantId } });
+  const courses = await prisma.course.count({ where: { tenantId } });
+  const enrollments = await prisma.enrollment.count();
+  
+  return {
+    totalUsers: users,
+    totalCourses: courses,
+    totalEnrollments: enrollments,
+  };
+}
+
+export async function getSystemSnapshot() {
+  const totalUsers = await prisma.user.count();
+  const totalCourses = await prisma.course.count();
+  const totalEnrollments = await prisma.enrollment.count();
+  
+  return {
+    totalUsers,
+    totalCourses,
+    totalEnrollments,
+    timestamp: new Date(),
+  };
+}
+
+export async function getJobManagementSnapshot() {
+  const totalJobs = await prisma.jobOpportunity.count();
+  const totalApplications = await prisma.jobApplication.count();
+  
+  return {
+    totalJobs,
+    totalApplications,
+  };
+}
+
+export async function getTutorManagementSnapshot() {
+  const totalTutors = await prisma.user.count({ where: { role: "TUTOR" } });
+  const activeCourses = await prisma.course.count({ where: { status: "ACTIVE" } });
+  
+  return {
+    totalTutors,
+    activeCourses,
+  };
+}
+
+export async function getUserById(userId: string) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+  });
+}
+
+export async function listAdminCourses() {
+  return prisma.course.findMany();
+}
+
+export async function listStudents() {
+  return prisma.user.findMany({
+    where: { role: "STUDENT" },
+  });
+}
+
+export async function listTutors() {
+  return prisma.user.findMany({
+    where: { role: "TUTOR" },
+  });
+}
+
+export async function getInviteByToken(token: string) {
+  return prisma.tenantInvite.findUnique({
+    where: { token },
+    include: { tenant: true },
+  });
+}
+
+export async function markInviteStatus(inviteId: string, status: string) {
+  return prisma.tenantInvite.update({
+    where: { id: inviteId },
+    data: { status },
+  });
+}
+
+export async function toggleFeatureFlag(key: string, enabled: boolean) {
+  return prisma.featureFlag.upsert({
+    where: { key },
+    update: { enabled },
+    create: { key, enabled },
+  });
+}
+
+export async function listTenantInvites(tenantId: string) {
+  return prisma.tenantInvite.findMany({
+    where: { tenantId },
+  });
+}
+
+export async function listAllJobs() {
+  return prisma.jobOpportunity.findMany();
+}
+
+export async function updateJobPostingStatus(jobId: string, status: string) {
+  return prisma.jobOpportunity.update({
+    where: { id: jobId },
+    data: { status },
+  });
+}
+
+export async function getAnalyticsOverview() {
+  const totalUsers = await prisma.user.count();
+  const totalCourses = await prisma.course.count();
+  const totalEnrollments = await prisma.enrollment.count();
+  
+  return {
+    totalUsers,
+    totalCourses,
+    totalEnrollments,
+  };
+}
+
+export async function listCoursesWithPendingEdits() {
+  return prisma.course.findMany({
+    where: { status: "PENDING" },
+  });
+}

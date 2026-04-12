@@ -37,3 +37,23 @@ export async function markDirectMessageRead(messageId: string) {
 export async function markConversationMessagesRead(conversationId: string) {
   return { conversationId, readAt: new Date() };
 }
+
+export async function listChatThreads(userId: string) {
+  return [];
+}
+
+export async function listThreadMessages(threadId: string) {
+  return [];
+}
+
+export async function listUserConversations(userId: string) {
+  return [];
+}
+
+export async function upsertChatMembership(conversationId: string, userId: string) {
+  return { conversationId, userId, joinedAt: new Date() };
+}
+
+export async function ensureCourseChatContext(courseId: string) {
+  return { courseId, context: "initialized" };
+}

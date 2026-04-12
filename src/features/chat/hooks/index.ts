@@ -1,32 +1,25 @@
-export function useChatMessages() {
-  return [];
+export function useChatMessages(threadId: string) {
+  return {
+    messages: [],
+    isLoading: false,
+    error: null,
+  };
 }
 
-export function useChatThreads() {
-  return [];
+export function useChatThreads(userId: string) {
+  return {
+    threads: [],
+    isLoading: false,
+    error: null,
+  };
 }
 
 export function useSendChatMessage() {
-  return async () => {};
-}
-
-
-export function useChatSpaces() {
-  return [];
-}
-
-export function useDirectConversations() {
-  return [];
-}
-
-export function useConversationMessages() {
-  return [];
-}
-
-export function useSendDirectMessage() {
-  return async () => {};
-}
-
-export function useCreateDirectConversation() {
-  return async () => {};
+  return {
+    sendMessage: async (threadId: string, message: string) => {
+      return { id: '', content: message };
+    },
+    isLoading: false,
+    error: null,
+  };
 }

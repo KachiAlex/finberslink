@@ -1,15 +1,40 @@
-import React from "react";
+import React from 'react';
 
-export const Avatar = ({ children, className = "" }: any) => (
-  <div className={`inline-flex items-center justify-center rounded-full bg-gray-200 ${className}`}>
-    {children}
-  </div>
-);
+export const Avatar = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className = '', ...props }, ref) => (
+  <div
+    ref={ref}
+    className={`h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center ${className}`}
+    {...props}
+  />
+));
 
-export const AvatarImage = ({ src, alt }: any) => (
-  <img src={src} alt={alt} className="w-full h-full rounded-full object-cover" />
-);
+Avatar.displayName = 'Avatar';
 
-export const AvatarFallback = ({ children }: any) => (
-  <span className="text-sm font-medium">{children}</span>
-);
+export const AvatarImage = React.forwardRef<
+  HTMLImageElement,
+  React.ImgHTMLAttributes<HTMLImageElement>
+>(({ className = '', ...props }, ref) => (
+  <img
+    ref={ref}
+    className={`h-full w-full rounded-full object-cover ${className}`}
+    {...props}
+  />
+));
+
+AvatarImage.displayName = 'AvatarImage';
+
+export const AvatarFallback = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className = '', ...props }, ref) => (
+  <div
+    ref={ref}
+    className={`h-full w-full rounded-full bg-gray-400 flex items-center justify-center text-white ${className}`}
+    {...props}
+  />
+));
+
+AvatarFallback.displayName = 'AvatarFallback';

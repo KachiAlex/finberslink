@@ -1,11 +1,13 @@
-export function cn(...classes: (string | undefined | null | false)[]) {
-  return classes.filter(Boolean).join(" ");
-}
-
-export function formatDate(date: Date | string) {
-  return new Date(date).toLocaleDateString();
-}
-
-export function formatTime(date: Date | string) {
-  return new Date(date).toLocaleTimeString();
+/**
+ * Utility function to combine classNames
+ * Handles conditional classes and removes duplicates
+ */
+export function cn(...classes: (string | undefined | null | false)[]): string {
+  return classes
+    .filter((c) => typeof c === 'string')
+    .join(' ')
+    .split(' ')
+    .filter((c) => c.length > 0)
+    .filter((c, i, arr) => arr.indexOf(c) === i)
+    .join(' ');
 }

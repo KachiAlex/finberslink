@@ -1,4 +1,4 @@
-export function buildDashboardCoursesUrl(params: any = {}) {
-  const query = new URLSearchParams(params);
-  return `/dashboard/courses?${query.toString()}`;
+export function buildDashboardCoursesUrl(courseId?: string) {
+  const baseUrl = '/dashboard/courses';
+  return courseId ? `${baseUrl}/${courseId}` : baseUrl;
 }

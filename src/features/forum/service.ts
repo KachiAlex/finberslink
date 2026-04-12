@@ -113,3 +113,22 @@ export async function listUserThreadSubscriptions(userId: string) {
     include: { thread: true },
   });
 }
+
+export async function listPostEdits(postId: string) {
+  return prisma.forumPostEdit.findMany({
+    where: { postId },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+export async function listPostReactions(postId: string) {
+  return prisma.forumPostReaction.findMany({
+    where: { postId },
+  });
+}
+
+export async function removePostReaction(postId: string, userId: string, reaction: string) {
+  return prisma.forumPostReaction.deleteMany({
+    where: { postId, userId, reaction },
+  });
+}

@@ -15,6 +15,10 @@ export async function listCompanies(skip: number = 0, take: number = 10) {
   });
 }
 
+export async function getCompanies() {
+  return prisma.company.findMany();
+}
+
 export async function getCompanyJobs(companyId: string) {
   return prisma.jobOpportunity.findMany({
     where: { companyId },

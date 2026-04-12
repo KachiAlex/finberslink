@@ -1,16 +1,14 @@
-import React from "react";
+import React from 'react';
 
-export const Badge = ({ children, variant = "default", className = "" }: any) => {
-  const variants = {
-    default: "bg-blue-100 text-blue-800",
-    secondary: "bg-gray-100 text-gray-800",
-    destructive: "bg-red-100 text-red-800",
-    outline: "border border-gray-300 text-gray-800",
-  };
+export const Badge = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className = '', ...props }, ref) => (
+  <div
+    ref={ref}
+    className={`inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 ${className}`}
+    {...props}
+  />
+));
 
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant as keyof typeof variants] || variants.default} ${className}`}>
-      {children}
-    </span>
-  );
-};
+Badge.displayName = 'Badge';

@@ -1,7 +1,14 @@
-import React from "react";
+import React from 'react';
 
-export const GlassCard = ({ children, className = "" }: any) => (
-  <div className={`rounded-lg bg-white/30 backdrop-blur-md border border-white/20 shadow-lg ${className}`}>
-    {children}
-  </div>
-);
+export const GlassCard = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className = '', ...props }, ref) => (
+  <div
+    ref={ref}
+    className={`rounded-lg backdrop-blur-md bg-white/30 border border-white/20 shadow-lg ${className}`}
+    {...props}
+  />
+));
+
+GlassCard.displayName = 'GlassCard';
