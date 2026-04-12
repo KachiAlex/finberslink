@@ -4,10 +4,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  turbopack: {},
-  webpack: (config, { isServer }) => {
-    return config;
-  },
   images: {
     unoptimized: process.env.NODE_ENV === "development",
     remotePatterns: [
