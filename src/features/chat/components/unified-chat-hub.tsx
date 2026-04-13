@@ -25,7 +25,7 @@ import { ChatSidebar } from "./chat-sidebar";
 import { getUnifiedChatData } from "../service";
 import { useChatMessages } from "@/hooks";
 import { ChatNotifications } from "./chat-notifications";
-import { useChatWebSocket } from "@/services/websocket-manager";
+import { useChatWebSocket } from "@/features/chat/services/websocket-manager";
 import { useChatSpaces, useDirectConversations } from "@/hooks";
 import { useCurrentUserId } from "@/components/current-user-provider";
 

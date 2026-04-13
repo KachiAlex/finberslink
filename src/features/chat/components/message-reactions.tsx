@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Heart, ThumbsUp, Laugh, Smile, Frown, Angry } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useChatWebSocket } from "@/services/websocket-manager";
+import { useChatWebSocket } from "@/features/chat/services/websocket-manager";
 
 interface MessageReactionsProps {
   messageId: string;
