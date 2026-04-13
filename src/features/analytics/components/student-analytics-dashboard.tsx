@@ -16,8 +16,8 @@ import {
   Calendar,
   Activity
 } from "lucide-react";
-import { CourseProgressCard, StreakTracker } from "../../progress/components/progress-components";
-import { useCourseProgress } from "../../progress/hooks/use-progress-tracking";
+import { CourseProgressCard, StreakTracker } from "@/features/progress/components/progress-components";
+import { useCourseProgress } from "@/features/progress/hooks/use-progress-tracking";
 import { getStudentAnalytics } from "../service";
 
 interface StudentAnalyticsDashboardProps {

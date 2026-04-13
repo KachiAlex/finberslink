@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
-import { DirectMessage } from "@/hooks/use-direct-messages";
+import { DirectMessage } from "@/features/chat/hooks/use-direct-messages";
 import { MessageBubble } from "./message-bubble";
 
 interface ThreadMessageListProps {

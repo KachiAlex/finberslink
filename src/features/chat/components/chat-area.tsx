@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { DirectConversation } from "@/hooks/use-direct-messages";
+import { DirectConversation } from "@/features/chat/hooks/use-direct-messages";
 import { UserAvatar } from "./user-avatar";
 import { ThreadMessageList } from "./thread-message-list";
 import { MessageInput } from "./message-input";

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Search, Plus, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { DirectConversation } from "@/hooks/use-direct-messages";
+import { DirectConversation } from "@/features/chat/hooks/use-direct-messages";
 import { ConversationItem } from "./conversation-item";
 import { cn } from "@/lib/utils";
 

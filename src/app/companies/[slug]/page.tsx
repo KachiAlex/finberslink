@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCompanyBySlug, getCompanyJobs, getCompanyStats } from "@/features/companies/service";
-import { JobCard } from "../../jobs/_components/job-card";
+import { JobCard } from "@/components/jobs/job-card";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Input } from "../ui/input";
-import { PDFViewer } from "../ui/pdf-viewer";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { PDFViewer } from "@/components/ui/pdf-viewer";
 import { getCourseResources } from "@/features/lms/data/course-service";
-import { SafeImage } from "../ui/safe-image";
+import { SafeImage } from "@/components/ui/safe-image";
 import { 
   Search, 
   Download, 
@@ -20,7 +20,7 @@ import {
   Eye,
   Calendar
 } from "lucide-react";
-import { Label } from "../ui/label";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 interface ResourceItem {
