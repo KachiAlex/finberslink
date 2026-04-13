@@ -53,7 +53,7 @@ const nextConfig = {
     // Configure webpack to resolve @/ alias - ensure it matches tsconfig.json
     const srcPath = path.resolve(__dirname, 'src');
     
-    // Force alias configuration - override existing
+    // Force alias configuration - override existing completely
     config.resolve.alias = {
       '@': srcPath,
       '@/lib': path.join(srcPath, 'lib'),
@@ -74,6 +74,23 @@ const nextConfig = {
 
     // Ensure proper extension resolution
     config.resolve.extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
+
+    // Add custom resolver for Vercel
+    config.resolve.plugins = [
+      ...(config.resolve.plugins || []),
+      {
+        apply: (resolver) => {
+          resolver.hooks.resolve.tapAsync('CustomAliasResolver', async (request) => {
+            if (request.request.startsWith('@/')) {
+              const newPath = request.request.replace('@/', '');
+              const fullPath = path.join(srcPath, newPath);
+              return { path: fullPath };
+            }
+            return resolver.hooks.resolve.callAsync(request);
+          });
+        },
+      },
+    ];
 
     return config;
   },
