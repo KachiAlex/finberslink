@@ -62,7 +62,10 @@ const nextConfig = {
       '@/features': path.join(srcPath, 'features'),
       '@/hooks': path.join(srcPath, 'hooks'),
       '@/types': path.join(srcPath, 'types'),
-      '@/utils': path.join(srcPath, 'lib/utils'),
+      '@/utils': path.join(srcPath, 'utils'),
+      '@/services': path.join(srcPath, 'services'),
+      '@/config': path.join(srcPath, 'config'),
+      '@/styles': path.join(srcPath, 'styles'),
     };
 
     // Add explicit module resolution for Vercel
@@ -75,23 +78,7 @@ const nextConfig = {
     // Ensure proper extension resolution
     config.resolve.extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
 
-    // Add custom resolver for Vercel
-    config.resolve.plugins = [
-      ...(config.resolve.plugins || []),
-      {
-        apply: (resolver) => {
-          resolver.hooks.resolve.tapAsync('CustomAliasResolver', async (request) => {
-            if (request.request.startsWith('@/')) {
-              const newPath = request.request.replace('@/', '');
-              const fullPath = path.join(srcPath, newPath);
-              return { path: fullPath };
-            }
-            return resolver.hooks.resolve.callAsync(request);
-          });
-        },
-      },
-    ];
-
+    
     return config;
   },
   async headers() {

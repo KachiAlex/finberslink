@@ -22,19 +22,19 @@
         "name": "next"
       }
     ],
-    "baseUrl": "./",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/features/*": ["./src/features/*"],
-      "@/app/*": ["./src/app/*"],
-      "@/services/*": ["./src/services/*"],
-      "@/config/*": ["./src/config/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/types/*": ["./src/types/*"],
-      "@/utils/*": ["./src/utils/*"],
-      "@/styles/*": ["./src/styles/*"]
+      "@/*": ["src/*"],
+      "@/components/*": ["src/components/*"],
+      "@/lib/*": ["src/lib/*"],
+      "@/features/*": ["src/features/*"],
+      "@/app/*": ["src/app/*"],
+      "@/services/*": ["src/services/*"],
+      "@/config/*": ["src/config/*"],
+      "@/hooks/*": ["src/hooks/*"],
+      "@/types/*": ["src/types/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@/styles/*": ["src/styles/*"]
     },
     "types": [
       "node",
