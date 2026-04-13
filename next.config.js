@@ -6,15 +6,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Explicit paths for Vercel build
-  experimental: {
-    ...{},
-    optimizePackageImports: [
-      '@mui/material',
-      '@mui/icons-material',
-      'lucide-react',
-    ],
-  },
   reactStrictMode: true,
   images: {
     unoptimized: process.env.NODE_ENV === "development",
@@ -78,7 +69,6 @@ const nextConfig = {
     // Ensure proper extension resolution
     config.resolve.extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
 
-    
     return config;
   },
   async headers() {
