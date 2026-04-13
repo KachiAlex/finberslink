@@ -6,12 +6,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Force webpack build for Vercel compatibility
-  webpack5: true,
-  // Explicit path mapping for Vercel build
-  compiler: {
-    removeConsole: false,
-  },
   reactStrictMode: true,
   images: {
     unoptimized: process.env.NODE_ENV === "development",
@@ -50,41 +44,10 @@ const nextConfig = {
     // Configure webpack to resolve @/ alias - ensure it matches tsconfig.json
     const srcPath = path.resolve(__dirname, 'src');
     
-    // Ensure the alias configuration is properly set
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': srcPath,
-      '@/components': path.join(srcPath, 'components'),
-      '@/lib': path.join(srcPath, 'lib'),
-      '@/features': path.join(srcPath, 'features'),
-      '@/app': path.join(srcPath, 'app'),
-      '@/services': path.join(srcPath, 'services'),
-      '@/config': path.join(srcPath, 'config'),
-      '@/hooks': path.join(srcPath, 'hooks'),
-      '@/types': path.join(srcPath, 'types'),
-      '@/utils': path.join(srcPath, 'utils'),
-      '@/styles': path.join(srcPath, 'styles'),
     };
-
-    // Ensure proper module resolution order
-    if (!config.resolve.extensions) {
-      config.resolve.extensions = [];
-    }
-    config.resolve.extensions = [
-      '.ts',
-      '.tsx',
-      '.js',
-      '.jsx',
-      '.json',
-      ...config.resolve.extensions.filter(ext => !['ts', 'tsx', 'js', 'jsx', 'json'].includes(ext)),
-    ];
-
-    // Add explicit module resolution for Vercel
-    config.resolve.modules = [
-      path.resolve(__dirname, 'src'),
-      path.resolve(__dirname, 'node_modules'),
-      'node_modules',
-    ];
 
     return config;
   },

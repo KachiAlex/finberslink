@@ -4,16 +4,7 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "env": {
-    "NODE_ENV": "production",
-    "NEXT_BUILD_TURBOPACK": "false",
-    "NEXT_DISABLE_TURBOPACK": "1"
-  },
-  "build": {
-    "env": {
-      "NODE_ENV": "production",
-      "NEXT_BUILD_TURBOPACK": "false",
-      "NEXT_DISABLE_TURBOPACK": "1"
-    }
+    "NODE_ENV": "production"
   },
   "functions": {
     "src/app/api/**/*.ts": {
