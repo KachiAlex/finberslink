@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
-import { Button } from "../../components/ui/button";
-import { siteConfig } from "../../config/site";
+import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/config/site";
 import { getUnreadCount } from "@/features/notifications/service";
-import { NotificationsBell } from "../../components/notifications/notifications-bell";
+import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { requireSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";

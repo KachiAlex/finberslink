@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { getDashboardSummary } from "@/features/dashboard/service";
-import { GlassCard } from "../../../components/ui/glass-card";
-import { GlassCardError } from "../../../components/ui/glass-card-error";
-import { Button } from "../../../components/ui/button";
-import { Skeleton } from "../../../components/ui/skeleton";
+import { GlassCard } from "@/components/ui/glass-card";
+import { GlassCardError } from "@/components/ui/glass-card-error";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type DashboardSummary = {
   enrollmentsCount: number;

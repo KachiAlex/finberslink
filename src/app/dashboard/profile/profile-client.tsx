@@ -5,13 +5,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { upsertStudentProfile } from "@/features/profile/service";
 
-import { Label } from "../../../components/ui/label";
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Input } from "../../../components/ui/input";
-import { Textarea } from "../../../components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import { Badge } from "../../../components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 interface ResumeEntry {
   id: string;

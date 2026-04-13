@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { DirectMessage } from "../hooks/use-direct-messages";
+import { DirectMessage } from "@/hooks/use-direct-messages";
 import { UserAvatar } from "./user-avatar";
 import { Check, CheckCheck } from "lucide-react";
 

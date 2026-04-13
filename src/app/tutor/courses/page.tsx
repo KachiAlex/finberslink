@@ -1,6 +1,6 @@
 import { listTutorCourses } from "@/features/tutor/service";
 import { requireSession } from "@/lib/auth/session";
-import { CoursesTable } from "../../../components/tutor/courses-table";
+import { CoursesTable } from "@/components/tutor/courses-table";
 import { CoursesPageClient } from "./courses-page-client";
 
 export const dynamic = "force-dynamic";

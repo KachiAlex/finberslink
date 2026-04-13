@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, CheckCircle2, Clock, AlertCircle, PencilLine } from "lucide-react";
-import { Input } from "../../../../../components/ui/input";
-import { Button } from "../../../../../components/ui/button";
-import { Badge } from "../../../../../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../../components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CourseLevel } from "@prisma/client";
 
 type ApprovalStatus = "DRAFT" | "PENDING" | "APPROVED" | "CHANGES";

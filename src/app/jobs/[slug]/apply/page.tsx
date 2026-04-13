@@ -2,9 +2,9 @@ import { ArrowLeft, Upload, FileText, User } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { Badge } from "../../../../components/ui/badge";
-import { Button } from "../../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJobBySlug, createJobApplication, getUserJobApplications } from "@/features/jobs/service";
 import { listUserResumes } from "@/features/resume/service";
 import { requireSession } from "@/lib/auth/session";
@@ -240,9 +240,7 @@ export default async function JobApplyPage({
                     existingDraft={existingDraft}
                     submitApplicationAction={submitApplicationAction}
                     saveDraftAction={saveDraftAction}
-                  />
-                )}
-              </CardContent>
+                        </CardContent>
             </Card>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useThreadSubscription } from '../hooks/useThreadSubscription';
+import { useThreadSubscription } from '@/hooks/useThreadSubscription';
 import { useState } from 'react';
 
 export function ThreadSubscribeButton({ userId, threadId, initiallySubscribed }: { userId: string; threadId: string; initiallySubscribed?: boolean }) {

@@ -8,7 +8,7 @@ import { Badge } from "../ui/badge";
 import { DashboardHero } from "./dashboard-hero";
 import { DashboardSection } from "./dashboard-section";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { getTutorDashboardData } from "../../features/dashboard/service";
+import { getTutorDashboardData } from "@/features/dashboard/service";
 
 // Floating Particles Component
 const FloatingParticles = () => {

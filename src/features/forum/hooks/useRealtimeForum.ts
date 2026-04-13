@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ForumPost, ForumThread } from '../types';
+import { ForumPost, ForumThread } from '@/types';
 
 interface RealtimeEvent {
   type: 'thread_created' | 'thread_updated' | 'post_created' | 'post_updated' | 'post_deleted';

@@ -1,4 +1,4 @@
-import { usePostReplies } from '../hooks/usePostReplies';
+import { usePostReplies } from '@/hooks/usePostReplies';
 import { PostReactions } from './PostReactions';
 import React from 'react';
 import RW from 'react-window/dist/react-window.cjs';

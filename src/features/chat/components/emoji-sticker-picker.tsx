@@ -26,14 +26,14 @@ import {
   Bookmark,
   Plus
 } from "lucide-react";
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Input } from "../../../components/ui/input";
-import { Badge } from "../../../components/ui/badge";
-import { ScrollArea } from "../../../components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getStickers } from "../service";
-import { useChatMessages } from "../hooks";
+import { useChatMessages } from "@/hooks";
 
 interface CustomEmoji {
   id: string;

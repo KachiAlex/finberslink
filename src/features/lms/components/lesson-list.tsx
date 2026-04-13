@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Clock, Lock, PlayCircle, Radio } from "lucide-react";
 
-import { Badge } from "../../../components/ui/badge";
-import { Button } from "../../../components/ui/button";
-import { Card } from "../../../components/ui/card";
-import { UniversalVideo } from "../../../components/ui/universal-video";
-import { PDFViewer } from "../../../components/ui/pdf-viewer";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { UniversalVideo } from "@/components/ui/universal-video";
+import { PDFViewer } from "@/components/ui/pdf-viewer";
 import type { Lesson } from "@/types/lms";
 
 interface LessonListProps {

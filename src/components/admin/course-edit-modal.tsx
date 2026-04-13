@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useCourseNameValidation } from "../hooks/use-course-name-validation";
+import { useCourseNameValidation } from "@/hooks/use-course-name-validation";
 import * as z from "zod";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";

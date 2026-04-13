@@ -1,4 +1,4 @@
-import { Button } from "../../components/ui/button";
+import { Button } from "@/components/ui/button";
 import { BarChart3, BookOpen, PenSquare, Users, Plus } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";

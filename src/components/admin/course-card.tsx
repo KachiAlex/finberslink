@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
-import { SafeImage } from "../../components/ui/safe-image";
-import { approveCourse } from "../../features/admin/service";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { SafeImage } from "@/components/ui/safe-image";
+import { approveCourse } from "@/features/admin/service";
 import { MoreHorizontal, Edit, Archive, Users, Eye, BarChart3 } from "lucide-react";
 
 interface Course {

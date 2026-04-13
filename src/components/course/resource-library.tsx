@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { PDFViewer } from "../ui/pdf-viewer";
-import { getCourseResources } from "../../features/lms/data/course-service";
+import { getCourseResources } from "@/features/lms/data/course-service";
 import { SafeImage } from "../ui/safe-image";
 import { 
   Search, 
@@ -21,7 +21,7 @@ import {
   Calendar
 } from "lucide-react";
 import { Label } from "../ui/label";
-import { cn } from "../lib/utils";
+import { cn } from "@/lib/utils";
 
 interface ResourceItem {
   id: string;

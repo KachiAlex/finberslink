@@ -1,6 +1,6 @@
 "use client";
 
-import { ChatSpace, ChatThread, ChatMessage, useChatSpaces, useChatThreads, useChatMessages, useMarkThreadRead, useSendChatMessage } from "../hooks";
+import { ChatSpace, ChatThread, ChatMessage, useChatSpaces, useChatThreads, useChatMessages, useMarkThreadRead, useSendChatMessage } from "@/hooks";
 import { useEffect, useState } from "react";
 
 // Export new components

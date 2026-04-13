@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ForumThread } from '../types';
+import { ForumThread } from '@/types';
 
 interface UseListThreadsParams {
   tag?: string;

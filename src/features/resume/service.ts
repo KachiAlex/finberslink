@@ -2,9 +2,9 @@ import { Prisma } from "@prisma/client";
 import type { ResumeVisibility } from "@prisma/client";
 import { customAlphabet } from "nanoid";
 
-import { prisma } from "../../lib/prisma";
-import { slugify } from "../../lib/slugify";
-import { isVideoUrlValid, toEmbedUrl } from "../../lib/video";
+import { prisma } from "@/lib/prisma";
+import { slugify } from "@/lib/slugify";
+import { isVideoUrlValid, toEmbedUrl } from "@/lib/video";
 import { VersioningService } from "./versioning-service";
 
 const SHARE_SLUG_ALPHABET = "abcdefghijkmnopqrstuvwxyz0123456789";

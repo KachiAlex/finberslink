@@ -1,6 +1,6 @@
 import type { JobApplicationStatus, JobOpportunity, JobType, RemoteOption } from "@prisma/client";
 
-import { prisma } from "../../lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { invalidateDashboardInsights } from "../dashboard/service";
 
 type JobListing = JobOpportunity & {

@@ -17,15 +17,15 @@ import {
   X,
   SlidersHorizontal
 } from "lucide-react";
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
-import { Badge } from "../../../components/ui/badge";
-import { Checkbox } from "../../../components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
-import { Slider } from "../../../components/ui/slider";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../../../components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   JobFilters, 
   getSalaryRangeFilters, 
@@ -248,10 +248,7 @@ export function AdvancedJobFilters({
                 />
                 <Label 
                   htmlFor={level.value} 
-                  className="text-sm text-slate-300 cursor-pointer"
-                >
-                  <div>
-                    <div className="font-medium">{level.label}</div>
+                  className="text-sm text-slate-300 cursor      <div className="font-medium">{level.label}</div>
                     <div className="text-xs text-slate-500">{level.years}</div>
                   </div>
                 </Label>

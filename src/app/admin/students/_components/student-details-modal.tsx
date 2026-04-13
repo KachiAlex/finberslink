@@ -1,14 +1,14 @@
 "use client";
 
-import { Badge } from "../../../../components/ui/badge";
-import { Button } from "../../../../components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../../../components/ui/dialog";
+} from "@/components/ui/dialog";
 
 type AssignedCourse = {
   courseId: string;

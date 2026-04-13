@@ -1,7 +1,7 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
-import { env } from '../../lib/env';
-import { siteConfig } from '../../config/site';
+import { env } from '@/lib/env';
+import { siteConfig } from '@/config/site';
 
 export interface ShareLink {
   id: string;

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { ResumeTemplateWrapper } from "../../../../components/resume/resume-template-wrapper";
+import { ResumeTemplateWrapper } from "@/components/resume/resume-template-wrapper";
 import { getResumeBySlug } from "@/features/resume/service";
 import { requireSession } from "@/lib/auth/session";
 

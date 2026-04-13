@@ -1,7 +1,7 @@
 import { BarChart2, Database, Users } from "lucide-react";
 
 import { GlassCard } from "@/components/ui/glass-card";
-import { StatCard } from "../../../components/ui/stat-card";
+import { StatCard } from "@/components/ui/stat-card";
 import { getSuperAdminUsageOverview } from "@/features/superadmin/usage";
 
 export const dynamic = "force-dynamic";

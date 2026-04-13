@@ -1,6 +1,6 @@
 "use client";
 
-import { DirectConversation } from "../hooks/use-direct-messages";
+import { DirectConversation } from "@/hooks/use-direct-messages";
 import { UserAvatar } from "./user-avatar";
 import { cn } from "@/lib/utils";
 

@@ -5,15 +5,15 @@ import Link from "next/link";
 import { BookOpen, Briefcase, MapPin, Calendar, Filter, FileText } from "lucide-react";
 
 import { getDashboardSummary } from "@/features/dashboard/service";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { GlassCard } from "../../components/ui/glass-card";
-import { GlassCardError } from "../../components/ui/glass-card-error";
-import { Skeleton } from "../../components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { GlassCard } from "@/components/ui/glass-card";
+import { GlassCardError } from "@/components/ui/glass-card-error";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getUserApplications } from "@/features/jobs/service";
-import { JobBrowserButton } from "../../components/jobs/job-browser-button";
+import { JobBrowserButton } from "@/components/jobs/job-browser-button";
 import { listStudentEnrollmentsWithCourses } from "@/features/dashboard/service";
-import { ImportResumeModal } from "../../components/resume/import-resume-modal";
+import { ImportResumeModal } from "@/components/resume/import-resume-modal";
 
 interface EnrollmentSection {
   id: string;

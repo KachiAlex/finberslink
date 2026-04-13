@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Badge } from "../../../../../components/ui/badge";
-import { Button } from "../../../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLearnerLesson } from "@/features/lms/data/course-service";
 import { requireSession } from "@/lib/auth/session";
 import LessonPageClient from "./lesson-client";

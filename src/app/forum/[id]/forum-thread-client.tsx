@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ThreadSubscribeButton } from "../../../components/forum/ThreadSubscribeButton";
-import { PostReactions } from "../../../components/forum/PostReactions";
-import { PostModerationButtons } from "../../../components/forum/PostModerationButtons";
-import { PostReplies } from "../../../components/forum/PostReplies";
-import { PostContent } from "../../../components/forum/PostContent";
+import { ThreadSubscribeButton } from "@/components/forum/ThreadSubscribeButton";
+import { PostReactions } from "@/components/forum/PostReactions";
+import { PostModerationButtons } from "@/components/forum/PostModerationButtons";
+import { PostReplies } from "@/components/forum/PostReplies";
+import { PostContent } from "@/components/forum/PostContent";
 
 export function ForumThreadClient({ threadId, userId, isAdmin }: any) {
   const [thread, setThread] = useState<any>(null);

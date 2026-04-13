@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Plus, Download, Edit2, Eye } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { ResumeCard } from "../../components/resume/resume-card";
-import { CreateResumeButton } from "../../components/resume/create-resume-button";
-import { ExportButton } from "../../components/resume/export-button";
+import { Button } from "@/components/ui/button";
+import { ResumeCard } from "@/components/resume/resume-card";
+import { CreateResumeButton } from "@/components/resume/create-resume-button";
+import { ExportButton } from "@/components/resume/export-button";
 import { getSessionFromCookies } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";

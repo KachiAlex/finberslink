@@ -1,7 +1,7 @@
 import { BarChart3, TrendingUp, Users, BookOpen, Briefcase, Activity } from "lucide-react";
 
-import { Badge } from "../../../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAnalyticsOverview } from "@/features/admin/service";
 
 import { AdminShell } from "../_components/admin-shell";

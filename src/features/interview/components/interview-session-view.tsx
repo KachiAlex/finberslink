@@ -13,10 +13,10 @@ import {
   RefreshCcw,
 } from "lucide-react";
 
-import { Badge } from "../../../components/ui/badge";
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Textarea } from "../../../components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import {
   type InterviewQuestion,
   type InterviewSession,
@@ -26,7 +26,7 @@ import {
   useUploadInterviewAudio,
 } from "@/features/interview/hooks";
 import { useAudioRecorder } from "@/features/interview/hooks/use-audio-recorder";
-import { cn } from "../../../lib/utils";
+import { cn } from "@/lib/utils";
 
 interface InterviewSessionViewProps {
   sessionId: string;

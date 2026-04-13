@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useCreateThread } from '../hooks/useCreateThread';
+import { useCreateThread } from '@/hooks/useCreateThread';
 import { MentionTextarea } from './MentionTextarea';
 
 export function ThreadCreateForm({ courseId, onCreated }: { courseId: string; onCreated?: (thread: any) => void }) {

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Textarea } from "../../components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Trash, Layers3, BookOpen, Target, FileText, Upload, CheckCircle, X } from "lucide-react";
 import type { CourseSection, CourseModule, SectionExam } from "./course-edit-modal-enhanced";
 

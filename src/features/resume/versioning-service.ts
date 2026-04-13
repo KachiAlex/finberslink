@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { Resume, ResumeVersion } from '@prisma/client';
 
 export interface Version {

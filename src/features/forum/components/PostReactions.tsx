@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { usePostReactions } from '../hooks/usePostReactions';
+import { usePostReactions } from '@/hooks/usePostReactions';
 
 const REACTION_TYPES = ['like', 'upvote', 'laugh', 'clap'];
 

@@ -5,12 +5,12 @@ import { cookies } from "next/headers";
 import type { Prisma } from "@prisma/client";
 import type { ResumeVisibility } from "@prisma/client";
 
-import { Button } from "../../../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../components/ui/card";
-import { Input } from "../../../../../components/ui/input";
-import { Label } from "../../../../../components/ui/label";
-import { Textarea } from "../../../../../components/ui/textarea";
-import { Badge } from "../../../../../components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   createResumeExperience,
   createResumeProject,
@@ -46,9 +46,9 @@ import {
 } from "./ai-forms";
 import { ShareLinkCopy } from "./share-link";
 import { NewExperienceForm, NewProjectForm } from "./forms";
-import { ResumeTemplateWrapper } from "../../../../../components/resume/resume-template-wrapper";
-import { ResumeTemplateSelector } from "../../../../../components/resume/resume-template-selector";
-import { HeadshotUpload } from "../../../../../components/resume/headshot-upload";
+import { ResumeTemplateWrapper } from "@/components/resume/resume-template-wrapper";
+import { ResumeTemplateSelector } from "@/components/resume/resume-template-selector";
+import { HeadshotUpload } from "@/components/resume/headshot-upload";
 
 // ============= Server Actions & Helper Functions =============
 

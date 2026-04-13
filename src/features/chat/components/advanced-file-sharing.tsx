@@ -22,26 +22,26 @@ import {
   Clock,
   Folder
 } from "lucide-react";
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Input } from "../../../components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { uploadChatFile } from "../service";
-import { Badge } from "../../../components/ui/badge";
-import { Progress } from "../../../components/ui/progress";
-import { ScrollArea } from "../../../components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
   DialogTrigger 
-} from "../../../components/ui/dialog";
+} from "@/components/ui/dialog";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger 
-} from "../../../components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 
 interface FileAttachment {
   id: string;

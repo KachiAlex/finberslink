@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useChatWebSocket } from "../services/websocket-manager";
+import { useChatWebSocket } from "@/services/websocket-manager";
 import { Avatar } from "@/components/ui/avatar";
 
 interface TypingIndicatorProps {

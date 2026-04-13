@@ -2,11 +2,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Calendar, CheckCircle2, Shield } from "lucide-react";
 
-import { Badge } from "../../../components/ui/badge";
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Input } from "../../../components/ui/input";
-import { Textarea } from "../../../components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { getInviteByToken, markInviteStatus } from "@/features/admin/service";
 import { registerUser } from "@/features/auth/service";
 
@@ -191,7 +191,7 @@ export default async function JoinPage(props: any) {
                         name="lastName"
                         placeholder="Okafor"
                         required
-                        className="mt-1 border-white/10 bg-white/10 text-white placeholder:text-white/40"
+              ite/10 bg-white/10 text-white placeholder:text-white/40"
                       />
                     </div>
                   </div>

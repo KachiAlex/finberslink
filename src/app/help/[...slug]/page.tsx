@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
-import { Badge } from "../../../components/ui/badge";
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
 const helpContent: Record<string, { title: string; content: string; related?: string[] }> = {
@@ -339,8 +339,7 @@ const helpContent: Record<string, { title: string; content: string; related?: st
 ## User Experience
 - Interface customization
 - Notification preferences
-- Language settings
-- Accessibility options
+- Language settingions
 
 ## Technical Settings
 - Database configuration
