@@ -41,16 +41,28 @@ const nextConfig = {
     pagesBufferLength: 2,
   },
   webpack: (config, { isServer }) => {
-    // Next.js should handle path aliases from tsconfig.json automatically
-    // But we'll ensure the resolve configuration is correct for Vercel
+    const srcPath = path.resolve(__dirname, 'src');
     
+    // Ensure resolve object exists
     if (!config.resolve) {
       config.resolve = {};
     }
     
-    if (!config.resolve.alias) {
-      config.resolve.alias = {};
-    }
+    // Set up alias mappings for @/ imports
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': srcPath,
+      '@/components': path.join(srcPath, 'components'),
+      '@/lib': path.join(srcPath, 'lib'),
+      '@/features': path.join(srcPath, 'features'),
+      '@/app': path.join(srcPath, 'app'),
+      '@/services': path.join(srcPath, 'services'),
+      '@/config': path.join(srcPath, 'config'),
+      '@/hooks': path.join(srcPath, 'hooks'),
+      '@/types': path.join(srcPath, 'types'),
+      '@/utils': path.join(srcPath, 'utils'),
+      '@/styles': path.join(srcPath, 'styles'),
+    };
 
     // Ensure extensions are properly ordered
     if (!config.resolve.extensions) {
