@@ -1,3 +1,5 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@prisma/client'],
@@ -37,6 +39,14 @@ const nextConfig = {
   onDemandEntries: {
     maxInactiveAge: 1000,
     pagesBufferLength: 2,
+  },
+  webpack: (config, { isServer }) => {
+    // Configure webpack to resolve @/ alias
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, './src'),
+    };
+    return config;
   },
   async headers() {
     return [
