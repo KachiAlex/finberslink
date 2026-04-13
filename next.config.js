@@ -41,11 +41,37 @@ const nextConfig = {
     pagesBufferLength: 2,
   },
   webpack: (config, { isServer }) => {
-    // Configure webpack to resolve @/ alias
+    // Configure webpack to resolve @/ alias - ensure it matches tsconfig.json
+    const srcPath = path.resolve(__dirname, 'src');
+    
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.resolve(__dirname, './src'),
+      '@': srcPath,
+      '@/components': path.join(srcPath, 'components'),
+      '@/lib': path.join(srcPath, 'lib'),
+      '@/features': path.join(srcPath, 'features'),
+      '@/app': path.join(srcPath, 'app'),
+      '@/services': path.join(srcPath, 'services'),
+      '@/config': path.join(srcPath, 'config'),
+      '@/hooks': path.join(srcPath, 'hooks'),
+      '@/types': path.join(srcPath, 'types'),
+      '@/utils': path.join(srcPath, 'utils'),
+      '@/styles': path.join(srcPath, 'styles'),
     };
+
+    // Ensure proper module resolution order
+    if (!config.resolve.extensions) {
+      config.resolve.extensions = [];
+    }
+    config.resolve.extensions = [
+      '.ts',
+      '.tsx',
+      '.js',
+      '.jsx',
+      '.json',
+      ...config.resolve.extensions.filter(ext => !['ts', 'tsx', 'js', 'jsx', 'json'].includes(ext)),
+    ];
+
     return config;
   },
   async headers() {
