@@ -44,10 +44,17 @@ const nextConfig = {
     // Configure webpack to resolve @/ alias - ensure it matches tsconfig.json
     const srcPath = path.resolve(__dirname, 'src');
     
-    // Ensure the alias is properly set
+    // Force alias configuration
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': srcPath,
+      '@/lib': path.join(srcPath, 'lib'),
+      '@/components': path.join(srcPath, 'components'),
+      '@/app': path.join(srcPath, 'app'),
+      '@/features': path.join(srcPath, 'features'),
+      '@/hooks': path.join(srcPath, 'hooks'),
+      '@/types': path.join(srcPath, 'types'),
+      '@/utils': path.join(srcPath, 'lib/utils'),
     };
 
     // Add explicit module resolution for Vercel
@@ -56,6 +63,9 @@ const nextConfig = {
       path.resolve(__dirname, 'node_modules'),
       'node_modules',
     ];
+
+    // Ensure proper extension resolution
+    config.resolve.extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
 
     return config;
   },
