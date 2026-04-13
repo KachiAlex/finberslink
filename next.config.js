@@ -49,9 +49,8 @@ const nextConfig = {
     }
     
     // Set up alias mappings for @/ imports
-    // Use absolute paths to ensure Vercel can resolve them correctly
-    config.resolve.alias = {
-      ...config.resolve.alias,
+    // These must be absolute paths for Vercel to resolve them correctly
+    const aliases = {
       '@': srcPath,
       '@/components': path.join(srcPath, 'components'),
       '@/lib': path.join(srcPath, 'lib'),
@@ -63,6 +62,11 @@ const nextConfig = {
       '@/types': path.join(srcPath, 'types'),
       '@/utils': path.join(srcPath, 'utils'),
       '@/styles': path.join(srcPath, 'styles'),
+    };
+    
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      ...aliases,
     };
 
     // Ensure extensions are properly ordered
