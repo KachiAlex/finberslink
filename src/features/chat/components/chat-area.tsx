@@ -5,7 +5,7 @@ import { DirectConversation } from "../hooks/use-direct-messages";
 import { UserAvatar } from "./user-avatar";
 import { ThreadMessageList } from "./thread-message-list";
 import { MessageInput } from "./message-input";
-import { cn } from "../../lib/utils";
+import { cn } from "../../../lib/utils";
 import { sendMessage } from "../service";
 import { Info, Phone, Video, Users, Hash, Send, Paperclip, Smile } from "lucide-react";
 import { useChatMessages, useConversationMessages } from "../hooks";

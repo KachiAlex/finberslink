@@ -166,7 +166,26 @@ export async function getUserById(userId: string) {
 }
 
 export async function listAdminCourses() {
-  return prisma.course.findMany();
+  const courses = await prisma.course.findMany({
+    include: {
+      instructor: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+      _count: {
+        select: {
+          enrollments: true,
+        },
+      },
+    },
+  });
+  
+  return {
+    allCourses: courses,
+  };
 }
 
 export async function listStudents() {

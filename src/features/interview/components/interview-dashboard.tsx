@@ -24,7 +24,7 @@ import {
   type InterviewSession,
 } from "../hooks";
 import { getInterviewSessions } from "../service";
-import { cn } from "../../lib/utils";
+import { cn } from "../../../lib/utils";
 import { QuestionBankSelector } from "./question-bank-selector";
 import { AnalyticsDashboard } from "./analytics-dashboard";
 

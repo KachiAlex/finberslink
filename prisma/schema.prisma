@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -430,6 +431,10 @@ model Resume {
   exports             ResumeExport[]     @relation("Exports")
   views               ResumeView[]       @relation("Views")
   notifications       ResumeNotification[] @relation("Notifications")
+  analytics           ResumeAnalytics[]  @relation("Analytics")
+  suggestions         ResumeSuggestion[] @relation("Suggestions")
+  publishing          ResumePublishing?  @relation("Publishing")
+  sectionEngagement   ResumeSectionEngagement[] @relation("SectionEngagement")
 }
 
 model ResumeExperience {
@@ -1374,6 +1379,80 @@ model NotificationPreference {
   aggregateViews    Boolean   @default(true)
   updatedAt         DateTime  @updatedAt
   user              User      @relation("NotificationPreferences", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ResumeAnalytics {
+  id                  String    @id @default(cuid())
+  resumeId            String
+  eventType           String    // 'view', 'download', 'share', 'export'
+  deviceType          String?
+  browser             String?
+  operatingSystem     String?
+  country             String?
+  city                String?
+  shareMethod         String?
+  timeSpentSeconds    Int?
+  scrollDepth         Int?
+  sectionName         String?
+  viewerEmail         String?
+  viewerName          String?
+  metadata            Json?
+  createdAt           DateTime  @default(now())
+  resume              Resume    @relation("Analytics", fields: [resumeId], references: [id], onDelete: Cascade)
+  
+  @@index([resumeId, createdAt])
+  @@index([eventType, createdAt])
+  @@index([country])
+  @@index([sectionName])
+}
+
+model ResumeSectionEngagement {
+  id                  String    @id @default(cuid())
+  resumeId            String
+  sectionName         String
+  viewCount           Int       @default(0)
+  totalTimeSpentSeconds Int     @default(0)
+  averageScrollDepth  Int       @default(0)
+  lastUpdatedAt       DateTime  @default(now())
+  resume              Resume    @relation("SectionEngagement", fields: [resumeId], references: [id], onDelete: Cascade)
+  
+  @@unique([resumeId, sectionName])
+  @@index([resumeId])
+}
+
+model ResumeSuggestion {
+  id                  String    @id @default(cuid())
+  resumeId            String
+  category            String    // 'summary', 'achievement', 'skill', 'experience'
+  originalText        String
+  suggestedText       String
+  explanation         String?
+  confidenceLevel     String    // 'high', 'medium', 'low'
+  targetField         String?
+  status              String    @default("pending") // 'pending', 'approved', 'rejected'
+  createdAt           DateTime  @default(now())
+  appliedAt           DateTime?
+  resume              Resume    @relation("Suggestions", fields: [resumeId], references: [id], onDelete: Cascade)
+  
+  @@index([resumeId, status])
+  @@index([createdAt])
+}
+
+model ResumePublishing {
+  id                  String    @id @default(cuid())
+  resumeId            String    @unique
+  publicId            String    @unique
+  published           Boolean   @default(false)
+  publishedAt         DateTime?
+  unpublishedAt       DateTime?
+  viewCount           Int       @default(0)
+  lastViewedAt        DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  resume              Resume    @relation("Publishing", fields: [resumeId], references: [id], onDelete: Cascade)
+  
+  @@index([publicId])
+  @@index([published])
 }
 
 

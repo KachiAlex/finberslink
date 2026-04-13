@@ -1,6 +1,14 @@
 {
-  "buildCommand": "NEXT_DISABLE_TURBOPACK=1 next build",
+  "buildCommand": "NEXT_DISABLE_TURBOPACK=1 NEXT_TURBO=0 TURBOPACK=0 NODE_OPTIONS=\"--no-experimental-fetch\" next build --no-turbopack",
   "env": {
-    "NEXT_DISABLE_TURBOPACK": "1"
+    "NEXT_DISABLE_TURBOPACK": "1",
+    "NEXT_TURBO": "0",
+    "TURBOPACK": "0",
+    "NODE_OPTIONS": "--no-experimental-fetch"
+  },
+  "build": {
+    "env": {
+      "NEXT_DISABLE_TURBOPACK": "1"
+    }
   }
 }

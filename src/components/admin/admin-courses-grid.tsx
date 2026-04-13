@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { listAdminCourses } from "../../features/admin/service";
 import { CourseListRow } from "./course-list-row";
 import { 
   Search, 
@@ -79,9 +78,10 @@ export function AdminCoursesGrid() {
   const fetchCourses = async () => {
     setLoading(true);
     try {
-      const data = await listAdminCourses();
+      const response = await fetch('/api/admin/courses');
+      const data = await response.json();
       
-      if (data.allCourses) {
+      if (data.success && data.allCourses) {
         // Separate live and archived courses
         const live = data.allCourses.filter((course: Course) => !course.archivedAt);
         const archived = data.allCourses.filter((course: Course) => course.archivedAt);
