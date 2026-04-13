@@ -6,6 +6,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  swcMinify: true,
   reactStrictMode: true,
   images: {
     unoptimized: process.env.NODE_ENV === "development",
@@ -47,7 +48,6 @@ const nextConfig = {
     }
     
     // Set up alias mappings for @/ imports
-    // These must be absolute paths for Vercel to resolve them correctly
     const aliases = {
       '@': srcPath,
       '@/components': path.join(srcPath, 'components'),
@@ -67,24 +67,8 @@ const nextConfig = {
       ...aliases,
     };
 
-    // Ensure extensions are properly ordered
-    if (!config.resolve.extensions) {
-      config.resolve.extensions = [];
-    }
-    
-    config.resolve.extensions = [
-      '.ts',
-      '.tsx', 
-      '.js',
-      '.jsx',
-      '.json',
-      ...config.resolve.extensions.filter(ext => !['ts', 'tsx', 'js', 'jsx', 'json'].includes(ext)),
-    ];
-
-    // Add fallback for module resolution issues
-    if (!config.resolve.fallback) {
-      config.resolve.fallback = {};
-    }
+    // Ensure symlinks are resolved (important for Vercel)
+    config.resolve.symlinks = true;
 
     return config;
   },
