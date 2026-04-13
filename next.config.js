@@ -41,33 +41,30 @@ const nextConfig = {
     pagesBufferLength: 2,
   },
   webpack: (config, { isServer }) => {
-    // Configure webpack to resolve @/ alias - ensure it matches tsconfig.json
-    const srcPath = path.resolve(__dirname, 'src');
+    // Next.js should handle path aliases from tsconfig.json automatically
+    // But we'll ensure the resolve configuration is correct for Vercel
     
-    // Force alias configuration - override existing completely
-    config.resolve.alias = {
-      '@': srcPath,
-      '@/lib': path.join(srcPath, 'lib'),
-      '@/components': path.join(srcPath, 'components'),
-      '@/app': path.join(srcPath, 'app'),
-      '@/features': path.join(srcPath, 'features'),
-      '@/hooks': path.join(srcPath, 'hooks'),
-      '@/types': path.join(srcPath, 'types'),
-      '@/utils': path.join(srcPath, 'utils'),
-      '@/services': path.join(srcPath, 'services'),
-      '@/config': path.join(srcPath, 'config'),
-      '@/styles': path.join(srcPath, 'styles'),
-    };
+    if (!config.resolve) {
+      config.resolve = {};
+    }
+    
+    if (!config.resolve.alias) {
+      config.resolve.alias = {};
+    }
 
-    // Add explicit module resolution for Vercel
-    config.resolve.modules = [
-      path.resolve(__dirname, 'src'),
-      path.resolve(__dirname, 'node_modules'),
-      'node_modules',
+    // Ensure extensions are properly ordered
+    if (!config.resolve.extensions) {
+      config.resolve.extensions = [];
+    }
+    
+    config.resolve.extensions = [
+      '.ts',
+      '.tsx', 
+      '.js',
+      '.jsx',
+      '.json',
+      ...config.resolve.extensions.filter(ext => !['ts', 'tsx', 'js', 'jsx', 'json'].includes(ext)),
     ];
-
-    // Ensure proper extension resolution
-    config.resolve.extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
 
     return config;
   },
