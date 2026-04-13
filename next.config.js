@@ -6,6 +6,15 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Explicit paths for Vercel build
+  experimental: {
+    ...{},
+    optimizePackageImports: [
+      '@mui/material',
+      '@mui/icons-material',
+      'lucide-react',
+    ],
+  },
   reactStrictMode: true,
   images: {
     unoptimized: process.env.NODE_ENV === "development",
@@ -44,9 +53,8 @@ const nextConfig = {
     // Configure webpack to resolve @/ alias - ensure it matches tsconfig.json
     const srcPath = path.resolve(__dirname, 'src');
     
-    // Force alias configuration
+    // Force alias configuration - override existing
     config.resolve.alias = {
-      ...config.resolve.alias,
       '@': srcPath,
       '@/lib': path.join(srcPath, 'lib'),
       '@/components': path.join(srcPath, 'components'),
