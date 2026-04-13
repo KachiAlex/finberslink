@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "yarn install"
+  "installCommand": "yarn install --no-frozen-lockfile"
 }
 
