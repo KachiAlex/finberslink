@@ -49,6 +49,7 @@ const nextConfig = {
     }
     
     // Set up alias mappings for @/ imports
+    // Use absolute paths to ensure Vercel can resolve them correctly
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': srcPath,
@@ -77,6 +78,11 @@ const nextConfig = {
       '.json',
       ...config.resolve.extensions.filter(ext => !['ts', 'tsx', 'js', 'jsx', 'json'].includes(ext)),
     ];
+
+    // Add fallback for module resolution issues
+    if (!config.resolve.fallback) {
+      config.resolve.fallback = {};
+    }
 
     return config;
   },

@@ -1,15 +1,14 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "../../../../components/ui/badge";
+import { Button } from "../../../../components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "../../../../components/ui/dialog";
 
 type AssignedCourse = {
   courseId: string;
@@ -63,7 +62,7 @@ export function StudentDetailsModal({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{student.name || "Student details"}</DialogTitle>
-          <DialogDescription>{student.email}</DialogDescription>
+          <p className="text-sm text-slate-600">{student.email}</p>
         </DialogHeader>
 
         <div className="grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm sm:grid-cols-3">

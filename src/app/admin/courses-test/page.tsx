@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminCoursesGrid } from "@/components/admin/admin-courses-grid";
+import { AdminCoursesGrid } from "../../../components/admin/admin-courses-grid";
 
 export default function TestAdminCoursesPage() {
   return (
