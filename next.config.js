@@ -6,6 +6,12 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Force webpack build for Vercel compatibility
+  webpack5: true,
+  // Explicit path mapping for Vercel build
+  compiler: {
+    removeConsole: false,
+  },
   reactStrictMode: true,
   images: {
     unoptimized: process.env.NODE_ENV === "development",
@@ -44,6 +50,7 @@ const nextConfig = {
     // Configure webpack to resolve @/ alias - ensure it matches tsconfig.json
     const srcPath = path.resolve(__dirname, 'src');
     
+    // Ensure the alias configuration is properly set
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': srcPath,
@@ -70,6 +77,13 @@ const nextConfig = {
       '.jsx',
       '.json',
       ...config.resolve.extensions.filter(ext => !['ts', 'tsx', 'js', 'jsx', 'json'].includes(ext)),
+    ];
+
+    // Add explicit module resolution for Vercel
+    config.resolve.modules = [
+      path.resolve(__dirname, 'src'),
+      path.resolve(__dirname, 'node_modules'),
+      'node_modules',
     ];
 
     return config;
