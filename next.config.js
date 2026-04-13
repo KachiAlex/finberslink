@@ -44,10 +44,18 @@ const nextConfig = {
     // Configure webpack to resolve @/ alias - ensure it matches tsconfig.json
     const srcPath = path.resolve(__dirname, 'src');
     
+    // Ensure the alias is properly set
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': srcPath,
     };
+
+    // Add explicit module resolution for Vercel
+    config.resolve.modules = [
+      path.resolve(__dirname, 'src'),
+      path.resolve(__dirname, 'node_modules'),
+      'node_modules',
+    ];
 
     return config;
   },
