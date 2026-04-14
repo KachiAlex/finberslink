@@ -1,7 +1,7 @@
 -- AlterTable: Add account lockout fields to User model
-ALTER TABLE "User" ADD COLUMN "lastFailedLoginAt" TIMESTAMP(3);
-ALTER TABLE "User" ADD COLUMN "failedLoginCount" INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE "User" ADD COLUMN "lockedUntil" TIMESTAMP(3);
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastFailedLoginAt" TIMESTAMP(3);
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "failedLoginCount" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lockedUntil" TIMESTAMP(3);
 
 -- CreateTable: LoginAttempt model for tracking login attempts
 CREATE TABLE "LoginAttempt" (

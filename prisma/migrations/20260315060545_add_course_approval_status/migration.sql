@@ -12,7 +12,7 @@ END$$;
 
 -- Add the missing approval status column required by the admin dashboard/courses views
 ALTER TABLE "Course"
-ADD COLUMN "approvalStatus" "CourseApprovalStatus" NOT NULL DEFAULT 'PENDING';
+ADD COLUMN IF NOT EXISTS "approvalStatus" "CourseApprovalStatus" NOT NULL DEFAULT 'PENDING';
 
 -- Backfill existing rows with the default to avoid NULL issues
 UPDATE "Course" SET "approvalStatus" = 'PENDING' WHERE "approvalStatus" IS NULL;

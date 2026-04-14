@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE "ForumThread" ADD COLUMN "lastActivityAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "ForumThread" ADD COLUMN IF NOT EXISTS "lastActivityAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 -- CreateIndex
 CREATE INDEX "ForumThread_courseId_idx" ON "ForumThread"("courseId");

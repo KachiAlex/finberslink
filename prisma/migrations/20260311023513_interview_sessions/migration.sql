@@ -22,7 +22,7 @@ ALTER TABLE "JobApplication" ALTER COLUMN "status" SET DEFAULT 'SUBMITTED';
 COMMIT;
 
 -- AlterTable
-ALTER TABLE "Resume" ADD COLUMN     "skillAnalysisSnapshot" JSONB;
+ALTER TABLE "Resume" ADD COLUMN IF NOT EXISTS     "skillAnalysisSnapshot" JSONB;
 
 -- CreateTable
 CREATE TABLE "InterviewSession" (

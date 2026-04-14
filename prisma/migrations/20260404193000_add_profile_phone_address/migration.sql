@@ -1,3 +1,3 @@
 -- AlterTable
-ALTER TABLE "Profile" ADD COLUMN     "phone" TEXT,
-ADD COLUMN     "address" TEXT;
+ALTER TABLE "Profile" ADD COLUMN IF NOT EXISTS     "phone" TEXT,
+ADD COLUMN IF NOT EXISTS     "address" TEXT;

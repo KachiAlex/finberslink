@@ -1,2 +1,2 @@
 -- AddColumn
-ALTER TABLE "Enrollment" ADD COLUMN "completedAt" TIMESTAMP(3);
+ALTER TABLE "Enrollment" ADD COLUMN IF NOT EXISTS "completedAt" TIMESTAMP(3);

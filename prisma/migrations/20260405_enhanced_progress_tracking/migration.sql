@@ -17,40 +17,40 @@ CREATE INDEX "idx_lesson_progress_lesson_status" ON "lesson_progress"("lessonId"
 CREATE INDEX "idx_student_achievement_user_unlocked" ON "student_achievement"("userId", "unlockedAt");
 
 -- AddColumn
-ALTER TABLE "lesson_progress" ADD COLUMN "watchTimeSeconds" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "lesson_progress" ADD COLUMN IF NOT EXISTS "watchTimeSeconds" INTEGER NOT NULL DEFAULT 0;
 
 -- AddColumn
-ALTER TABLE "lesson_progress" ADD COLUMN "timeSpentMinutes" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "lesson_progress" ADD COLUMN IF NOT EXISTS "timeSpentMinutes" INTEGER NOT NULL DEFAULT 0;
 
 -- AddColumn
-ALTER TABLE "lesson_progress" ADD COLUMN "lastAccessedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "lesson_progress" ADD COLUMN IF NOT EXISTS "lastAccessedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 -- AddColumn
-ALTER TABLE "lesson_progress" ADD COLUMN "completionScore" DOUBLE PRECISION;
+ALTER TABLE "lesson_progress" ADD COLUMN IF NOT EXISTS "completionScore" DOUBLE PRECISION;
 
 -- AddColumn
-ALTER TABLE "lesson_progress" ADD COLUMN "engagementMetrics" JSON NOT NULL DEFAULT '{}';
+ALTER TABLE "lesson_progress" ADD COLUMN IF NOT EXISTS "engagementMetrics" JSON NOT NULL DEFAULT '{}';
 
 -- AddColumn
-ALTER TABLE "lesson_progress" ADD COLUMN "videoProgress" DOUBLE PRECISION NOT NULL DEFAULT 0;
+ALTER TABLE "lesson_progress" ADD COLUMN IF NOT EXISTS "videoProgress" DOUBLE PRECISION NOT NULL DEFAULT 0;
 
 -- AddColumn
-ALTER TABLE "lesson_progress" ADD COLUMN "scrollProgress" DOUBLE PRECISION NOT NULL DEFAULT 0;
+ALTER TABLE "lesson_progress" ADD COLUMN IF NOT EXISTS "scrollProgress" DOUBLE PRECISION NOT NULL DEFAULT 0;
 
 -- AddColumn
-ALTER TABLE "enrollment" ADD COLUMN "totalStudyTime" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "enrollment" ADD COLUMN IF NOT EXISTS "totalStudyTime" INTEGER NOT NULL DEFAULT 0;
 
 -- AddColumn
-ALTER TABLE "enrollment" ADD COLUMN "streakDays" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "enrollment" ADD COLUMN IF NOT EXISTS "streakDays" INTEGER NOT NULL DEFAULT 0;
 
 -- AddColumn
-ALTER TABLE "enrollment" ADD COLUMN "averageScore" DOUBLE PRECISION;
+ALTER TABLE "enrollment" ADD COLUMN IF NOT EXISTS "averageScore" DOUBLE PRECISION;
 
 -- AddColumn
-ALTER TABLE "enrollment" ADD COLUMN "engagementScore" DOUBLE PRECISION NOT NULL DEFAULT 0;
+ALTER TABLE "enrollment" ADD COLUMN IF NOT EXISTS "engagementScore" DOUBLE PRECISION NOT NULL DEFAULT 0;
 
 -- AddColumn
-ALTER TABLE "enrollment" ADD COLUMN "lastStreakDate" TIMESTAMP(3);
+ALTER TABLE "enrollment" ADD COLUMN IF NOT EXISTS "lastStreakDate" TIMESTAMP(3);
 
 -- CreateTable
 CREATE TABLE "achievement" (
@@ -89,7 +89,7 @@ ALTER TABLE "student_achievement" ADD CONSTRAINT "student_achievement_userId_fke
 ALTER TABLE "student_achievement" ADD CONSTRAINT "student_achievement_achievementId_fkey" FOREIGN KEY ("achievementId") REFERENCES "achievement"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddRelation
-ALTER TABLE "user" ADD COLUMN "studentAchievements" "student_achievement"[];
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "studentAchievements" "student_achievement"[];
 
 -- CreateEnum
 CREATE TYPE "AchievementCategory" AS ENUM ('COMPLETION', 'STREAK', 'ENGAGEMENT', 'PERFORMANCE', 'SOCIAL', 'MILESTONE');

@@ -1,8 +1,8 @@
 -- AlterTable
-ALTER TABLE "Resume" ADD COLUMN     "location" TEXT,
-ADD COLUMN     "notableAchievements" TEXT,
-ADD COLUMN     "personaName" TEXT,
-ADD COLUMN     "targetIndustry" TEXT,
-ADD COLUMN     "targetRoles" TEXT[] DEFAULT ARRAY[]::TEXT[],
-ADD COLUMN     "topSkills" TEXT[] DEFAULT ARRAY[]::TEXT[],
-ADD COLUMN     "yearsExperience" INTEGER;
+ALTER TABLE "Resume" ADD COLUMN IF NOT EXISTS     "location" TEXT,
+ADD COLUMN IF NOT EXISTS     "notableAchievements" TEXT,
+ADD COLUMN IF NOT EXISTS     "personaName" TEXT,
+ADD COLUMN IF NOT EXISTS     "targetIndustry" TEXT,
+ADD COLUMN IF NOT EXISTS     "targetRoles" TEXT[] DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN IF NOT EXISTS     "topSkills" TEXT[] DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN IF NOT EXISTS     "yearsExperience" INTEGER;

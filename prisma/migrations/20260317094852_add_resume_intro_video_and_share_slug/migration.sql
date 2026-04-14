@@ -19,21 +19,21 @@ ALTER TYPE "ChatThreadType" ADD VALUE 'FORUM';
 ALTER TYPE "ChatThreadType" ADD VALUE 'STREAM';
 
 -- AlterTable
-ALTER TABLE "ChatSpace" ADD COLUMN     "archivedAt" TIMESTAMP(3),
-ADD COLUMN     "defaultThreadType" "ChatThreadType" NOT NULL DEFAULT 'CHANNEL',
-ADD COLUMN     "description" TEXT,
-ADD COLUMN     "icon" TEXT,
-ADD COLUMN     "type" "ChatSpaceType" NOT NULL DEFAULT 'COURSE_FORUM';
+ALTER TABLE "ChatSpace" ADD COLUMN IF NOT EXISTS     "archivedAt" TIMESTAMP(3),
+ADD COLUMN IF NOT EXISTS     "defaultThreadType" "ChatThreadType" NOT NULL DEFAULT 'CHANNEL',
+ADD COLUMN IF NOT EXISTS     "description" TEXT,
+ADD COLUMN IF NOT EXISTS     "icon" TEXT,
+ADD COLUMN IF NOT EXISTS     "type" "ChatSpaceType" NOT NULL DEFAULT 'COURSE_FORUM';
 
 -- AlterTable
-ALTER TABLE "ChatThread" ADD COLUMN     "pinned" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "resolvedAt" TIMESTAMP(3),
-ADD COLUMN     "tags" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "ChatThread" ADD COLUMN IF NOT EXISTS     "pinned" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS     "resolvedAt" TIMESTAMP(3),
+ADD COLUMN IF NOT EXISTS     "tags" TEXT[] DEFAULT ARRAY[]::TEXT[];
 
 -- AlterTable
-ALTER TABLE "Resume" ADD COLUMN     "introVideoEmbedUrl" TEXT,
-ADD COLUMN     "introVideoUrl" TEXT,
-ADD COLUMN     "shareSlug" TEXT;
+ALTER TABLE "Resume" ADD COLUMN IF NOT EXISTS     "introVideoEmbedUrl" TEXT,
+ADD COLUMN IF NOT EXISTS     "introVideoUrl" TEXT,
+ADD COLUMN IF NOT EXISTS     "shareSlug" TEXT;
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Resume_shareSlug_key" ON "Resume"("shareSlug");
