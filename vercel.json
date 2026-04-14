@@ -1,11 +1,5 @@
 {
   "buildCommand": "yarn prisma generate && yarn next build",
   "outputDirectory": ".next",
-  "installCommand": "yarn install --no-frozen-lockfile",
-  "functions": {
-    "api/**": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  }
+  "installCommand": "yarn install --no-frozen-lockfile"
 }
