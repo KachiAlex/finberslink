@@ -8,7 +8,7 @@ import {
   optimizeResumeForATS,
 } from "@/features/resume/ai-service";
 import { requireAuth } from "@/lib/auth/guards";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
+
 
 export const runtime = "nodejs";
 
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
   if (url.pathname.includes("/bullets")) {
     try {
-      const session = requireAuth(request);
+      const session = (await requireAuth(request));
       const body = await request.json();
 
       const validated = GenerateBulletsSchema.parse(body);
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
   if (url.pathname.includes("/summary")) {
     try {
-      const session = requireAuth(request);
+      const session = (await requireAuth(request));
       const body = await request.json();
 
       const validated = GenerateSummarySchema.parse(body);
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
 
   if (url.pathname.includes("/optimize")) {
     try {
-      const session = requireAuth(request);
+      const session = (await requireAuth(request));
       const body = await request.json();
 
       const validated = OptimizeForATSSchema.parse(body);
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 
   if (url.pathname.includes("/extract-skills")) {
     try {
-      const session = requireAuth(request);
+      const session = (await requireAuth(request));
       const body = await request.json();
 
       const validated = ExtractSkillsSchema.parse(body);

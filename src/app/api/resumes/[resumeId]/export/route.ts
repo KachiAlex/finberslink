@@ -18,8 +18,6 @@ const ExportSchema = z.object({
   format: z.enum(["json", "plaintext", "pdf"]),
 });
 
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
-
 /**
  * GET /api/resumes/[id]/export
  * Export resume (default format: json) - supports direct navigation

@@ -11,7 +11,6 @@ import {
   getExportHistory,
 } from "@/features/resume/export-service";
 import { requireAuth } from "@/lib/auth/guards";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -33,15 +32,13 @@ const PublishSchema = z.object({
   slug: z.string().min(1),
 });
 
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
-
 /**
  * POST /api/resumes/export
  * Export resume in specified format
  */
-export const POST = rateLimitMiddleware(async (request: NextRequest) => {
+export async function POST(request: NextRequest) {
   try {
-    const session = requireAuth(request);
+    const session = await (await requireAuth(request));
     const body = await request.json();
     const validated = ExportSchema.parse(body);
 
@@ -83,5 +80,4 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
     console.error("Error exporting resume:", error);
     return NextResponse.json({ error: "Failed to export resume" }, { status: 500 });
   }
-});
-
+}

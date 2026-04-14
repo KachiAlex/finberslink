@@ -42,12 +42,12 @@ export async function PUT(
   { params }: { params: { courseId: string } }
 ) {
   try {
-    const session = requireAuth(request);
+    const session = await requireAuth(request);
     const courseId = params.courseId;
 
     // Verify user is admin
     const user = await prisma.user.findUnique({
-      where: { id: session.sub },
+      where: { id: session.userId },
       select: { role: true }
     });
 
