@@ -86,35 +86,23 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const [
-      summaryResult,
-      enrollmentsResult,
-      resumesResult,
-      applicationsResult,
-      recommendedResult,
-      savedIdsResult,
-      insightsResult,
-    ] = await Promise.all([
-      measure("summary", () => getDashboardSummary(user.sub)),
-      measure("enrollments", () => getStudentEnrollments(user.sub, 4)),
-      measure("resumes", () => getStudentResumes(user.sub, 3)),
-      measure("applications", () => getStudentApplications(user.sub, applicationsLimit)),
-      measure("recommended", () =>
-        mode === "fast"
-          ? withTimeout("recommended", () => listRecommendedJobs(recommendationsLimit), 700, [])
-          : listRecommendedJobs(recommendationsLimit)
-      ),
+    // Run queries sequentially to avoid Prisma 5.22 engine PANIC
+    // caused by concurrent queries in Promise.all
+    const summaryResult = await measure("summary", () => getDashboardSummary(user.sub));
+    const enrollmentsResult = await measure("enrollments", () => getStudentEnrollments(user.sub, 4));
+    const resumesResult = await measure("resumes", () => getStudentResumes(user.sub, 3));
+    const applicationsResult = await measure("applications", () => getStudentApplications(user.sub, applicationsLimit));
+    const recommendedResult = await measure("recommended", () =>
       mode === "fast"
-        ? Promise.resolve({ data: [], error: null, durationMs: 0 } as {
-            data: string[];
-            error: null;
-            durationMs: number;
-          })
-        : measure("saved-ids", () =>
-            withTimeout("saved-ids", () => listSavedJobIds(user.sub, 50), 600, [])
-          ),
-      measure("insights", () => getDashboardInsights(user.sub)),
-    ]);
+        ? withTimeout("recommended", () => listRecommendedJobs(recommendationsLimit), 700, [])
+        : listRecommendedJobs(recommendationsLimit)
+    );
+    const savedIdsResult = mode === "fast"
+      ? { data: [] as string[], error: null, durationMs: 0 }
+      : await measure("saved-ids", () =>
+          withTimeout("saved-ids", () => listSavedJobIds(user.sub, 50), 600, [])
+        );
+    const insightsResult = await measure("insights", () => getDashboardInsights(user.sub));
 
     const timings = {
       summaryMs: summaryResult.durationMs,
