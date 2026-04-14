@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { GraduationCap, LayoutDashboard, MessageCircle, Sparkles, Briefcase, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
@@ -85,48 +84,13 @@ export default async function DashboardLayout({
               title="Dashboard"
               subtitle="Your personalized workspace."
               items={[
-                {
-                  label: "Overview",
-                  description: "Manage your progress and tasks.",
-                  href: "/dashboard",
-                  icon: LayoutDashboard,
-                },
-                {
-                  label: "Insights & Guidance",
-                  description: "Get tips and recommendations.",
-                  href: "/dashboard#insights-guidance",
-                  icon: Sparkles,
-                },
-                {
-                  label: "Courses",
-                  description: "Browse courses, view assigned tracks, and enroll.",
-                  href: buildDashboardCoursesUrl(),
-                  icon: GraduationCap,
-                },
-                {
-                  label: "Resumes",
-                  description: "View, download, or share your resumes.",
-                  href: "/dashboard/resumes",
-                  icon: Sparkles,
-                },
-                {
-                  label: "Jobs",
-                  description: "Find job posts and apply quickly.",
-                  href: "/dashboard/jobs",
-                  icon: Briefcase,
-                },
-                {
-                  label: "Chat",
-                  description: "Message with tutors and peers.",
-                  href: "/dashboard/chat",
-                  icon: MessageCircle,
-                },
-                {
-                  label: "Profile",
-                  description: "View and edit your personal profile.",
-                  href: "/dashboard/profile",
-                  icon: User,
-                },
+                { label: "Overview", description: "Manage your progress and tasks.", href: "/dashboard" },
+                { label: "Insights & Guidance", description: "Get tips and recommendations.", href: "/dashboard#insights-guidance" },
+                { label: "Courses", description: "Browse courses, view assigned tracks, and enroll.", href: buildDashboardCoursesUrl() },
+                { label: "Resumes", description: "View, download, or share your resumes.", href: "/dashboard/resumes" },
+                { label: "Jobs", description: "Find job posts and apply quickly.", href: "/dashboard/jobs" },
+                { label: "Chat", description: "Message with tutors and peers.", href: "/dashboard/chat" },
+                { label: "Profile", description: "View and edit your personal profile.", href: "/dashboard/profile" },
               ]}
               footer={
                 <>
