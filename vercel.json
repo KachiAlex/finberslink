@@ -1,5 +1,5 @@
 {
-  "buildCommand": "yarn prisma generate && yarn prisma migrate deploy && yarn next build",
+  "buildCommand": "yarn prisma generate && yarn next build",
   "outputDirectory": ".next",
   "installCommand": "yarn install --no-frozen-lockfile"
 }
