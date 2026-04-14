@@ -1,17 +1,29 @@
-export async function requireSession() {
-  return {
-    user: {
-      id: '',
-      email: '',
-    },
-  };
-}
+import { cookies } from "next/headers";
+import { verifyAccessToken } from "./jwt";
 
 export async function getSessionFromCookies() {
-  return {
-    user: {
-      id: '',
-      email: '',
-    },
-  };
+  try {
+    const cookieStore = cookies();
+    const token = cookieStore.get("access_token")?.value;
+    if (!token) return null;
+    const payload = await verifyAccessToken(token);
+    return {
+      user: {
+        id: payload.sub,
+        email: payload.email,
+        role: payload.role,
+        tenantId: payload.tenantId,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function requireSession() {
+  const session = await getSessionFromCookies();
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+  return session;
 }
