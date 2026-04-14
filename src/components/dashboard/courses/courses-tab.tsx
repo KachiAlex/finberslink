@@ -97,26 +97,32 @@ export const CoursesTab: React.FC = () => {
       const response = await fetch(
         `/api/dashboard/courses/discover?${params}`
       );
-      if (!response.ok) throw new Error("Failed to fetch");
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to fetch courses");
+      }
 
       const data = await response.json();
       setDiscover({
-        courses: data.data,
+        courses: data.data || [],
         loading: false,
         error: null,
         pagination: {
           page,
           pageSize: 12,
-          total: data.pagination.total,
-          pages: data.pagination.pages,
+          total: data.pagination?.total || 0,
+          pages: data.pagination?.pages || 0,
         },
       });
-      setCategories(data.filters.categories);
+      setCategories(data.filters?.categories || []);
     } catch (error) {
+      console.error("Discover courses error:", error);
       setDiscover((prev) => ({
         ...prev,
+        courses: [],
         loading: false,
-        error: "Failed to load courses",
+        error: error instanceof Error ? error.message : "Failed to load courses",
       }));
     }
   }, [searchQuery, selectedCategory, selectedLevel]);
@@ -133,25 +139,31 @@ export const CoursesTab: React.FC = () => {
       const response = await fetch(
         `/api/dashboard/courses/assigned?${params}`
       );
-      if (!response.ok) throw new Error("Failed to fetch");
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to fetch assigned courses");
+      }
 
       const data = await response.json();
       setAssigned({
-        courses: data.data,
+        courses: data.data || [],
         loading: false,
         error: null,
         pagination: {
           page,
           pageSize: 12,
-          total: data.pagination.total,
-          pages: data.pagination.pages,
+          total: data.pagination?.total || 0,
+          pages: data.pagination?.pages || 0,
         },
       });
     } catch (error) {
+      console.error("Assigned courses error:", error);
       setAssigned((prev) => ({
         ...prev,
+        courses: [],
         loading: false,
-        error: "Failed to load assigned courses",
+        error: error instanceof Error ? error.message : "Failed to load assigned courses",
       }));
     }
   }, []);
@@ -168,25 +180,31 @@ export const CoursesTab: React.FC = () => {
       const response = await fetch(
         `/api/dashboard/courses/enrolled?${params}`
       );
-      if (!response.ok) throw new Error("Failed to fetch");
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to fetch enrolled courses");
+      }
 
       const data = await response.json();
       setEnrolled({
-        courses: data.data,
+        courses: data.data || [],
         loading: false,
         error: null,
         pagination: {
           page,
           pageSize: 12,
-          total: data.pagination.total,
-          pages: data.pagination.pages,
+          total: data.pagination?.total || 0,
+          pages: data.pagination?.pages || 0,
         },
       });
     } catch (error) {
+      console.error("Enrolled courses error:", error);
       setEnrolled((prev) => ({
         ...prev,
+        courses: [],
         loading: false,
-        error: "Failed to load enrolled courses",
+        error: error instanceof Error ? error.message : "Failed to load enrolled courses",
       }));
     }
   }, []);
@@ -294,7 +312,7 @@ export const CoursesTab: React.FC = () => {
           count={discover.pagination.total}
         />
 
-        {discover.error && (
+        {discover.error && !discover.loading && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-red-600" />
             <div>
@@ -359,7 +377,7 @@ export const CoursesTab: React.FC = () => {
           count={assigned.pagination.total}
         />
 
-        {assigned.error && (
+        {assigned.error && !assigned.loading && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-red-600" />
             <div>
@@ -431,7 +449,7 @@ export const CoursesTab: React.FC = () => {
           count={enrolled.pagination.total}
         />
 
-        {enrolled.error && (
+        {enrolled.error && !enrolled.loading && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-red-600" />
             <div>
