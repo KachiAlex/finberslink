@@ -49,11 +49,13 @@ export default async function CoursesLayout({
   // Fetch user data for personalized greeting
   let userName: string | null = null;
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: session.sub },
-      select: { firstName: true, lastName: true }
-    });
-    userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : null;
+    if (session.sub) {
+      const user = await prisma.user.findUnique({
+        where: { id: session.sub },
+        select: { firstName: true, lastName: true }
+      });
+      userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : null;
+    }
   } catch (error) {
     console.error("Failed to fetch user data:", error);
   }

@@ -37,11 +37,13 @@ export default async function DashboardLayout({
   // Fetch user data for personalized greeting
   let userName: string | null = null;
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: session.sub },
-      select: { firstName: true, lastName: true }
-    });
-    userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : null;
+    if (session.sub) {
+      const user = await prisma.user.findUnique({
+        where: { id: session.sub },
+        select: { firstName: true, lastName: true }
+      });
+      userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : null;
+    }
   } catch (error) {
     console.error("Failed to fetch user data:", error);
   }
@@ -65,7 +67,7 @@ export default async function DashboardLayout({
             <ChatAvatar initialUnreadCount={unreadCount} />
             <NotificationsBell unreadCount={0} />
             <span className="text-sm text-slate-600 capitalize">
-              {session.role.replace("_", " ")}
+              {session.role?.replace("_", " ") ?? ""}
             </span>
             <Button variant="outline" asChild>
               <Link href="/">Home</Link>
