@@ -191,7 +191,7 @@ export default async function JoinPage(props: any) {
                         name="lastName"
                         placeholder="Okafor"
                         required
-              ite/10 bg-white/10 text-white placeholder:text-white/40"
+                        className="mt-1 border-white/10 bg-white/10 text-white placeholder:text-white/40"
                       />
                     </div>
                   </div>

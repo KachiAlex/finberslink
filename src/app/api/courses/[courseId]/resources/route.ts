@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/guards";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth/jwt";
 
@@ -16,23 +15,24 @@ const ResourceSchema = z.object({
   size: z.number().positive().optional(),
 });
 
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
-
 /**
  * GET /api/courses/[courseId]/resources
  * Get all resources for a specific course
  */
-export const GET = rateLimitMiddleware(async (request: NextRequest, { params }: { params: { courseId: string } }) => {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ courseId: string }> }
+) {
   try {
-    const session = requireAuth(request);
-    const { courseId } = params;
+    const session = await requireAuth(request);
+    const { courseId } = await params;
 
     // Verify user has access to this course
     const course = await prisma.course.findFirst({
       where: { id: courseId },
       include: {
         enrollments: {
-          where: { userId: session.sub }
+          where: { userId: session.userId }
         }
       }
     });
@@ -41,7 +41,7 @@ export const GET = rateLimitMiddleware(async (request: NextRequest, { params }: 
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    const hasAccess = course.enrollments?.some(enrollment => enrollment.userId === session.sub);
+    const hasAccess = course.enrollments?.some(enrollment => enrollment.userId === session.userId);
     if (!hasAccess) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
@@ -57,20 +57,23 @@ export const GET = rateLimitMiddleware(async (request: NextRequest, { params }: 
     console.error("Failed to fetch resources:", error);
     return NextResponse.json({ error: "Failed to fetch resources" }, { status: 500 });
   }
-});
+}
 
 /**
  * POST /api/courses/[courseId]/resources
  * Upload a new resource to a course
  */
-export const POST = rateLimitMiddleware(async (request: NextRequest, { params }: { params: { courseId: string } }) => {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ courseId: string }> }
+) {
   try {
-    const session = requireAuth(request);
-    const { courseId } = params;
+    const session = await requireAuth(request);
+    const { courseId } = await params;
 
     // Verify user is instructor or admin
     const user = await prisma.user.findUnique({
-      where: { id: session.sub }
+      where: { id: session.userId }
     });
 
     if (!user || (user.role !== "TUTOR" && user.role !== "ADMIN")) {
@@ -86,7 +89,7 @@ export const POST = rateLimitMiddleware(async (request: NextRequest, { params }:
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    const hasAccess = user.role === "ADMIN" || course.instructorId === session.sub;
+    const hasAccess = user.role === "ADMIN" || course.instructorId === session.userId;
     if (!hasAccess) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
@@ -157,4 +160,4 @@ export const POST = rateLimitMiddleware(async (request: NextRequest, { params }:
     console.error("Failed to upload resource:", error);
     return NextResponse.json({ error: "Failed to upload resource" }, { status: 500 });
   }
-});
+}

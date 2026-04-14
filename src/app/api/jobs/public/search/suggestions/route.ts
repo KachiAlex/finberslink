@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
-
-const publicRateLimit = createRateLimit(rateLimitPresets.public);
 
 /**
  * GET /api/jobs/public/search/suggestions
  * Get search suggestions based on job titles and company names
  */
-export const GET = publicRateLimit(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   try {
     const query = new URL(request.url).searchParams.get("q");
 
@@ -50,4 +47,4 @@ export const GET = publicRateLimit(async (request: NextRequest) => {
     console.error("Error fetching search suggestions:", error);
     return NextResponse.json({ suggestions: [] }, { status: 200 });
   }
-});
+}

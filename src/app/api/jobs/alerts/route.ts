@@ -6,12 +6,10 @@ import {
   deleteJobAlert,
   findMatchingJobs,
   getJobAlertById,
-  getSuggestedKeywords,
   getUserJobAlerts,
   updateJobAlert,
 } from "@/features/jobs/alerts.service";
 import { requireAuth } from "@/lib/auth/guards";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 import type { JobType } from "@prisma/client";
 
 export const runtime = "nodejs";
@@ -24,31 +22,29 @@ const CreateAlertSchema = z.object({
 
 const UpdateAlertSchema = CreateAlertSchema.partial();
 
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
-
 /**
  * GET /api/jobs/alerts
  * Get all job alerts for the current user
  */
-export const GET = rateLimitMiddleware(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   try {
-    const session = requireAuth(request);
-    const alerts = await getUserJobAlerts(session.sub);
+    const session = await requireAuth(request);
+    const alerts = await getUserJobAlerts(session.userId);
 
     return NextResponse.json({ alerts }, { status: 200 });
   } catch (error) {
     console.error("Error fetching job alerts:", error);
     return NextResponse.json({ error: "Failed to fetch alerts" }, { status: 500 });
   }
-});
+}
 
 /**
  * POST /api/jobs/alerts
  * Create a new job alert
  */
-export const POST = rateLimitMiddleware(async (request: NextRequest) => {
+export async function POST(request: NextRequest) {
   try {
-    const session = requireAuth(request);
+    const session = await requireAuth(request);
     const body = await request.json();
 
     const validation = CreateAlertSchema.safeParse(body);
@@ -60,8 +56,7 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
     }
 
     const validated = validation.data;
-    const alert = await createJobAlert({
-      userId: session.sub,
+    const alert = await createJobAlert(session.userId, {
       keywords: validated.keywords,
       location: validated.location,
       jobType: validated.jobType as JobType | undefined,
@@ -75,4 +70,4 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
     console.error("Error creating job alert:", error);
     return NextResponse.json({ error: "Failed to create alert" }, { status: 500 });
   }
-});
+}

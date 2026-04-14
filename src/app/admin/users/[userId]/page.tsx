@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getUserById, updateUserRole, updateUserStatus } from "@/features/admin/service";
 import type { Role, UserStatus } from "@prisma/client";
 
-import { AdminShell } from "../../_components/admin-shell";
+import { AdminShell } from "@/app/admin/_components/admin-shell";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

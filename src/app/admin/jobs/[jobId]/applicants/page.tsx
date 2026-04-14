@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJobById, getJobApplicationsForAdmin, updateJobApplicationStatus } from "@/features/jobs/service";
-import { AdminShell } from "../../../_components/admin-shell";
+import { AdminShell } from "@/app/admin/_components/admin-shell";
 
 const JOB_APPLICATION_STATUS_VALUES: JobApplicationStatus[] = [
   "SUBMITTED",

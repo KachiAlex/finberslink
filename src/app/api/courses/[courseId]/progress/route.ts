@@ -1,28 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
-
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
 
 /**
  * GET /api/courses/[courseId]/progress
  * Get comprehensive course progress for current user
  */
-export const GET = rateLimitMiddleware(async (
+export async function GET(
   request: NextRequest,
-  { params }: { params: { courseId: string } }
-) => {
+  { params }: { params: Promise<{ courseId: string }> }
+) {
   try {
-    const session = requireAuth(request);
-    const { courseId } = params;
+    const session = await requireAuth(request);
+    const { courseId } = await params;
 
     // Get enrollment with detailed progress
     const enrollment = await prisma.enrollment.findFirst({
       where: {
-        userId: session.sub,
+        userId: session.userId,
         courseId,
       },
       include: {
@@ -133,7 +130,7 @@ export const GET = rateLimitMiddleware(async (
     // Get achievements for this course
     const achievements = await prisma.studentAchievement.findMany({
       where: {
-        userId: session.sub,
+        userId: session.userId,
         achievement: {
           category: {
             in: ["COMPLETION", "STREAK", "ENGAGEMENT"]
@@ -197,24 +194,24 @@ export const GET = rateLimitMiddleware(async (
       { status: 500 }
     );
   }
-});
+}
 
 /**
  * PUT /api/courses/[courseId]/progress
  * Update overall course completion status
  */
-export const PUT = rateLimitMiddleware(async (
+export async function PUT(
   request: NextRequest,
-  { params }: { params: { courseId: string } }
-) => {
+  { params }: { params: Promise<{ courseId: string }> }
+) {
   try {
-    const session = requireAuth(request);
-    const { courseId } = params;
+    const session = await requireAuth(request);
+    const { courseId } = await params;
     const body = await request.json();
 
     const enrollment = await prisma.enrollment.findFirst({
       where: {
-        userId: session.sub,
+        userId: session.userId,
         courseId,
       },
     });
@@ -246,4 +243,4 @@ export const PUT = rateLimitMiddleware(async (
       { status: 500 }
     );
   }
-});
+}

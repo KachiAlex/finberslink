@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 import { EnrollmentStatus } from "@prisma/client";
 
 export const runtime = "nodejs";
-
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
 
 /**
  * POST /api/enrollments
  * Enroll a student in a course
  */
-export const POST = rateLimitMiddleware(async (request: NextRequest) => {
+export async function POST(request: NextRequest) {
   try {
-    const session = requireAuth(request);
+    const session = await requireAuth(request);
     const body = await request.json();
     const { courseId } = body;
 
@@ -25,24 +22,27 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
       );
     }
 
-    // Check if course exists and is published
-    const course = await prisma.course.findFirst({
-      where: {
-        id: courseId,
-        publishedAt: { not: null },
-        archivedAt: null,
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
+    // Check if course exists and is available
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      include: {
+        enrollments: {
+          select: { id: true },
+        },
       },
     });
 
     if (!course) {
       return NextResponse.json(
-        { success: false, error: "Course not found or not available" },
+        { success: false, error: "Course not found" },
         { status: 404 }
+      );
+    }
+
+    if (!course.isPublished) {
+      return NextResponse.json(
+        { success: false, error: "Course is not available for enrollment" },
+        { status: 400 }
       );
     }
 
@@ -50,7 +50,7 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
     const existingEnrollment = await prisma.enrollment.findUnique({
       where: {
         userId_courseId: {
-          userId: session.sub,
+          userId: session.userId,
           courseId: courseId,
         },
       },
@@ -67,7 +67,7 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
     // Create enrollment
     const enrollment = await prisma.enrollment.create({
       data: {
-        userId: session.sub,
+        userId: session.userId,
         courseId: courseId,
         status: EnrollmentStatus.ACTIVE,
         progressPercentage: 0,
@@ -80,8 +80,8 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
       message: "Successfully enrolled in course",
       enrollment: {
         id: enrollment.id,
-        courseId: enrollment.courseId,
         userId: enrollment.userId,
+        courseId: enrollment.courseId,
         status: enrollment.status,
         progressPercentage: enrollment.progressPercentage,
         createdAt: enrollment.createdAt,
@@ -93,7 +93,7 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
       },
     });
   } catch (error) {
-    console.error("Enrollment API error:", error);
+    console.error("Enrollment error:", error);
     return NextResponse.json(
       { 
         success: false,
@@ -103,19 +103,19 @@ export const POST = rateLimitMiddleware(async (request: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}
 
 /**
  * GET /api/enrollments
  * Get user's enrollments
  */
-export const GET = rateLimitMiddleware(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   try {
-    const session = requireAuth(request);
+    const session = await requireAuth(request);
     const { searchParams } = new URL(request.url);
     const courseId = searchParams.get("courseId");
 
-    let where: any = { userId: session.sub };
+    let where: any = { userId: session.userId };
     
     if (courseId) {
       where.courseId = courseId;
@@ -129,10 +129,15 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
             id: true,
             title: true,
             slug: true,
-            tagline: true,
-            level: true,
-            category: true,
-            coverImage: true,
+            thumbnail: true,
+            instructor: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
           },
         },
       },
@@ -141,8 +146,21 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
 
     return NextResponse.json({
       success: true,
-      data: enrollments,
-      count: enrollments.length,
+      data: enrollments.map(enrollment => ({
+        id: enrollment.id,
+        userId: enrollment.userId,
+        courseId: enrollment.courseId,
+        status: enrollment.status,
+        progressPercentage: enrollment.progressPercentage,
+        createdAt: enrollment.createdAt,
+        course: {
+          id: enrollment.course.id,
+          title: enrollment.course.title,
+          slug: enrollment.course.slug,
+          thumbnail: enrollment.course.thumbnail,
+          instructor: enrollment.course.instructor,
+        },
+      })),
     });
   } catch (error) {
     console.error("Get enrollments API error:", error);
@@ -155,4 +173,4 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}

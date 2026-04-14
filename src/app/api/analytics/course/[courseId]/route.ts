@@ -1,30 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
-
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
 
 /**
  * GET /api/analytics/course/[courseId]
  * Get course analytics for instructors
  */
-export const GET = rateLimitMiddleware(async (
+export async function GET(
   request: NextRequest,
-  { params }: { params: { courseId: string } }
-) => {
+  { params }: { params: Promise<{ courseId: string }> }
+) {
   try {
-    const session = requireAuth(request);
-    const { courseId } = params;
+    const session = await requireAuth(request);
+    const { courseId } = await params;
 
     // Verify user is instructor or admin for this course
     const course = await prisma.course.findFirst({
       where: {
         id: courseId,
         OR: [
-          { instructorId: session.sub },
+          { instructorId: session.userId },
           { instructor: { role: "ADMIN" } },
         ],
       },
@@ -92,7 +89,7 @@ export const GET = rateLimitMiddleware(async (
     });
 
     const lessonAnalytics = lessons.map(lesson => {
-      const progress = lesson.lessonProgress;
+      const progress = lesson._count?.lessonProgress || [];
       const completed = progress.filter(lp => lp.status === "COMPLETED").length;
       const inProgress = progress.filter(lp => lp.status === "IN_PROGRESS").length;
       const notStarted = progress.filter(lp => lp.status === "NOT_STARTED").length;
@@ -183,10 +180,12 @@ export const GET = rateLimitMiddleware(async (
         progressPercentage: enrollment.progressPercentage,
         totalStudyTime: enrollment.totalStudyTime,
         streakDays: enrollment.streakDays,
-        averageScore: enrollment.lessonProgress
-          .filter(lp => lp.completionScore !== null)
-          .reduce((sum, lp) => sum + lp.completionScore!, 0) / 
-          enrollment.lessonProgress.filter(lp => lp.completionScore !== null).length || 0,
+        averageScore: enrollment._count?.lessonProgress
+          ? enrollment._count.lessonProgress
+              .filter(lp => lp.completionScore !== null)
+              .reduce((sum, lp) => sum + lp.completionScore!, 0) / 
+              enrollment._count.lessonProgress.filter(lp => lp.completionScore !== null).length || 0
+          : 0,
       }));
 
     return NextResponse.json({
@@ -218,4 +217,4 @@ export const GET = rateLimitMiddleware(async (
       { status: 500 }
     );
   }
-});
+}

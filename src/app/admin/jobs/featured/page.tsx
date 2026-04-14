@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJobs } from "@/features/jobs/service";
-import { AdminShell } from "../../_components/admin-shell";
+import { AdminShell } from "@/app/admin/_components/admin-shell";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

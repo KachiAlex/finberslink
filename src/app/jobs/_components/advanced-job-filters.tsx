@@ -248,9 +248,9 @@ export function AdvancedJobFilters({
                 />
                 <Label 
                   htmlFor={level.value} 
-                  className="text-sm text-slate-300 cursor      <div className="font-medium">{level.label}</div>
-                    <div className="text-xs text-slate-500">{level.years}</div>
-                  </div>
+                  className="text-sm text-slate-300 cursor-pointer flex-1">
+                  <div className="font-medium">{level.label}</div>
+                  <div className="text-xs text-slate-500">{level.years}</div>
                 </Label>
               </div>
             ))}

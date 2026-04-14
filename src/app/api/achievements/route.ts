@@ -1,24 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
-
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
 
 /**
  * GET /api/achievements
  * Get user's achievements
  */
-export const GET = rateLimitMiddleware(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   try {
-    const session = requireAuth(request);
+    const session = await requireAuth(request);
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
 
     const where: any = {
-      userId: session.sub,
+      userId: session.userId,
     };
 
     if (category) {
@@ -56,7 +53,7 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}
 
 /**
  * GET /api/achievements/available
@@ -64,7 +61,7 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
  */
 export async function GET_AVAILABLE(request: NextRequest) {
   try {
-    const session = requireAuth(request);
+    const session = await requireAuth(request);
 
     // Get all achievements
     const allAchievements = await prisma.achievement.findMany({
@@ -77,7 +74,7 @@ export async function GET_AVAILABLE(request: NextRequest) {
     // Get user's unlocked achievements
     const unlockedAchievementIds = await prisma.studentAchievement
       .findMany({
-        where: { userId: session.sub },
+        where: { userId: session.userId },
         select: { achievementId: true },
       })
       .then((achievements) => achievements.map((a) => a.achievementId));

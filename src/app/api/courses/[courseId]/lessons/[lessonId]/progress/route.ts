@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -23,24 +22,22 @@ const UpdateProgressSchema = z.object({
   }).optional(),
 });
 
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
-
 /**
  * GET /api/courses/[courseId]/lessons/[lessonId]/progress
  * Get lesson progress for current user
  */
-export const GET = rateLimitMiddleware(async (
+export async function GET(
   request: NextRequest,
-  { params }: { params: { courseId: string; lessonId: string } }
-) => {
+  { params }: { params: Promise<{ courseId: string; lessonId: string }> }
+) {
   try {
-    const session = requireAuth(request);
-    const { courseId, lessonId } = params;
+    const session = await requireAuth(request);
+    const { courseId, lessonId } = await params;
 
     // Find enrollment
     const enrollment = await prisma.enrollment.findFirst({
       where: {
-        userId: session.sub,
+        userId: session.userId,
         courseId,
       },
       include: {
@@ -89,26 +86,26 @@ export const GET = rateLimitMiddleware(async (
       { status: 500 }
     );
   }
-});
+}
 
 /**
  * POST /api/courses/[courseId]/lessons/[lessonId]/progress
  * Update lesson progress
  */
-export const POST = rateLimitMiddleware(async (
+export async function POST(
   request: NextRequest,
-  { params }: { params: { courseId: string; lessonId: string } }
-) => {
+  { params }: { params: Promise<{ courseId: string; lessonId: string }> }
+) {
   try {
-    const session = requireAuth(request);
-    const { courseId, lessonId } = params;
+    const session = await requireAuth(request);
+    const { courseId, lessonId } = await params;
     const body = await request.json();
     const validatedData = UpdateProgressSchema.parse(body);
 
     // Find enrollment
     const enrollment = await prisma.enrollment.findFirst({
       where: {
-        userId: session.sub,
+        userId: session.userId,
         courseId,
       },
       include: {
@@ -218,7 +215,7 @@ export const POST = rateLimitMiddleware(async (
     });
 
     // Check for achievements
-    await checkAndUnlockAchievements(session.sub, enrollment.id, {
+    await checkAndUnlockAchievements(session.userId, enrollment.id, {
       lessonCompleted: validatedData.status === "COMPLETED",
       progressPercentage: newProgressPercentage,
       streakDays,
@@ -238,7 +235,7 @@ export const POST = rateLimitMiddleware(async (
       { status: 500 }
     );
   }
-});
+}
 
 async function checkAndUnlockAchievements(
   userId: string,

@@ -8,20 +8,17 @@ import {
   getUserActivityFeed,
 } from "@/features/dashboard/insights";
 import { requireAuth } from "@/lib/auth/guards";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 import type { Role } from "@prisma/client";
 
 export const runtime = "nodejs";
-
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
 
 /**
  * GET /api/dashboard/insights
  * Get role-based dashboard insights for the current user
  */
-export const GET = rateLimitMiddleware(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   try {
-    const session = requireAuth(request);
+    const session = await requireAuth(request);
     const role = session.role as Role;
 
     let insights: any = {};
@@ -29,19 +26,19 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
     // Get role-specific insights
     switch (role) {
       case "STUDENT":
-        insights = await getStudentDashboardInsights(session.sub);
+        insights = await getStudentDashboardInsights(session.userId);
         break;
       case "TUTOR":
-        insights = await getTutorDashboardInsights(session.sub);
+        insights = await getTutorDashboardInsights(session.userId);
         break;
       case "EMPLOYER":
-        insights = await getEmployerDashboardInsights(session.sub);
+        insights = await getEmployerDashboardInsights(session.userId);
         break;
       case "ADMIN":
-        insights = await getAdminDashboardInsights();
+        insights = await getAdminDashboardInsights(session.userId);
         break;
       case "SUPER_ADMIN":
-        insights = await getAdminDashboardInsights();
+        insights = await getAdminDashboardInsights(session.userId);
         break;
       default:
         return NextResponse.json(
@@ -51,7 +48,7 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
     }
 
     // Get activity feed (common to all users)
-    const activityFeed = await getUserActivityFeed(session.sub, 10);
+    const activityFeed = await getUserActivityFeed(session.userId);
 
     return NextResponse.json(
       {
@@ -69,4 +66,4 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}

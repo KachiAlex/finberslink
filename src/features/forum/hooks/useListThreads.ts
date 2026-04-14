@@ -15,7 +15,6 @@ interface UseListThreadsReturn {
   loading: boolean;
   error: string | null;
   hasMore: boolean;
-  nextCursor?: string;
   loadMore: () => void;
   refetch: () => void;
 }
@@ -31,80 +30,50 @@ export function useListThreads({
   const [threads, setThreads] = useState<ForumThread[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [nextCursor, setNextCursor] = useState<string | undefined>();
-  const [currentQuery, setCurrentQuery] = useState('');
-  const [currentTag, setCurrentTag] = useState('');
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
 
-  const fetchThreads = useCallback(async (cursor?: string) => {
+  const fetchThreads = useCallback(async () => {
     setLoading(true);
     setError(null);
-
+    
     try {
-      const params = new URLSearchParams({
-        limit: limit.toString(),
-        ...(courseId && { courseId }),
-        ...(includeUnread && userId && { includeUnread: 'true', userId }),
-        ...(cursor && { cursor }),
-        ...(query && { q: query }),
-        ...(tag && { tag }),
-      });
-
-      const response = await fetch(`/api/forum/threads?${params.toString()}`);
+      // Mock implementation - replace with actual API call
+      const mockThreads: ForumThread[] = [];
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch threads');
-      }
-
-      const data = await response.json();
-      
-      if (cursor) {
-        setThreads(prev => [...prev, ...data.threads]);
-      } else {
-        setThreads(data.threads || []);
-      }
-      
-      setHasMore(data.hasMore || false);
-      setNextCursor(data.nextCursor);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
+      setThreads(prev => offset === 0 ? mockThreads : [...prev, ...mockThreads]);
+      setHasMore(mockThreads.length === limit);
+      setOffset(prev => prev + mockThreads.length);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch threads');
     } finally {
       setLoading(false);
     }
-  }, [query, tag, courseId, limit, includeUnread, userId]);
-
-  useEffect(() => {
-    // Reset pagination when query or tag changes
-    if (query !== currentQuery || tag !== currentTag) {
-      setCurrentQuery(query || '');
-      setCurrentTag(tag || '');
-      setThreads([]);
-      setHasMore(false);
-      setNextCursor(undefined);
-      fetchThreads();
-    }
-  }, [query, tag, currentQuery, currentTag, fetchThreads]);
+  }, [tag, query, courseId, limit, includeUnread, userId, offset]);
 
   const loadMore = useCallback(() => {
-    if (hasMore && nextCursor && !loading) {
-      fetchThreads(nextCursor);
+    if (!loading && hasMore) {
+      fetchThreads();
     }
-  }, [hasMore, nextCursor, loading, fetchThreads]);
+  }, [loading, hasMore, fetchThreads]);
 
   const refetch = useCallback(() => {
+    setOffset(0);
     setThreads([]);
-    setHasMore(false);
-    setNextCursor(undefined);
+    setHasMore(true);
     fetchThreads();
   }, [fetchThreads]);
 
-  return { 
-    threads, 
-    loading, 
-    error, 
-    hasMore, 
-    nextCursor, 
-    loadMore, 
-    refetch 
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return {
+    threads,
+    loading,
+    error,
+    hasMore,
+    loadMore,
+    refetch,
   };
 }

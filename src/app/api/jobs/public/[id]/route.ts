@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
-
-const publicRateLimit = createRateLimit(rateLimitPresets.public);
 
 /**
  * GET /api/jobs/public/[id]
  * Get detailed job information (public, no auth required)
  */
-export const GET = publicRateLimit(async (request: NextRequest) => {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // Extract id from the URL path (works for public route handlers without context)
-    const url = new URL(request.url);
-    const pathParts = url.pathname.split("/").filter(Boolean);
-    const id = pathParts[pathParts.length - 1];
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({ error: "Job ID is required" }, { status: 400 });
@@ -66,4 +63,4 @@ export const GET = publicRateLimit(async (request: NextRequest) => {
     console.error("Error fetching job detail:", error);
     return NextResponse.json({ error: "Failed to fetch job" }, { status: 500 });
   }
-});
+}

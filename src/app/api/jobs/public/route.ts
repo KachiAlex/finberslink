@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -16,13 +15,11 @@ const ListJobsSchema = z.object({
   sortBy: z.enum(["recent", "featured", "trending"]).optional(),
 });
 
-const publicRateLimit = createRateLimit(rateLimitPresets.public);
-
 /**
  * GET /api/jobs/public
  * Get publicly available jobs without authentication
  */
-export const GET = publicRateLimit(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const params = ListJobsSchema.parse(Object.fromEntries(searchParams));
@@ -127,7 +124,7 @@ export const GET = publicRateLimit(async (request: NextRequest) => {
     console.error("Error fetching public jobs:", error);
     return NextResponse.json({ error: "Failed to fetch jobs" }, { status: 500 });
   }
-});
+}
 
 /**
  * GET /api/jobs/public/featured

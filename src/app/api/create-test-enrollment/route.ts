@@ -10,7 +10,7 @@ export const runtime = "nodejs";
  */
 export const POST = async (request: NextRequest) => {
   try {
-    const session = requireAuth(request);
+    const session = await requireAuth(request);
     
     // Get first available course
     const course = await prisma.course.findFirst({
@@ -28,7 +28,7 @@ export const POST = async (request: NextRequest) => {
     // Create enrollment
     const enrollment = await prisma.enrollment.create({
       data: {
-        userId: session.sub,
+        userId: session.userId,
         courseId: course.id,
         status: EnrollmentStatus.ACTIVE,
         progressPercentage: 50,

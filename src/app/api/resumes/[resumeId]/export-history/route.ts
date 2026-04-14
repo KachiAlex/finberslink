@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import { getExportHistory } from "@/features/resume/export-service";
 import { requireAuth } from "@/lib/auth/guards";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -14,16 +13,17 @@ const QuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).optional().default(50),
 });
 
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
-
 /**
  * GET /api/resumes/[resumeId]/export-history
  * Get export history for a resume with filtering
  */
-export const GET = rateLimitMiddleware(async (request: NextRequest, { params }: { params: { resumeId: string } }) => {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ resumeId: string }> }
+) {
   try {
-    const session = requireAuth(request);
-    const { resumeId } = params;
+    const session = await requireAuth(request);
+    const { resumeId } = await params;
 
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -53,4 +53,4 @@ export const GET = rateLimitMiddleware(async (request: NextRequest, { params }: 
     console.error("Error fetching export history:", error);
     return NextResponse.json({ error: "Failed to fetch export history" }, { status: 500 });
   }
-});
+}

@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import { listLearnerCourses } from "@/features/lms/data/course-service";
 import { requireAuth } from "@/lib/auth/guards";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -17,15 +16,13 @@ const ListCoursesSchema = z.object({
   sortBy: z.enum(["recent", "popular", "rating"]).optional(),
 });
 
-const rateLimitMiddleware = createRateLimit(rateLimitPresets.api);
-
 /**
  * GET /api/courses
  * Get courses for the current user with filtering and pagination
  */
-export const GET = rateLimitMiddleware(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   try {
-    const session = requireAuth(request);
+    const session = await requireAuth(request);
 
     const { searchParams } = new URL(request.url);
     const params = ListCoursesSchema.parse(Object.fromEntries(searchParams));
@@ -39,7 +36,7 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
     const where: any = {
       enrollments: {
         some: {
-          userId: session.sub,
+          userId: session.userId,
         },
       },
     };
@@ -87,7 +84,7 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
           select: { id: true },
         },
         enrollments: {
-          where: { userId: session.sub },
+          where: { userId: session.userId },
           // Enrollment model stores `progressPercentage` not `progress`
           select: { progressPercentage: true, completedAt: true },
         },
@@ -133,4 +130,4 @@ export const GET = rateLimitMiddleware(async (request: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}

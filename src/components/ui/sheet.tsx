@@ -27,3 +27,15 @@ export const SheetTitle = ({ children }: any) => (
     {children}
   </h2>
 );
+
+export const SheetDescription = ({ children }: any) => (
+  <p className="text-sm text-gray-600">
+    {children}
+  </p>
+);
+
+export const SheetFooter = ({ children }: any) => (
+  <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 p-6">
+    {children}
+  </div>
+);

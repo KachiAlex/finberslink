@@ -1,4 +1,4 @@
-import { useListThreads } from '@/hooks/useListThreads';
+import { useListThreads } from '@/features/forum/hooks/useListThreads';
 import { ForumThread } from '@/types';
 
 interface ThreadListProps {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "../../../_helpers";
+import { requireAuth } from "@/app/api/_helpers";
 import { getConversation } from "@/features/chat/service";
 
 export async function GET(
