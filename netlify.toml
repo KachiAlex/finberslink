@@ -1,5 +1,5 @@
 [build]
-  command = "yarn install --no-frozen-lockfile --ignore-scripts && yarn prisma generate && yarn prisma migrate resolve --rolled-back 20260325_add_resume_template || true && yarn prisma migrate deploy && yarn next build"
+  command = "yarn install --no-frozen-lockfile --ignore-scripts && yarn prisma generate && yarn prisma migrate deploy && yarn next build"
   publish = ".next"
 
 [build.environment]
