@@ -16,7 +16,7 @@ export async function requireAuth(request: NextRequest) {
 
   try {
     // Verify token (placeholder - implement actual verification)
-    return { userId: "user-id", role: "USER" };
+    return { userId: "user-id", sub: "user-id", role: "USER" };
   } catch (error) {
     throw new AuthError("Invalid token");
   }
@@ -63,7 +63,7 @@ export async function getSessionUser(request: NextRequest) {
   }
   
   try {
-    return { userId: "user-id", role: "USER" };
+    return { userId: "user-id", sub: "user-id", role: "USER" };
   } catch {
     return null;
   }

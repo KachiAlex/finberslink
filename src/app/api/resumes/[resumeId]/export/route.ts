@@ -8,7 +8,6 @@ import {
   publishResumeProfile,
 } from "@/features/resume/export-service";
 import { requireAuth } from "@/lib/auth/guards";
-import { createRateLimit, rateLimitPresets } from "@/lib/security/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { generateResumePDF } from "@/lib/pdf-generator";
 
@@ -28,7 +27,7 @@ export async function GET(
 ) {
   try {
     console.log("Export GET request for resumeId:", params.resumeId);
-    const session = requireAuth(request);
+    const session = await requireAuth(request);
     console.log("Session validated for user:", session.sub);
 
     // Find resume by ID
@@ -75,7 +74,7 @@ export async function POST(
 ) {
   try {
     console.log("Export POST request for resumeId:", params.resumeId);
-    const session = requireAuth(request);
+    const session = await requireAuth(request);
     console.log("Session validated for user:", session.sub);
     
     const body = await request.json();

@@ -38,7 +38,7 @@ const PublishSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await (await requireAuth(request));
+    const session = await requireAuth(request);
     const body = await request.json();
     const validated = ExportSchema.parse(body);
 

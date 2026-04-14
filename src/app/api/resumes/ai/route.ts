@@ -36,11 +36,8 @@ const ExtractSkillsSchema = z.object({
   resumeText: z.string().min(10),
 });
 
-// Rate limit AI operations more strictly
-const aiRateLimit = createRateLimit({
-  windowMs: 60000, // 1 minute
-  maxRequests: 10, // 10 requests per minute
-});
+// Rate limit AI operations more strictly - placeholder, no-op
+const aiRateLimit = null;
 
 /**
  * POST /api/resumes/ai/bullets
