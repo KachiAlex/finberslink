@@ -1,60 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 
 import { RegisterSchema } from "@/features/auth/schemas";
+import { registerUser } from "@/features/auth/service";
 import { upsertStudentProfile } from "@/features/profile/service";
 import { setAuthCookies } from "@/lib/auth/cookies";
-import { hashPassword } from "@/lib/auth/password";
 import { getOrCreateDefaultTenant } from "@/features/tenant/service";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    let body: unknown;
-    const nowLog = new Date().toISOString();
-    try {
-      const debugPath = path.resolve(process.cwd(), 'tmp', 'auth-debug.log');
-      fs.appendFileSync(debugPath, `${nowLog}\tREGISTER_HEADERS\t${JSON.stringify(Object.fromEntries(request.headers))}\n`);
-    } catch (e) {
-      // ignore debug logging errors
-    }
     const contentType = (request.headers.get("content-type") || "").toLowerCase();
-    const raw = await request.text();
-    const cleaned = raw.replace(/^\uFEFF/, "").trim();
 
     if (contentType && !contentType.includes("application/json")) {
-      try {
-        const now = new Date().toISOString();
-        const logPath = path.resolve(process.cwd(), 'tmp', 'register-non-json.log');
-        fs.mkdirSync(path.dirname(logPath), { recursive: true });
-        fs.appendFileSync(logPath, `${now}\tCONTENT_TYPE=${contentType}\t${raw}\n\n`);
-      } catch (e) {
-        // ignore logging errors
-      }
       return NextResponse.json({ error: "Expected application/json request" }, { status: 415 });
     }
 
+    const raw = await request.text();
+    const cleaned = raw.replace(/^\uFEFF/, "").trim();
+
+    let body: unknown = {};
     if (cleaned) {
       try {
         body = JSON.parse(cleaned);
-      } catch (finalErr) {
-        const now = new Date().toISOString();
-        const logPath = path.resolve(process.cwd(), 'tmp', 'register-raw-body.log');
-        try {
-          fs.mkdirSync(path.dirname(logPath), { recursive: true });
-          fs.appendFileSync(logPath, `${now}\t${raw}\n\n`);
-        } catch (e) {
-          // ignore logging errors
-        }
+      } catch {
         return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
       }
-    } else {
-      body = {};
     }
-    const parsed = RegisterSchema.safeParse(body);
 
+    const parsed = RegisterSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid input", details: parsed.error.issues },
@@ -62,21 +36,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get default tenant for the registration
     const defaultTenant = await getOrCreateDefaultTenant();
-
-    // Register user using auth service
     const tokens = await registerUser(parsed.data, defaultTenant.id);
-    const payload = verifyToken(tokens.accessToken);
+
+    // Create student profile after registration
+    try {
+      await upsertStudentProfile(tokens.user.id, {});
+    } catch {
+      // Non-fatal - profile can be created later
+    }
 
     const response = NextResponse.json(
-      {
-        message: "User registered successfully",
-        user: {
-          email: parsed.data.email,
-          role: payload.role,
-        },
-      },
+      { message: "User registered successfully", user: { email: tokens.user.email, role: tokens.user.role } },
       { status: 201 }
     );
 
@@ -85,62 +56,20 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const requestId = crypto.randomUUID();
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[${requestId}] Registration error:`, errorMessage, error);
-    
-    if (error instanceof Error && error.message === "User already exists") {
-      return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 409 }
-      );
+    console.error(`[${requestId}] Registration error:`, errorMessage);
+
+    if (errorMessage === "User already exists") {
+      return NextResponse.json({ error: "User with this email already exists" }, { status: 409 });
     }
 
-    if (errorMessage.startsWith("Missing required environment variable:")) {
-      return NextResponse.json(
-        { error: "Server misconfiguration", requestId },
-        { status: 500 }
-      );
+    const code = (error as { code?: unknown })?.code;
+    if (code === "P2002") {
+      return NextResponse.json({ error: "User with this email already exists" }, { status: 409 });
+    }
+    if (code === "P2021") {
+      return NextResponse.json({ error: "Database schema not deployed", requestId }, { status: 503 });
     }
 
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code?: unknown }).code === "P2021"
-    ) {
-      return NextResponse.json(
-        { error: "Database schema not deployed", requestId },
-        { status: 503 }
-      );
-    }
-
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code?: unknown }).code === "P2002"
-    ) {
-      return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 409 }
-      );
-    }
-
-    if (
-      errorMessage.includes("Cannot read properties of undefined") ||
-      errorMessage.includes("db.collection is not a function") ||
-      errorMessage.includes("collection is not a function") ||
-      errorMessage.includes("Firebase not initialized")
-    ) {
-      console.error("Firebase not initialized properly");
-      return NextResponse.json(
-        { error: "Database connection failed. Please try again later." },
-        { status: 503 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "Internal server error", requestId },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error", requestId }, { status: 500 });
   }
 }

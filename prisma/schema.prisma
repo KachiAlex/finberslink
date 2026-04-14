@@ -20,6 +20,9 @@ model User {
   createdAt                    DateTime               @default(now())
   updatedAt                    DateTime               @updatedAt
   tenantId                     String?
+  lastFailedLoginAt            DateTime?
+  failedLoginCount             Int                    @default(0)
+  lockedUntil                  DateTime?
   chatMemberships              ChatMembership[]
   chatMessages                 ChatMessage[]
   chatNotifications            ChatNotification[]
@@ -573,6 +576,15 @@ model PasswordResetToken {
   createdAt  DateTime @default(now())
 
   @@index([userId])
+}
+
+model LoginAttempt {
+  id          String   @id @default(cuid())
+  email       String
+  attemptedAt DateTime @default(now())
+  success     Boolean
+
+  @@index([email, attemptedAt])
 }
 
 model JobApplication {
