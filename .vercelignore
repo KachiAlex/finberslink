@@ -62,8 +62,6 @@ __tests__/
 # Configuration files (keep only what's needed)
 .eslintrc.json
 .prettierrc
-tsconfig.json
-next.config.js
 
 # Browser test scripts
 browser-test-*.js

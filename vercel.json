@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "yarn next build",
   "outputDirectory": ".next",
   "installCommand": "yarn install --no-frozen-lockfile"
 }
