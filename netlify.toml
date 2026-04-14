@@ -1,11 +1,10 @@
 [build]
-  command = "yarn install --no-frozen-lockfile --ignore-scripts && yarn prisma generate && yarn prisma migrate deploy && yarn next build"
+  command = "yarn install --no-frozen-lockfile --ignore-scripts && yarn prisma generate && yarn prisma migrate resolve --rolled-back 20260325_add_resume_template || true && yarn prisma migrate deploy && yarn next build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
   NEXT_TELEMETRY_DISABLED = "1"
-  # Netlify functions run on Debian Linux - these are the correct binary targets
   PRISMA_CLI_BINARY_TARGETS = "debian-openssl-3.0.x,debian-openssl-1.1.x,linux-musl-openssl-3.0.x"
 
 [[plugins]]
