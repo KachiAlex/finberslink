@@ -11,6 +11,10 @@ const nextConfig = {
   },
   swcMinify: true,
   reactStrictMode: true,
+  // Required for Prisma to work on Vercel/serverless
+  outputFileTracingIncludes: {
+    '/api/**/*': ['./node_modules/.prisma/client/**/*'],
+  },
   images: {
     unoptimized: process.env.NODE_ENV === "development",
     remotePatterns: [
