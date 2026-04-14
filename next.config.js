@@ -2,6 +2,9 @@ const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Tell Next.js NOT to bundle these — load them from node_modules at runtime.
+  // This is the correct fix for Prisma native binaries on Vercel.
+  serverExternalPackages: ['@prisma/client', 'prisma'],
   transpilePackages: ['@prisma/client'],
   typescript: {
     ignoreBuildErrors: true,
@@ -11,32 +14,13 @@ const nextConfig = {
   },
   swcMinify: true,
   reactStrictMode: true,
-  // Required for Prisma to work on Vercel/serverless
-  // Expanded to ensure all Prisma binaries are included in the build output
+  // Ensure Prisma query engine binary is included in the output bundle
   outputFileTracingIncludes: {
-    '/api/**/*': [
-      './node_modules/.prisma/client/**/*',
-      './node_modules/@prisma/client/**/*',
-      './node_modules/@prisma/client/query-engine-rhel-openssl-3.0.x',
-      './.prisma/client/**/*',
-      './node_modules/.prisma/**/*',
-      './node_modules/prisma/**/*',
-    ],
-    '/app/**/*': [
-      './node_modules/.prisma/client/**/*',
-      './node_modules/@prisma/client/**/*',
-      './node_modules/@prisma/client/query-engine-rhel-openssl-3.0.x',
-      './.prisma/client/**/*',
-      './node_modules/.prisma/**/*',
-      './node_modules/prisma/**/*',
-    ],
-    '/**/*': [
-      './node_modules/.prisma/client/**/*',
-      './node_modules/@prisma/client/**/*',
-      './node_modules/@prisma/client/query-engine-rhel-openssl-3.0.x',
-      './.prisma/client/**/*',
-      './node_modules/.prisma/**/*',
-      './node_modules/prisma/**/*',
+    '/**': [
+      './node_modules/.prisma/client/**',
+      './node_modules/@prisma/client/**',
+      './node_modules/prisma/libquery_engine*',
+      './node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/**',
     ],
   },
   images: {
