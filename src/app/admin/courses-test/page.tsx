@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { AdminCoursesGrid } from "@/components/admin/admin-courses-grid";
 
 export default function TestAdminCoursesPage() {

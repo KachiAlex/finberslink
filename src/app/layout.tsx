@@ -4,6 +4,9 @@ import { siteConfig } from "@/config/site";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
+// Force all pages to be dynamic - this app requires auth/DB on every route
+export const dynamic = 'force-dynamic';
+
 const sans = Space_Grotesk({
   variable: "--font-sans",
   subsets: ["latin"],
