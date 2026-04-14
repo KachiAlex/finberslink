@@ -3,9 +3,8 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Tell Next.js NOT to bundle these — load them from node_modules at runtime.
-  // This is the correct fix for Prisma native binaries on Vercel.
-  serverExternalPackages: ['@prisma/client', 'prisma'],
-  transpilePackages: ['@prisma/client'],
+  // This is the correct fix for Prisma native binaries on Vercel/Netlify.
+  serverExternalPackages: ['@prisma/client', 'prisma', 'bcryptjs'],
   typescript: {
     ignoreBuildErrors: true,
   },
