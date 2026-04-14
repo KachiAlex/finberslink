@@ -11,10 +11,14 @@ import { prisma } from '@/lib/prisma';
 
 const logger = new Logger('SuggestionService');
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-initialize OpenAI client to avoid build-time crash when env var is missing
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return _openai;
+}
 
 export interface ResumeSectionData {
   summary?: string;
@@ -100,7 +104,7 @@ For each suggestion, provide:
 Format as JSON array with objects containing: originalText, suggestedText, explanation, confidenceLevel`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -173,7 +177,7 @@ For each suggestion, provide:
 Format as JSON array with objects containing: originalText, suggestedText, explanation, confidenceLevel, experienceIndex`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -236,7 +240,7 @@ For each suggestion, provide:
 Format as JSON array with objects containing: originalText, suggestedText, explanation, confidenceLevel`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -307,7 +311,7 @@ For each suggestion, provide:
 Format as JSON array with objects containing: originalText, suggestedText, explanation, confidenceLevel, experienceIndex`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4',
       messages: [
         {

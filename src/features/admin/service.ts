@@ -256,3 +256,22 @@ export async function listCoursesWithPendingEdits() {
     where: { status: "PENDING" },
   });
 }
+
+export async function createJobPosting(data: {
+  title: string;
+  description: string;
+  companyId?: string;
+  location?: string;
+  salary?: string;
+  type?: string;
+}) {
+  return prisma.jobOpportunity.create({
+    data: {
+      title: data.title,
+      description: data.description,
+      location: data.location,
+      salary: data.salary,
+      type: data.type,
+    },
+  });
+}

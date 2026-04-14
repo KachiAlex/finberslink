@@ -1,11 +1,14 @@
 import OpenAI from "openai";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
-import { env } from "@/lib/env";
 
-const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY,
-});
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return _openai;
+}
 
 export interface ResumeBulletGenerationInput {
   role: string;
@@ -33,7 +36,7 @@ export async function generateResumeBullets(input: ResumeBulletGenerationInput):
   const prompt = buildBulletPrompt(input);
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4-turbo",
       messages: [
         {
@@ -94,7 +97,7 @@ ${input.industry ? `Industry: ${input.industry}` : ""}
 The summary should highlight key strengths and career goals, suitable for an ATS.`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4-turbo",
       messages: [
         {
@@ -144,7 +147,7 @@ Return a JSON object with:
 3. "optimizedText": improved version of the resume`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4-turbo",
       messages: [
         {
@@ -275,7 +278,7 @@ Resume:
 ${resumeText}`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4-turbo",
       messages: [
         {

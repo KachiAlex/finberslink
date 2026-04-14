@@ -26,3 +26,7 @@ export const ResetPasswordSchema = z.object({
   token: z.string(),
   newPassword: z.string().min(8),
 });
+
+export const ForgotPasswordSchema = z.object({
+  email: z.string().email(),
+});

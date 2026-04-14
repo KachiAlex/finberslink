@@ -464,3 +464,14 @@ export async function deleteAnalyticsData(resumeId: string): Promise<void> {
     throw error;
   }
 }
+
+// Named service object for backwards compatibility
+export const analyticsService = {
+  getSummary: (resumeId: string) => getAnalyticsSummary(resumeId),
+  getViewTrends: (resumeId: string, start: Date, end: Date, groupBy: 'day' | 'week' | 'month') => getTrends(resumeId, 'view', start, end, groupBy),
+  getDownloadTrends: (resumeId: string, start: Date, end: Date, groupBy: 'day' | 'week' | 'month') => getTrends(resumeId, 'download', start, end, groupBy),
+  getShareTrends: (resumeId: string, start: Date, end: Date, groupBy: 'day' | 'week' | 'month') => getTrends(resumeId, 'share', start, end, groupBy),
+  getSectionEngagement: (resumeId: string) => getSectionEngagement(resumeId),
+  getViewHistory: (resumeId: string, limit: number, offset: number) => getViewHistory(resumeId, limit, offset),
+  getRecentViewers: (resumeId: string, limit: number) => getRecentViewers(resumeId, limit),
+};
