@@ -1,23 +1,30 @@
 import { prisma } from "@/lib/prisma";
 
-export async function getStudentEnrollments(userId: string) {
+export async function getStudentEnrollments(userId: string, limit?: number) {
   return prisma.enrollment.findMany({
     where: { userId },
     include: { course: true },
+    take: limit ?? 10,
+    orderBy: { createdAt: "desc" },
   });
 }
 
-export async function getStudentResumes(userId: string) {
+export async function getStudentResumes(userId: string, limit?: number) {
   return prisma.resume.findMany({
     where: { userId },
+    take: limit ?? 10,
+    orderBy: { updatedAt: "desc" },
   });
 }
 
-export async function getStudentApplications(userId: string) {
-  return prisma.jobApplication.findMany({
+export async function getStudentApplications(userId: string, _limits?: { jobsLimit?: number; volunteerLimit?: number }) {
+  const jobs = await prisma.jobApplication.findMany({
     where: { userId },
-    include: { jobOpportunity: true },
+    include: { opportunity: true },
+    take: _limits?.jobsLimit ?? 10,
+    orderBy: { submittedAt: "desc" },
   });
+  return { jobs, volunteer: [] };
 }
 
 export async function listStudentEnrollmentsWithCourses(userId: string) {
@@ -51,11 +58,11 @@ export async function getTutorDashboardData(userId: string) {
   };
 }
 
-export async function listRecommendedJobs(userId: string) {
+export async function listRecommendedJobs(_limit?: number) {
   return [];
 }
 
-export async function listSavedJobIds(userId: string) {
+export async function listSavedJobIds(_userId: string, _limit?: number) {
   return [];
 }
 
