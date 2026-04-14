@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { verifyToken } from "@/lib/auth/jwt";
+import { verifyAccessToken } from "@/lib/auth/jwt";
 import {
   getDashboardInsights,
   getDashboardSummary,
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = verifyToken(accessToken);
+    const user = await verifyAccessToken(accessToken);
     const mode = request.nextUrl.searchParams.get("mode") === "fast" ? "fast" : "full";
 
     const applicationsLimit = mode === "fast" ? { jobsLimit: 1, volunteerLimit: 1 } : { jobsLimit: 2, volunteerLimit: 1 };
