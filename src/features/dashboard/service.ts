@@ -1,12 +1,52 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getStudentEnrollments(userId: string, limit?: number) {
-  return prisma.enrollment.findMany({
+  // Avoid include: { course: true } to prevent Prisma 5.22 engine PANIC
+  // when running multiple parallel queries in Promise.all
+  const enrollments = await prisma.enrollment.findMany({
     where: { userId },
-    include: { course: true },
+    select: {
+      id: true,
+      userId: true,
+      courseId: true,
+      status: true,
+      progressPercentage: true,
+      lastAccessedAt: true,
+      completedAt: true,
+      totalStudyTime: true,
+      streakDays: true,
+      averageScore: true,
+      engagementScore: true,
+      lastStreakDate: true,
+      createdAt: true,
+      updatedAt: true,
+    },
     take: limit ?? 10,
     orderBy: { createdAt: "desc" },
   });
+
+  if (enrollments.length === 0) return [];
+
+  const courseIds = [...new Set(enrollments.map((e) => e.courseId))];
+  const courses = await prisma.course.findMany({
+    where: { id: { in: courseIds } },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      tagline: true,
+      description: true,
+      level: true,
+      category: true,
+      coverImage: true,
+      approvalStatus: true,
+      publishedAt: true,
+      instructorId: true,
+    },
+  });
+
+  const courseMap = new Map(courses.map((c) => [c.id, c]));
+  return enrollments.map((e) => ({ ...e, course: courseMap.get(e.courseId) ?? null }));
 }
 
 export async function getStudentResumes(userId: string, limit?: number) {
@@ -28,10 +68,48 @@ export async function getStudentApplications(userId: string, _limits?: { jobsLim
 }
 
 export async function listStudentEnrollmentsWithCourses(userId: string) {
-  return prisma.enrollment.findMany({
+  const enrollments = await prisma.enrollment.findMany({
     where: { userId },
-    include: { course: true },
+    select: {
+      id: true,
+      userId: true,
+      courseId: true,
+      status: true,
+      progressPercentage: true,
+      lastAccessedAt: true,
+      completedAt: true,
+      totalStudyTime: true,
+      streakDays: true,
+      averageScore: true,
+      engagementScore: true,
+      lastStreakDate: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
+
+  if (enrollments.length === 0) return [];
+
+  const courseIds = [...new Set(enrollments.map((e) => e.courseId))];
+  const courses = await prisma.course.findMany({
+    where: { id: { in: courseIds } },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      tagline: true,
+      description: true,
+      level: true,
+      category: true,
+      coverImage: true,
+      approvalStatus: true,
+      publishedAt: true,
+      instructorId: true,
+    },
+  });
+
+  const courseMap = new Map(courses.map((c) => [c.id, c]));
+  return enrollments.map((e) => ({ ...e, course: courseMap.get(e.courseId) ?? null }));
 }
 
 export async function getDashboardSummary(userId: string) {

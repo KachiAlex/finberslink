@@ -254,10 +254,10 @@ export function DashboardSectionsClient({
   const criticalWarnings = useMemo(() => getCriticalTimingWarnings(meta), [meta]);
   const summary = data?.summary;
 
-  const activeCourses = data?.enrollments.length ?? 0;
-  const resumesCount = data?.resumes.length ?? 0;
+  const activeCourses = data?.enrollments?.length ?? 0;
+  const resumesCount = data?.resumes?.length ?? 0;
   const applicationsCount =
-    (data?.applications.jobs.length ?? 0) + (data?.applications.volunteer.length ?? 0);
+    (data?.applications?.jobs?.length ?? 0) + (data?.applications?.volunteer?.length ?? 0);
 
   const quickSummary = useMemo(() => {
     if (loading) {
@@ -268,10 +268,10 @@ export function DashboardSectionsClient({
       return "Stay tuned—your learning signals will appear here.";
     }
 
-    const applicationTotal = data.applications.jobs.length + data.applications.volunteer.length;
-    return `${data.enrollments.length || "No"} active course${data.enrollments.length === 1 ? "" : "s"}, ${
-      data.resumes.length || "no"
-    } resume${data.resumes.length === 1 ? "" : "s"}, ${
+    const applicationTotal = (data.applications?.jobs?.length ?? 0) + (data.applications?.volunteer?.length ?? 0);
+    return `${data.enrollments?.length || "No"} active course${data.enrollments?.length === 1 ? "" : "s"}, ${
+      data.resumes?.length || "no"
+    } resume${data.resumes?.length === 1 ? "" : "s"}, ${
       applicationTotal || "no"
     } application${applicationTotal === 1 ? "" : "s"} in motion.`;
   }, [data, loading]);
@@ -364,11 +364,11 @@ export function DashboardSectionsClient({
     [applicationsCount, loading, summary]
   );
 
-  const topCourse = data?.enrollments[0];
-  const topApplication = data?.applications.jobs[0] ?? data?.applications.volunteer[0];
-  const featuredFocus = data?.insights.focus[0];
-  const skillInsight = data?.insights.skills;
-  const featuredJob = data?.recommended[0];
+  const topCourse = data?.enrollments?.[0];
+  const topApplication = data?.applications?.jobs?.[0] ?? data?.applications?.volunteer?.[0];
+  const featuredFocus = data?.insights?.focus?.[0];
+  const skillInsight = data?.insights?.skills;
+  const featuredJob = data?.recommended?.[0];
 
   const renderLatestCourse = () => {
     if (errors?.enrollments) {
