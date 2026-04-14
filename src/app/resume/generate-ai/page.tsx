@@ -11,7 +11,6 @@ export default function GenerateAiPage() {
       <h1 className="text-2xl font-semibold mb-4">Generate Resume with AI</h1>
       <p className="text-sm text-slate-600 mb-6">Interactive wizard will ask a few questions and generate a draft resume you can refine.</p>
       <AiResumeWizard />
-      <AIResumeWizard />
     </main>
   );
 }
