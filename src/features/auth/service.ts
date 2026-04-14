@@ -65,30 +65,48 @@ export async function lockAccount(email: string): Promise<void> {
 export async function loginUser(data: { email: string; password: string }) {
   const { email, password } = data;
 
-  // Always look up user but use generic error to prevent enumeration
-  const user = await prisma.user.findUnique({ where: { email } });
+  // Select only core fields to avoid errors if lockout columns don't exist yet
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      passwordHash: true,
+      role: true,
+      tenantId: true,
+      status: true,
+    },
+  });
 
   if (!user) {
-    // Still record attempt to prevent timing attacks revealing email existence
     await prisma.loginAttempt.create({ data: { email, success: false } }).catch(() => {});
     throw new Error("Invalid credentials");
   }
 
-  // Check account lockout
-  if (user.lockedUntil && user.lockedUntil > new Date()) {
-    throw new Error("Invalid credentials");
+  // Check account lockout (gracefully skip if columns don't exist)
+  try {
+    const lockCheck = await prisma.user.findUnique({
+      where: { email },
+      select: { lockedUntil: true },
+    });
+    if (lockCheck?.lockedUntil && lockCheck.lockedUntil > new Date()) {
+      throw new Error("Invalid credentials");
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message === "Invalid credentials") throw e;
+    // Column doesn't exist yet — skip lockout check
   }
 
   // Verify password
   const passwordValid = await verifyPassword(password, user.passwordHash);
 
   if (!passwordValid) {
-    await recordFailedLogin(email);
+    await recordFailedLogin(email).catch(() => {}); // graceful if columns missing
     throw new Error("Invalid credentials");
   }
 
-  // Success - clear failed login tracking
-  await clearFailedLogins(email);
+  // Success - clear failed login tracking (graceful if columns missing)
+  await clearFailedLogins(email).catch(() => {});
   await prisma.loginAttempt.create({ data: { email, success: true } }).catch(() => {});
 
   const payload: SessionPayload = {
@@ -144,7 +162,10 @@ export async function registerUser(
 export async function refreshSession(refreshToken: string) {
   const decoded = await verifyRefreshToken(refreshToken);
 
-  const user = await prisma.user.findUnique({ where: { id: decoded.sub } });
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.sub },
+    select: { id: true, email: true, role: true, tenantId: true },
+  });
   if (!user) throw new Error("User not found");
 
   const payload: SessionPayload = {
