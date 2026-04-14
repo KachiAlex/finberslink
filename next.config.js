@@ -12,8 +12,32 @@ const nextConfig = {
   swcMinify: true,
   reactStrictMode: true,
   // Required for Prisma to work on Vercel/serverless
+  // Expanded to ensure all Prisma binaries are included in the build output
   outputFileTracingIncludes: {
-    '/api/**/*': ['./node_modules/.prisma/client/**/*'],
+    '/api/**/*': [
+      './node_modules/.prisma/client/**/*',
+      './node_modules/@prisma/client/**/*',
+      './node_modules/@prisma/client/query-engine-rhel-openssl-3.0.x',
+      './.prisma/client/**/*',
+      './node_modules/.prisma/**/*',
+      './node_modules/prisma/**/*',
+    ],
+    '/app/**/*': [
+      './node_modules/.prisma/client/**/*',
+      './node_modules/@prisma/client/**/*',
+      './node_modules/@prisma/client/query-engine-rhel-openssl-3.0.x',
+      './.prisma/client/**/*',
+      './node_modules/.prisma/**/*',
+      './node_modules/prisma/**/*',
+    ],
+    '/**/*': [
+      './node_modules/.prisma/client/**/*',
+      './node_modules/@prisma/client/**/*',
+      './node_modules/@prisma/client/query-engine-rhel-openssl-3.0.x',
+      './.prisma/client/**/*',
+      './node_modules/.prisma/**/*',
+      './node_modules/prisma/**/*',
+    ],
   },
   images: {
     unoptimized: process.env.NODE_ENV === "development",

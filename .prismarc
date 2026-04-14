@@ -1,0 +1,20 @@
+# Prisma Configuration for Vercel Deployment
+# This file explicitly configures Prisma's behavior for the Vercel environment
+
+# Set the output directory for Prisma Client
+# This ensures the generated client is placed in the correct location
+output = "node_modules/.prisma/client"
+
+# Enable binary targeting for Vercel's RHEL-compatible runtime
+# The binaryTargets in schema.prisma will generate binaries for these platforms
+
+# Explicitly configure engine path for Prisma Client
+# This helps Prisma locate the query engine binary at runtime
+enginePath = "node_modules/.prisma/client"
+
+# For Vercel deployments, ensure the binary is available
+# The query-engine-rhel-openssl-3.0.x binary will be used on Vercel's Linux runtime
+binaryTargets = ["native", "rhel-openssl-3.0.x"]
+
+# Enable verbose logging for debugging (can be disabled in production)
+# logLevel = "debug"

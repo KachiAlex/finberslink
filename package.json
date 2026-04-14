@@ -7,7 +7,7 @@
     "build": "next build",
     "db:ensure-schema": "node scripts/ensure-db-schema.js",
     "db:prepare": "node scripts/vercel-db-prepare.js",
-    "vercel-build": "echo \"FORCE REBUILD: $(date) - Version 0.1.1\" && rm -rf .next node_modules/.cache && npm run db:prepare && next build",
+    "vercel-build": "echo \"FORCE REBUILD: $(date) - Version 0.1.1\" && rm -rf .next node_modules/.cache && npx prisma generate --skip-engine-check && npm run db:prepare && next build",
     "start": "next start",
     "start:realtime": "node src/realtime/server.js",
     "lint": "next lint",

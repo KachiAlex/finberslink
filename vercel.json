@@ -1,5 +1,15 @@
 {
   "buildCommand": "yarn prisma generate && yarn next build",
   "outputDirectory": ".next",
-  "installCommand": "yarn install --no-frozen-lockfile"
+  "installCommand": "yarn install --no-frozen-lockfile",
+  "env": {
+    "PRISMA_QUERY_ENGINE_BINARY": "@prisma/client/query-engine-rhel-openssl-3.0.x",
+    "PRISMA_SKIP_VALIDATION_WARNING": "true"
+  },
+  "functions": {
+    "api/**": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
 }
